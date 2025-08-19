@@ -8,25 +8,25 @@ def event_loop():
     yield loop
     loop.close()
 
-# 2) Ladda testdata (YAML, HTML, JSON)
+# 2) Ladda testdata (YAML, HTML, JSON) från den nya data/ strukturen
 @pytest.fixture
 def load_template():
     def _load(name: str) -> dict:
-        p = Path(__file__).parent / "fixtures" / "templates" / f"{name}.yaml"
+        p = Path(__file__).parent.parent / "data" / "templates" / f"{name}.yaml"
         return yaml.safe_load(p.read_text(encoding="utf-8"))
     return _load
 
 @pytest.fixture
 def load_html():
     def _load(name: str) -> str:
-        p = Path(__file__).parent / "fixtures" / "html" / f"{name}.html"
+        p = Path(__file__).parent.parent / "data" / "samples" / "html" / f"{name}.html"
         return p.read_text(encoding="utf-8")
     return _load
 
 @pytest.fixture
 def load_json():
     def _load(name: str) -> dict:
-        p = Path(__file__).parent / "fixtures" / "data" / f"{name}.json"
+        p = Path(__file__).parent.parent / "data" / "samples" / "expected" / f"{name}.json"
         return json.loads(p.read_text(encoding="utf-8"))
     return _load
 

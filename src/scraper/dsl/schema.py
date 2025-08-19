@@ -61,6 +61,7 @@ class ScrapingTemplate(BaseModel):
     """The root model for a scraping template."""
     template_id: str
     version: str
+    extends: Optional[str] = None # Added for inheritance
     scope: Scope
     policy: Policy
     output: Output
