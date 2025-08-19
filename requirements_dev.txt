@@ -1,1 +1,8 @@
 pytest
+pytest-asyncio
+requests
+PyYAML
+beautifulsoup4
+black
+ruff
+mypy
