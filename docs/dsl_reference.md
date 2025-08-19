@@ -69,3 +69,18 @@ This object defines how to extract, clean, and validate a single piece of data.
     -   `mapping`: A dictionary of `{ "from": "to" }`.
 
 > **Note:** The repertoire of transforms and validators can be easily extended by following the existing pattern in `src/scraper/dsl/schema.py` and adding the corresponding logic to `src/scraper/template_runtime.py`.
+
+---
+
+## JSON Schema for Validation
+
+To facilitate the creation of valid templates, a JSON Schema can be automatically generated from the underlying Pydantic models. This schema can be used in modern editors (like VSCode with the YAML extension or a web-based Monaco editor) to provide real-time validation and autocompletion.
+
+### Generating the Schema
+You can generate the latest schema by running the following script from the project root:
+
+```bash
+python scripts/generate_dsl_schema.py
+```
+
+This will create or update the schema file at `docs/dsl.schema.json`. This file should be committed to the repository so that UIs and other tools can rely on it.
