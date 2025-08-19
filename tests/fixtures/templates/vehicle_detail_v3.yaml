@@ -1,21 +1,23 @@
-id: vehicle_detail_v3
+template_id: vehicle_detail_v3
+version: 1
 entity_type: vehicle
-url_pattern: "*/item/*"
+url_pattern: ".*/item/.*"
 fields:
   - name: registration_number
-    selector: "dd"
     type: string
+    selectors: ["dd"]
     required: true
   - name: model_year
-    selector: "[data-spec=modelYear]"
     type: number
+    selectors: ["[data-spec=modelYear]"]
     transforms:
       - name: regex_extract
         args:
           pattern: "(\\d{4})"
+      - name: to_int
   - name: co2_wltp
-    selector: "#wltp-co2"
     type: number
+    selectors: ["#wltp-co2"]
     transforms:
       - name: regex_extract
         args:

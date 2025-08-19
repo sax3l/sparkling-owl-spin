@@ -1,44 +1,149 @@
-name: CI
+name: CI/CD Pipeline
 
 on:
-  pull_request:
   push:
-    branches: [ main ]
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
 
 jobs:
-  unit:
+  lint_and_type:
+    name: 1. Lint & Type Check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with: { python-version: '3.11' }
-      - run: pip install -r requirements_dev.txt
-      - name: Unit tests
-        run: pytest -m unit --maxfail=1 --disable-warnings -q
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements_dev.txt
+      - name: Run Ruff Linter
+        run: ruff check .
+      - name: Run Black Formatter Check
+        run: black --check .
+      - name: Run MyPy Type Checker
+        run: mypy src/
 
-  integration:
+  unit_tests:
+    name: 2. Unit Tests
     runs-on: ubuntu-latest
-    needs: unit
+    needs: lint_and_type
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with: { python-version: '3.11' }
-      - run: pip install -r requirements_dev.txt
-      - name: Start synthetic sites
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements_dev.txt
+      - name: Run Unit Tests with Coverage
+        run: pytest -m unit --cov=src --cov-report=xml
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+
+  integration_tests:
+    name: 3. Integration Tests
+    runs-on: ubuntu-latest
+    needs: unit_tests
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements_dev.txt
+      - name: Start Synthetic Services
         run: docker compose -f docker/docker-compose.synthetic.yml up -d
-      - name: Integration tests
-        run: pytest -m "integration and not browser" -q
+      - name: Run Integration Tests
+        run: pytest -m "integration and not browser"
 
-  e2e:
+  e2e_tests:
+    name: 4. E2E Tests (Synthetic)
+    runs-on: ubuntu-latest
+    needs: integration_tests
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements_dev.txt
+      - name: Start Synthetic Services
+        run: docker compose -f docker/docker-compose.synthetic.yml up -d
+      - name: Run E2E Tests
+        run: pytest -m "e2e and not browser"
+
+  security_scan:
+    name: 5. Security Scan
+    runs-on: ubuntu-latest
+    needs: e2e_tests
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements_dev.txt
+      - name: Run Bandit (SAST)
+        run: bandit -r src/
+      - name: Run pip-audit (Dependency Scan)
+        run: pip-audit
+
+  build_and_push:
+    name: 6. Build & Push Images
+    runs-on: ubuntu-latest
+    needs: security_scan
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/Dockerfile
+          push: true
+          tags: your-repo/ecadp:${{ github.sha }}
+
+  deploy_staging:
+    name: 7. Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: build_and_push
+    if: github.ref == 'refs/heads/develop'
+    environment: staging
+    steps:
+      - name: Deploy to Staging Environment
+        run: echo "Deploying image ${{ github.sha }} to staging..." # Placeholder for Helm/Kubectl
+
+  deploy_production:
+    name: 8. Deploy to Production
+    runs-on: ubuntu-latest
+    needs: build_and_push
     if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    needs: integration
+    environment: production
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with: { python-version: '3.11' }
-      - run: pip install -r requirements_dev.txt
-      - name: Start synthetic sites
-        run: docker compose -f docker/docker-compose.synthetic.yml up -d
-      - name: E2E tests
-        run: pytest -m "e2e and not browser" -q
+      - name: Deploy Canary to Production
+        run: echo "Deploying image ${{ github.sha }} as canary to production..." # Placeholder
+      - name: Run Conformance Checks
+        run: echo "Verifying canary health..." # Placeholder
+      - name: Promote to 100%
+        run: echo "Promoting canary to full production rollout..." # Placeholder
