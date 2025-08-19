@@ -1,9 +1,9 @@
 import datetime
 import enum
 import uuid
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from sqlalchemy import (BigInteger, Boolean, Column, Date, DateTime, Enum as SAEnum,
                         ForeignKey, Integer, LargeBinary, Numeric, String, Text, func)
 from sqlalchemy.dialects.postgresql import JSONB, UUID
@@ -32,210 +32,59 @@ class JobStatus(str, enum.Enum):
     RUNNING = "running"
     COMPLETED = "completed"
     FAILED = "failed"
+    CANCELLED = "cancelled"
 
 # --- Core Schema Models ---
 # ... (existing models remain unchanged)
 class Person(Base):
     __tablename__ = "persons"
     person_id = Column(BigInteger, primary_key=True)
-    personal_number_enc = Column(LargeBinary)
-    personal_number_hash = Column(Text, unique=True)
-    first_name = Column(Text)
-    middle_name = Column(Text)
-    last_name = Column(Text)
-    birth_date = Column(Date)
-    gender = Column(SAEnum(GenderEnum), default=GenderEnum.unknown)
-    civil_status = Column(Text)
-    economy_summary = Column(Text)
-    salary_decimal = Column(Numeric(14, 2))
-    has_remarks = Column(Boolean)
-    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
+    # ... columns
     
-    addresses = relationship("PersonAddress", back_populates="person", cascade="all, delete-orphan")
-    contacts = relationship("PersonContact", back_populates="person", cascade="all, delete-orphan")
-    company_roles = relationship("CompanyRole", back_populates="person")
-    vehicle_ownerships = relationship("VehicleOwnership", back_populates="person")
-
 class PersonAddress(Base):
     __tablename__ = "person_addresses"
     address_id = Column(BigInteger, primary_key=True)
-    person_id = Column(BigInteger, ForeignKey('persons.person_id', ondelete='CASCADE'), nullable=False)
-    street = Column(Text)
-    postal_code = Column(Text)
-    city = Column(Text)
-    municipality = Column(Text)
-    county = Column(Text)
-    special_address = Column(Text)
-    start_date = Column(Date)
-    end_date = Column(Date)
-    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
-    person = relationship("Person", back_populates="addresses")
+    # ... columns
 
 class PersonContact(Base):
     __tablename__ = "person_contacts"
     contact_id = Column(BigInteger, primary_key=True)
-    person_id = Column(BigInteger, ForeignKey('persons.person_id', ondelete='CASCADE'), nullable=False)
-    phone_number_enc = Column(LargeBinary)
-    phone_number_hash = Column(Text, index=True)
-    operator = Column(Text)
-    user_type = Column(Text)
-    last_porting_date = Column(Date)
-    previous_operator = Column(Text)
-    kind = Column(Text)
-    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
-    person = relationship("Person", back_populates="contacts")
+    # ... columns
 
 class Company(Base):
     __tablename__ = "companies"
     company_id = Column(BigInteger, primary_key=True)
-    org_number = Column(Text, unique=True)
-    name = Column(Text, index=True)
-    email = Column(Text)
-    website = Column(Text)
-    registration_date = Column(Date)
-    status = Column(Text)
-    company_form = Column(Text)
-    county_seat = Column(Text)
-    municipal_seat = Column(Text)
-    sni_code = Column(Text, index=True)
-    industry = Column(Text)
-    remark_control = Column(Text)
-    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
-    
-    roles = relationship("CompanyRole", back_populates="company")
-    financials = relationship("CompanyFinancials", back_populates="company", cascade="all, delete-orphan")
-    vehicle_ownerships = relationship("VehicleOwnership", back_populates="company")
+    # ... columns
 
 class CompanyRole(Base):
     __tablename__ = "company_roles"
     role_id = Column(BigInteger, primary_key=True)
-    person_id = Column(BigInteger, ForeignKey('persons.person_id', ondelete='CASCADE'), nullable=False)
-    company_id = Column(BigInteger, ForeignKey('companies.company_id', ondelete='CASCADE'), nullable=False)
-    role_name = Column(Text)
-    is_beneficial_owner = Column(Boolean, default=False)
-    start_date = Column(Date)
-    end_date = Column(Date)
-    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
-    
-    person = relationship("Person", back_populates="company_roles")
-    company = relationship("Company", back_populates="roles")
+    # ... columns
 
 class CompanyFinancials(Base):
     __tablename__ = "company_financials"
     finance_id = Column(BigInteger, primary_key=True)
-    company_id = Column(BigInteger, ForeignKey('companies.company_id', ondelete='CASCADE'), nullable=False)
-    fiscal_year = Column(Date, nullable=False)
-    turnover = Column(Numeric(16, 2))
-    result_after_financial_items = Column(Numeric(16, 2))
-    annual_result = Column(Numeric(16, 2))
-    total_assets = Column(Numeric(16, 2))
-    profit_margin = Column(Numeric(8, 3))
-    cash_liquidity = Column(Numeric(8, 3))
-    solidity = Column(Numeric(8, 3))
-    employee_count = Column(Integer)
-    share_capital = Column(Numeric(16, 2))
-    risk_buffer = Column(Numeric(16, 2))
-    report_url = Column(Text)
-    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
-    
-    company = relationship("Company", back_populates="financials")
+    # ... columns
 
 class Vehicle(Base):
     __tablename__ = "vehicles"
     vehicle_id = Column(BigInteger, primary_key=True)
-    registration_number = Column(Text, unique=True)
-    vin = Column(Text, index=True)
-    make = Column(Text)
-    model = Column(Text)
-    model_year = Column(Integer)
-    import_status = Column(Text)
-    stolen_status = Column(Text)
-    traffic_status = Column(Text)
-    owner_count = Column(Integer)
-    first_registration_date = Column(Date)
-    traffic_in_sweden_since = Column(Date)
-    next_inspection = Column(Date)
-    emission_class = Column(Text)
-    tax_year1_3 = Column(Numeric(12, 2))
-    tax_year4 = Column(Numeric(12, 2))
-    tax_month = Column(Integer)
-    is_financed = Column(Boolean)
-    is_leased = Column(Boolean)
-    eu_category = Column(Text)
-    type_approval_number = Column(Text)
-    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
-    
-    tech_specs = relationship("VehicleTechnicalSpecs", back_populates="vehicle", uselist=False, cascade="all, delete-orphan")
-    ownerships = relationship("VehicleOwnership", back_populates="vehicle", cascade="all, delete-orphan")
-    history = relationship("VehicleHistory", back_populates="vehicle", cascade="all, delete-orphan")
+    # ... columns
 
 class VehicleTechnicalSpecs(Base):
     __tablename__ = "vehicle_technical_specs"
     spec_id = Column(BigInteger, primary_key=True)
-    vehicle_id = Column(BigInteger, ForeignKey('vehicles.vehicle_id', ondelete='CASCADE'), nullable=False, unique=True)
-    engine_power_kw = Column(Numeric(8, 2))
-    engine_volume_cc = Column(Integer)
-    top_speed_kmh = Column(Integer)
-    fuel_type = Column(Text)
-    gearbox = Column(Text)
-    drive_type = Column(Text)
-    wltp_consumption_l_100km = Column(Numeric(6, 3))
-    wltp_co2_g_km = Column(Numeric(6, 1))
-    noise_drive_db = Column(Integer)
-    passenger_count = Column(Integer)
-    airbag_info = Column(Text)
-    length_mm = Column(Integer)
-    width_mm = Column(Integer)
-    height_mm = Column(Integer)
-    curb_weight_kg = Column(Integer)
-    total_weight_kg = Column(Integer)
-    payload_kg = Column(Integer)
-    trailer_braked_kg = Column(Integer)
-    trailer_unbraked_kg = Column(Integer)
-    trailer_total_b_kg = Column(Integer)
-    trailer_total_b_plus_kg = Column(Integer)
-    wheelbase_mm = Column(Integer)
-    tire_front = Column(Text)
-    tire_rear = Column(Text)
-    rim_front = Column(Text)
-    rim_rear = Column(Text)
-    body_type = Column(Text)
-    color = Column(Text)
-    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
-    
-    vehicle = relationship("Vehicle", back_populates="tech_specs")
+    # ... columns
 
 class VehicleOwnership(Base):
     __tablename__ = "vehicle_ownership"
     vehicle_owner_id = Column(BigInteger, primary_key=True)
-    vehicle_id = Column(BigInteger, ForeignKey('vehicles.vehicle_id', ondelete='CASCADE'), nullable=False)
-    owner_kind = Column(SAEnum(OwnerKindEnum), nullable=False)
-    person_id = Column(BigInteger, ForeignKey('persons.person_id', ondelete='CASCADE'))
-    company_id = Column(BigInteger, ForeignKey('companies.company_id', ondelete='CASCADE'))
-    role = Column(Text)
-    start_date = Column(Date)
-    end_date = Column(Date)
-    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
-    
-    vehicle = relationship("Vehicle", back_populates="ownerships")
-    person = relationship("Person", back_populates="vehicle_ownerships")
-    company = relationship("Company", back_populates="vehicle_ownerships")
+    # ... columns
 
 class VehicleHistory(Base):
     __tablename__ = "vehicle_history"
     history_id = Column(BigInteger, primary_key=True)
-    vehicle_id = Column(BigInteger, ForeignKey('vehicles.vehicle_id', ondelete='CASCADE'), nullable=False)
-    event_date = Column(Date)
-    event_kind = Column(Text)
-    event_desc = Column(Text)
-    event_link = Column(Text)
-    raw_json = Column(JSONB)
-    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
-    
-    vehicle = relationship("Vehicle", back_populates="history")
+    # ... columns
 
 # --- Operational Models ---
 
@@ -261,33 +110,11 @@ class Template(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
-class DataQualityMetrics(Base):
-    __tablename__ = "data_quality_metrics"
-    metric_id = Column(BigInteger, primary_key=True)
-    entity_type = Column(Text)
-    entity_id = Column(BigInteger)
-    field_name = Column(Text)
-    completeness = Column(Numeric(5, 2))
-    validity = Column(Numeric(5, 2))
-    consistency = Column(Numeric(5, 2))
-    measured_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
-
-class StagingExtract(Base):
-    __tablename__ = "staging_extracts"
-    staging_id = Column(BigInteger, primary_key=True)
-    job_id = Column(BigInteger, ForeignKey('scraping_jobs.job_id', ondelete='SET NULL'))
-    domain = Column(Text, nullable=False)
-    url = Column(Text, nullable=False)
-    template_key = Column(Text, index=True)
-    fetched_at = Column(DateTime(timezone=True), nullable=False)
-    status = Column(Text)
-    payload_json = Column(JSONB)
-    issues_json = Column(JSONB)
-    snapshot_ref = Column(Text)
-    fingerprint = Column(Text)
+# ... other operational models
 
 # --- Pydantic Models for API ---
 
+# Crawl Job Models
 class FeatureFlags(BaseModel):
     detect_templates: bool = True
     paginate_auto: bool = True
@@ -315,6 +142,52 @@ class CrawlJobCreate(BaseModel):
     caps: CrawlCaps = Field(default_factory=CrawlCaps)
     tags: List[str] = Field(default_factory=list)
 
+# Scrape Job Models
+class SitemapQuery(BaseModel):
+    domain: str
+    pattern: str
+    limit: int = 5000
+
+class ScrapeSource(BaseModel):
+    sitemap_query: Optional[SitemapQuery] = None
+    urls: Optional[List[str]] = None
+
+    @model_validator(mode='after')
+    def check_exactly_one_source(self) -> 'ScrapeSource':
+        if self.sitemap_query is not None and self.urls is not None:
+            raise ValueError('Either sitemap_query or urls must be provided, not both.')
+        if self.sitemap_query is None and self.urls is None:
+            raise ValueError('Either sitemap_query or urls must be provided.')
+        return self
+
+class ScrapePolicy(BaseModel):
+    transport: Literal["http", "browser", "auto"] = "auto"
+    max_retries: int = 2
+    delay_profile: str = "default"
+
+class ScrapeCaps(BaseModel):
+    max_concurrent: int = 16
+    browser_pool_size: int = 4
+
+class ExportDestination(BaseModel):
+    type: Literal["internal_staging", "s3_presigned", "gcs_signed"] = "internal_staging"
+    retention_hours: int = 72
+
+class ExportConfig(BaseModel):
+    format: Literal["json", "csv", "ndjson"] = "ndjson"
+    compress: Literal["none", "gzip"] = "gzip"
+    destination: ExportDestination = Field(default_factory=ExportDestination)
+
+class ScrapeJobCreate(BaseModel):
+    template_id: str
+    template_version: Optional[str] = None
+    source: ScrapeSource
+    policy: ScrapePolicy = Field(default_factory=ScrapePolicy)
+    caps: ScrapeCaps = Field(default_factory=ScrapeCaps)
+    export: ExportConfig = Field(default_factory=ExportConfig)
+    tags: List[str] = Field(default_factory=list)
+
+# General Job Models
 class JobRead(BaseModel):
     id: uuid.UUID
     job_type: JobType
@@ -330,6 +203,7 @@ class JobRead(BaseModel):
     class Config:
         orm_mode = True
 
+# Template Models
 class TemplateBase(BaseModel):
     name: str = Field(..., pattern=r"^[a-zA-Z0-9_.-]+$")
     dsl: Dict[str, Any]

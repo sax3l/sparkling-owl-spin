@@ -14,154 +14,142 @@ components:
       name: X-API-Key
 
   schemas:
+    # Crawl Job Schemas
     FeatureFlags:
       type: object
       properties:
-        detect_templates:
-          type: boolean
-          default: true
-        paginate_auto:
-          type: boolean
-          default: true
-        infinite_scroll:
-          type: boolean
-          default: false
+        detect_templates: { type: boolean, default: true }
+        paginate_auto: { type: boolean, default: true }
+        infinite_scroll: { type: boolean, default: false }
     
     CrawlPolicy:
       type: object
       properties:
-        respect_robots:
-          type: boolean
-          default: true
-        crawl_delay_ms:
-          type: integer
-          default: 1000
-        parallelism:
-          type: integer
-          default: 8
-        transport:
-          type: string
-          enum: ["http", "browser", "auto"]
-          default: "http"
-        user_agent_profile:
-          type: string
-          default: "chrome-stable"
-        feature_flags:
-          $ref: "#/components/schemas/FeatureFlags"
+        respect_robots: { type: boolean, default: true }
+        crawl_delay_ms: { type: integer, default: 1000 }
+        parallelism: { type: integer, default: 8 }
+        transport: { type: string, enum: ["http", "browser", "auto"], default: "http" }
+        user_agent_profile: { type: string, default: "chrome-stable" }
+        feature_flags: { $ref: "#/components/schemas/FeatureFlags" }
 
     CrawlCaps:
       type: object
       properties:
-        rps_per_domain:
-          type: number
-          format: float
-          default: 1.5
-        max_concurrent_per_domain:
-          type: integer
-          default: 4
+        rps_per_domain: { type: number, format: float, default: 1.5 }
+        max_concurrent_per_domain: { type: integer, default: 4 }
 
     CrawlJobCreate:
       type: object
-      required:
-        - seeds
-        - allow_domains
+      required: [seeds, allow_domains]
       properties:
-        seeds:
-          type: array
-          items:
-            type: string
-            format: uri
-        max_depth:
-          type: integer
-          default: 3
-        max_urls:
-          type: integer
-          default: 20000
-        allow_domains:
-          type: array
-          items:
-            type: string
-        disallow_patterns:
-          type: array
-          items:
-            type: string
-        policy:
-          $ref: "#/components/schemas/CrawlPolicy"
-        caps:
-          $ref: "#/components/schemas/CrawlCaps"
-        tags:
-          type: array
-          items:
-            type: string
+        seeds: { type: array, items: { type: string, format: uri } }
+        max_depth: { type: integer, default: 3 }
+        max_urls: { type: integer, default: 20000 }
+        allow_domains: { type: array, items: { type: string } }
+        disallow_patterns: { type: array, items: { type: string } }
+        policy: { $ref: "#/components/schemas/CrawlPolicy" }
+        caps: { $ref: "#/components/schemas/CrawlCaps" }
+        tags: { type: array, items: { type: string } }
 
+    # Scrape Job Schemas
+    SitemapQuery:
+      type: object
+      properties:
+        domain: { type: string }
+        pattern: { type: string }
+        limit: { type: integer, default: 5000 }
+
+    ScrapeSource:
+      type: object
+      properties:
+        sitemap_query: { $ref: "#/components/schemas/SitemapQuery" }
+        urls: { type: array, items: { type: string, format: uri } }
+      description: "Must contain exactly one of `sitemap_query` or `urls`."
+
+    ScrapePolicy:
+      type: object
+      properties:
+        transport: { type: string, enum: ["http", "browser", "auto"], default: "auto" }
+        max_retries: { type: integer, default: 2 }
+        delay_profile: { type: string, default: "default" }
+
+    ScrapeCaps:
+      type: object
+      properties:
+        max_concurrent: { type: integer, default: 16 }
+        browser_pool_size: { type: integer, default: 4 }
+
+    ExportDestination:
+      type: object
+      properties:
+        type: { type: string, enum: ["internal_staging", "s3_presigned", "gcs_signed"], default: "internal_staging" }
+        retention_hours: { type: integer, default: 72 }
+
+    ExportConfig:
+      type: object
+      properties:
+        format: { type: string, enum: ["json", "csv", "ndjson"], default: "ndjson" }
+        compress: { type: string, enum: ["none", "gzip"], default: "gzip" }
+        destination: { $ref: "#/components/schemas/ExportDestination" }
+
+    ScrapeJobCreate:
+      type: object
+      required: [template_id, source]
+      properties:
+        template_id: { type: string }
+        template_version: { type: string }
+        source: { $ref: "#/components/schemas/ScrapeSource" }
+        policy: { $ref: "#/components/schemas/ScrapePolicy" }
+        caps: { $ref: "#/components/schemas/ScrapeCaps" }
+        export: { $ref: "#/components/schemas/ExportConfig" }
+        tags: { type: array, items: { type: string } }
+
+    # Common Schemas
     JobAcceptedResponse:
       type: object
       properties:
-        job_id:
-          type: string
-          format: uuid
-        status:
-          type: string
-          enum: ["queued", "pending"]
-        links:
-          type: object
-          properties:
-            self:
-              type: string
-              example: "/v1/jobs/craw_01HQM9M1R1…"
+        job_id: { type: string, format: uuid }
+        status: { type: string, enum: ["queued", "pending"] }
+        links: { type: object, properties: { self: { type: string, example: "/v1/jobs/..." } } }
 
     ErrorResponse:
       type: object
       properties:
-        detail:
-          type: string
+        detail: { type: string }
 
 paths:
   /jobs/crawl:
     post:
       summary: "Submit a new crawl job"
       operationId: "submit_crawl_job"
-      security:
-        - ApiKeyAuth: []
+      security: [{ ApiKeyAuth: [] }]
       parameters:
-        - name: "Idempotency-Key"
-          in: "header"
-          required: false
-          schema:
-            type: "string"
-            format: "uuid"
+        - { name: "Idempotency-Key", in: "header", required: false, schema: { type: "string", format: "uuid" } }
       requestBody:
         required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CrawlJobCreate"
+        content: { application/json: { schema: { $ref: "#/components/schemas/CrawlJobCreate" } } }
       responses:
         '202':
           description: "Job accepted and queued for execution."
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/JobAcceptedResponse"
-        '400':
-          description: "Bad Request - Invalid input"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        '409':
-          description: "Conflict - Duplicate job based on Idempotency-Key"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        '429':
-          description: "Too Many Requests - Rate limit exceeded"
-          headers:
-            Retry-After:
-              schema:
-                type: integer
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
+          content: { application/json: { schema: { $ref: "#/components/schemas/JobAcceptedResponse" } } }
+        '400': { description: "Bad Request", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
+        '409': { description: "Conflict", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
+        '429': { description: "Too Many Requests", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
+
+  /jobs/scrape:
+    post:
+      summary: "Submit a new scrape job"
+      operationId: "submit_scrape_job"
+      security: [{ ApiKeyAuth: [] }]
+      parameters:
+        - { name: "Idempotency-Key", in: "header", required: false, schema: { type: "string", format: "uuid" } }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/ScrapeJobCreate" } } }
+      responses:
+        '202':
+          description: "Job accepted and queued for execution."
+          content: { application/json: { schema: { $ref: "#/components/schemas/JobAcceptedResponse" } } }
+        '400': { description: "Bad Request", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
+        '409': { description: "Conflict", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
+        '429': { description: "Too Many Requests", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
