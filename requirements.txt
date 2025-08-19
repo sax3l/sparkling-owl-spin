@@ -4,3 +4,6 @@ apscheduler
 pydantic
 httpx
 python-json-logger
+redis
+beautifulsoup4
+lxml

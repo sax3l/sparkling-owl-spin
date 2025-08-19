@@ -6,3 +6,4 @@ beautifulsoup4
 black
 ruff
 mypy
+types-redis
