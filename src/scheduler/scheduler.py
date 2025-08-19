@@ -1,9 +1,12 @@
 import time
 import datetime
 import logging
+import yaml
+from pathlib import Path
 from urllib.parse import urlparse
 from apscheduler.schedulers.background import BackgroundScheduler
 from src.database.models import Job, JobStatus, JobType
+from src.scraper.dsl.schema import ScrapingTemplate
 from src.scraper.template_runtime import run_template
 from src.database.manager import SessionLocal
 from src.anti_bot.policy_manager import PolicyManager
@@ -17,7 +20,18 @@ scheduler.start()
 logger = logging.getLogger(__name__)
 
 REDIS_URL = "redis://localhost:6379/0"
-DQ_COMPLETENESS_THRESHOLD = 0.7
+
+def _load_template(template_id: str) -> ScrapingTemplate:
+    """Loads and validates a YAML template file."""
+    # TODO: This should eventually load from a database or a dedicated template store.
+    template_path = Path(__file__).parent.parent.parent / "tests" / "fixtures" / "templates" / f"{template_id}.yaml"
+    if not template_path.exists():
+        raise FileNotFoundError(f"Template file not found for ID: {template_id}")
+    
+    with open(template_path, 'r') as f:
+        template_data = yaml.safe_load(f)
+    
+    return ScrapingTemplate.model_validate(template_data)
 
 def _run_job(job_id: str):
     """
@@ -52,16 +66,12 @@ def _run_job(job_id: str):
 
 def _execute_crawl_job(job: Job):
     logger.info(f"Executing CRAWL job {job.id} for URL: {job.start_url}")
-    
-    # Setup dependencies for the crawler
     frontier = URLFrontier(redis_url=REDIS_URL, queue_name=f"frontier:{job.id}")
     robots_parser = RobotsParser(redis_url=REDIS_URL)
     policy_manager = PolicyManager(redis_url=REDIS_URL)
     transport_manager = TransportManager()
-    
     crawler = Crawler(frontier, robots_parser, policy_manager, transport_manager)
     crawler.crawl_domain(job.start_url)
-    
     job.status = JobStatus.COMPLETED.value
     logger.info(f"CRAWL job {job.id} completed.")
 
@@ -78,7 +88,10 @@ def _execute_scrape_job(job: Job):
     if status_code != 200:
         raise Exception(f"Failed to fetch URL with status code: {status_code}")
 
-    template = {"id": "mock-template"}
+    # A real job would pass a template_id in its params
+    template_id = job.params.get("template_id", "vehicle_detail_v3")
+    template = _load_template(template_id)
+    
     record, dq_metrics = run_template(html_content, template)
     
     job.result = {"data": record, "dq_metrics": dq_metrics}

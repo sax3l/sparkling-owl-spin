@@ -11,9 +11,9 @@ class FieldDefinition(BaseModel):
     selector: str  # CSS or XPath
     attr: str = "text"  # e.g., 'text', 'href', or other attribute
     required: bool = False
-    transforms: List[Transform] = []
-    validate: Dict[str, Any] = {}
-    cross_field: List[str] = []
+    transforms: List[Transform] = Field(default_factory=list)
+    validate: Dict[str, Any] = Field(default_factory=dict)
+    cross_field: List[str] = Field(default_factory=list)
 
 class ScrapingTemplate(BaseModel):
     id: str
