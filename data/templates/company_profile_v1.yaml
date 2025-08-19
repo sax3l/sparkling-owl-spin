@@ -1,62 +1,31 @@
-template_id: "company_profile_v1"
+template_id: company_profile_v1
 version: "1.0.0"
-
-scope:
-  domains: ["localhost:5080","example.test"]
-  url_patterns:
-    - "^https?://(localhost:5080|example\\.test)/company/.*$"
-
-policy:
-  transport: "auto"
-  max_retries: 2
-  respect_robots: true
-  delay_profile: "default"
-
-output:
-  primary_table: "companies"
-  upsert: { key: ["org_number"], strategy: "update" }
+domain: synthetic.local
+entity: company
+url_pattern: "^https?://(localhost:5080|example\\.test)/company/.*$"
 
 fields:
   - name: "org_number"
-    type: "string"
+    selector: ".header .orgnr"
+    selector_type: "css"
     required: true
-    selectors:
-      - css: ".header .orgnr"
-    transform: [ {name: "strip"}, {name: "only_digits"} ]
-    validate:
-      - name: "not_empty"
-      - name: "regex"
-        args: { pattern: "^[0-9]{10}$" }
-    target: { table: "companies", column: "org_number" }
+    transforms:
+      - type: "strip"
+      - type: "regex_sub"
+        pattern: "[^0-9]"
+        repl: ""
+    validators:
+      - type: "required"
+      - type: "regex"
+        pattern: "^[0-9]{10}$"
 
   - name: "name"
-    type: "string"
+    selector: "h1.company-title"
+    selector_type: "css"
     required: true
-    selectors:
-      - css: "h1.company-title"
-    transform: [ {name: "strip"}, {name: "normalize_whitespace"}, {name: "title_case"} ]
-    validate:
-      - name: "not_empty"
-    target: { table: "companies", column: "name" }
-
-relations:
-  - group: "financials"
-    repeat:
-      by:
-        - css: "section.financials .year-row"
-      captures:
-        - name: "year"
-          type: "number"
-          selectors: [{ css: ".year" }]
-          transform: [ {name: "strip"}, {name: "only_digits"}, {name: "parse_int"} ]
-          validate: [ {name: "year_reasonable", args: { min: 1990, max: 2100 }} ]
-          target: { table: "company_financials", column: "year" }
-
-        - name: "turnover"
-          type: "number"
-          selectors: [{ css: ".turnover" }]
-          transform:
-            - name: "strip"
-            - name: "currency_normalize"
-              args: { drop_symbols: ["kr","SEK"], decimal_sep:",", thousands_sep:" " }
-          target: { table: "company_financials", column: "turnover" }
+    transforms:
+      - type: "strip"
+      - type: "normalize_whitespace"
+      - type: "title"
+    validators:
+      - type: "required"

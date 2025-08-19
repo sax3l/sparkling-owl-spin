@@ -1,100 +1,40 @@
-template_id: "person_profile_v1"
+template_id: person_profile_v1
 version: "1.0.0"
-
-scope:
-  domains: ["localhost", "example.test"]
-  url_patterns:
-    - "^https?://(localhost:5080|example\\.test)/person/.*$"
-
-policy:
-  transport: "auto"
-  max_retries: 2
-  respect_robots: true
-  delay_profile: "default"
-
-output:
-  primary_table: "persons"
-  upsert:
-    key: ["personal_number"]
-    strategy: "update"
+domain: synthetic.local
+entity: person
+url_pattern: "^https?://(localhost:5080|example\\.test)/person/.*$"
 
 fields:
   - name: "first_name"
-    type: "string"
+    selector: "h1.person .first"
+    selector_type: "css"
     required: true
-    selectors:
-      - css: "h1.person .first"
-    transform:
-      - name: "strip"
-      - name: "normalize_whitespace"
-      - name: "title_case"
-    validate:
-      - name: "not_empty"
-    target: { table: "persons", column: "first_name" }
+    transforms:
+      - type: "strip"
+      - type: "normalize_whitespace"
+      - type: "title"
+    validators:
+      - type: "required"
 
   - name: "last_name"
-    type: "string"
+    selector: "h1.person .last"
+    selector_type: "css"
     required: true
-    selectors:
-      - css: "h1.person .last"
-    transform: [ {name: "strip"}, {name: "title_case"} ]
-    validate: [ {name: "not_empty"} ]
-    target: { table: "persons", column: "last_name" }
+    transforms:
+      - type: "strip"
+      - type: "title"
+    validators:
+      - type: "required"
 
   - name: "personal_number"
-    type: "string"
+    selector: ".pnr"
+    selector_type: "css"
     required: true
-    selectors:
-      - css: ".pnr"
-    transform:
-      - name: "strip"
-      - name: "regex_sub"
-        args: { pattern: "[^0-9-]", repl: "" }
-    validate:
-      - name: "personnummer_sv"
-    target: { table: "persons", column: "personal_number" }
-
-relations:
-  - group: "addresses"
-    repeat:
-      by:
-        - css: "section.addresses .addr-card"
-      captures:
-        - name: "street"
-          type: "string"
-          selectors: [{ css: ".street" }]
-          transform: [{name: "strip"}, {name: "title_case"}]
-          target: { table: "person_addresses", column: "street" }
-        - name: "postal_code"
-          type: "string"
-          selectors: [{ css: ".postal" }]
-          transform: [{name: "only_digits"}]
-          validate: [{name: "postal_code_sv"}]
-          target: { table: "person_addresses", column: "postal_code" }
-        - name: "city"
-          type: "string"
-          selectors: [{ css: ".city" }]
-          transform: [{name: "strip"}, {name: "title_case"}]
-          target: { table: "person_addresses", column: "city" }
-
-  - group: "company_roles"
-    repeat:
-      by:
-        - css: "section.company-roles .role-row"
-      captures:
-        - name: "org_number"
-          type: "string"
-          selectors: [{ css: ".orgnr" }]
-          transform: [{name: "only_digits"}]
-          validate: [{name: "orgnr_sv"}]
-          target: { table: "companies", column: "org_number" }
-        - name: "company_name"
-          type: "string"
-          selectors: [{ css: ".name" }]
-          transform: [{name: "strip"}, {name: "title_case"}]
-          target: { table: "companies", column: "name" }
-        - name: "role_name"
-          type: "string"
-          selectors: [{ css: ".role" }]
-          transform: [{name: "strip"}, {name: "title_case"}]
-          target: { table: "company_roles", column: "role_name" }
+    transforms:
+      - type: "strip"
+      - type: "regex_sub"
+        pattern: "[^0-9-]"
+        repl: ""
+    validators:
+      - type: "regex"
+        pattern: "^(19|20)?\\d{6}[-+]?\\d{4}$"

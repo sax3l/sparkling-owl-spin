@@ -1,126 +1,63 @@
-template_id: "vehicle_detail_v1"
-version: "1.0.0"
-
-scope:
-  domains: ["localhost:5080","example.test"]
-  url_patterns:
-    - "^https?://(localhost:5080|example\\.test)/vehicle/.*$"
-
-policy:
-  transport: "auto"
-  max_retries: 2
-  respect_robots: true
-  delay_profile: "default"
-
-output:
-  primary_table: "vehicles"
-  upsert:
-    key: ["registration_number"]
-    strategy: "update"
+template_id: vehicle_detail_v1
+version: 1.0.0
+domain: synthetic.local
+entity: vehicle
+url_pattern: "^https?://(localhost:5080|example\\.test)/vehicle/.*$"
+requires_js: false
 
 fields:
-  - name: "registration_number"
-    type: "string"
+  - name: registration_number
+    selector: ".regnr"
+    selector_type: css
+    attr: text
     required: true
-    selectors:
-      - css: ".regnr"
-    transform:
-      - name: "strip"
-      - name: "to_upper"
-      - name: "regex_sub"
-        args: { pattern: "[^A-Z0-9]", repl: "" }
-    validate:
-      - name: "not_empty"
-      - name: "regex"
-        args: { pattern: "^[A-Z0-9]{3,8}$" }
-    target: { table: "vehicles", column: "registration_number" }
+    transforms:
+      - type: strip
+      - type: upper
+    validators:
+      - type: regex
+        pattern: "^[A-Z0-9]{3,8}$"
 
-  - name: "vin"
-    type: "string"
-    selectors:
-      - css: ".vin"
-    transform:
-      - name: "strip"
-      - name: "to_upper"
-    validate:
-      - name: "vin_like"
-    target: { table: "vehicles", column: "vin" }
+  - name: vin
+    selector: ".vin"
+    selector_type: css
+    attr: text
+    required: false
+    transforms:
+      - type: strip
+      - type: upper
+    validators:
+      - type: length_range
+        min: 17
+        max: 17
 
-  - name: "make"
-    type: "string"
-    selectors: [{ css: ".make" }]
-    transform: [{ name: "strip" }, { name: "title_case" }]
-    target: { table: "vehicles", column: "make" }
+  - name: make
+    selector: ".make"
+    selector_type: css
+    attr: text
+    transforms:
+      - type: strip
+      - type: title
 
-  - name: "model"
-    type: "string"
-    selectors: [{ css: ".model" }]
-    transform: [{ name: "strip" }, { name: "title_case" }]
-    target: { table: "vehicles", column: "model" }
+  - name: model
+    selector: ".model"
+    selector_type: css
+    attr: text
+    transforms:
+      - type: strip
 
-  - name: "model_year"
-    type: "number"
-    selectors: [{ css: ".model-year" }]
-    transform: [{ name: "strip" }, { name: "only_digits" }, { name: "parse_int" }]
-    validate: [{ name: "year_reasonable", args: { min: 1980, max: 2100 } }]
-    target: { table: "vehicles", column: "model_year" }
+  - name: model_year
+    selector: ".model-year"
+    selector_type: css
+    attr: text
+    transforms:
+      - type: strip
+      - type: to_int
+    validators:
+      - type: numeric_range
+        min: 1950
+        max: 2100
 
-relations:
-  - group: "tech_specs"
-    repeat:
-      by:
-        - css: "section.specs"
-      captures:
-        - name: "engine_power"
-          type: "string"
-          selectors: [{ css: ".engine-power" }]
-          transform:
-            - name: "strip"
-            - name: "unit_extract"
-              args:
-                unit_map: { "hk": "HP", "HP": "HP", "kW": "KW" }
-                value_regex: "([0-9]+(?:[.,][0-9]+)?)"
-          target: { table: "vehicle_technical_specs", column: "engine_power" }
-        - name: "fuel_type"
-          type: "string"
-          selectors: [{ css: ".fuel" }]
-          transform: [{ name: "strip" }, { name: "title_case" }]
-          target: { table: "vehicle_technical_specs", column: "fuel_type" }
-
-  - group: "ownership"
-    repeat:
-      by:
-        - css: "section.ownership .owner-card"
-      captures:
-        - name: "owner_type"
-          type: "string"
-          selectors: [{ css: ".type" }]
-          transform: [{ name: "strip" }, { name: "to_lower" }]
-          validate: [{ name: "enum", args: { values: ["person","company"] } }]
-          target: { table: "vehicle_ownership", column: "owner_type" }
-        - name: "owner_key"
-          type: "string"
-          selectors: [{ css: ".key" }]
-          transform: [{ name: "strip" }, { name: "regex_sub", args: { pattern: "\\s", repl: "" } }]
-          target: { table: "vehicle_ownership", column: "owner_id" }
-        - name: "role"
-          type: "string"
-          selectors: [{ css: ".role" }]
-          transform: [{ name: "strip" }, { name: "title_case" }]
-          target: { table: "vehicle_ownership", column: "role" }
-
-  - group: "history"
-    repeat:
-      by:
-        - css: "section.history .event"
-      captures:
-        - name: "event_date"
-          type: "string"
-          selectors: [{ css: ".date" }]
-          transform: [{ name: "strip" }]
-          target: { table: "vehicle_history", column: "event_date" }
-        - name: "event_description"
-          type: "string"
-          selectors: [{ css: ".desc" }]
-          transform: [{ name: "strip" }, { name: "normalize_whitespace" }]
-          target: { table: "vehicle_history", column: "event_description" }
+samples:
+  sample_urls:
+    - "http://localhost:5080/vehicle/ABC123"

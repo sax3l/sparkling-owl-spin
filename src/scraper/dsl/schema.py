@@ -1,93 +1,154 @@
-from pydantic import BaseModel, Field
-from typing import List, Dict, Any, Literal, Optional
+from __future__ import annotations
 
-class Transform(BaseModel):
-    """Defines a data transformation step."""
-    name: str
-    args: Dict[str, Any] = Field(default_factory=dict)
+from typing import List, Literal, Optional, Dict, Any, Union
+from pydantic import BaseModel, Field, field_validator, model_validator
+import re
 
-class Validator(BaseModel):
-    """Defines a data validation rule."""
-    name: str
-    args: Dict[str, Any] = Field(default_factory=dict)
 
-class DBMapping(BaseModel):
-    """Defines how a field maps to a database table and column."""
-    table: str
-    column: str
+SelectorType = Literal["css", "xpath"]
 
-class ComputeDefinition(BaseModel):
-    """Defines how to compute a field from another."""
-    from_field: str = Field(..., alias="from")
-    apply: List[Transform]
+# ---- Transform-typer ---------------------------------------------------------
 
-class PrivacyDefinition(BaseModel):
-    """Defines privacy and sensitivity settings for a field."""
-    sensitivity: Literal["none", "low", "medium", "high", "pii"]
-    storage: Literal["plaintext", "encrypted_at_rest", "tokenized"]
+class TransformStrip(BaseModel):
+    type: Literal["strip"]
 
-class FieldDefinition(BaseModel):
-    """Defines how to extract, transform, and validate a single data field."""
-    name: str
-    type: Literal["string", "number", "date", "boolean", "array"]
+class TransformUpper(BaseModel):
+    type: Literal["upper"]
+
+class TransformLower(BaseModel):
+    type: Literal["lower"]
+
+class TransformTitle(BaseModel):
+    type: Literal["title"]
+
+class TransformNormalizeWhitespace(BaseModel):
+    type: Literal["normalize_whitespace"]
+
+class TransformNullIf(BaseModel):
+    type: Literal["null_if"]
+    equals: str
+
+class TransformRegexExtract(BaseModel):
+    type: Literal["regex_extract"]
+    pattern: str
+    group: int = 1
+
+class TransformRegexSub(BaseModel):
+    type: Literal["regex_sub"]
+    pattern: str
+    repl: str
+
+class TransformToInt(BaseModel):
+    type: Literal["to_int"]
+
+class TransformToFloat(BaseModel):
+    type: Literal["to_float"]
+
+class TransformParseDate(BaseModel):
+    type: Literal["parse_date"]
+    formats: List[str] = Field(default_factory=lambda: ["%Y-%m-%d"])
+
+class TransformMap(BaseModel):
+    type: Literal["map"]
+    mapping: Dict[str, Any]  # str->val (val kan vara str/int/bool)
+
+Transform = Union[
+    TransformStrip,
+    TransformUpper,
+    TransformLower,
+    TransformTitle,
+    TransformNormalizeWhitespace,
+    TransformNullIf,
+    TransformRegexExtract,
+    TransformRegexSub,
+    TransformToInt,
+    TransformToFloat,
+    TransformParseDate,
+    TransformMap,
+]
+
+# ---- Validator-typer ---------------------------------------------------------
+
+class ValidatorRequired(BaseModel):
+    type: Literal["required"]
+
+class ValidatorRegex(BaseModel):
+    type: Literal["regex"]
+    pattern: str
+
+class ValidatorLengthRange(BaseModel):
+    type: Literal["length_range"]
+    min: Optional[int] = None
+    max: Optional[int] = None
+
+class ValidatorNumericRange(BaseModel):
+    type: Literal["numeric_range"]
+    min: Optional[float] = None
+    max: Optional[float] = None
+
+class ValidatorEnum(BaseModel):
+    type: Literal["enum"]
+    values: List[str]
+
+Validator = Union[
+    ValidatorRequired, ValidatorRegex, ValidatorLengthRange, ValidatorNumericRange, ValidatorEnum
+]
+
+# ---- Fältdefinition ----------------------------------------------------------
+
+class FieldDef(BaseModel):
+    name: str = Field(..., pattern=r"^[a-zA-Z_][a-zA-Z0-9_]*$")
+    selector: str
+    selector_type: SelectorType = "css"
+    attr: str = "text"     # "text" eller t.ex. "href", "content"
+    multi: bool = False
     required: bool = False
-    selectors: List[Dict[Literal["css", "xpath"], str]] = Field(default_factory=list)
-    transform: List[Transform] = Field(default_factory=list)
-    validate: List[Validator] = Field(default_factory=list)
-    target: Optional[DBMapping] = None
-    error_policy: Literal["drop_field", "use_default", "fail_record"] = "drop_field"
-    default_value: Optional[Any] = None
-    compute: Optional[ComputeDefinition] = None
-    privacy: Optional[PrivacyDefinition] = None
+    transforms: List[Transform] = Field(default_factory=list)
+    validators: List[Validator] = Field(default_factory=list)
 
-class Repeater(BaseModel):
-    """Defines how to iterate over a list of elements."""
-    by: List[Dict[Literal["css", "xpath"], str]]
-    captures: List[FieldDefinition]
+    @field_validator("selector")
+    @classmethod
+    def selector_not_empty(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("selector cannot be empty")
+        return v
 
-class GroupDefinition(BaseModel):
-    """Defines extraction for a group of repeating items (a list or table)."""
-    group: str
-    repeat: Repeater
-    link: Dict[str, Any]
+# ---- Post-processors ---------------------------------------------------------
 
-class Scope(BaseModel):
-    domains: List[str]
-    url_patterns: List[str]
+class PostEnsureFields(BaseModel):
+    type: Literal["ensure_fields"]
+    fields: List[str]
 
-class MergePolicy(BaseModel):
-    """Defines how to merge data from multiple sources."""
-    trust_order: List[str] = Field(default_factory=list)
-    overwrite: Dict[str, Any] = Field(default_factory=dict)
+PostProcessor = Union[PostEnsureFields]
 
-class Policy(BaseModel):
-    transport: Literal["http", "browser", "auto"] = "auto"
-    max_retries: int = 2
-    respect_robots: bool = True
-    delay_profile: str = "default"
-    merge: Optional[MergePolicy] = None
+# ---- Samples -----------------------------------------------------------------
 
-class UpsertConfig(BaseModel):
-    key: List[str]
-    strategy: Literal["insert_only", "update", "merge"] = "update"
+class TemplateSamples(BaseModel):
+    sample_urls: List[str] = Field(default_factory=list)
+    sample_htmls: List[str] = Field(default_factory=list)
 
-class Output(BaseModel):
-    primary_table: str
-    upsert: UpsertConfig
-
-class QualityGates(BaseModel):
-    min_validity: float = 0.95
-    min_coverage: float = 0.90
+# ---- Top-level Template -------------------------------------------------------
 
 class ScrapingTemplate(BaseModel):
-    """The root model for a scraping template."""
-    template_id: str
+    template_id: str = Field(..., pattern=r"^[a-zA-Z_][a-zA-Z0-9_]*$")
     version: str
-    extends: Optional[str] = None
-    scope: Scope
-    policy: Policy
-    output: Output
-    quality: Optional[QualityGates] = None
-    macros: Optional[Dict[str, List[Transform]]] = None
-    fields: List[FieldDefinition] = Field(default_factory=list)
-    relations: List[GroupDefinition] = Field(default_factory=list)
+    domain: Optional[str] = None
+    entity: Optional[str] = None
+    url_pattern: Optional[str] = None
+    requires_js: bool = False
+    fields: List[FieldDef]
+    postprocessors: List[PostProcessor] = Field(default_factory=list)
+    samples: TemplateSamples = Field(default_factory=TemplateSamples)
+
+    @model_validator(mode="after")
+    def validate_url_pattern(self):
+        if self.url_pattern:
+            try:
+                re.compile(self.url_pattern)
+            except re.error as e:
+                raise ValueError(f"Invalid url_pattern regex: {e}")
+        return self
+
+    def json_schema(self) -> Dict[str, Any]:
+        # Bekvämlighetsmetod ifall du vill exponera JSON Schema
+        return self.model_json_schema()
