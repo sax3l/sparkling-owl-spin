@@ -9,6 +9,12 @@ class Transform(BaseModel):
     ]
     args: Dict[str, Any] = Field(default_factory=dict)
 
+class DBMapping(BaseModel):
+    """Defines how a field maps to a database table and column."""
+    table: str
+    column: str
+    is_relation_key: bool = False
+
 class FieldDefinition(BaseModel):
     """Defines how to extract, transform, and validate a single data field."""
     name: str
@@ -20,6 +26,7 @@ class FieldDefinition(BaseModel):
     transforms: List[Transform] = Field(default_factory=list)
     validate: Dict[str, Any] = Field(default_factory=dict) # e.g., {"matches_regex": "^[A-Z]{3}"}
     cross_field_rules: List[str] = Field(default_factory=list)
+    db_map: Optional[DBMapping] = None
 
 class ListDefinition(BaseModel):
     """Defines extraction for a list of repeating items (e.g., search results, table rows)."""

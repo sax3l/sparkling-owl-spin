@@ -7,6 +7,9 @@ fields:
     type: string
     selectors: ["dd"]
     required: true
+    db_map:
+      table: "vehicles"
+      column: "registration_number"
   - name: model_year
     type: number
     selectors: ["[data-spec=modelYear]"]
@@ -15,6 +18,9 @@ fields:
         args:
           pattern: "(\\d{4})"
       - name: to_int
+    db_map:
+      table: "vehicles"
+      column: "model_year"
   - name: co2_wltp
     type: number
     selectors: ["#wltp-co2"]
@@ -23,3 +29,6 @@ fields:
         args:
           pattern: "([\\d,]+)"
       - name: to_decimal
+    db_map:
+      table: "vehicle_technical_specs"
+      column: "wltp_co2_g_km"
