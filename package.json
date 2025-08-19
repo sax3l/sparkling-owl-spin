@@ -1,12 +1,21 @@
 {
 	"dependencies": {
 		"@apollo/server": "^5.0.0",
+		"@graphql-codegen/cli": "^5.0.7",
+		"@graphql-codegen/typescript": "^4.1.6",
+		"@graphql-codegen/typescript-resolvers": "^4.5.1",
+		"@graphql-tools/merge": "^9.1.1",
 		"@graphql-tools/schema": "^10.0.25",
+		"@graphql-tools/utils": "^10.9.1",
+		"apollo-server-express": "^3.13.0",
+		"cors": "^2.8.5",
 		"dataloader": "^2.2.3",
+		"express": "^5.1.0",
 		"graphql": "^16.11.0",
 		"graphql-middleware": "^6.1.35",
 		"graphql-shield": "^7.6.5",
 		"graphql-validation-complexity": "^0.4.2",
+		"helmet": "^8.1.0",
 		"lucide-react": "^0.540.0"
 	}
 }
