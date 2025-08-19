@@ -1,0 +1,271 @@
+"""GraphQL Schema for Ethical Crawler & Data Platform"""
+directive @auth(requires: [Role!] = [ADMIN]) on OBJECT | FIELD_DEFINITION
+directive @rateLimit(limit: Int!, duration: Int!) on FIELD_DEFINITION
+
+enum Role {
+  ADMIN
+  ANALYST
+  READONLY
+  API_KEY
+}
+
+scalar DateTime
+scalar Decimal
+scalar JSON
+
+type Query {
+  "Get person by ID"
+  person(id: ID!): Person @auth(requires: [ADMIN, ANALYST])
+  
+  "Search persons with filtering and pagination"
+  persons(
+    filter: PersonFilter
+    pagination: Pagination = {first: 50}
+    sort: [Sort!]
+  ): PersonConnection! @auth(requires: [ADMIN, ANALYST]) @rateLimit(limit: 100, duration: 60)
+
+  "Get company by ID"
+  company(id: ID!): Company @auth(requires: [ADMIN, ANALYST])
+  
+  "Search companies with filtering and pagination"
+  companies(
+    filter: CompanyFilter
+    pagination: Pagination = {first: 50}
+    sort: [Sort!]
+  ): CompanyConnection! @auth(requires: [ADMIN, ANALYST]) @rateLimit(limit: 100, duration: 60)
+
+  "Get vehicle by ID"
+  vehicle(id: ID!): Vehicle @auth(requires: [ADMIN, ANALYST])
+  
+  "Search vehicles with filtering and pagination"
+  vehicles(
+    filter: VehicleFilter
+    pagination: Pagination = {first: 50}
+    sort: [Sort!]
+  ): VehicleConnection! @auth(requires: [ADMIN, ANALYST]) @rateLimit(limit: 100, duration: 60)
+
+  "Get job status by ID"
+  job(id: ID!): Job @auth(requires: [ADMIN])
+  
+  "List jobs with filtering"
+  jobs(
+    filter: JobFilter
+    pagination: Pagination = {first: 50}
+    sort: [Sort!]
+  ): JobConnection! @auth(requires: [ADMIN])
+
+  "Get proxy statistics"
+  proxyStats: ProxyStats! @auth(requires: [ADMIN])
+}
+
+type Mutation {
+  "Start a new crawl job"
+  startCrawlJob(input: CrawlJobInput!): JobResult! @auth(requires: [ADMIN])
+  
+  "Start a new scrape job"
+  startScrapeJob(input: ScrapeJobInput!): JobResult! @auth(requires: [ADMIN])
+  
+  "Create or update a template"
+  upsertTemplate(input: TemplateInput!): TemplateResult! @auth(requires: [ADMIN])
+  
+  "Activate a specific template version"
+  activateTemplate(input: ActivateTemplateInput!): TemplateResult! @auth(requires: [ADMIN])
+}
+
+input Pagination {
+  first: Int = 50
+  after: String
+  last: Int
+  before: String
+}
+
+input Sort {
+  field: String!
+  direction: SortDirection! = DESC
+}
+
+enum SortDirection {
+  ASC
+  DESC
+}
+
+type Person {
+  person_id: ID!
+  first_name: String
+  middle_name: String
+  last_name: String
+  personal_number: String @deprecated(reason: "Sensitive; use maskedPersonalNumber")
+  maskedPersonalNumber: String
+  age: Int
+  civil_status: String
+  salary: Decimal
+  remark: String
+  addresses(first: Int = 10, after: String): PersonAddressConnection!
+  contacts(first: Int = 10, after: String): PersonContactConnection!
+  companies(first: Int = 10, after: String): CompanyConnection!
+  vehicles(first: Int = 10, after: String): VehicleConnection!
+  updated_at: DateTime!
+  created_at: DateTime!
+}
+
+type Company {
+  company_id: ID!
+  org_number: String
+  name: String
+  email: String
+  website: String
+  registration_date: DateTime
+  status: String
+  company_form: String
+  county_seat: String
+  municipal_seat: String
+  sni_code: String
+  industry: String
+  financials(first: Int = 10, after: String): CompanyFinancialConnection!
+  vehicles(first: Int = 10, after: String): VehicleConnection!
+  annual_reports(first: Int = 10, after: String): AnnualReportConnection!
+  updated_at: DateTime!
+  created_at: DateTime!
+}
+
+type Vehicle {
+  vehicle_id: ID!
+  registration_number: String
+  vin: String
+  make: String
+  model: String
+  model_year: Int
+  emission_class: String
+  next_inspection: DateTime
+  tax_year1_3: Decimal
+  tax_year4: Decimal
+  tech_specs: VehicleTechnicalSpecs
+  owners(first: Int = 10, after: String): VehicleOwnershipConnection!
+  history(first: Int = 10, after: String): VehicleHistoryConnection!
+  updated_at: DateTime!
+  created_at: DateTime!
+}
+
+type VehicleTechnicalSpecs {
+  engine_power: String
+  engine_volume: Decimal
+  fuel_type: String
+  gearbox: String
+  drive_type: String
+  wltp_co2: Decimal
+  length: Int
+  width: Int
+  height: Int
+  body_type: String
+  color: String
+}
+
+# Connection types (Relay-style pagination)
+type PersonConnection {
+  edges: [PersonEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type PersonEdge {
+  cursor: String!
+  node: Person!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+# ... similar Connection types for other entities ...
+
+type Job {
+  job_id: ID!
+  type: JobType!
+  status: JobStatus!
+  started_at: DateTime
+  finished_at: DateTime
+  updated_at: DateTime!
+  progress: JobProgress
+  export: JobExport
+  tags: [String!]!
+  error: String
+}
+
+enum JobType {
+  CRAWL
+  SCRAPE
+}
+
+enum JobStatus {
+  PENDING
+  QUEUED
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+type JobProgress {
+  queued: Int!
+  in_flight: Int!
+  completed: Int!
+  failed: Int!
+}
+
+type JobExport {
+  status: ExportStatus!
+  artifacts: [JobArtifact!]!
+}
+
+enum ExportStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+type JobArtifact {
+  name: String!
+  size_bytes: Int
+  download: String!
+  expires_at: DateTime!
+}
+
+type ProxyStats {
+  pool_size: Int!
+  healthy: Int!
+  blocked: Int!
+  avg_latency_ms: Int!
+  ban_rate_1h: Float!
+}
+
+# Input types
+input CrawlJobInput {
+  seeds: [String!]!
+  max_depth: Int = 3
+  max_urls: Int = 10000
+  policy: CrawlPolicyInput
+}
+
+input ScrapeJobInput {
+  template_id: ID!
+  template_version: String
+  source: ScrapeSourceInput!
+  export: ExportConfigInput
+}
+
+input TemplateInput {
+  name: String!
+  dsl: JSON!
+  version: String = "1.0.0"
+}
+
+input ActivateTemplateInput {
+  template_id: ID!
+  version: String!
+}
+
+# ... additional input types for filters and configurations ...
