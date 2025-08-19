@@ -1,27 +1,14 @@
-version: '3.8'
-
+version: "3.9"
 services:
-  static_list:
-    build: ./synthetic/static_list
-    ports:
-      - "8081:8000"
-    networks:
-      - scraping_net
-
-  infinite_scroll:
-    build: ./synthetic/infinite_scroll
-    ports:
-      - "8082:8000"
-    networks:
-      - scraping_net
-
-  form_flow:
-    build: ./synthetic/form_flow
-    ports:
-      - "8083:8000"
-    networks:
-      - scraping_net
-
-networks:
-  scraping_net:
-    driver: bridge
+  synthetic-static:
+    build: ./docker/synthetics/static_list
+    container_name: synthetic-static
+    ports: ["8081:8081"]
+  synthetic-scroll:
+    build: ./docker/synthetics/infinite_scroll
+    container_name: synthetic-scroll
+    ports: ["8082:8082"]
+  synthetic-form:
+    build: ./docker/synthetics/form_flow
+    container_name: synthetic-form
+    ports: ["8083:8083"]

@@ -1,0 +1,6 @@
+template: vehicle_list_v1
+url_pattern: "*/list*"
+list:
+  container: "#items, #list"
+  item_selector: "li, .item"
+  link_selector: "a::attr(href)"

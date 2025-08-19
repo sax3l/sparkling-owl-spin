@@ -1,0 +1,18 @@
+domains:
+  default:
+    transport: http
+    headers:
+      accept_language: "sv-SE,sv;q=0.9,en;q=0.8"
+      user_agent_pool:
+        - "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0 Safari/537.36"
+        - "Mozilla/5.0 (Macintosh; Intel Mac OS X 13_5) AppleWebKit/605.1.15 Version/17.0 Safari/605.1.15"
+    delays:
+      min: 0.8
+      max: 2.2
+    retry:
+      max_attempts: 3
+      backoff: "exponential"
+  synthetic:
+    transport: browser
+    delays: { min: 0.6, max: 1.6 }
+    retry: { max_attempts: 2, backoff: "linear" }

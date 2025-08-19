@@ -1,0 +1,14 @@
+http:
+  concurrency_per_worker: 50
+  connect_timeout: 8
+  read_timeout: 15
+  p95_latency_budget_ms: 1800
+browser:
+  max_instances_per_node: 4
+  per_domain_parallelism: 1
+  navigation_timeout: 30
+  p95_latency_budget_ms: 7000
+queues:
+  crawl_max_depth: 6
+  crawl_bfs_batch: 200
+  sitemap_shard_size: 500

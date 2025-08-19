@@ -1,0 +1,30 @@
+template: vehicle_detail_v3
+url_pattern: "*/item/*"
+fields:
+  - name: registration_number
+    selector: "//dt[text()='Registreringsnummer']/following-sibling::dd[1]"
+    attr: text
+    type: string
+    required: true
+    validate:
+      matches: "^[A-ZÅÄÖ0-9-]{3,10}$"
+
+  - name: model_year
+    selector: "//*[@data-spec='modelYear']"
+    attr: text
+    type: int
+    transforms:
+      - strip
+      - regex_extract: "(\\d{4})"
+
+  - name: co2_wltp
+    selector: "#wltp-co2"
+    attr: text
+    type: decimal
+    transforms:
+      - strip
+      - regex_extract: "(\\d+[\\.,]\\d+)"
+      - to_decimal
+
+cross_field:
+  - rule: "if model_year then make and model must exist"

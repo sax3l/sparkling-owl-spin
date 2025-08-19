@@ -1,6 +1,6 @@
 import pytest
 
-@pytest.mark.e2e
+@pytest.mark.integration
 @pytest.mark.browser
-def test_infinite_scroll(synthetic_hosts, test_config):
+def test_browser_smoke():
     pytest.skip("Selenium/Playwright not installed or configured for this test environment.")
