@@ -1,9 +1,6 @@
+-r requirements.txt
 pytest
 pytest-asyncio
-requests
-PyYAML
-beautifulsoup4
-black
 ruff
+black
 mypy
-types-redis
