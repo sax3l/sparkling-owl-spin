@@ -1,53 +1,31 @@
 import redis
 from src.utils.url_utils import normalize_and_canonicalize_url
+from typing import Optional
 
 class URLFrontier:
     """
-    Manages the queue of URLs to be crawled (the "frontier").
-    
-    This class will handle:
-    - Per-host queues to ensure politeness.
-    - A global priority queue for scheduling hosts.
-    - Visited set to avoid re-crawling, using a Bloom filter and a persistent set.
-    - URL normalization and canonicalization before adding to the queue.
+    Manages the queue of URLs to be crawled (the "frontier") using Redis.
+    Handles deduplication via a visited set.
     """
-    def __init__(self, redis_url: str):
-        """
-        Initializes the connection to Redis.
-        """
+    def __init__(self, redis_url: str, queue_name: str = "frontier:queue"):
         self.redis = redis.from_url(redis_url, decode_responses=True)
-        # TODO: Initialize Bloom filter
+        self.queue_name = queue_name
+        self.visited_set_key = "visited:set"
 
-    def add_url(self, url: str, depth: int = 0):
+    def add_url(self, url: str):
         """
         Adds a new URL to the frontier after normalization and duplicate checks.
         """
         normalized_url, canonical_key = normalize_and_canonicalize_url(url)
         
-        # TODO: Check against Bloom filter and visited set
-        # is_visited = self.redis.sismember('visited:set', canonical_key)
-        # if is_visited:
-        #     return
+        if not self.redis.sismember(self.visited_set_key, canonical_key):
+            self.redis.rpush(self.queue_name, normalized_url)
 
-        # TODO: Add to per-host queue and global scheduler
-        # host = urlparse(normalized_url).netloc
-        # self.redis.rpush(f'frontier:host:{host}', normalized_url)
-        print(f"URL added (stub): {normalized_url}")
-
-    def get_next_url(self) -> str | None:
-        """
-        Retrieves the next URL to crawl based on scheduling logic.
-        """
-        # TODO: Implement round-robin or priority-based host selection
-        # TODO: Pop URL from the selected host's queue
-        print("Getting next URL (stub)")
-        return None
+    def get_next_url(self) -> Optional[str]:
+        """Retrieves the next URL to crawl from the queue."""
+        return self.redis.lpop(self.queue_name)
 
     def mark_as_visited(self, url: str):
-        """
-        Marks a URL as visited in the persistent set and Bloom filter.
-        """
+        """Marks a URL as visited in the persistent set."""
         _normalized_url, canonical_key = normalize_and_canonicalize_url(url)
-        # TODO: Add to Redis set and update Bloom filter
-        # self.redis.sadd('visited:set', canonical_key)
-        print(f"Marked as visited (stub): {url}")
+        self.redis.sadd(self.visited_set_key, canonical_key)

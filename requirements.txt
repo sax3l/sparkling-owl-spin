@@ -10,3 +10,5 @@ pydantic
 playwright
 redis
 httpx[brotli]
+robotexclusionrulesparser
+beautifulsoup4

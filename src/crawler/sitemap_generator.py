@@ -1,35 +1,57 @@
-import httpx
-from urllib.parse import urljoin, urlparse
+import time
+import logging
+from urllib.parse import urlparse
+from src.crawler.url_frontier import URLFrontier
+from src.crawler.robots_parser import RobotsParser
+from src.crawler.link_extractor import extract_links
+from src.anti_bot.policy_manager import PolicyManager
+from src.scraper.transport import TransportManager
 
-def fetch_and_parse_robots_txt(url: str) -> list:
-    """Fetches and parses robots.txt to respect crawling rules."""
-    # TODO: Implement a proper robots.txt parser.
-    print(f"Respecting robots.txt for {url}")
-    return []
+logger = logging.getLogger(__name__)
 
-def crawl_site(start_url: str):
-    """
-    Performs a basic crawl of a website, respecting robots.txt.
-    Uses a simple BFS/DFS approach.
-    """
-    queue = [start_url]
-    visited = set()
+class Crawler:
+    def __init__(self, frontier: URLFrontier, robots_parser: RobotsParser, policy_manager: PolicyManager, transport_manager: TransportManager):
+        self.frontier = frontier
+        self.robots_parser = robots_parser
+        self.policy_manager = policy_manager
+        self.transport_manager = transport_manager
 
-    fetch_and_parse_robots_txt(urljoin(start_url, "/robots.txt"))
-
-    while queue:
-        url = queue.pop(0)
-        if url in visited:
-            continue
+    def crawl_domain(self, start_url: str):
+        """
+        Performs a crawl of a domain starting from a seed URL.
+        """
+        self.frontier.add_url(start_url)
         
-        print(f"Crawling: {url}")
-        visited.add(url)
+        while url_to_crawl := self.frontier.get_next_url():
+            domain = urlparse(url_to_crawl).netloc
+            policy = self.policy_manager.get_policy(domain)
+            user_agent = "ECaDP/0.1" # TODO: Get from header generator
 
-        try:
-            response = httpx.get(url)
-            response.raise_for_status()
-            # TODO: Parse HTML for new links and add them to the queue.
-        except httpx.HTTPStatusError as e:
-            print(f"Error fetching {url}: {e}")
+            if not self.robots_parser.can_fetch(url_to_crawl, user_agent):
+                logger.info(f"Skipping {url_to_crawl} due to robots.txt")
+                self.frontier.mark_as_visited(url_to_crawl)
+                continue
 
-    return list(visited)
+            if time.time() < policy.backoff_until:
+                logger.warning(f"Domain {domain} is in backoff. Re-queueing {url_to_crawl}")
+                self.frontier.add_url(url_to_crawl)
+                time.sleep(1) # Avoid a tight loop
+                continue
+
+            logger.info(f"Crawling: {url_to_crawl} with delay {policy.current_delay_seconds:.2f}s")
+            time.sleep(policy.current_delay_seconds)
+
+            html_content, status_code = self.transport_manager.fetch(url_to_crawl, policy)
+            self.frontier.mark_as_visited(url_to_crawl)
+
+            if status_code == 200:
+                self.policy_manager.update_on_success(domain)
+                new_links = extract_links(url_to_crawl, html_content)
+                for link in new_links:
+                    # Only add links within the same domain for this simple crawler
+                    if urlparse(link).netloc == domain:
+                        self.frontier.add_url(link)
+                logger.info(f"Found {len(new_links)} links on {url_to_crawl}")
+            else:
+                self.policy_manager.update_on_failure(domain, status_code)
+                logger.error(f"Failed to fetch {url_to_crawl} with status code {status_code}")
