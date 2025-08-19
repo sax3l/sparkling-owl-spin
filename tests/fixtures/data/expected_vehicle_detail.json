@@ -1,5 +1,33 @@
 {
   "registration_number": "ABC123",
-  "model_year": 2021,
-  "co2_wltp": 132.5
+  "vin": "YS3FB55E681234567",
+  "make": "Saab",
+  "model": "9-3",
+  "model_year": 2008,
+  "tech_specs": [
+    {
+      "engine_power": {
+        "value": 150,
+        "unit": "HP"
+      },
+      "fuel_type": "Bensin"
+    }
+  ],
+  "ownership": [
+    {
+      "owner_type": "person",
+      "owner_key": "850101-1234",
+      "role": "Ägare"
+    }
+  ],
+  "history": [
+    {
+      "event_date": "2023-10-26",
+      "event_description": "Besiktning"
+    },
+    {
+      "event_date": "2022-05-10",
+      "event_description": "Ägarbyte"
+    }
+  ]
 }
