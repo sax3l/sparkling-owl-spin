@@ -1,0 +1,15 @@
+# Proxy pool configuration
+enabled: true
+
+collector:
+  sources:
+    - "http://example.com/proxy-list-1"
+    - "http://example.com/proxy-list-2"
+
+validator:
+  validation_url: "http://httpbin.org/ip"
+  timeout_seconds: 10
+
+quality_filter:
+  min_success_rate: 0.8
+  max_latency_ms: 2000

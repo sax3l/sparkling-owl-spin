@@ -1,0 +1,37 @@
+# GraphQL Schema Definition Language (SDL)
+
+schema {
+  query: Query
+}
+
+type Query {
+  person(id: ID!): Person
+  company(id: ID!): Company
+  vehicle(id: ID!): Vehicle
+  persons(limit: Int = 10, offset: Int = 0): [Person!]
+  companies(limit: Int = 10, offset: Int = 0): [Company!]
+  vehicles(limit: Int = 10, offset: Int = 0): [Vehicle!]
+}
+
+type Person {
+  id: ID!
+  name: String!
+  email: String
+  company: Company
+}
+
+type Company {
+  id: ID!
+  name: String!
+  vatNumber: String @deprecated(reason: "Use taxId instead")
+  taxId: String
+  employees: [Person!]
+}
+
+type Vehicle {
+  id: ID!
+  make: String!
+  model: String!
+  year: Int!
+  owner: Person
+}

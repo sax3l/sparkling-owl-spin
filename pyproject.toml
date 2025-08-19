@@ -1,0 +1,32 @@
+[tool.poetry]
+name = "ecadp"
+version = "0.1.0"
+description = "Ethical Crawler & Data Platform"
+authors = ["Your Name <you@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+[tool.black]
+line-length = 88
+
+[tool.ruff]
+line-length = 88
+select = ["E", "F", "W", "I"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+strict = true
+
+[tool.pytest.ini_options]
+markers = [
+    "unit: marks tests as unit tests",
+    "integration: marks tests as integration tests",
+    "e2e: marks tests as end-to-end tests",
+    "security: marks tests as security tests",
+    "observability: marks tests as observability tests",
+    "ops: marks tests as ops tests",
+]

@@ -1,0 +1,2 @@
+-- Schedule jobs using pg_cron
+-- select cron.schedule('nightly-job', '0 0 * * *', 'select process_nightly_tasks()');

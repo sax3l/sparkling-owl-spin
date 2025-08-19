@@ -1,0 +1,2 @@
+-- This file can be used to generate a full schema dump.
+-- The source of truth is the migration files in supabase/migrations/.

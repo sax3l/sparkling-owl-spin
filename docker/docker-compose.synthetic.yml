@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  static_list:
+    build: ./synthetic/static_list
+    ports:
+      - "8081:8000"
+    networks:
+      - scraping_net
+
+  infinite_scroll:
+    build: ./synthetic/infinite_scroll
+    ports:
+      - "8082:8000"
+    networks:
+      - scraping_net
+
+  form_flow:
+    build: ./synthetic/form_flow
+    ports:
+      - "8083:8000"
+    networks:
+      - scraping_net
+
+networks:
+  scraping_net:
+    driver: bridge

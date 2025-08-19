@@ -1,0 +1,12 @@
+# Default performance settings
+http_client:
+  timeout_seconds: 30
+  max_connections: 100
+  max_keepalive_connections: 20
+
+crawler:
+  max_concurrent_requests: 10
+  max_depth: 5
+
+scraper:
+  max_concurrent_tasks: 20

@@ -1,0 +1,17 @@
+# Kubernetes CronJob for processing erasure requests
+# TODO: Implement CronJob definition
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: erasure-worker
+spec:
+  schedule: "0 2 * * *" # Runs daily at 2 AM
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: erasure-worker
+            image: ecadp-image:latest
+            command: ["python", "scripts/run_erasure_worker.py"]
+          restartPolicy: OnFailure

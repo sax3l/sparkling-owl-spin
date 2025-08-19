@@ -1,0 +1,17 @@
+# Kubernetes CronJob for backing up the SQL database
+# TODO: Implement CronJob definition
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: sql-backup
+spec:
+  schedule: "0 0 * * *" # Runs daily at midnight
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: sql-backup
+            image: ecadp-image:latest
+            command: ["scripts/backup.sh"]
+          restartPolicy: OnFailure

@@ -1,0 +1,17 @@
+# Kubernetes CronJob for uploading Redis snapshots to S3
+# TODO: Implement CronJob definition
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: redis-snapshot-upload
+spec:
+  schedule: "0 3 * * *" # Runs daily at 3 AM
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: redis-snapshot-uploader
+            image: ecadp-image:latest
+            command: ["scripts/backup_redis.sh"]
+          restartPolicy: OnFailure

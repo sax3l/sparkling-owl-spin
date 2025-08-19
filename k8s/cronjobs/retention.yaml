@@ -1,0 +1,17 @@
+# Kubernetes CronJob for enforcing data retention policies
+# TODO: Implement CronJob definition
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: retention-job
+spec:
+  schedule: "0 1 * * *" # Runs daily at 1 AM
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: retention-job
+            image: ecadp-image:latest
+            command: ["python", "scripts/run_retention_job.py"]
+          restartPolicy: OnFailure

@@ -1,0 +1,14 @@
+{
+  "Rules": [
+    {
+      "ID": "RawHTMLRetentionPolicy",
+      "Status": "Enabled",
+      "Filter": {
+        "Prefix": "raw_html/"
+      },
+      "Expiration": {
+        "Days": 30
+      }
+    }
+  ]
+}

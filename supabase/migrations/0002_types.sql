@@ -1,0 +1,2 @@
+-- Define custom ENUM types
+-- create type job_status as enum ('pending', 'running', 'completed', 'failed');

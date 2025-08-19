@@ -1,0 +1,88 @@
+openapi: 3.0.0
+info:
+  title: "Ethical Crawler & Data Platform API"
+  version: "1.0.0"
+servers:
+  - url: http://localhost:8000/api/v1
+
+paths:
+  /jobs/crawl:
+    post:
+      summary: "Submit a new crawl job"
+      parameters:
+        - name: "Idempotency-Key"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                start_url:
+                  type: string
+      responses:
+        '202':
+          description: "Job accepted"
+  /jobs/scrape:
+    post:
+      summary: "Submit a new scrape job"
+      parameters:
+        - name: "Idempotency-Key"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                url:
+                  type: string
+                template_id:
+                  type: string
+      responses:
+        '202':
+          description: "Job accepted"
+  /jobs/{id}:
+    get:
+      summary: "Get job status"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "Job status"
+  /data/{entity}:
+    get:
+      summary: "Get data for an entity"
+      parameters:
+        - name: entity
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "Entity data"
+  /templates:
+    post:
+      summary: "Create a new scraping template"
+      responses:
+        '201':
+          description: "Template created"
+  /proxy/stats:
+    get:
+      summary: "Get proxy pool statistics"
+      responses:
+        '200':
+          description: "Proxy stats"

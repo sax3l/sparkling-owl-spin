@@ -1,0 +1,66 @@
+{
+	"info": {
+		"_postman_id": "a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6",
+		"name": "ECaDP API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Submit Crawl Job",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Idempotency-Key",
+						"value": "{{$guid}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"start_url\": \"http://localhost:8081\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/jobs/crawl",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"jobs",
+						"crawl"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Job Status",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/jobs/some-job-id",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"jobs",
+						"some-job-id"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8000/api/v1"
+		}
+	]
+}
