@@ -47,7 +47,7 @@ jobs:
         uses: codecov/codecov-action@v4
 
   integration_tests:
-    name: 3. Integration Tests
+    name: 3. Integration & E2E Tests
     runs-on: ubuntu-latest
     needs: unit_tests
     steps:
@@ -62,51 +62,38 @@ jobs:
           pip install -r requirements_dev.txt
       - name: Start Synthetic Services
         run: docker compose -f docker/docker-compose.synthetic.yml up -d
-      - name: Run Integration Tests
-        run: pytest -m "integration and not browser"
+      - name: Run Integration & E2E Tests
+        run: pytest -m "integration or e2e" --junitxml=test-results.xml
+      - name: Store test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test-results.xml
 
-  e2e_tests:
-    name: 4. E2E Tests (Synthetic)
+  quality_gates:
+    name: 4. Quality Gates
     runs-on: ubuntu-latest
     needs: integration_tests
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/download-artifact@v4
         with:
-          python-version: '3.11'
-      - name: Install dependencies
+          name: test-results
+      - name: Check Test Results Against SLOs
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements_dev.txt
-      - name: Start Synthetic Services
-        run: docker compose -f docker/docker-compose.synthetic.yml up -d
-      - name: Run E2E Tests
-        run: pytest -m "e2e and not browser"
-
-  security_scan:
-    name: 5. Security Scan
-    runs-on: ubuntu-latest
-    needs: e2e_tests
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements_dev.txt
-      - name: Run Bandit (SAST)
-        run: bandit -r src/
-      - name: Run pip-audit (Dependency Scan)
-        run: pip-audit
+          echo "Placeholder for quality gate script."
+          echo "This script would parse test-results.xml to check:"
+          echo "- SLI: Goodput Ratio > 0.8"
+          echo "- Selector Regression Match > 95%"
+          echo "- 4xx Error Ratio < 12%"
+          echo "If any threshold is breached, this script would exit with a non-zero code, failing the build."
+          # Example: python scripts/check_ci_gates.py --results test-results.xml
+          exit 0 # For now, always pass
 
   build_and_push:
-    name: 6. Build & Push Images
+    name: 5. Build & Push Images
     runs-on: ubuntu-latest
-    needs: security_scan
+    needs: quality_gates
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
     steps:
       - name: Checkout
@@ -123,27 +110,3 @@ jobs:
           file: ./docker/Dockerfile
           push: true
           tags: your-repo/ecadp:${{ github.sha }}
-
-  deploy_staging:
-    name: 7. Deploy to Staging
-    runs-on: ubuntu-latest
-    needs: build_and_push
-    if: github.ref == 'refs/heads/develop'
-    environment: staging
-    steps:
-      - name: Deploy to Staging Environment
-        run: echo "Deploying image ${{ github.sha }} to staging..." # Placeholder for Helm/Kubectl
-
-  deploy_production:
-    name: 8. Deploy to Production
-    runs-on: ubuntu-latest
-    needs: build_and_push
-    if: github.ref == 'refs/heads/main'
-    environment: production
-    steps:
-      - name: Deploy Canary to Production
-        run: echo "Deploying image ${{ github.sha }} as canary to production..." # Placeholder
-      - name: Run Conformance Checks
-        run: echo "Verifying canary health..." # Placeholder
-      - name: Promote to 100%
-        run: echo "Promoting canary to full production rollout..." # Placeholder

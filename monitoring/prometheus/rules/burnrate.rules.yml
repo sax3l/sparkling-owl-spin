@@ -12,3 +12,22 @@ groups:
 
       - record: slo:goodput_burnrate_slow
         expr: (1 - avg_over_time(sli:goodput_ratio:rate5m[1h])) / (1 - 0.80)
+
+      # --- ALERT RULES ---
+      - alert: HighGoodputBurnRateFast
+        expr: slo:goodput_burnrate_fast > 8 # Consuming 8x the error budget
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Critical Goodput Drop (Fast Burn)"
+          description: "The platform is burning through its 30-day error budget for goodput at an extremely high rate. Immediate action required. Goodput is {{ $value | printf `%.2f` }}%."
+
+      - alert: HighGoodputBurnRateSlow
+        expr: slo:goodput_burnrate_slow > 1 # Consuming more than the allocated budget over 1h
+        for: 2h
+        labels:
+          severity: warning
+        annotations:
+          summary: "Sustained Goodput Drop (Slow Burn)"
+          description: "The platform's goodput has been consistently below the 80% SLO for the past 2 hours, steadily consuming the error budget."
