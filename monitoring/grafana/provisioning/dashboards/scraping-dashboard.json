@@ -1,0 +1,37 @@
+{
+  "__inputs": [],
+  "__requires": [],
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "title": "Scraping Performance Overview",
+      "type": "text",
+      "description": "This dashboard provides an overview of the scraping performance, cost, and system health. Replace this placeholder with actual panels for metrics like requests_total, dq_score, and request_duration_seconds.",
+      "options": {
+        "content": "# Scraping Performance & Cost Dashboard\n\nThis is a placeholder dashboard. Please build panels using the Prometheus, Loki, and Tempo datasources."
+      }
+    }
+  ],
+  "schemaVersion": 36,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Scraping - Performance & Cost",
+  "uid": "scraping-perf-cost",
+  "version": 1
+}

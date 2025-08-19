@@ -1,0 +1,14 @@
+groups:
+  - name: slo_burnrates
+    interval: 30s
+    rules:
+      # SLI: Goodput = OK extractions / (2xx|304 responses)
+      - record: sli:goodput_ratio:rate5m
+        expr: sum(rate(extractions_ok_total[5m])) / sum(rate(requests_total{status_code=~"2..|304"}[5m]))
+
+      # Burn rate windows: fast (5m) and slow (1h)
+      - record: slo:goodput_burnrate_fast
+        expr: (1 - sli:goodput_ratio:rate5m) / (1 - 0.80)   # Target 80% goodput
+
+      - record: slo:goodput_burnrate_slow
+        expr: (1 - avg_over_time(sli:goodput_ratio:rate5m[1h])) / (1 - 0.80)
