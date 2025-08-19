@@ -3,6 +3,9 @@ This module will handle website logins in a secure, policy-driven manner.
 It will manage cookie jars tied to sessions and provide hooks for manual
 intervention (e.g., for 2FA) via the UI, ensuring no credentials are
 hardcoded or logged.
+
+This aligns with the principles in "Automatiserade formulärsökningar" (Kapitel 6.7)
+and the implementation blueprint in Kapitel 6.15.
 """
 def perform_login(url: str, credentials: dict) -> dict:
     """
