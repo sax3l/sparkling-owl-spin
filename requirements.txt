@@ -1,9 +1,9 @@
 fastapi
 uvicorn[standard]
+SQLAlchemy
+psycopg2-binary
+python-dotenv
 apscheduler
-pydantic
-httpx
+PyYAML
 python-json-logger
-redis
-beautifulsoup4
-lxml
+pydantic
