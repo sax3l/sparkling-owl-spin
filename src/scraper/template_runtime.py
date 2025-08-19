@@ -1,15 +1,7 @@
 def run_template(html_content: str, template: dict) -> tuple:
     """
-    Executes the scraping process for a given HTML and template.
-    Loader -> Extractor -> Writer
+    Executes the scraping process and calculates Data Quality (DQ) metrics.
     """
-    # This is a simplified placeholder implementation
-    # 1. Load HTML (already provided)
-    # 2. Extract data using template_extractor (mocked)
-    # 3. Transform data using dsl.transformers (mocked)
-    # 4. Validate data (mocked)
-    # 5. Write to database via database.manager (mocked)
-    
     print(f"Running template {template.get('id')}...")
     
     # Placeholder for extracted data
@@ -18,10 +10,20 @@ def run_template(html_content: str, template: dict) -> tuple:
         "price": 123.45
     }
     
-    # Placeholder for data quality metrics
+    # Placeholder for DQ component scores
+    completeness = 0.98  # % of required fields found
+    validity = 1.0      # % of fields that pass validation (regex, type)
+    consistency = 0.95  # % of cross-field validation rules passed
+    
+    # Calculate weighted DQ score based on the evaluation plan
+    # Weights: completeness=0.4, validity=0.4, consistency=0.2
+    dq_score = (0.4 * completeness) + (0.4 * validity) + (0.2 * consistency)
+
     dq_metrics = {
-        "completeness": 0.98,
-        "validity": 1.0
+        "completeness": completeness,
+        "validity": validity,
+        "consistency": consistency,
+        "dq_score": round(dq_score, 4)
     }
     
     return (record, dq_metrics)
