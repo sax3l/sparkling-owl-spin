@@ -1,5 +1,9 @@
 from fastapi import FastAPI
 from src.webapp import api
+from src.utils.logger import setup_logging
+
+# Set up logging as the first step
+setup_logging()
 
 app = FastAPI(
     title="Ethical Crawler & Data Platform",
