@@ -28,12 +28,13 @@ class JobType(str, enum.Enum):
 
 class JobStatus(str, enum.Enum):
     PENDING = "pending"
+    QUEUED = "queued"
     RUNNING = "running"
     COMPLETED = "completed"
     FAILED = "failed"
 
 # --- Core Schema Models ---
-
+# ... (existing models remain unchanged)
 class Person(Base):
     __tablename__ = "persons"
     person_id = Column(BigInteger, primary_key=True)
@@ -287,10 +288,32 @@ class StagingExtract(Base):
 
 # --- Pydantic Models for API ---
 
-class JobCreate(BaseModel):
-    job_type: JobType
-    start_url: str
-    params: Optional[Dict[str, Any]] = None
+class FeatureFlags(BaseModel):
+    detect_templates: bool = True
+    paginate_auto: bool = True
+    infinite_scroll: bool = False
+
+class CrawlPolicy(BaseModel):
+    respect_robots: bool = True
+    crawl_delay_ms: int = 1000
+    parallelism: int = 8
+    transport: str = "http"
+    user_agent_profile: str = "chrome-stable"
+    feature_flags: FeatureFlags = Field(default_factory=FeatureFlags)
+
+class CrawlCaps(BaseModel):
+    rps_per_domain: float = 1.5
+    max_concurrent_per_domain: int = 4
+
+class CrawlJobCreate(BaseModel):
+    seeds: List[str]
+    max_depth: int = 3
+    max_urls: int = 20000
+    allow_domains: List[str]
+    disallow_patterns: List[str] = Field(default_factory=list)
+    policy: CrawlPolicy = Field(default_factory=CrawlPolicy)
+    caps: CrawlCaps = Field(default_factory=CrawlCaps)
+    tags: List[str] = Field(default_factory=list)
 
 class JobRead(BaseModel):
     id: uuid.UUID
@@ -302,6 +325,7 @@ class JobRead(BaseModel):
     created_at: datetime.datetime
     started_at: Optional[datetime.datetime] = None
     finished_at: Optional[datetime.datetime] = None
+    links: Dict[str, str]
 
     class Config:
         orm_mode = True
