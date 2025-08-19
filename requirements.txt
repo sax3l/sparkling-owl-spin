@@ -1,11 +1,5 @@
 fastapi
 uvicorn[standard]
-httpx[http2]
-playwright
-pydantic
-ariadne
-supabase
-psycopg2-binary
-redis
 apscheduler
-python-json-logger
+pydantic
+httpx
