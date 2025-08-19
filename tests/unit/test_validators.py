@@ -1,7 +1,8 @@
 import pytest
+import re
+
 # Stubs for validators, assuming they will be created in src/utils/validators.py
 def matches(value, pattern):
-    import re
     return bool(re.match(pattern, value))
 
 def in_range(value, min_val, max_val):

@@ -4,8 +4,6 @@ import time
 
 @pytest.mark.unit
 def test_delay_strategy_range():
-    # This is a simple test to ensure the function runs without error
-    # A more complex test would involve mocking time.sleep
     start = time.time()
     apply_delay(0.01, 0.02)
     end = time.time()

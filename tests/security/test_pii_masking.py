@@ -1,8 +1,8 @@
 import pytest
+import re
 
 # Placeholder for PII scrubber
 def scrub_pii(msg):
-    import re
     return re.sub(r"\d{6}-\d{4}", "[REDACTED]", msg)
 
 @pytest.mark.unit

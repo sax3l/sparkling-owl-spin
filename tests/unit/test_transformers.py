@@ -1,4 +1,5 @@
 import pytest
+from decimal import Decimal
 from src.scraper.dsl.transformers import strip, regex_extract, to_decimal, date_parse, map_values
 
 @pytest.mark.unit
@@ -15,19 +16,18 @@ def test_regex_extract(text, pattern, expected):
 
 @pytest.mark.unit
 @pytest.mark.parametrize("raw,expected", [
-    ("12,34", 12.34),
-    ("12.34", 12.34),
-    ("  1 234,50 ", 1234.50),
+    ("12,34", Decimal("12.34")),
+    ("12.34", Decimal("12.34")),
+    ("  1 234,50 ", Decimal("1234.50")),
 ])
 def test_to_decimal(raw, expected):
-    from decimal import Decimal
-    assert to_decimal(raw, {}) == Decimal(str(expected))
+    assert to_decimal(raw, {}) == expected
 
 @pytest.mark.unit
-def test_date_parse_sv():
+def test_date_parse_stub():
     # This is a placeholder as date_parse is not fully implemented
     assert date_parse("2024-03-15", {}) == "2024-03-15"
 
 @pytest.mark.unit
-def test_map_values_yes_no():
+def test_map_values():
     assert map_values("Ja", {"map": {"Ja": True, "Nej": False}}) is True

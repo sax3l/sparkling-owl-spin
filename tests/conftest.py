@@ -1,14 +1,14 @@
 import os, json, yaml, pytest, asyncio, time
 from pathlib import Path
 
-# ---------- Async event loop ----------
+# 1) Event loop (för async-tester)
 @pytest.fixture(scope="session")
 def event_loop():
     loop = asyncio.new_event_loop()
     yield loop
     loop.close()
 
-# ---------- Helpers: load YAML/HTML/JSON ----------
+# 2) Ladda testdata (YAML, HTML, JSON)
 @pytest.fixture
 def load_template():
     def _load(name: str) -> dict:
@@ -30,7 +30,7 @@ def load_json():
         return json.loads(p.read_text(encoding="utf-8"))
     return _load
 
-# ---------- Fake Redis (ersätt gärna med fakeredis i skarp test) ----------
+# 3) Falsk Redis
 class FakeRedis:
     def __init__(self): self.store = {}
     async def get(self, k): return self.store.get(k)
@@ -42,7 +42,7 @@ class FakeRedis:
 async def redis_client():
     return FakeRedis()
 
-# ---------- Testkonfig (anti-bot/performance) ----------
+# 4) Test-konfig
 @pytest.fixture
 def test_config():
     cfg_dir = Path(__file__).parent / "fixtures" / "config"
@@ -51,30 +51,31 @@ def test_config():
         "perf": yaml.safe_load((cfg_dir / "performance-defaults.yml").read_text(encoding="utf-8")),
     }
 
-# ---------- Endpoints för syntetiska sajter (via docker-compose) ----------
+# 5) Endpoints för syntetiska sajter
 @pytest.fixture(scope="session")
 def synthetic_hosts():
-    # matchar docker/docker-compose.synthetic.yml
     return {
         "static": "http://localhost:8081",
         "scroll": "http://localhost:8082",
         "form":   "http://localhost:8083",
     }
 
-# ---------- Liten väntare för att docker-sajter ska hinna starta i CI ----------
+# 6) Vänta på att syntetiska sajter startar i CI
 @pytest.fixture(scope="session", autouse=True)
 def _wait_for_synthetic_services(synthetic_hosts):
     import requests
-    for name, base in synthetic_hosts.items():
-        ok = False
-        for _ in range(60):
-            try:
-                r = requests.get(base, timeout=1.0)
-                if r.status_code in (200, 404):
-                    ok = True
-                    break
-            except Exception:
-                time.sleep(1)
-        if not ok:
-            print(f"[WARN] Synthetic service '{name}' not ready at {base} (tests may fail)")
+    # Check if running in CI where docker is expected
+    if os.environ.get("CI"):
+        for name, base in synthetic_hosts.items():
+            ok = False
+            for _ in range(60):
+                try:
+                    r = requests.get(base, timeout=1.0)
+                    if r.status_code in (200, 404):
+                        ok = True
+                        break
+                except requests.RequestException:
+                    time.sleep(1)
+            if not ok:
+                print(f"[WARN] Synthetic service '{name}' not ready at {base} (tests may fail)")
     yield
