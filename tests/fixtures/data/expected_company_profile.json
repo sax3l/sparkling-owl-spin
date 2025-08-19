@@ -1,0 +1,14 @@
+{
+  "org_number": "5566778899",
+  "name": "Megacorp Ab",
+  "financials": [
+    {
+      "year": 2023,
+      "turnover": 1234567.00
+    },
+    {
+      "year": 2022,
+      "turnover": 987654.00
+    }
+  ]
+}
