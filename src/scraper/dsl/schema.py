@@ -2,46 +2,67 @@ from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Literal, Optional
 
 class Transform(BaseModel):
-    """Defines a data transformation step to be applied to an extracted value."""
-    name: Literal[
-        "strip", "regex_extract", "to_decimal", "to_int", "date_parse", "map_values",
-        "normalize_postal_code", "normalize_reg_nr", "validate_org_nr"
-    ]
+    """Defines a data transformation step."""
+    name: str
+    args: Dict[str, Any] = Field(default_factory=dict)
+
+class Validator(BaseModel):
+    """Defines a data validation rule."""
+    name: str
     args: Dict[str, Any] = Field(default_factory=dict)
 
 class DBMapping(BaseModel):
     """Defines how a field maps to a database table and column."""
     table: str
     column: str
-    is_relation_key: bool = False
 
 class FieldDefinition(BaseModel):
     """Defines how to extract, transform, and validate a single data field."""
     name: str
-    description: Optional[str] = None
     type: Literal["string", "number", "date", "boolean", "array"]
-    selectors: List[str] = Field(..., min_length=1)  # List of CSS/XPath selectors for fallback
-    attr: str = "text"  # e.g., 'text', 'href', or other attribute
     required: bool = False
-    transforms: List[Transform] = Field(default_factory=list)
-    validate: Dict[str, Any] = Field(default_factory=dict) # e.g., {"matches_regex": "^[A-Z]{3}"}
-    cross_field_rules: List[str] = Field(default_factory=list)
-    db_map: Optional[DBMapping] = None
+    selectors: List[Dict[Literal["css", "xpath"], str]]
+    transform: List[Transform] = Field(default_factory=list)
+    validate: List[Validator] = Field(default_factory=list)
+    target: DBMapping
+    error_policy: Literal["drop_field", "use_default", "fail_record"] = "drop_field"
+    default_value: Optional[Any] = None
 
-class ListDefinition(BaseModel):
-    """Defines extraction for a list of repeating items (e.g., search results, table rows)."""
-    name: str
-    container_selector: str # Selector for the list container (e.g., 'ul#items')
-    item_selector: str # Selector for a single item within the container (e.g., 'li.item')
-    fields: List[FieldDefinition] # Fields to extract relative to each item
+class Repeater(BaseModel):
+    """Defines how to iterate over a list of elements."""
+    by: List[Dict[Literal["css", "xpath"], str]]
+    captures: List[FieldDefinition]
+
+class GroupDefinition(BaseModel):
+    """Defines extraction for a group of repeating items (a list or table)."""
+    group: str
+    repeat: Repeater
+    link: Dict[str, str] # e.g., {"parent_table": "persons", "foreign_key": "person_id"}
+
+class Scope(BaseModel):
+    domains: List[str]
+    url_patterns: List[str]
+
+class Policy(BaseModel):
+    transport: Literal["http", "browser", "auto"] = "auto"
+    max_retries: int = 2
+    respect_robots: bool = True
+    delay_profile: str = "default"
+
+class UpsertConfig(BaseModel):
+    key: List[str]
+    strategy: Literal["insert_only", "update", "merge"] = "update"
+
+class Output(BaseModel):
+    primary_table: str
+    upsert: UpsertConfig
 
 class ScrapingTemplate(BaseModel):
-    """
-    The root model for a scraping template, defining all extraction logic for a page type.
-    """
+    """The root model for a scraping template."""
     template_id: str
-    version: int
-    entity_type: str
-    url_pattern: str # Regex to match URLs this template applies to
+    version: str
+    scope: Scope
+    policy: Policy
+    output: Output
     fields: List[FieldDefinition] = Field(default_factory=list)
-    lists: List[ListDefinition] = Field(default_factory=list)
+    relations: List[GroupDefinition] = Field(default_factory=list)

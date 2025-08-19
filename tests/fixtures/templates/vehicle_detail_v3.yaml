@@ -1,34 +1,47 @@
-template_id: vehicle_detail_v3
-version: 1
-entity_type: vehicle
-url_pattern: ".*/item/.*"
+template_id: "vehicle_detail_v3"
+version: "2.0.0"
+scope:
+  domains: ["localhost"]
+  url_patterns:
+    - ".*/item/.*"
+policy:
+  transport: "http"
+output:
+  primary_table: "vehicles"
+  upsert:
+    key: ["registration_number"]
+    strategy: "update"
 fields:
-  - name: registration_number
-    type: string
-    selectors: ["dd"]
+  - name: "registration_number"
+    type: "string"
     required: true
-    db_map:
+    selectors:
+      - css: "dd"
+    target:
       table: "vehicles"
       column: "registration_number"
-  - name: model_year
-    type: number
-    selectors: ["[data-spec=modelYear]"]
-    transforms:
-      - name: regex_extract
-        args:
-          pattern: "(\\d{4})"
-      - name: to_int
-    db_map:
+  - name: "model_year"
+    type: "number"
+    selectors:
+      - css: "[data-spec=modelYear]"
+    transform:
+      - name: "regex_sub"
+        args: { pattern: "[^0-9]", repl: "" }
+      - name: "parse_int"
+    validate:
+      - name: "not_empty"
+    target:
       table: "vehicles"
       column: "model_year"
-  - name: co2_wltp
-    type: number
-    selectors: ["#wltp-co2"]
-    transforms:
-      - name: regex_extract
-        args:
-          pattern: "([\\d,]+)"
-      - name: to_decimal
-    db_map:
+  - name: "co2_wltp"
+    type: "number"
+    selectors:
+      - css: "#wltp-co2"
+    transform:
+      - name: "regex_sub"
+        args: { pattern: " g/km", repl: "" }
+      - name: "parse_decimal"
+        args: { decimal_sep: "," }
+    target:
       table: "vehicle_technical_specs"
       column: "wltp_co2_g_km"
