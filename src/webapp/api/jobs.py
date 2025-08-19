@@ -4,12 +4,13 @@ from uuid import UUID
 from src.database.models import Job, JobCreate, JobRead, JobStatus
 from src.database.manager import get_db
 from src.scheduler.scheduler import schedule_job
+from src.webapp.security import get_api_key
 import logging
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-@router.post("/jobs", response_model=JobRead, status_code=202)
+@router.post("/jobs", response_model=JobRead, status_code=202, dependencies=[Depends(get_api_key)])
 async def submit_job(task: JobCreate, db: Session = Depends(get_db)):
     """Submits a new job to the scheduler and saves it to the database."""
     logger.info(f"Received job submission for URL: {task.start_url}")
@@ -25,20 +26,20 @@ async def submit_job(task: JobCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(job)
     
-    logger.info(f"Job {job.id} created and saved to database.")
+    logger.info(f"Job {job.id} created and saved to database.", extra={"job_id": str(job.id)})
     
     schedule_job(job.id)
     
     return job
 
-@router.get("/jobs/{job_id}", response_model=JobRead)
+@router.get("/jobs/{job_id}", response_model=JobRead, dependencies=[Depends(get_api_key)])
 async def get_job_status(job_id: UUID, db: Session = Depends(get_db)):
     """Retrieves the status of a specific job from the database."""
-    logger.debug(f"Fetching status for job {job_id}")
+    logger.debug(f"Fetching status for job {job_id}", extra={"job_id": str(job_id)})
     job = db.query(Job).filter(Job.id == job_id).first()
     
     if not job:
-        logger.warning(f"Job with ID {job_id} not found.")
+        logger.warning(f"Job with ID {job_id} not found.", extra={"job_id": str(job_id)})
         raise HTTPException(status_code=404, detail="Job not found")
         
     return job

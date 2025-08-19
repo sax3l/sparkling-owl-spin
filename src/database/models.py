@@ -1,9 +1,9 @@
 import datetime
 import enum
 import uuid
-from typing import Optional
+from typing import Optional, List, Dict, Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import (BigInteger, Boolean, Column, Date, DateTime, Enum as SAEnum,
                         ForeignKey, Integer, LargeBinary, Numeric, String, Text, func)
 from sqlalchemy.dialects.postgresql import JSONB, UUID
@@ -21,6 +21,16 @@ class GenderEnum(enum.Enum):
 class OwnerKindEnum(enum.Enum):
     person = 'person'
     company = 'company'
+
+class JobType(str, enum.Enum):
+    CRAWL = "crawl"
+    SCRAPE = "scrape"
+
+class JobStatus(str, enum.Enum):
+    PENDING = "pending"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
 
 # --- Core Schema Models ---
 
@@ -228,20 +238,27 @@ class VehicleHistory(Base):
 
 # --- Operational Models ---
 
-class ScrapingJob(Base):
+class Job(Base):
     __tablename__ = "scraping_jobs"
-    job_id = Column(BigInteger, primary_key=True)
-    job_type = Column(Text)
-    status = Column(Text, index=True)
-    domain = Column(Text)
-    template_id = Column(BigInteger)
-    params_json = Column(JSONB)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    job_type = Column(String, nullable=False)
+    start_url = Column(String, nullable=False)
+    status = Column(String, default=JobStatus.PENDING.value, nullable=False)
+    params = Column(JSONB)
+    result = Column(JSONB)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
     started_at = Column(DateTime(timezone=True))
     finished_at = Column(DateTime(timezone=True))
-    error_text = Column(Text)
-    result_location = Column(Text)
-    
-    staging_extracts = relationship("StagingExtract", back_populates="job")
+
+class Template(Base):
+    __tablename__ = "templates"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String, nullable=False, unique=True)
+    dsl = Column(JSONB, nullable=False)
+    version = Column(Integer, nullable=False, default=1)
+    created_by = Column(UUID(as_uuid=True))
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
 class DataQualityMetrics(Base):
     __tablename__ = "data_quality_metrics"
@@ -267,23 +284,43 @@ class StagingExtract(Base):
     issues_json = Column(JSONB)
     snapshot_ref = Column(Text)
     fingerprint = Column(Text)
-    
-    job = relationship("ScrapingJob", back_populates="staging_extracts")
 
 # --- Pydantic Models for API ---
 
 class JobCreate(BaseModel):
-    job_type: str
-    domain: str
-    params_json: Optional[dict] = None
+    job_type: JobType
+    start_url: str
+    params: Optional[Dict[str, Any]] = None
 
 class JobRead(BaseModel):
-    job_id: int
-    job_type: Optional[str]
-    status: Optional[str]
-    domain: Optional[str]
-    started_at: Optional[datetime.datetime]
-    finished_at: Optional[datetime.datetime]
+    id: uuid.UUID
+    job_type: JobType
+    start_url: str
+    status: JobStatus
+    params: Optional[Dict[str, Any]] = None
+    result: Optional[Dict[str, Any]] = None
+    created_at: datetime.datetime
+    started_at: Optional[datetime.datetime] = None
+    finished_at: Optional[datetime.datetime] = None
+
+    class Config:
+        orm_mode = True
+
+class TemplateBase(BaseModel):
+    name: str = Field(..., pattern=r"^[a-zA-Z0-9_.-]+$")
+    dsl: Dict[str, Any]
+
+class TemplateCreate(TemplateBase):
+    pass
+
+class TemplateUpdate(TemplateBase):
+    pass
+
+class TemplateRead(TemplateBase):
+    id: uuid.UUID
+    version: int
+    created_at: datetime.datetime
+    updated_at: Optional[datetime.datetime] = None
 
     class Config:
         orm_mode = True
