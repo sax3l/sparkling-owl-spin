@@ -1,10 +1,14 @@
 import redis
 import time
 from pydantic import BaseModel
-from urllib.parse import urlparse
+from typing import Literal
 
 class DomainPolicy(BaseModel):
-    transport: str = "http"  # 'http' or 'browser'
+    transport: Literal["http", "browser"] = "http"
+    proxy_type: Literal["datacenter", "residential"] = "datacenter"
+    session_policy: Literal["rotating", "sticky"] = "rotating"
+    header_family: Literal["chrome", "firefox"] = "chrome"
+    
     current_delay_seconds: float = 2.0
     backoff_until: float = 0.0
     error_rate: float = 0.0
@@ -26,18 +30,24 @@ class PolicyManager:
 
     def update_policy(self, domain: str, policy: DomainPolicy):
         """Saves the updated policy to Redis."""
-        self.redis.set(f"policy:{domain}", policy.model_dump_json(), ex=86400) # 24h expiry
+        self.redis.set(f"policy:{domain}", policy.model_dump_json(), ex=86400)
 
     def update_on_failure(self, domain: str, status_code: int):
-        """Increases delay and applies backoff if a blocking status code is received."""
+        """
+        Increases delay, applies backoff, and escalates transport if blocking is detected.
+        """
         policy = self.get_policy(domain)
-        if status_code in [429, 403, 503]:
-            # Exponential backoff
-            new_delay = min(policy.current_delay_seconds * 2, 60) 
-            policy.current_delay_seconds = new_delay
-            policy.backoff_until = time.time() + new_delay * 5 # Pause for 5x the delay
+        if status_code in [403, 429, 503] or status_code == 999: # 999 is our custom CAPTCHA code
+            # Exponential backoff for delay
+            policy.current_delay_seconds = min(policy.current_delay_seconds * 2, 60)
+            policy.backoff_until = time.time() + policy.current_delay_seconds * 5
             
-            # Switch to browser mode on repeated failures as a fallback
+            # Escalate policy: switch header family, then proxy type, then to browser
+            if policy.header_family == "chrome":
+                policy.header_family = "firefox"
+            elif policy.proxy_type == "datacenter":
+                policy.proxy_type = "residential"
+            
             policy.transport = "browser"
             
         self.update_policy(domain, policy)
@@ -45,6 +55,5 @@ class PolicyManager:
     def update_on_success(self, domain: str):
         """Gradually reduces delay back to normal on successful requests."""
         policy = self.get_policy(domain)
-        # Slowly decrease delay if things are going well
         policy.current_delay_seconds = max(policy.current_delay_seconds * 0.95, 2.0)
         self.update_policy(domain, policy)
