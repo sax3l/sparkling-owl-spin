@@ -10,7 +10,7 @@ class URLFrontier:
     def __init__(self, redis_url: str, queue_name: str = "frontier:queue"):
         self.redis = redis.from_url(redis_url, decode_responses=True)
         self.queue_name = queue_name
-        self.visited_set_key = "visited:set"
+        self.visited_set_key = f"{queue_name}:visited"
 
     def add_url(self, url: str):
         """
@@ -29,3 +29,8 @@ class URLFrontier:
         """Marks a URL as visited in the persistent set."""
         _normalized_url, canonical_key = normalize_and_canonicalize_url(url)
         self.redis.sadd(self.visited_set_key, canonical_key)
+
+    def clear(self):
+        """Clears the frontier queue and visited set for a fresh start."""
+        self.redis.delete(self.queue_name)
+        self.redis.delete(self.visited_set_key)
