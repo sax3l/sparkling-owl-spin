@@ -1,0 +1,2 @@
+-- This migration will set up Storage buckets and policies.
+-- For example: raw_html, images, exports.

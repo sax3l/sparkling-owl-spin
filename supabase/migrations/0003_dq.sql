@@ -1,0 +1,2 @@
+-- This migration will contain tables and functions related to Data Quality.
+-- For example: data_quality_metrics, provenance_records.

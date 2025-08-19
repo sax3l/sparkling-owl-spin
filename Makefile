@@ -1,49 +1,38 @@
-.PHONY: help install-dev test lint run-api docker-up docker-down clean
+ENV?=dev
 
-help:
-	@echo "Commands:"
-	@echo "  install-dev      : Install development dependencies"
-	@echo "  test             : Run all tests"
-	@echo "  test-unit        : Run unit tests"
-	@echo "  test-integration : Run integration tests"
-	@echo "  test-e2e         : Run end-to-end tests"
-	@echo "  lint             : Run linters and formatters"
-	@echo "  run-api          : Run the FastAPI web application"
-	@echo "  docker-up        : Start synthetic services with Docker Compose"
-	@echo "  docker-down      : Stop synthetic services"
-	@echo "  clean            : Clean up build artifacts"
+.PHONY: bootstrap up down types lint ci
 
-install-dev:
-	pip install -r requirements.txt
-	pip install -r requirements_dev.txt
+bootstrap:
+	@echo "--- Bootstrapping project ---"
+	@echo "Pushing database schema..."
+	supabase db push
+	@echo "Deploying Supabase functions..."
+	supabase functions deploy jobs_webhook
+	supabase functions deploy retention
+	supabase functions deploy erasure
+	supabase functions deploy dq_recompute
+	@echo "Installing frontend dependencies..."
+	npm --prefix frontend install
+	@echo "--- Bootstrap complete ---"
 
-test:
-	pytest
+up:
+	@echo "--- Starting services with Docker Compose ---"
+	docker compose -f docker/docker-compose.yml up -d
 
-test-unit:
-	pytest -m unit
+down:
+	@echo "--- Stopping services ---"
+	docker compose -f docker/docker-compose.yml down
 
-test-integration:
-	pytest -m integration
-
-test-e2e:
-	pytest -m e2e
+types:
+	@echo "--- Generating TypeScript types from Supabase schema ---"
+	supabase gen types typescript --linked > supabase/types/database-types.ts
 
 lint:
-	ruff check .
-	black .
-	mypy src
-
-run-api:
-	uvicorn src.webapp.app:app --reload
-
-docker-up:
-	docker-compose -f docker/docker-compose.synthetic.yml up -d
-
-docker-down:
-	docker-compose -f docker/docker-compose.synthetic.yml down
-
-clean:
-	find . -type f -name "*.py[co]" -delete
-	find . -type d -name "__pycache__" -delete
-	rm -rf .pytest_cache .coverage htmlcov
+	@echo "--- Running linters ---"
+	ruff check src
+	black --check src
+	
+ci:
+	@echo "--- Running CI checks ---"
+	make types
+	pytest -q
