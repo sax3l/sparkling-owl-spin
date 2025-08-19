@@ -1,0 +1,7 @@
+# Placeholder for company profile template
+template: company_profile_v2
+url_pattern: "*/company/*"
+fields:
+  - name: company_name
+    selector: "h1.company-name"
+    type: string

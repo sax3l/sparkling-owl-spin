@@ -1,0 +1,7 @@
+# Placeholder for person profile template
+template: person_profile_v2
+url_pattern: "*/person/*"
+fields:
+  - name: full_name
+    selector: "h1.person-name"
+    type: string
