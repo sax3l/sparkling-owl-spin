@@ -36,3 +36,84 @@ type Query {
   oldField: String @deprecated(reason: "Use newField instead. Will be removed after 2025-01-01.")
   newField: String
 }
+```
+
+## SDK & Examples
+
+### cURL
+
+**Start Scrape Job**
+```bash
+curl -X POST https://api.example.com/v1/jobs/scrape \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: $(uuidgen)" \
+  -d '{
+    "template_id": "vehicle_detail_v1",
+    "source": { "sitemap_query": { "domain": "synthetic.local", "pattern": "^https://synthetic\\\\.local/vehicle/.*$", "limit": 500 } },
+    "policy": { "transport": "auto", "max_retries": 2 },
+    "export": { "format": "ndjson", "compress": "gzip", "destination": { "type": "internal_staging", "retention_hours": 72 } }
+  }'
+```
+
+**Fetch Persons (CSV)**
+```bash
+curl "https://api.example.com/v1/data/persons?fields=first_name,last_name,city&filter[city]=Göteborg&sort=-updated_at&page[size]=100" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Accept: text/csv" \
+  -o persons_gbg.csv
+```
+
+### Node.js (fetch)
+
+```typescript
+import fetch from "node-fetch"; // In Node.js < 18, you might need to import fetch. In modern browsers/Node.js 18+, it's global.
+
+async function startScrape(token: string) {
+  const res = await fetch("https://api.example.com/v1/jobs/scrape", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json",
+      "Idempotency-Key": crypto.randomUUID() // crypto is global in Node.js and browsers
+    },
+    body: JSON.stringify({
+      template_id: "company_profile_v1",
+      source: { sitemap_query: { domain: "synthetic.local", pattern: "^https://synthetic\\.local/company/.*$", limit: 1000 } },
+      policy: { transport: "http" },
+      caps: { max_concurrent: 16 }
+    })
+  });
+  if (!res.ok) {
+    const errorBody = await res.json().catch(() => ({ message: res.statusText }));
+    throw new Error(`HTTP ${res.status}: ${errorBody.message || JSON.stringify(errorBody)}`);
+  }
+  return res.json();
+}
+
+async function getPersonsCsv(token: string) {
+  const params = new URLSearchParams({
+    fields: "first_name,last_name,city",
+    "filter[city]": "Göteborg",
+    sort_by: "-updated_at",
+    "page[size]": "100" // Note: page[size] is not directly supported by current backend, use limit/offset
+  });
+
+  const res = await fetch(`https://api.example.com/v1/data/persons?${params.toString()}`, {
+    method: "GET",
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Accept": "text/csv"
+    }
+  });
+  if (!res.ok) {
+    const errorBody = await res.json().catch(() => ({ message: res.statusText }));
+    throw new Error(`HTTP ${res.status}: ${errorBody.message || JSON.stringify(errorBody)}`);
+  }
+  return res.text(); // Return as text for CSV
+}
+
+// Example usage (assuming you have a token)
+// const MY_TOKEN = "your_api_token_here";
+// startScrape(MY_TOKEN).then(job => console.log("Scrape job started:", job)).catch(console.error);
+// getPersonsCsv(MY_TOKEN).then(csvData => console.log("Persons CSV:", csvData.substring(0, 200) + "...")).catch(console.error);
