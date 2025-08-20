@@ -117,3 +117,45 @@ async function getPersonsCsv(token: string) {
 // const MY_TOKEN = "your_api_token_here";
 // startScrape(MY_TOKEN).then(job => console.log("Scrape job started:", job)).catch(console.error);
 // getPersonsCsv(MY_TOKEN).then(csvData => console.log("Persons CSV:", csvData.substring(0, 200) + "...")).catch(console.error);
+```
+
+### Python (requests)
+
+```python
+import requests, uuid
+
+token = "YOUR_API_TOKEN_HERE" # Replace with your actual token
+resp = requests.post(
+  "https://api.example.com/v1/jobs/crawl",
+  headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json", "Idempotency-Key": str(uuid.uuid4())},
+  json={
+    "seeds": ["https://synthetic.local/vehicles"],
+    "max_depth": 2,
+    "allow_domains": ["synthetic.local"],
+    "policy": {"transport": "http", "respect_robots": True, "parallelism": 8},
+    "caps": {"rps_per_domain": 1.0}
+  }
+)
+print(resp.status_code, resp.json())
+```
+
+### GraphQL (fetch)
+
+```typescript
+const query = `
+query($id: ID!) {
+  vehicle(id: $id) {
+    registration_number
+    model_year
+    tech_specs { fuel_type wltp_co2 }
+    owners(first: 1) { edges { node { owner_type role } } }
+  }
+}`;
+
+const token = "YOUR_API_TOKEN_HERE"; // Replace with your actual token
+const res = await fetch("https://api.example.com/graphql", {
+  method: "POST",
+  headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+  body: JSON.stringify({ query, variables: { id: "veh_01H..." } }) # Replace with a real vehicle ID
+});
+console.log(await res.json());
