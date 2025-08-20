@@ -1,66 +1,359 @@
 {
-	"info": {
-		"_postman_id": "a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6",
-		"name": "ECaDP API",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-	},
-	"item": [
-		{
-			"name": "Submit Crawl Job",
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Idempotency-Key",
-						"value": "{{$guid}}",
-						"type": "text"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n    \"start_url\": \"http://localhost:8081\"\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{baseUrl}}/jobs/crawl",
-					"host": [
-						"{{baseUrl}}"
-					],
-					"path": [
-						"jobs",
-						"crawl"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Get Job Status",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{baseUrl}}/jobs/some-job-id",
-					"host": [
-						"{{baseUrl}}"
-					],
-					"path": [
-						"jobs",
-						"some-job-id"
-					]
-				}
-			},
-			"response": []
-		}
-	],
-	"variable": [
-		{
-			"key": "baseUrl",
-			"value": "http://localhost:8000/api/v1"
-		}
-	]
+  "info": {
+    "_postman_id": "YOUR_POSTMAN_COLLECTION_ID",
+    "name": "ECaDP API Collection",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "A collection of example requests for the Ethical Crawler & Data Platform API."
+  },
+  "item": [
+    {
+      "name": "Auth: Generate OAuth Token (Client Credentials)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/x-www-form-urlencoded"
+          }
+        ],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "grant_type",
+              "value": "client_credentials"
+            },
+            {
+              "key": "username",
+              "value": "{{client_id}}",
+              "description": "Your OAuth Client ID"
+            },
+            {
+              "key": "password",
+              "value": "{{client_secret}}",
+              "description": "Your OAuth Client Secret"
+            },
+            {
+              "key": "scope",
+              "value": "jobs:write data:read",
+              "description": "Requested scopes (space-separated)"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/oauth/token",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "oauth",
+            "token"
+          ]
+        },
+        "description": "Generates an OAuth2 access token using client credentials flow. Use the returned access_token in the Authorization header for subsequent requests."
+      },
+      "response": []
+    },
+    {
+      "name": "Jobs: Submit Scrape Job",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{$guid}}",
+            "type": "text",
+            "description": "Unique key for idempotency. Use {{$guid}} for a new one each time."
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"template_id\": \"vehicle_detail_v1\",\n  \"source\": {\n    \"urls\": [\"http://localhost:8082/item/1\", \"http://localhost:8082/item/2\"]\n  },\n  \"policy\": {\n    \"transport\": \"http\",\n    \"max_retries\": 2\n  },\n  \"export\": {\n    \"format\": \"ndjson\",\n    \"compress\": \"gzip\",\n    \"destination\": {\n      \"type\": \"supabase_storage\",\n      \"retention_hours\": 72\n    }\n  },\n  \"tags\": [\"demo\", \"quick-scrape\"]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/jobs/scrape",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "jobs",
+            "scrape"
+          ]
+        },
+        "description": "Submits a new scrape job using a specified template and source URLs. Returns a job ID."
+      },
+      "response": []
+    },
+    {
+      "name": "Jobs: Get Job Status",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/jobs/{{jobId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "jobs",
+            "{{jobId}}"
+          ]
+        },
+        "description": "Retrieves the current status and details of a specific job by its ID."
+      },
+      "response": []
+    },
+    {
+      "name": "Data: Get Vehicles (CSV)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          },
+          {
+            "key": "Accept",
+            "value": "text/csv"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/data/vehicle?format=csv&fields=registration_number,model_year,make&sort_by=-model_year&filters={\"make\":\"Saab\"}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "data",
+            "vehicle"
+          ],
+          "query": [
+            {
+              "key": "format",
+              "value": "csv"
+            },
+            {
+              "key": "fields",
+              "value": "registration_number,model_year,make",
+              "description": "Comma-separated list of fields to include."
+            },
+            {
+              "key": "sort_by",
+              "value": "-model_year",
+              "description": "Field to sort by. Add '-' for descending."
+            },
+            {
+              "key": "filters",
+              "value": "{\"make\":\"Saab\"}",
+              "description": "JSON string of filters. Example: {\"model_year\":{\"gte\":2020}}"
+            },
+            {
+              "key": "mask_pii",
+              "value": "true",
+              "description": "Apply PII masking (default: true)",
+              "disabled": true
+            }
+          ]
+        },
+        "description": "Directly retrieves vehicle data in CSV format, with filtering, sorting, and field selection."
+      },
+      "response": []
+    },
+    {
+      "name": "Data: Get Vehicles (NDJSON)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          },
+          {
+            "key": "Accept",
+            "value": "application/x-ndjson"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/data/vehicle?format=ndjson&compress=true&filters={\"model_year\":{\"gte\":2015}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "data",
+            "vehicle"
+          ],
+          "query": [
+            {
+              "key": "format",
+              "value": "ndjson"
+            },
+            {
+              "key": "compress",
+              "value": "true",
+              "description": "Apply gzip compression."
+            },
+            {
+              "key": "filters",
+              "value": "{\"model_year\":{\"gte\":2015}}",
+              "description": "JSON string of filters."
+            }
+          ]
+        },
+        "description": "Directly retrieves vehicle data in NDJSON format, gzipped, with filtering."
+      },
+      "response": []
+    },
+    {
+      "name": "Templates: Create/Validate Template",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{$guid}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"my_new_template\",\n  \"dsl\": {\n    \"template_id\": \"my_new_template\",\n    \"version\": \"1.0.0\",\n    \"domain\": \"example.com\",\n    \"entity\": \"product\",\n    \"url_pattern\": \".*/products/.*\",\n    \"requires_js\": false,\n    \"fields\": [\n      {\n        \"name\": \"product_name\",\n        \"selector\": \"h1.product-title\",\n        \"selector_type\": \"css\",\n        \"attr\": \"text\",\n        \"required\": true,\n        \"transforms\": [\n          { \"type\": \"strip\" }\n        ]\n      }\n    ]\n  },\n  \"message\": \"Initial version of product template\",\n  \"validate_only\": true\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/templates",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "templates"
+          ]
+        },
+        "description": "Creates a new scraping template or validates it if `validate_only` is true. Returns the template details."
+      },
+      "response": []
+    },
+    {
+      "name": "Monitoring: Get Proxy Stats",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/monitoring/proxy-stats",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "monitoring",
+            "proxy-stats"
+          ]
+        },
+        "description": "Retrieves current statistics about the proxy pool and anti-bot policies."
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Extract token from OAuth response",
+          "if (pm.request.url.includes('/oauth/token') && pm.response.code === 200) {",
+          "    const responseJson = pm.response.json();",
+          "    pm.environment.set('token', responseJson.access_token);",
+          "    console.log('Access Token set:', responseJson.access_token);",
+          "}",
+          "",
+          "// Extract jobId from job submission response",
+          "if (pm.request.url.includes('/jobs/') && pm.request.method === 'POST' && pm.response.code === 202) {",
+          "    const responseJson = pm.response.json();",
+          "    pm.environment.set('jobId', responseJson.id);",
+          "    console.log('Job ID set:', responseJson.id);",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000/api/v1",
+      "type": "string",
+      "description": "Base URL for the API"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string",
+      "description": "Bearer token for authentication. Set automatically after OAuth request."
+    },
+    {
+      "key": "jobId",
+      "value": "",
+      "type": "string",
+      "description": "ID of a submitted job. Set automatically after job submission."
+    },
+    {
+      "key": "client_id",
+      "value": "your_client_id",
+      "type": "string",
+      "description": "Your OAuth Client ID for testing."
+    },
+    {
+      "key": "client_secret",
+      "value": "your_client_secret",
+      "type": "string",
+      "description": "Your OAuth Client Secret for testing."
+    }
+  ]
 }

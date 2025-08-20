@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import HTTPException, RequestValidationError
 from prometheus_client import make_asgi_app
-from src.webapp.api import jobs, templates, auth, exports, webhooks
+from src.webapp.api import jobs, templates, auth, exports, webhooks, monitoring # Import new monitoring router
 from src.utils.logger import setup_logging
 from src.utils.telemetry import setup_telemetry
 from src.utils.rate_limiter import RateLimitMiddleware
@@ -70,7 +70,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
     logger.error(f"Validation Error: {exc.errors()}", extra={"request_id": request_id, "validation_errors": exc.errors()})
     return JSONResponse(
-        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, # Changed from 400 to 422
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content=error_response.model_dump(exclude_none=True)
     )
 
@@ -100,3 +100,4 @@ app.include_router(templates.router, prefix="/api/v1", tags=["Templates"])
 app.include_router(auth.router, prefix="/api/v1", tags=["Authentication"])
 app.include_router(exports.router, prefix="/api/v1", tags=["Exports"])
 app.include_router(webhooks.router, prefix="/api/v1", tags=["Webhooks"])
+app.include_router(monitoring.router, prefix="/api/v1", tags=["Monitoring"]) # Include new monitoring router

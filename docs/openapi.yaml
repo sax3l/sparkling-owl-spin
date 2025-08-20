@@ -143,6 +143,19 @@ components:
       type: object
       properties:
         detail: { type: string }
+    
+    ProxyStats:
+      type: object
+      properties:
+        active_proxies: { type: integer, description: "Number of currently active proxies." }
+        healthy_proxies: { type: integer, description: "Number of healthy proxies in the pool." }
+        unhealthy_proxies: { type: integer, description: "Number of unhealthy proxies in the pool." }
+        domains_in_backoff: { type: integer, description: "Number of domains currently under backoff policy." }
+        total_requests_last_hour: { type: integer, description: "Total requests made in the last hour." }
+        average_latency_ms: { type: number, format: float, description: "Average request latency in milliseconds." }
+        policy_manager_status: { type: string, description: "Status of the policy manager (e.g., active, degraded)." }
+        last_updated: { type: string, format: date-time, description: "Timestamp of when these statistics were last updated." }
+
 
 paths:
   /jobs/crawl:
@@ -239,7 +252,7 @@ paths:
           description: "Details of the export job."
           content: { application/json: { schema: { $ref: "#/components/schemas/ExportRead" } } }
         '404': { description: "Export job not found", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
-        '401': { description: "Unauthorized", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
+        '401': { description: "Unauthorized", content: { application: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
 
   /data/{export_type}:
     get:
@@ -271,6 +284,10 @@ paths:
           in: query
           schema: { type: string }
           description: "Comma-separated list of fields to include, e.g., 'id,name,email'"
+        - name: mask_pii
+          in: query
+          schema: { type: boolean, default: true }
+          description: "Apply PII masking to sensitive fields (e.g., personal numbers, salaries). Requires 'data:read' scope."
       responses:
         '200':
           description: "Streamed data in the requested format."
@@ -286,3 +303,16 @@ paths:
         '400': { description: "Bad Request", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
         '401': { description: "Unauthorized", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
         '404': { description: "Export type not found", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
+  
+  /monitoring/proxy-stats:
+    get:
+      summary: "Retrieve current statistics about the proxy pool and anti-bot policies"
+      operationId: "get_proxy_stats"
+      security: [{ ApiKeyAuth: [] }]
+      responses:
+        '200':
+          description: "Current proxy and policy statistics."
+          content: { application/json: { schema: { $ref: "#/components/schemas/ProxyStats" } } }
+        '401': { description: "Unauthorized", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
+        '403': { description: "Forbidden", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
+        '500': { description: "Internal Server Error", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
