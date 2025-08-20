@@ -1,13 +1,13 @@
-import datetime # Import datetime for the sunset date
-from fastapi import APIRouter, HTTPException, Depends, Header, Query
+import datetime
+from fastapi import APIRouter, HTTPException, Depends, Header, Query, status
 from sqlalchemy.orm import Session
 from uuid import UUID
 from typing import Optional, List, Dict, Any
-from src.database.models import Job, CrawlJobCreate, ScrapeJobCreate, JobRead, JobStatus, JobType
+from src.database.models import Job, CrawlJobCreate, ScrapeJobCreate, JobRead, JobStatus, JobType, JobProgress, JobMetrics, JobExport, JobExportArtifact, JobLogs, JobLinks
 from src.database.manager import get_db
 from src.scheduler.scheduler import schedule_job
 from src.webapp.security import get_current_tenant_id, authorize_with_scopes
-from src.utils.deprecation import deprecated_endpoint # Import the decorator
+from src.utils.deprecation import deprecated_endpoint
 import logging
 
 router = APIRouter()
@@ -32,7 +32,8 @@ async def submit_crawl_job(
         start_url=task.seeds[0],
         job_type=JobType.CRAWL.value,
         params=task.model_dump(),
-        status=JobStatus.QUEUED.value
+        status=JobStatus.QUEUED.value,
+        created_at=datetime.datetime.utcnow() # Ensure created_at is set
     )
     
     db.add(job)
@@ -41,10 +42,10 @@ async def submit_crawl_job(
     
     logger.info(f"Job {job.id} created and queued.", extra={"job_id": str(job.id), "tenant_id": str(tenant_id)})
     
-    schedule_job(str(job.id))
+    schedule_job(str(job.id), job_type=JobType.CRAWL.value, params=task.model_dump())
     
-    response_data = {**job.__dict__, "links": {"self": f"/v1/jobs/{job.id}"}}
-    return response_data
+    # Construct JobRead from the ORM object, which will use the model_validator
+    return JobRead.model_validate(job)
 
 @router.post("/jobs/scrape", response_model=JobRead, status_code=202, dependencies=[Depends(authorize_with_scopes(["jobs:write"]))])
 async def submit_scrape_job(
@@ -63,7 +64,8 @@ async def submit_scrape_job(
         start_url=start_url,
         job_type=JobType.SCRAPE.value,
         params=task.model_dump(),
-        status=JobStatus.QUEUED.value
+        status=JobStatus.QUEUED.value,
+        created_at=datetime.datetime.utcnow() # Ensure created_at is set
     )
 
     db.add(job)
@@ -71,10 +73,10 @@ async def submit_scrape_job(
     db.refresh(job)
 
     logger.info(f"Job {job.id} created and queued.", extra={"job_id": str(job.id), "tenant_id": str(tenant_id)})
-    schedule_job(str(job.id))
+    schedule_job(str(job.id), job_type=JobType.SCRAPE.value, params=task.model_dump())
 
-    response_data = {**job.__dict__, "links": {"self": f"/v1/jobs/{job.id}"}}
-    return response_data
+    # Construct JobRead from the ORM object, which will use the model_validator
+    return JobRead.model_validate(job)
 
 @router.get("/jobs/{job_id}", response_model=JobRead, dependencies=[Depends(authorize_with_scopes(["data:read"]))])
 async def get_job_status(
@@ -90,8 +92,34 @@ async def get_job_status(
         logger.warning(f"Job with ID {job_id} not found for tenant {tenant_id}.", extra={"job_id": str(job_id), "tenant_id": str(tenant_id)})
         raise HTTPException(status_code=404, detail="Job not found")
         
-    response_data = {**job.__dict__, "links": {"self": f"/v1/jobs/{job.id}"}}
-    return response_data
+    # Construct JobRead from the ORM object, which will use the model_validator
+    return JobRead.model_validate(job)
+
+@router.post("/jobs/{job_id}/cancel", status_code=202, dependencies=[Depends(authorize_with_scopes(["jobs:write"]))])
+async def cancel_job(
+    job_id: UUID,
+    tenant_id: UUID = Depends(get_current_tenant_id),
+    db: Session = Depends(get_db)
+):
+    """Requests cancellation of a running or queued job."""
+    logger.info(f"Received cancellation request for job {job_id}", extra={"job_id": str(job_id), "tenant_id": str(tenant_id)})
+    job = db.query(Job).filter(Job.id == job_id, Job.tenant_id == tenant_id).first()
+
+    if not job:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found.")
+    
+    if job.status in [JobStatus.COMPLETED.value, JobStatus.FAILED.value, JobStatus.CANCELLED.value]:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"Job is already in status: {job.status}. Cannot cancel.")
+
+    # Mark job as cancelled. The scheduler/worker should pick this up.
+    job.status = JobStatus.CANCELLED.value
+    job.finished_at = datetime.datetime.utcnow()
+    db.commit()
+    db.refresh(job)
+
+    logger.info(f"Job {job_id} marked as CANCELLED.", extra={"job_id": str(job_id), "tenant_id": str(tenant_id)})
+    return {"message": "Cancellation requested. Job status will update shortly."}
+
 
 @router.get("/jobs", response_model=List[JobRead], dependencies=[Depends(authorize_with_scopes(["data:read"]))])
 async def list_jobs(
@@ -122,4 +150,5 @@ async def list_jobs(
         raise HTTPException(status_code=400, detail=f"Invalid sort_by field: {sort_by}")
 
     jobs = query.offset(offset).limit(limit).all()
-    return [{**job.__dict__, "links": {"self": f"/v1/jobs/{job.id}"}} for job in jobs]
+    # Construct JobRead from the ORM objects, which will use the model_validator
+    return [JobRead.model_validate(job) for job in jobs]

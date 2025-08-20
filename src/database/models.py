@@ -26,6 +26,7 @@ class JobType(str, enum.Enum):
     CRAWL = "crawl"
     SCRAPE = "scrape"
     EXPORT = "export" # Added EXPORT job type
+    DIAGNOSTIC = "diagnostic" # Added DIAGNOSTIC job type
 
 class JobStatus(str, enum.Enum):
     PENDING = "pending"
@@ -625,9 +626,9 @@ class ScrapingJob(Base):
 # --- Operational Models (Existing, updated with tenant_id) ---
 
 class Job(Base):
-    __tablename__ = "scraping_jobs"
+    __tablename__ = "scraping_jobs" # Re-using scraping_jobs table for Job model
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    tenant_id = Column(UUID(as_uuid=True), ForeignKey('auth.users.id', ondelete='CASCADE'), nullable=False) # New column
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey('auth.users.id', ondelete='CASCADE'), nullable=False)
     job_type = Column(String, nullable=False)
     start_url = Column(String, nullable=False)
     status = Column(String, default=JobStatus.PENDING.value, nullable=False)
@@ -636,6 +637,20 @@ class Job(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     started_at = Column(DateTime(timezone=True))
     finished_at = Column(DateTime(timezone=True))
+    # Added fields for job status enrichment
+    progress_queued = Column(Integer, default=0)
+    progress_in_flight = Column(Integer, default=0)
+    progress_completed = Column(Integer, default=0)
+    progress_failed = Column(Integer, default=0)
+    metrics_throughput_per_min = Column(Numeric)
+    metrics_p95_latency_ms = Column(Numeric)
+    metrics_goodput_ratio = Column(Numeric)
+    metrics_ban_rate = Column(Numeric)
+    export_status = Column(Text)
+    export_artifacts = Column(JSONB) # List of dicts for artifacts
+    logs_stdout_url = Column(Text)
+    logs_errors_url = Column(Text)
+
 
 class OAuthClient(Base):
     __tablename__ = "oauth_clients"
@@ -809,9 +824,39 @@ class ExportRead(BaseModel):
         orm_mode = True
 
 # General Job Models
+class JobProgress(BaseModel):
+    queued: int = 0
+    in_flight: int = 0
+    completed: int = 0
+    failed: int = 0
+
+class JobMetrics(BaseModel):
+    throughput_per_min: Optional[float] = None
+    p95_latency_ms: Optional[float] = None
+    goodput_ratio: Optional[float] = None
+    ban_rate: Optional[float] = None
+
+class JobExportArtifact(BaseModel):
+    name: str
+    size_bytes: Optional[int] = None
+    download_url: Optional[str] = None
+    expires_at: Optional[datetime.datetime] = None
+
+class JobExport(BaseModel):
+    status: str
+    artifacts: List[JobExportArtifact] = Field(default_factory=list)
+
+class JobLogs(BaseModel):
+    stdout: Optional[str] = None
+    errors: Optional[str] = None
+
+class JobLinks(BaseModel):
+    self: str
+    cancel: Optional[str] = None
+
 class JobRead(BaseModel):
     id: uuid.UUID
-    tenant_id: uuid.UUID # New column
+    tenant_id: uuid.UUID
     job_type: JobType
     start_url: str
     status: JobStatus
@@ -820,10 +865,60 @@ class JobRead(BaseModel):
     created_at: datetime.datetime
     started_at: Optional[datetime.datetime] = None
     finished_at: Optional[datetime.datetime] = None
-    links: Dict[str, str]
+    
+    # New fields for enriched status
+    progress: JobProgress = Field(default_factory=JobProgress)
+    metrics: JobMetrics = Field(default_factory=JobMetrics)
+    export: Optional[JobExport] = None # Only for scrape/export jobs that produce artifacts
+    logs: JobLogs = Field(default_factory=JobLogs)
+    links: JobLinks # Updated to use JobLinks model
 
     class Config:
         orm_mode = True
+        # Allow population by field name for SQLAlchemy ORM objects
+        from_attributes = True 
+
+    @model_validator(mode='before')
+    @classmethod
+    def populate_nested_fields_from_orm(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            return data
+        
+        # Assume data is an SQLAlchemy ORM object
+        # Manually map ORM attributes to Pydantic nested models
+        if hasattr(data, 'progress_queued'):
+            data.progress = JobProgress(
+                queued=data.progress_queued,
+                in_flight=data.progress_in_flight,
+                completed=data.progress_completed,
+                failed=data.progress_failed
+            )
+        if hasattr(data, 'metrics_throughput_per_min'):
+            data.metrics = JobMetrics(
+                throughput_per_min=data.metrics_throughput_per_min,
+                p95_latency_ms=data.metrics_p95_latency_ms,
+                goodput_ratio=data.metrics_goodput_ratio,
+                ban_rate=data.metrics_ban_rate
+            )
+        if hasattr(data, 'export_status'):
+            data.export = JobExport(
+                status=data.export_status,
+                artifacts=data.export_artifacts if data.export_artifacts else []
+            )
+        if hasattr(data, 'logs_stdout_url'):
+            data.logs = JobLogs(
+                stdout=data.logs_stdout_url,
+                errors=data.logs_errors_url
+            )
+        
+        # Construct links
+        job_id_str = str(data.id)
+        data.links = JobLinks(
+            self=f"/v1/jobs/{job_id_str}",
+            cancel=f"/v1/jobs/{job_id_str}/cancel" if data.status in [JobStatus.QUEUED.value, JobStatus.RUNNING.value] else None
+        )
+        return data
+
 
 # Template Models
 class TemplateBase(BaseModel):
@@ -831,10 +926,12 @@ class TemplateBase(BaseModel):
     dsl: Dict[str, Any]
 
 class TemplateCreate(TemplateBase):
-    pass
+    message: Optional[str] = Field(None, description="Commit message for the template change.")
+    validate_only: bool = Field(False, description="If true, only validate the template without saving.")
 
 class TemplateUpdate(TemplateBase):
-    pass
+    message: Optional[str] = Field(None, description="Commit message for the template change.")
+    validate_only: bool = Field(False, description="If true, only validate the template without saving.")
 
 class TemplateRead(TemplateBase):
     id: uuid.UUID
@@ -843,6 +940,8 @@ class TemplateRead(TemplateBase):
     created_at: datetime.datetime
     updated_at: Optional[datetime.datetime] = None
     etag: Optional[str] = None # For optimistic concurrency
+    status: str = Field("stored", description="Current status of the template (e.g., stored, active, draft).")
+    links: Dict[str, str] = Field(default_factory=dict) # Links to versions, validation endpoint etc.
 
     class Config:
         orm_mode = True
