@@ -31,15 +31,17 @@ cv_job_id = contextvars.ContextVar("job_id", default=None)
 cv_domain = contextvars.ContextVar("domain", default=None)
 cv_template = contextvars.ContextVar("template", default=None)
 cv_mode = contextvars.ContextVar("mode", default=None)  # http | browser
+cv_request_id = contextvars.ContextVar("request_id", default=None) # New: Request ID
 
 def set_context(run_id: Optional[str]=None, job_id: Optional[str]=None,
                 domain: Optional[str]=None, template: Optional[str]=None,
-                mode: Optional[str]=None):
+                mode: Optional[str]=None, request_id: Optional[str]=None):
     if run_id is not None: cv_run_id.set(run_id)
     if job_id is not None: cv_job_id.set(job_id)
     if domain is not None: cv_domain.set(domain)
     if template is not None: cv_template.set(template)
     if mode is not None: cv_mode.set(mode)
+    if request_id is not None: cv_request_id.set(request_id)
 
 def get_context() -> Dict[str, Optional[str]]:
     return {
@@ -48,6 +50,7 @@ def get_context() -> Dict[str, Optional[str]]:
         "domain": cv_domain.get(),
         "template": cv_template.get(),
         "mode": cv_mode.get(),
+        "request_id": cv_request_id.get(), # Include request_id
     }
 
 # -----------------------------

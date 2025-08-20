@@ -2,14 +2,15 @@ from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import HTTPException, RequestValidationError
 from prometheus_client import make_asgi_app
-from src.webapp.api import jobs, templates, auth, exports, webhooks # Import the new webhooks router
+from src.webapp.api import jobs, templates, auth, exports, webhooks
 from src.utils.logger import setup_logging
 from src.utils.telemetry import setup_telemetry
 from src.utils.rate_limiter import RateLimitMiddleware
 from src.utils.idempotency import IdempotencyMiddleware
 from src.utils.deprecation import DeprecationMiddleware
 from src.utils.error_models import ErrorResponse # Import the new error model
-from src.observability.instrumentation import get_context # To get request_id
+from src.utils.request_id_middleware import RequestIDMiddleware # Import the new middleware
+from src.observability.instrumentation import get_context, set_context # To get request_id
 import os
 import logging
 
@@ -30,7 +31,8 @@ setup_telemetry(app)
 metrics_app = make_asgi_app()
 app.mount("/metrics", metrics_app)
 
-# Add middleware for rate limiting, idempotency, and deprecation
+# Add middleware for request ID, rate limiting, idempotency, and deprecation
+app.add_middleware(RequestIDMiddleware) # Must be added early to ensure ID is available
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 app.add_middleware(RateLimitMiddleware, redis_url=REDIS_URL)
 app.add_middleware(IdempotencyMiddleware)
@@ -97,4 +99,4 @@ app.include_router(jobs.router, prefix="/api/v1", tags=["Jobs"])
 app.include_router(templates.router, prefix="/api/v1", tags=["Templates"])
 app.include_router(auth.router, prefix="/api/v1", tags=["Authentication"])
 app.include_router(exports.router, prefix="/api/v1", tags=["Exports"])
-app.include_router(webhooks.router, prefix="/api/v1", tags=["Webhooks"]) # Include the new webhooks router
+app.include_router(webhooks.router, prefix="/api/v1", tags=["Webhooks"])
