@@ -111,13 +111,23 @@ async def get_data_direct(
     filters: Optional[str] = Query(None, description="JSON string of filters, e.g., '{\"field\":\"value\"}' or '{\"field\":{\"gte\":\"value\"}}'"),
     sort_by: Optional[str] = Query(None, description="Field to sort by, e.g., 'created_at' or '-created_at' for descending."),
     fields: Optional[str] = Query(None, description="Comma-separated list of fields to include, e.g., 'id,name,email'"),
-    mask_pii: bool = Query(True, description="Apply PII masking to sensitive fields (e.g., personal numbers, salaries). Requires 'data:read' scope."),
-    if_none_match: Optional[str] = Header(None, alias="If-None-Match")
+    mask_pii: bool = Query(True, description="Apply PII masking to sensitive fields (e.g., personal numbers, salaries). Requires 'data:read' scope to disable."), # Updated description
+    if_none_match: Optional[str] = Header(None, alias="If-None-Match"),
+    request: Request = Request # Inject Request object to access state.scopes
 ):
     """
     Directly retrieves data in specified format (CSV, NDJSON, JSON).
     Supports content negotiation via Accept header.
     """
+    # PII masking enforcement
+    if not mask_pii: # If client explicitly requests to disable masking
+        user_scopes = getattr(request.state, "scopes", [])
+        if "data:read:pii" not in user_scopes and "admin:*" not in user_scopes:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Insufficient permissions. 'data:read:pii' scope required to disable PII masking."
+            )
+
     parsed_filters = {}
     if filters:
         try:
@@ -128,15 +138,13 @@ async def get_data_direct(
     parsed_fields = fields.split(',') if fields else None
 
     # Determine ETag based on data content and filters
-    # For simplicity, ETag is based on a hash of filters and the latest update timestamp
-    # A more robust ETag would involve hashing the actual data content or a version ID.
     latest_update = get_latest_update_timestamp_for_export_type(db, export_type, tenant_id, parsed_filters)
     etag_content = {
         "export_type": export_type,
         "filters": parsed_filters,
         "sort_by": sort_by,
         "fields": parsed_fields,
-        "mask_pii": mask_pii,
+        "mask_pii": mask_pii, # Include mask_pii in ETag calculation
         "latest_update": latest_update.isoformat() if latest_update else "none"
     }
     current_etag = f'"{hashlib.sha256(json.dumps(etag_content, sort_keys=True).encode()).hexdigest()}"'
@@ -184,9 +192,6 @@ async def get_data_direct(
     }
     if compress:
         headers["Content-Encoding"] = "gzip"
-        # Wrap the stream in gzip compression
-        # Note: This is a simple approach. For very large files, consider
-        # a more efficient streaming gzip implementation or offloading to a proxy.
         def gzip_stream():
             buffer = io.BytesIO()
             with gzip.GzipFile(fileobj=buffer, mode='wb') as gz:
@@ -195,7 +200,7 @@ async def get_data_direct(
                     yield buffer.getvalue()
                     buffer.seek(0)
                     buffer.truncate(0)
-            yield buffer.getvalue() # Yield any remaining data
+            yield buffer.getvalue()
         stream_generator = gzip_stream()
         headers["Content-Disposition"] += ".gz"
 
