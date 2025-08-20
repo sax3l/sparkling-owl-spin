@@ -513,10 +513,11 @@ input TemplateInput {
   validate_only: Boolean
 }
 
-# --- Persisted Queries ---
-# For common dashboard queries or frequently used complex queries,
-# consider using persisted queries to reduce network overhead and improve security.
-# This involves registering a query on the server and referencing it by an ID from the client.
+# --- GraphQL Deprecation Best Practices ---
+# When deprecating fields or types in GraphQL, use the @deprecated directive.
+# Provide a 'reason' argument explaining why it's deprecated and suggest alternatives.
+# Communicate a 'sunset' date in documentation for when the field will be removed.
 # Example:
-# query MyDashboardData { ... } -> register on server -> client sends { queryId: "MyDashboardData" }
-# This is an architectural pattern and not directly part of the GraphQL SDL.
+#   oldField: String @deprecated(reason: "Use newField instead. Will be removed after 2025-01-01.")
+#
+# This approach ensures backward compatibility for clients and provides a clear migration path.

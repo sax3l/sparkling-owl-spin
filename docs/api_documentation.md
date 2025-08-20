@@ -19,6 +19,7 @@ When an API endpoint or a specific field is deprecated, we follow these guidelin
     *   **Example Header:** `Sunset: 2025-01-01T00:00:00Z`
     *   A `Warning` header (code 299) may also be included to provide a human-readable message.
 3.  **Grace Period:** Deprecated features will be maintained for a minimum of **6 to 12 months** from the date of deprecation before being removed. This provides ample time for clients to migrate to newer versions or alternative solutions.
+4.  **New Versions:** For significant breaking changes to resource forms or behavior, a new API version will be introduced (e.g., `/api/v2`). Clients will need to explicitly opt into the new version by changing their API endpoint. Content negotiation via `Accept` headers may be considered for minor variations within a version.
 
 ## GraphQL API
 
