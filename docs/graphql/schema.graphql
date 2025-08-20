@@ -1,82 +1,30 @@
-"""GraphQL Schema for Ethical Crawler & Data Platform"""
-directive @auth(requires: [Role!] = [ADMIN]) on OBJECT | FIELD_DEFINITION
-directive @rateLimit(limit: Int!, duration: Int!) on FIELD_DEFINITION
-
-enum Role {
-  ADMIN
-  ANALYST
-  READONLY
-  API_KEY
-}
-
 scalar DateTime
 scalar Decimal
 scalar JSON
 
 type Query {
-  "Get person by ID"
-  person(id: ID!): Person @auth(requires: [ADMIN, ANALYST])
-  
-  "Search persons with filtering and pagination"
+  person(id: ID!): Person
   persons(
     filter: PersonFilter
-    pagination: Pagination = {first: 50}
+    pagination: Pagination = {}
     sort: [Sort!]
-  ): PersonConnection! @auth(requires: [ADMIN, ANALYST]) @rateLimit(limit: 100, duration: 60)
+  ): PersonConnection!
 
-  "Get company by ID"
-  company(id: ID!): Company @auth(requires: [ADMIN, ANALYST])
-  
-  "Search companies with filtering and pagination"
-  companies(
-    filter: CompanyFilter
-    pagination: Pagination = {first: 50}
-    sort: [Sort!]
-  ): CompanyConnection! @auth(requires: [ADMIN, ANALYST]) @rateLimit(limit: 100, duration: 60)
+  company(id: ID!): Company
+  companies(filter: CompanyFilter, pagination: Pagination = {}, sort: [Sort!]): CompanyConnection!
 
-  "Get vehicle by ID"
-  vehicle(id: ID!): Vehicle @auth(requires: [ADMIN, ANALYST])
-  
-  "Search vehicles with filtering and pagination"
-  vehicles(
-    filter: VehicleFilter
-    pagination: Pagination = {first: 50}
-    sort: [Sort!]
-  ): VehicleConnection! @auth(requires: [ADMIN, ANALYST]) @rateLimit(limit: 100, duration: 60)
+  vehicle(id: ID!): Vehicle
+  vehicles(filter: VehicleFilter, pagination: Pagination = {}, sort: [Sort!]): VehicleConnection!
 
-  "Get job status by ID"
-  job(id: ID!): Job @auth(requires: [ADMIN])
-  
-  "List jobs with filtering"
-  jobs(
-    filter: JobFilter
-    pagination: Pagination = {first: 50}
-    sort: [Sort!]
-  ): JobConnection! @auth(requires: [ADMIN])
+  job(id: ID!): Job
+  jobs(filter: JobFilter, pagination: Pagination = {}, sort: [Sort!]): JobConnection!
 
-  "Get proxy statistics"
-  proxyStats: ProxyStats! @auth(requires: [ADMIN])
-}
-
-type Mutation {
-  "Start a new crawl job"
-  startCrawlJob(input: CrawlJobInput!): JobResult! @auth(requires: [ADMIN])
-  
-  "Start a new scrape job"
-  startScrapeJob(input: ScrapeJobInput!): JobResult! @auth(requires: [ADMIN])
-  
-  "Create or update a template"
-  upsertTemplate(input: TemplateInput!): TemplateResult! @auth(requires: [ADMIN])
-  
-  "Activate a specific template version"
-  activateTemplate(input: ActivateTemplateInput!): TemplateResult! @auth(requires: [ADMIN])
+  proxyStats: ProxyStats!
 }
 
 input Pagination {
-  first: Int = 50
+  first: Int
   after: String
-  last: Int
-  before: String
 }
 
 input Sort {
@@ -99,13 +47,37 @@ type Person {
   age: Int
   civil_status: String
   salary: Decimal
-  remark: String
-  addresses(first: Int = 10, after: String): PersonAddressConnection!
-  contacts(first: Int = 10, after: String): PersonContactConnection!
-  companies(first: Int = 10, after: String): CompanyConnection!
-  vehicles(first: Int = 10, after: String): VehicleConnection!
-  updated_at: DateTime!
-  created_at: DateTime!
+  has_remarks: Boolean
+  addresses(first: Int, after: String): PersonAddressConnection!
+  contacts(first: Int, after: String): PersonContactConnection!
+  companies(first: Int, after: String): CompanyConnection! # Roles in companies
+  vehicles(first: Int, after: String): VehicleConnection! # Ownership of vehicles
+  created_at: DateTime
+  updated_at: DateTime
+}
+
+type PersonAddress {
+  address_id: ID!
+  street: String
+  postal_code: String
+  city: String
+  municipality: String
+  county: String
+  special_address: String
+  start_date: DateTime
+  end_date: DateTime
+  created_at: DateTime
+}
+
+type PersonContact {
+  contact_id: ID!
+  phone_number: String # Masked or partial
+  operator: String
+  user_type: String
+  last_porting_date: DateTime
+  previous_operator: String
+  kind: String
+  created_at: DateTime
 }
 
 type Company {
@@ -121,11 +93,38 @@ type Company {
   municipal_seat: String
   sni_code: String
   industry: String
-  financials(first: Int = 10, after: String): CompanyFinancialConnection!
-  vehicles(first: Int = 10, after: String): VehicleConnection!
-  annual_reports(first: Int = 10, after: String): AnnualReportConnection!
-  updated_at: DateTime!
-  created_at: DateTime!
+  remark_control: String
+  financials(first: Int, after: String): CompanyFinancialConnection!
+  vehicles(first: Int, after: String): VehicleConnection! # Vehicles owned by company
+  roles(first: Int, after: String): CompanyRoleConnection! # People roles in company
+  created_at: DateTime
+  updated_at: DateTime
+}
+
+type CompanyFinancial {
+  finance_id: ID!
+  fiscal_year: DateTime
+  turnover: Decimal
+  result_after_financial_items: Decimal
+  annual_result: Decimal
+  total_assets: Decimal
+  profit_margin: Decimal
+  cash_liquidity: Decimal
+  solidity: Decimal
+  employee_count: Int
+  share_capital: Decimal
+  risk_buffer: Decimal
+  report_url: String
+  created_at: DateTime
+}
+
+type CompanyRole {
+  role_id: ID!
+  role_name: String
+  is_beneficial_owner: Boolean
+  start_date: DateTime
+  end_date: DateTime
+  created_at: DateTime
 }
 
 type Vehicle {
@@ -135,103 +134,129 @@ type Vehicle {
   make: String
   model: String
   model_year: Int
-  emission_class: String
+  import_status: String
+  stolen_status: String
+  traffic_status: String
+  owner_count: Int
+  first_registration_date: DateTime
+  traffic_in_sweden_since: DateTime
   next_inspection: DateTime
+  emission_class: String
   tax_year1_3: Decimal
   tax_year4: Decimal
+  tax_month: Int
+  is_financed: Boolean
+  is_leased: Boolean
+  eu_category: String
+  type_approval_number: String
   tech_specs: VehicleTechnicalSpecs
-  owners(first: Int = 10, after: String): VehicleOwnershipConnection!
-  history(first: Int = 10, after: String): VehicleHistoryConnection!
-  updated_at: DateTime!
-  created_at: DateTime!
+  owners(first: Int, after: String): VehicleOwnershipConnection!
+  history(first: Int, after: String): VehicleHistoryConnection!
+  created_at: DateTime
+  updated_at: DateTime
 }
 
 type VehicleTechnicalSpecs {
-  engine_power: String
-  engine_volume: Decimal
+  spec_id: ID!
+  engine_power_kw: Decimal
+  engine_volume_cc: Int
+  top_speed_kmh: Int
   fuel_type: String
   gearbox: String
   drive_type: String
-  wltp_co2: Decimal
-  length: Int
-  width: Int
-  height: Int
+  wltp_consumption_l_100km: Decimal
+  wltp_co2_g_km: Decimal
+  noise_drive_db: Int
+  passenger_count: Int
+  airbag_info: String
+  length_mm: Int
+  width_mm: Int
+  height_mm: Int
+  curb_weight_kg: Int
+  total_weight_kg: Int
+  payload_kg: Int
+  trailer_braked_kg: Int
+  trailer_unbraked_kg: Int
+  trailer_total_b_kg: Int
+  trailer_total_b_plus_kg: Int
+  wheelbase_mm: Int
+  tire_front: String
+  tire_rear: String
+  rim_front: String
+  rim_rear: String
   body_type: String
   color: String
+  created_at: DateTime
 }
 
-# Connection types (Relay-style pagination)
-type PersonConnection {
-  edges: [PersonEdge!]!
-  pageInfo: PageInfo!
-  totalCount: Int!
+type VehicleOwnership {
+  vehicle_owner_id: ID!
+  owner_kind: String # Enum: PERSON, COMPANY
+  role: String
+  start_date: DateTime
+  end_date: DateTime
+  created_at: DateTime
+  # owner: Person | Company # Future: Union type for owner
 }
 
-type PersonEdge {
-  cursor: String!
-  node: Person!
+type VehicleHistory {
+  history_id: ID!
+  event_date: DateTime
+  event_kind: String
+  event_desc: String
+  event_link: String
+  raw_json: JSON
+  created_at: DateTime
 }
-
-type PageInfo {
-  hasNextPage: Boolean!
-  hasPreviousPage: Boolean!
-  startCursor: String
-  endCursor: String
-}
-
-# ... similar Connection types for other entities ...
 
 type Job {
   job_id: ID!
-  type: JobType!
-  status: JobStatus!
+  type: String!
+  status: String!
   started_at: DateTime
-  finished_at: DateTime
-  updated_at: DateTime!
+  updated_at: DateTime
   progress: JobProgress
+  metrics: JobMetrics
   export: JobExport
-  tags: [String!]!
-  error: String
-}
-
-enum JobType {
-  CRAWL
-  SCRAPE
-}
-
-enum JobStatus {
-  PENDING
-  QUEUED
-  RUNNING
-  COMPLETED
-  FAILED
-  CANCELLED
+  logs: JobLogs
+  links: JobLinks
+  tags: [String!]
 }
 
 type JobProgress {
-  queued: Int!
-  in_flight: Int!
-  completed: Int!
-  failed: Int!
+  queued: Int
+  in_flight: Int
+  completed: Int
+  failed: Int
+}
+
+type JobMetrics {
+  throughput_per_min: Float
+  p95_latency_ms: Float
+  goodput_ratio: Float
+  ban_rate: Float
 }
 
 type JobExport {
-  status: ExportStatus!
-  artifacts: [JobArtifact!]!
-}
-
-enum ExportStatus {
-  PENDING
-  PROCESSING
-  COMPLETED
-  FAILED
+  status: String
+  artifacts: [JobArtifact!]
 }
 
 type JobArtifact {
   name: String!
   size_bytes: Int
-  download: String!
-  expires_at: DateTime!
+  download: String
+  expires_at: DateTime
+}
+
+type JobLogs {
+  stdout: String
+  errors: String
+}
+
+type JobLinks {
+  self: String!
+  cancel: String
 }
 
 type ProxyStats {
@@ -240,32 +265,226 @@ type ProxyStats {
   blocked: Int!
   avg_latency_ms: Int!
   ban_rate_1h: Float!
+  by_region: [ProxyRegionStats!]
+  updated_at: DateTime
 }
 
-# Input types
+type ProxyRegionStats {
+  region: String!
+  healthy: Int!
+  avg_latency_ms: Int!
+}
+
+# --- Connection Types for Pagination (Relay-style) ---
+
+type PageInfo {
+  hasNextPage: Boolean!
+  endCursor: String
+}
+
+type PersonConnection {
+  edges: [PersonEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int
+}
+
+type PersonEdge {
+  cursor: String!
+  node: Person!
+}
+
+type PersonAddressConnection {
+  edges: [PersonAddressEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int
+}
+
+type PersonAddressEdge {
+  cursor: String!
+  node: PersonAddress!
+}
+
+type PersonContactConnection {
+  edges: [PersonContactEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int
+}
+
+type PersonContactEdge {
+  cursor: String!
+  node: PersonContact!
+}
+
+type CompanyConnection {
+  edges: [CompanyEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int
+}
+
+type CompanyEdge {
+  cursor: String!
+  node: Company!
+}
+
+type CompanyFinancialConnection {
+  edges: [CompanyFinancialEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int
+}
+
+type CompanyFinancialEdge {
+  cursor: String!
+  node: CompanyFinancial!
+}
+
+type CompanyRoleConnection {
+  edges: [CompanyRoleEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int
+}
+
+type CompanyRoleEdge {
+  cursor: String!
+  node: CompanyRole!
+}
+
+type VehicleConnection {
+  edges: [VehicleEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int
+}
+
+type VehicleEdge {
+  cursor: String!
+  node: Vehicle!
+}
+
+type VehicleOwnershipConnection {
+  edges: [VehicleOwnershipEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int
+}
+
+type VehicleOwnershipEdge {
+  cursor: String!
+  node: VehicleOwnership!
+}
+
+type VehicleHistoryConnection {
+  edges: [VehicleHistoryEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int
+}
+
+type VehicleHistoryEdge {
+  cursor: String!
+  node: VehicleHistory!
+}
+
+type JobConnection {
+  edges: [JobEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int
+}
+
+type JobEdge {
+  cursor: String!
+  node: Job!
+}
+
+# --- Filter Input Types (Simplified for now, can be expanded) ---
+input PersonFilter {
+  first_name: String
+  last_name: String
+  city: String
+  personal_number: String
+  updated_at_gte: DateTime
+  updated_at_lte: DateTime
+}
+
+input CompanyFilter {
+  name: String
+  org_number: String
+  industry: String
+  updated_at_gte: DateTime
+  updated_at_lte: DateTime
+}
+
+input VehicleFilter {
+  registration_number: String
+  make: String
+  model: String
+  model_year: Int
+  model_year_gte: Int
+  model_year_lte: Int
+  updated_at_gte: DateTime
+  updated_at_lte: DateTime
+}
+
+input JobFilter {
+  job_type: String
+  status: String
+  created_at_gte: DateTime
+  created_at_lte: DateTime
+}
+
+# --- Mutations (Optional in v1, but good to define) ---
+type Mutation {
+  startCrawlJob(input: CrawlJobInput!): Job!
+  startScrapeJob(input: ScrapeJobInput!): Job!
+  upsertTemplate(input: TemplateInput!): Template!
+  activateTemplate(templateId: ID!, version: String!): Template!
+}
+
 input CrawlJobInput {
   seeds: [String!]!
-  max_depth: Int = 3
-  max_urls: Int = 10000
-  policy: CrawlPolicyInput
+  max_depth: Int
+  max_urls: Int
+  allow_domains: [String!]!
+  disallow_patterns: [String!]
+  # policy: CrawlPolicyInput # Future: Add detailed policy input
+  # caps: CrawlCapsInput # Future: Add caps input
+  tags: [String!]
 }
 
 input ScrapeJobInput {
-  template_id: ID!
+  template_id: String!
   template_version: String
   source: ScrapeSourceInput!
-  export: ExportConfigInput
+  # policy: ScrapePolicyInput # Future: Add detailed policy input
+  # caps: ScrapeCapsInput # Future: Add caps input
+  # export: ExportConfigInput # Future: Add export config input
+  tags: [String!]
+}
+
+input ScrapeSourceInput {
+  sitemap_query: SitemapQueryInput
+  urls: [String!]
+}
+
+input SitemapQueryInput {
+  domain: String!
+  pattern: String
+  limit: Int
 }
 
 input TemplateInput {
+  id: ID
   name: String!
   dsl: JSON!
-  version: String = "1.0.0"
+  version: String
+  message: String
+  validate_only: Boolean
 }
 
-input ActivateTemplateInput {
-  template_id: ID!
-  version: String!
+type Template {
+  id: ID!
+  name: String!
+  dsl: JSON!
+  version: Int!
+  created_at: DateTime!
+  updated_at: DateTime
+  etag: String
+  status: String
+  links: JSON # Or a specific Link type
 }
-
-# ... additional input types for filters and configurations ...
