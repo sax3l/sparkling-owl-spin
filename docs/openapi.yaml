@@ -262,7 +262,15 @@ paths:
         - name: filters
           in: query
           schema: { type: string }
-          description: "JSON string of filters, e.g., '{\"field\":\"value\"}'"
+          description: "JSON string of filters, e.g., '{\"field\":\"value\"}' or '{\"field\":{\"gte\":\"value\"}}'"
+        - name: sort_by
+          in: query
+          schema: { type: string }
+          description: "Field to sort by, e.g., 'created_at' or '-created_at' for descending. Multiple fields not supported yet."
+        - name: fields
+          in: query
+          schema: { type: string }
+          description: "Comma-separated list of fields to include, e.g., 'id,name,email'"
       responses:
         '200':
           description: "Streamed data in the requested format."

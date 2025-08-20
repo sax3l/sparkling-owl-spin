@@ -1,6 +1,6 @@
 import datetime
 import os
-from fastapi import APIRouter, HTTPException, Depends, Header, BackgroundTasks, Response
+from fastapi import APIRouter, HTTPException, Depends, Header, BackgroundTasks, Response, Query, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from uuid import UUID
@@ -104,9 +104,9 @@ async def get_data_direct(
     db: Session = Depends(get_db),
     format: Optional[str] = Query(None, description="Desired format: csv, ndjson, json"),
     compress: Optional[bool] = Query(False, description="Apply gzip compression"),
-    # Add more filters as query parameters, e.g., start_date, end_date, specific_id
-    # For simplicity, using a generic 'filters' param for now
-    filters: Optional[str] = Query(None, description="JSON string of filters, e.g., '{\"field\":\"value\"}'")
+    filters: Optional[str] = Query(None, description="JSON string of filters, e.g., '{\"field\":\"value\"}' or '{\"field\":{\"gte\":\"value\"}}'"),
+    sort_by: Optional[str] = Query(None, description="Field to sort by, e.g., 'created_at' or '-created_at' for descending."),
+    fields: Optional[str] = Query(None, description="Comma-separated list of fields to include, e.g., 'id,name,email'")
 ):
     """
     Directly retrieves data in specified format (CSV, NDJSON, JSON).
@@ -119,8 +119,10 @@ async def get_data_direct(
         except json.JSONDecodeError:
             raise HTTPException(status_code=400, detail="Invalid filters JSON format.")
 
-    data_generator = get_data_from_db(db, export_type, parsed_filters)
-    fieldnames = get_fieldnames_for_export_type(export_type)
+    parsed_fields = fields.split(',') if fields else None
+
+    data_generator = get_data_from_db(db, export_type, parsed_filters, sort_by, parsed_fields)
+    fieldnames = parsed_fields if parsed_fields else get_fieldnames_for_export_type(export_type)
 
     # Determine format based on query param or Accept header
     response_format = format

@@ -4,9 +4,11 @@ import json
 import gzip
 import os
 import datetime
+import uuid # Import uuid for UUID type handling
+import enum # Import enum for Enum type handling
 from typing import List, Dict, Any, Generator, Optional
 from sqlalchemy.orm import Session
-from sqlalchemy import inspect, text
+from sqlalchemy import inspect, text, asc, desc
 from src.database.models import Person, Company, Vehicle # Import relevant models
 from src.integrations.supabase.client import supabase # Assuming supabase client is available
 import logging
@@ -125,62 +127,74 @@ async def generate_presigned_url(bucket_name: str, file_path: str, expires_in: i
         logger.error(f"Error generating presigned URL: {e}")
         raise
 
-def get_data_from_db(db: Session, export_type: str, filters: Dict[str, Any]) -> Generator[Dict, None, None]:
+def get_data_from_db(
+    db: Session, 
+    export_type: str, 
+    filters: Dict[str, Any], 
+    sort_by: Optional[str] = None,
+    fields: Optional[List[str]] = None
+) -> Generator[Dict, None, None]:
     """
-    Fetches data from the database based on export_type and filters.
+    Fetches data from the database based on export_type, filters, sorting, and field selection.
     Yields rows as dictionaries.
     """
     model = get_model_by_export_type(export_type)
     query = db.query(model)
 
-    # Apply filters (basic example, needs more robust filter parsing)
+    # Apply filters
     for key, value in filters.items():
         if hasattr(model, key):
-            # Basic equality filter. For more complex filters (e.g., ranges, LIKE),
-            # you'd need a more sophisticated filter parsing logic.
-            query = query.filter(getattr(model, key) == value)
-
-    # Implement cursor-based pagination for large datasets
-    # For simplicity, this example fetches all matching records.
-    # In a real-world scenario, you'd fetch in chunks using a cursor.
-    
-    # Example of fetching in chunks (pseudo-code for cursor pagination)
-    # last_id = None
-    # while True:
-    #     chunk_query = query.order_by(model.id).limit(1000)
-    #     if last_id:
-    #         chunk_query = chunk_query.filter(model.id > last_id)
-    #     
-    #     results = chunk_query.all()
-    #     if not results:
-    #         break
-    #     
-    #     for row in results:
-    #         yield {c.key: getattr(row, c.key) for c in inspect(row).mapper.column_attrs}
-    #     
-    #     last_id = results[-1].id
-
-    # For now, fetch all and yield
-    for row in query.all():
-        # Convert SQLAlchemy model instance to dictionary
-        row_dict = {}
-        for column in inspect(model).columns:
-            value = getattr(row, column.name)
-            # Handle non-JSON serializable types (e.g., datetime, Decimal, UUID)
-            if isinstance(value, (datetime.datetime, datetime.date)):
-                row_dict[column.name] = value.isoformat()
-            elif isinstance(value, datetime.timedelta):
-                row_dict[column.name] = str(value)
-            elif isinstance(value, uuid.UUID):
-                row_dict[column.name] = str(value)
-            elif isinstance(value, enum.Enum):
-                row_dict[column.name] = value.value
-            elif isinstance(value, (float, int)):
-                row_dict[column.name] = value
-            elif isinstance(value, bytes): # For LargeBinary columns
-                row_dict[column.name] = value.decode('utf-8', errors='ignore') # Or base64 encode
+            column = getattr(model, key)
+            if isinstance(value, dict):
+                # Handle operators like gte, lte, in
+                if "gte" in value:
+                    query = query.filter(column >= value["gte"])
+                if "lte" in value:
+                    query = query.filter(column <= value["lte"])
+                if "in" in value and isinstance(value["in"], list):
+                    query = query.filter(column.in_(value["in"]))
             else:
-                row_dict[column.name] = value
+                # Basic equality filter
+                query = query.filter(column == value)
+        else:
+            logger.warning(f"Filter field '{key}' not found in model '{export_type}'. Skipping.")
+
+    # Apply sorting
+    if sort_by:
+        sort_column_name = sort_by.lstrip('-')
+        if hasattr(model, sort_column_name):
+            sort_column = getattr(model, sort_column_name)
+            if sort_by.startswith('-'):
+                query = query.order_by(desc(sort_column))
+            else:
+                query = query.order_by(asc(sort_column))
+        else:
+            logger.warning(f"Sort field '{sort_by}' not found in model '{export_type}'. Skipping sort.")
+
+    # Fetch and yield data
+    for row in query.all():
+        row_dict = {}
+        # Select specific fields if requested, otherwise all columns
+        columns_to_include = fields if fields else [c.name for c in inspect(model).columns]
+
+        for col_name in columns_to_include:
+            if hasattr(row, col_name):
+                value = getattr(row, col_name)
+                # Handle non-JSON serializable types (e.g., datetime, Decimal, UUID, Enum)
+                if isinstance(value, (datetime.datetime, datetime.date)):
+                    row_dict[col_name] = value.isoformat()
+                elif isinstance(value, datetime.timedelta):
+                    row_dict[col_name] = str(value)
+                elif isinstance(value, uuid.UUID):
+                    row_dict[col_name] = str(value)
+                elif isinstance(value, enum.Enum):
+                    row_dict[col_name] = value.value
+                elif isinstance(value, (float, int)):
+                    row_dict[col_name] = value
+                elif isinstance(value, bytes): # For LargeBinary columns
+                    row_dict[col_name] = value.decode('utf-8', errors='ignore') # Or base64 encode
+                else:
+                    row_dict[col_name] = value
         yield row_dict
 
 def get_fieldnames_for_export_type(export_type: str) -> List[str]:
