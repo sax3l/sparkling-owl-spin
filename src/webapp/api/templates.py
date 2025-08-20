@@ -71,7 +71,7 @@ async def update_template(
     template_update: TemplateUpdate, 
     tenant_id: UUID = Depends(get_current_tenant_id),
     db: Session = Depends(get_db),
-    if_match: Optional[str] = Header(None) # For optimistic concurrency
+    if_match: str = Header(..., description="ETag of the template for optimistic concurrency control.") # Made required
 ):
     """Updates an existing template."""
     db_template = db.query(Template).filter(Template.id == template_id, Template.tenant_id == tenant_id).first()
@@ -80,7 +80,7 @@ async def update_template(
     
     # Optimistic concurrency check
     expected_etag = _generate_etag(db_template)
-    if if_match and if_match != expected_etag:
+    if if_match != expected_etag: # if_match is now guaranteed to be present
         raise HTTPException(
             status_code=status.HTTP_412_PRECONDITION_FAILED,
             detail="Precondition Failed: ETag mismatch. The resource has been modified.",

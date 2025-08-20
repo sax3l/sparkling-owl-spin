@@ -70,7 +70,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
     logger.error(f"Validation Error: {exc.errors()}", extra={"request_id": request_id, "validation_errors": exc.errors()})
     return JSONResponse(
-        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, # Changed from 400 to 422
         content=error_response.model_dump(exclude_none=True)
     )
 
