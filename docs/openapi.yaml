@@ -156,6 +156,24 @@ components:
         policy_manager_status: { type: string, description: "Status of the policy manager (e.g., active, degraded)." }
         last_updated: { type: string, format: date-time, description: "Timestamp of when these statistics were last updated." }
 
+    DataQualityMetricInput:
+      type: object
+      required: [entity_type, entity_id]
+      properties:
+        entity_type: { type: string, description: "Type of entity (e.g., 'person', 'company', 'vehicle')." }
+        entity_id: { type: integer, format: int64, description: "ID of the entity." }
+        field_name: { type: string, nullable: true, description: "Specific field name if metric is field-level." }
+        completeness: { type: number, format: float, nullable: true, description: "Completeness score (0.0-1.0)." }
+        validity: { type: number, format: float, nullable: true, description: "Validity score (0.0-1.0)." }
+        consistency: { type: number, format: float, nullable: true, description: "Consistency score (0.0-1.0)." }
+        measured_at: { type: string, format: date-time, nullable: true, description: "Timestamp when metric was measured (defaults to now)." }
+
+    TemplateStatusUpdate:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string, enum: ["active", "inactive", "draft"], description: "New status for the template." }
+
 
 paths:
   /jobs/crawl:
@@ -301,7 +319,7 @@ paths:
             application/gzip:
               schema: { type: string, format: binary }
         '400': { description: "Bad Request", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
-        '401': { description: "Unauthorized", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
+        '401': { description: "Unauthorized", content: { application: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
         '404': { description: "Export type not found", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
   
   /monitoring/proxy-stats:
@@ -313,6 +331,57 @@ paths:
         '200':
           description: "Current proxy and policy statistics."
           content: { application/json: { schema: { $ref: "#/components/schemas/ProxyStats" } } }
-        '401': { description: "Unauthorized", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
-        '403': { description: "Forbidden", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
-        '500': { description: "Internal Server Error", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
+        '401': { description: "Unauthorized", content: { application: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
+        '403': { description: "Forbidden", content: { application: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
+        '500': { description: "Internal Server Error", content: { application: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
+
+  /data-quality-metrics:
+    post:
+      summary: "Submit data quality metrics for entities"
+      operationId: "submit_data_quality_metrics"
+      security: [{ ApiKeyAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/DataQualityMetricInput"
+      responses:
+        '201':
+          description: "Metrics submitted successfully."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+        '400': { description: "Bad Request", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
+        '401': { description: "Unauthorized", content: { application: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
+        '403': { description: "Forbidden", content: { application: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
+
+  /templates/{template_id}/status:
+    patch:
+      summary: "Update the status of a template"
+      operationId: "update_template_status"
+      security: [{ ApiKeyAuth: [] }]
+      parameters:
+        - name: template_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TemplateStatusUpdate"
+      responses:
+        '200':
+          description: "Template status updated successfully."
+          content: { application/json: { schema: { $ref: "#/components/schemas/TemplateRead" } } }
+        '400': { description: "Bad Request", content: { application: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
+        '401': { description: "Unauthorized", content: { application: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
+        '403': { description: "Forbidden", content: { application: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
+        '404': { description: "Template not found", content: { application: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }

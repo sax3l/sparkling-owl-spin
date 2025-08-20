@@ -35,7 +35,7 @@
             },
             {
               "key": "scope",
-              "value": "jobs:write data:read",
+              "value": "jobs:write data:read data_quality:write templates:write monitoring:read",
               "description": "Requested scopes (space-separated)"
             }
           ]
@@ -225,6 +225,43 @@
       "response": []
     },
     {
+      "name": "Data Quality: Submit Metrics",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "[\n  {\n    \"entity_type\": \"vehicle\",\n    \"entity_id\": 12345,\n    \"field_name\": \"registration_number\",\n    \"completeness\": 1.0,\n    \"validity\": 0.95,\n    \"consistency\": 1.0,\n    \"measured_at\": \"2024-07-20T10:00:00Z\"\n  },\n  {\n    \"entity_type\": \"person\",\n    \"entity_id\": 67890,\n    \"completeness\": 0.8,\n    \"validity\": 0.7,\n    \"measured_at\": \"2024-07-20T10:05:00Z\"\n  }\n]",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/data-quality-metrics",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "data-quality-metrics"
+          ]
+        },
+        "description": "Submits a batch of data quality metrics for various entities. Requires `data_quality:write` scope."
+      },
+      "response": []
+    },
+    {
       "name": "Templates: Create/Validate Template",
       "request": {
         "method": "POST",
@@ -263,6 +300,45 @@
           ]
         },
         "description": "Creates a new scraping template or validates it if `validate_only` is true. Returns the template details."
+      },
+      "response": []
+    },
+    {
+      "name": "Templates: Update Template Status",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"active\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/templates/{{templateId}}/status",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "templates",
+            "{{templateId}}",
+            "status"
+          ]
+        },
+        "description": "Updates the status of a template (e.g., active, inactive, draft). Requires `templates:write` scope."
       },
       "response": []
     },
@@ -319,6 +395,13 @@
           "    const responseJson = pm.response.json();",
           "    pm.environment.set('jobId', responseJson.id);",
           "    console.log('Job ID set:', responseJson.id);",
+          "}",
+          "",
+          "// Extract templateId from template creation response (if needed for update status)",
+          "if (pm.request.url.includes('/templates') && pm.request.method === 'POST' && pm.response.code === 201) {",
+          "    const responseJson = pm.response.json();",
+          "    pm.environment.set('templateId', responseJson.id);",
+          "    console.log('Template ID set:', responseJson.id);",
           "}"
         ]
       }
@@ -342,6 +425,12 @@
       "value": "",
       "type": "string",
       "description": "ID of a submitted job. Set automatically after job submission."
+    },
+    {
+      "key": "templateId",
+      "value": "",
+      "type": "string",
+      "description": "ID of a created template. Set automatically after template creation."
     },
     {
       "key": "client_id",

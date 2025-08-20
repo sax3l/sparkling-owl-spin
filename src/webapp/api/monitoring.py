@@ -1,11 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import Dict, Any
+from typing import Dict, Any, List
 from src.database.manager import get_db
-from src.webapp.security import authorize_with_scopes
+from src.webapp.security import authorize_with_scopes, get_current_tenant_id
 from src.anti_bot.policy_manager import PolicyManager # Assuming PolicyManager can provide stats
+from src.database.models import DataQualityMetric # Import DataQualityMetric model
 import logging
 import os
+import datetime
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -48,3 +50,43 @@ async def get_proxy_stats(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve proxy statistics."
         )
+
+@router.post("/data-quality-metrics", status_code=201, dependencies=[Depends(authorize_with_scopes(["data_quality:write", "admin:*"]))])
+async def submit_data_quality_metrics(
+    metrics: List[Dict[str, Any]], # Expecting a list of metric dictionaries
+    tenant_id: str = Depends(get_current_tenant_id), # Assuming tenant_id is passed as string or UUID
+    db: Session = Depends(get_db)
+):
+    """
+    Submits data quality metrics for entities.
+    This endpoint allows external systems (e.g., ETL pipelines) to report DQ results.
+    """
+    logger.info(f"Received {len(metrics)} data quality metrics for tenant {tenant_id}.", extra={"tenant_id": str(tenant_id)})
+    
+    new_metrics = []
+    for metric_data in metrics:
+        try:
+            # Ensure required fields are present and types are correct
+            # Note: DataQualityMetric model does not have tenant_id, but it should for multi-tenancy.
+            # For now, we'll just log the tenant_id and assume the metric applies to the tenant's data.
+            # A proper implementation would add tenant_id to DataQualityMetric table.
+            new_metric = DataQualityMetric(
+                entity_type=metric_data["entity_type"],
+                entity_id=metric_data["entity_id"],
+                field_name=metric_data.get("field_name"),
+                completeness=metric_data.get("completeness"),
+                validity=metric_data.get("validity"),
+                consistency=metric_data.get("consistency"),
+                measured_at=datetime.datetime.utcnow()
+            )
+            new_metrics.append(new_metric)
+        except KeyError as e:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Missing required field in metric data: {e}")
+        except Exception as e:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid metric data format: {e}")
+
+    db.add_all(new_metrics)
+    db.commit()
+    
+    logger.info(f"Successfully submitted {len(new_metrics)} data quality metrics.", extra={"tenant_id": str(tenant_id)})
+    return {"message": f"Successfully submitted {len(new_metrics)} data quality metrics."}

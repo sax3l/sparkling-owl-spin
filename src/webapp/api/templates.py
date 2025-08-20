@@ -1,7 +1,7 @@
-from fastapi import APIRouter, HTTPException, Depends, Header, Request
+from fastapi import APIRouter, HTTPException, Depends, Header, Request, status
 from sqlalchemy.orm import Session
 from uuid import UUID
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from src.database.models import Template, TemplateCreate, TemplateRead, TemplateUpdate
 from src.database.manager import get_db
 from src.webapp.security import get_current_tenant_id, authorize_with_scopes
@@ -113,3 +113,31 @@ async def delete_template(
     db.delete(db_template)
     db.commit()
     return None
+
+@router.patch("/templates/{template_id}/status", response_model=TemplateRead, dependencies=[Depends(authorize_with_scopes(["templates:write"]))])
+async def update_template_status(
+    template_id: UUID,
+    status_update: Dict[str, Any], # Expecting {"status": "active" | "inactive" | "draft"}
+    tenant_id: UUID = Depends(get_current_tenant_id),
+    db: Session = Depends(get_db)
+):
+    """
+    Updates the status of a template (e.g., active, inactive, draft).
+    This can be used for canary deployments or A/B testing of templates.
+    """
+    db_template = db.query(Template).filter(Template.id == template_id, Template.tenant_id == tenant_id).first()
+    if not db_template:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Template not found")
+
+    new_status = status_update.get("status")
+    if not new_status or new_status not in ["active", "inactive", "draft"]:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid status provided. Must be 'active', 'inactive', or 'draft'.")
+
+    db_template.status = new_status
+    db_template.updated_at = datetime.datetime.utcnow()
+    db.commit()
+    db.refresh(db_template)
+
+    template_read = TemplateRead.from_orm(db_template)
+    template_read.etag = _generate_etag(db_template)
+    return template_read
