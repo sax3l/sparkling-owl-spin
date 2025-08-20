@@ -1,3 +1,4 @@
+import datetime # Import datetime for the sunset date
 from fastapi import APIRouter, HTTPException, Depends, Header, Query
 from sqlalchemy.orm import Session
 from uuid import UUID
@@ -5,17 +6,18 @@ from typing import Optional, List, Dict, Any
 from src.database.models import Job, CrawlJobCreate, ScrapeJobCreate, JobRead, JobStatus, JobType
 from src.database.manager import get_db
 from src.scheduler.scheduler import schedule_job
-from src.webapp.security import get_current_tenant_id, authorize_with_scopes # Import new security dependencies
+from src.webapp.security import get_current_tenant_id, authorize_with_scopes
+from src.utils.deprecation import deprecated_endpoint # Import the decorator
 import logging
-import datetime
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
 @router.post("/jobs/crawl", response_model=JobRead, status_code=202, dependencies=[Depends(authorize_with_scopes(["jobs:write"]))])
+@deprecated_endpoint(sunset_date=datetime.date(2025, 1, 1)) # Example: This endpoint will be deprecated by Jan 1, 2025
 async def submit_crawl_job(
     task: CrawlJobCreate, 
-    tenant_id: UUID = Depends(get_current_tenant_id), # Get tenant_id
+    tenant_id: UUID = Depends(get_current_tenant_id),
     db: Session = Depends(get_db),
     idempotency_key: Optional[str] = Header(None)
 ):
@@ -26,7 +28,7 @@ async def submit_crawl_job(
         raise HTTPException(status_code=400, detail="Seed list cannot be empty")
 
     job = Job(
-        tenant_id=tenant_id, # Assign tenant_id
+        tenant_id=tenant_id,
         start_url=task.seeds[0],
         job_type=JobType.CRAWL.value,
         params=task.model_dump(),
@@ -47,7 +49,7 @@ async def submit_crawl_job(
 @router.post("/jobs/scrape", response_model=JobRead, status_code=202, dependencies=[Depends(authorize_with_scopes(["jobs:write"]))])
 async def submit_scrape_job(
     task: ScrapeJobCreate,
-    tenant_id: UUID = Depends(get_current_tenant_id), # Get tenant_id
+    tenant_id: UUID = Depends(get_current_tenant_id),
     db: Session = Depends(get_db),
     idempotency_key: Optional[str] = Header(None)
 ):
@@ -57,7 +59,7 @@ async def submit_scrape_job(
     start_url = task.source.sitemap_query.domain if task.source.sitemap_query else (task.source.urls[0] if task.source.urls else "N/A")
 
     job = Job(
-        tenant_id=tenant_id, # Assign tenant_id
+        tenant_id=tenant_id,
         start_url=start_url,
         job_type=JobType.SCRAPE.value,
         params=task.model_dump(),
@@ -77,12 +79,12 @@ async def submit_scrape_job(
 @router.get("/jobs/{job_id}", response_model=JobRead, dependencies=[Depends(authorize_with_scopes(["data:read"]))])
 async def get_job_status(
     job_id: UUID, 
-    tenant_id: UUID = Depends(get_current_tenant_id), # Get tenant_id
+    tenant_id: UUID = Depends(get_current_tenant_id),
     db: Session = Depends(get_db)
 ):
     """Retrieves the status of a specific job from the database."""
     logger.debug(f"Fetching status for job {job_id}", extra={"job_id": str(job_id), "tenant_id": str(tenant_id)})
-    job = db.query(Job).filter(Job.id == job_id, Job.tenant_id == tenant_id).first() # Filter by tenant_id
+    job = db.query(Job).filter(Job.id == job_id, Job.tenant_id == tenant_id).first()
     
     if not job:
         logger.warning(f"Job with ID {job_id} not found for tenant {tenant_id}.", extra={"job_id": str(job_id), "tenant_id": str(tenant_id)})

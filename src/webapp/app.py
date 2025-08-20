@@ -1,10 +1,11 @@
 from fastapi import FastAPI
 from prometheus_client import make_asgi_app
-from src.webapp.api import jobs, templates, auth, exports # Import exports router
+from src.webapp.api import jobs, templates, auth, exports
 from src.utils.logger import setup_logging
 from src.utils.telemetry import setup_telemetry
-from src.utils.rate_limiter import RateLimitMiddleware # Import RateLimitMiddleware
-from src.utils.idempotency import IdempotencyMiddleware # Import IdempotencyMiddleware
+from src.utils.rate_limiter import RateLimitMiddleware
+from src.utils.idempotency import IdempotencyMiddleware
+from src.utils.deprecation import DeprecationMiddleware # Import DeprecationMiddleware
 import os
 
 # Set up logging as the first step
@@ -23,11 +24,12 @@ setup_telemetry(app)
 metrics_app = make_asgi_app()
 app.mount("/metrics", metrics_app)
 
-# Add middleware for rate limiting and idempotency
+# Add middleware for rate limiting, idempotency, and deprecation
 # Ensure Redis is running and accessible at this URL
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 app.add_middleware(RateLimitMiddleware, redis_url=REDIS_URL)
 app.add_middleware(IdempotencyMiddleware)
+app.add_middleware(DeprecationMiddleware) # Add DeprecationMiddleware
 
 
 @app.get("/health", tags=["Monitoring"])
@@ -39,4 +41,4 @@ def health_check():
 app.include_router(jobs.router, prefix="/api/v1", tags=["Jobs"])
 app.include_router(templates.router, prefix="/api/v1", tags=["Templates"])
 app.include_router(auth.router, prefix="/api/v1", tags=["Authentication"])
-app.include_router(exports.router, prefix="/api/v1", tags=["Exports"]) # Include exports router
+app.include_router(exports.router, prefix="/api/v1", tags=["Exports"])
