@@ -82,7 +82,7 @@ components:
     ExportDestination:
       type: object
       properties:
-        type: { type: string, enum: ["internal_staging", "s3_presigned", "gcs_signed"], default: "internal_staging" }
+        type: { type: string, enum: ["internal_staging", "s3_presigned", "gcs_signed", "supabase_storage"], default: "internal_staging" }
         retention_hours: { type: integer, default: 72 }
 
     ExportConfig:
@@ -103,6 +103,33 @@ components:
         caps: { $ref: "#/components/schemas/ScrapeCaps" }
         export: { $ref: "#/components/schemas/ExportConfig" }
         tags: { type: array, items: { type: string } }
+
+    # New Export Schemas
+    ExportCreate:
+      type: object
+      required: [export_type]
+      properties:
+        export_type: { type: string, description: "Type of data to export (e.g., 'person', 'company', 'vehicle')" }
+        filters: { type: object, additionalProperties: true, default: {}, description: "JSON object of filters to apply to the data" }
+        format: { type: string, enum: ["json", "csv", "ndjson"], default: "csv" }
+        compress: { type: string, enum: ["none", "gzip"], default: "gzip" }
+        destination: { $ref: "#/components/schemas/ExportDestination" }
+        file_name_prefix: { type: string, nullable: true, description: "Optional prefix for the exported file name" }
+
+    ExportRead:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        user_id: { type: string, format: uuid, nullable: true }
+        export_type: { type: string }
+        file_name: { type: string }
+        file_size_mb: { type: number, format: float, nullable: true }
+        credits_used: { type: integer }
+        status: { type: string, enum: ["pending", "queued", "running", "completed", "failed", "cancelled"] }
+        download_url: { type: string, format: uri, nullable: true }
+        expires_at: { type: string, format: date-time, nullable: true }
+        created_at: { type: string, format: date-time }
+        filters_json: { type: object, additionalProperties: true, nullable: true }
 
     # Common Schemas
     JobAcceptedResponse:
@@ -153,3 +180,101 @@ paths:
         '400': { description: "Bad Request", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
         '409': { description: "Conflict", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
         '429': { description: "Too Many Requests", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
+
+  /exports:
+    post:
+      summary: "Initiate a new asynchronous data export job"
+      operationId: "create_export_job"
+      security: [{ ApiKeyAuth: [] }]
+      parameters:
+        - { name: "Idempotency-Key", in: "header", required: false, schema: { type: "string", format: "uuid" } }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/ExportCreate" } } }
+      responses:
+        '202':
+          description: "Export job accepted and queued for execution."
+          content: { application/json: { schema: { $ref: "#/components/schemas/ExportRead" } } }
+        '400': { description: "Bad Request", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
+        '409': { description: "Conflict", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
+    get:
+      summary: "List all export jobs for the authenticated tenant"
+      operationId: "list_exports"
+      security: [{ ApiKeyAuth: [] }]
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string, enum: ["pending", "queued", "running", "completed", "failed", "cancelled"] }
+          description: "Filter by job status"
+        - name: export_type
+          in: query
+          schema: { type: string }
+          description: "Filter by export type (e.g., 'person', 'company')"
+        - name: limit
+          in: query
+          schema: { type: integer, default: 100, minimum: 1, maximum: 1000 }
+          description: "Maximum number of results to return"
+        - name: offset
+          in: query
+          schema: { type: integer, default: 0, minimum: 0 }
+          description: "Number of results to skip"
+      responses:
+        '200':
+          description: "A list of export jobs."
+          content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/ExportRead" } } } }
+        '401': { description: "Unauthorized", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
+
+  /exports/{export_id}:
+    get:
+      summary: "Retrieve the status of a specific export job"
+      operationId: "get_export_status"
+      security: [{ ApiKeyAuth: [] }]
+      parameters:
+        - name: export_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: "Details of the export job."
+          content: { application/json: { schema: { $ref: "#/components/schemas/ExportRead" } } }
+        '404': { description: "Export job not found", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
+        '401': { description: "Unauthorized", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
+
+  /data/{export_type}:
+    get:
+      summary: "Directly retrieve data in specified format (CSV, NDJSON, JSON)"
+      operationId: "get_data_direct"
+      security: [{ ApiKeyAuth: [] }]
+      parameters:
+        - name: export_type
+          in: path
+          required: true
+          schema: { type: string, description: "Type of data to export (e.g., 'person', 'company', 'vehicle')" }
+        - name: format
+          in: query
+          schema: { type: string, enum: ["csv", "ndjson", "json"] }
+          description: "Desired output format. If not specified, determined by Accept header."
+        - name: compress
+          in: query
+          schema: { type: boolean, default: false }
+          description: "Apply gzip compression to the output."
+        - name: filters
+          in: query
+          schema: { type: string }
+          description: "JSON string of filters, e.g., '{\"field\":\"value\"}'"
+      responses:
+        '200':
+          description: "Streamed data in the requested format."
+          content:
+            text/csv:
+              schema: { type: string, format: binary }
+            application/x-ndjson:
+              schema: { type: string, format: binary }
+            application/json:
+              schema: { type: string, format: binary }
+            application/gzip:
+              schema: { type: string, format: binary }
+        '400': { description: "Bad Request", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
+        '401': { description: "Unauthorized", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
+        '404': { description: "Export type not found", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }

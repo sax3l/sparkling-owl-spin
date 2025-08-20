@@ -25,6 +25,7 @@ class OwnerKindEnum(enum.Enum):
 class JobType(str, enum.Enum):
     CRAWL = "crawl"
     SCRAPE = "scrape"
+    EXPORT = "export" # Added EXPORT job type
 
 class JobStatus(str, enum.Enum):
     PENDING = "pending"
@@ -390,14 +391,15 @@ class ExportHistory(Base):
     __tablename__ = "export_history"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey('auth.users.id', ondelete='CASCADE'))
-    export_type = Column(Text, nullable=False)
+    export_type = Column(Text, nullable=False) # e.g., 'person', 'company', 'vehicle'
     file_name = Column(Text, nullable=False)
     file_size_mb = Column(Numeric)
     credits_used = Column(Integer, nullable=False, default=0)
     status = Column(Text, nullable=False, default='processing')
-    download_url = Column(Text)
+    download_url = Column(Text) # Added download_url
     expires_at = Column(DateTime(timezone=True))
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    filters_json = Column(JSONB) # Added filters_json to store export criteria
 
 class Referral(Base):
     __tablename__ = "referrals"
@@ -620,20 +622,6 @@ class ScrapingJob(Base):
     result_location = Column(Text)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-class StagingExtract(Base):
-    __tablename__ = "staging_extracts"
-    staging_id = Column(BigInteger, primary_key=True)
-    job_id = Column(BigInteger, ForeignKey('scraping_jobs.id'))
-    domain = Column(Text, nullable=False)
-    url = Column(Text, nullable=False)
-    template_key = Column(Text)
-    fetched_at = Column(DateTime(timezone=True), nullable=False)
-    status = Column(Text)
-    payload_json = Column(JSONB)
-    issues_json = Column(JSONB)
-    snapshot_ref = Column(Text)
-    fingerprint = Column(Text)
-
 # --- Operational Models (Existing, updated with tenant_id) ---
 
 class Job(Base):
@@ -778,7 +766,7 @@ class ScrapeCaps(BaseModel):
     browser_pool_size: int = 4
 
 class ExportDestination(BaseModel):
-    type: Literal["internal_staging", "s3_presigned", "gcs_signed"] = "internal_staging"
+    type: Literal["internal_staging", "s3_presigned", "gcs_signed", "supabase_storage"] = "internal_staging" # Added supabase_storage
     retention_hours: int = 72
 
 class ExportConfig(BaseModel):
@@ -794,6 +782,31 @@ class ScrapeJobCreate(BaseModel):
     caps: ScrapeCaps = Field(default_factory=ScrapeCaps)
     export: ExportConfig = Field(default_factory=ExportConfig)
     tags: List[str] = Field(default_factory=list)
+
+# New Pydantic models for Export API
+class ExportCreate(BaseModel):
+    export_type: str # e.g., 'person', 'company', 'vehicle'
+    filters: Dict[str, Any] = Field(default_factory=dict) # Filters for the data to export
+    format: Literal["json", "csv", "ndjson"] = "csv"
+    compress: Literal["none", "gzip"] = "gzip"
+    destination: ExportDestination = Field(default_factory=ExportDestination)
+    file_name_prefix: Optional[str] = None
+
+class ExportRead(BaseModel):
+    id: uuid.UUID
+    user_id: Optional[uuid.UUID]
+    export_type: str
+    file_name: str
+    file_size_mb: Optional[float]
+    credits_used: int
+    status: str
+    download_url: Optional[str]
+    expires_at: Optional[datetime.datetime]
+    created_at: datetime.datetime
+    filters_json: Optional[Dict[str, Any]]
+
+    class Config:
+        orm_mode = True
 
 # General Job Models
 class JobRead(BaseModel):

@@ -12,6 +12,7 @@ class WebhookEventType(str, Enum):
     DQ_THRESHOLD = "dq.threshold_breach"
     PROXY_POOL_LOW = "proxy.pool.low"
     QUOTA_LIMIT = "quota.near_limit"
+    EXPORT_READY = "export.ready" # Added EXPORT_READY event type
 
 class WebhookEndpointCreate(BaseModel):
     url: HttpUrl

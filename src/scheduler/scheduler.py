@@ -2,6 +2,7 @@ import time
 import datetime
 import logging
 import yaml
+import asyncio # Import asyncio for async export job
 from pathlib import Path
 from urllib.parse import urlparse
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -15,6 +16,7 @@ from src.crawler.sitemap_generator import Crawler
 from src.crawler.url_frontier import URLFrontier
 from src.crawler.robots_parser import RobotsParser
 from src.utils.metrics import REQUESTS_TOTAL, EXTRACTIONS_OK_TOTAL, REQUEST_DURATION_SECONDS, DQ_SCORE
+from src.scheduler.jobs.export_job import execute_export_job # Import the new export job
 
 scheduler = BackgroundScheduler()
 scheduler.start()
@@ -33,14 +35,24 @@ def _load_template(template_id: str) -> ScrapingTemplate:
     
     return ScrapingTemplate.model_validate(template_data)
 
-def _run_job(job_id: str):
+def _run_job(job_id: str, job_type: str, params: Dict[str, Any]):
     """
     Fetches a job from the DB, determines its type, and executes it.
+    This function is called by APScheduler.
     """
     db = SessionLocal()
     log_extra = {"job_id": job_id, "run_id": f"run_{datetime.datetime.utcnow().isoformat()}"}
+    job = None # Initialize job to None
     try:
-        job = db.query(Job).filter(Job.id == UUID(job_id)).first() # Use UUID for lookup
+        # For EXPORT jobs, job_id refers to ExportHistory.id, not Job.id
+        if job_type == JobType.EXPORT.value:
+            # Execute the async export job in a new event loop
+            asyncio.run(execute_export_job(job_id, params))
+            logger.info(f"EXPORT job {job_id} execution initiated.", extra=log_extra)
+            return # Export job updates its own status
+        
+        # For CRAWL/SCRAPE jobs, fetch from Job table
+        job = db.query(Job).filter(Job.id == UUID(job_id)).first()
         if not job:
             logger.error(f"Job {job_id} not found", extra=log_extra)
             return
@@ -53,16 +65,20 @@ def _run_job(job_id: str):
 
         if job.job_type == JobType.CRAWL.value:
             _execute_crawl_job(job, log_extra)
-        else:
+        elif job.job_type == JobType.SCRAPE.value:
             _execute_scrape_job(job, log_extra)
+        else:
+            logger.warning(f"Unknown job type: {job.job_type}", extra=log_extra)
+            job.status = JobStatus.FAILED.value
+            job.result = {"error": "Unknown job type"}
 
     except Exception as e:
         logger.error(f"Job failed: {e}", exc_info=True, extra=log_extra)
-        if 'job' in locals() and job:
+        if job: # Only update if job object exists (not for EXPORT which handles its own status)
             job.status = JobStatus.FAILED.value
             job.result = {"error": str(e)}
     finally:
-        if 'job' in locals() and job:
+        if job: # Only update if job object exists
             job.finished_at = datetime.datetime.utcnow()
             db.commit()
         db.close()
@@ -106,7 +122,7 @@ def _execute_scrape_job(job: Job, log_extra: dict):
     
     logger.info(f"SCRAPE job completed successfully.", extra=log_extra)
 
-def schedule_job(job_id: str):
+def schedule_job(job_id: str, job_type: str = JobType.CRAWL.value, params: Dict[str, Any] = None):
     """Adds a job to the scheduler to be run immediately."""
-    logger.info(f"Scheduling job {job_id} for immediate execution.", extra={"job_id": job_id})
-    scheduler.add_job(_run_job, args=[job_id])
+    logger.info(f"Scheduling job {job_id} of type {job_type} for immediate execution.", extra={"job_id": job_id, "job_type": job_type})
+    scheduler.add_job(_run_job, args=[job_id, job_type, params or {}])

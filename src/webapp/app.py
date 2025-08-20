@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from prometheus_client import make_asgi_app
-from src.webapp.api import jobs, templates, auth # Import auth router
+from src.webapp.api import jobs, templates, auth, exports # Import exports router
 from src.utils.logger import setup_logging
 from src.utils.telemetry import setup_telemetry
 from src.utils.rate_limiter import RateLimitMiddleware # Import RateLimitMiddleware
@@ -38,4 +38,5 @@ def health_check():
 # Include the API routers
 app.include_router(jobs.router, prefix="/api/v1", tags=["Jobs"])
 app.include_router(templates.router, prefix="/api/v1", tags=["Templates"])
-app.include_router(auth.router, prefix="/api/v1", tags=["Authentication"]) # Include auth router
+app.include_router(auth.router, prefix="/api/v1", tags=["Authentication"])
+app.include_router(exports.router, prefix="/api/v1", tags=["Exports"]) # Include exports router
