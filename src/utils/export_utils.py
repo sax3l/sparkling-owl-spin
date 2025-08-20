@@ -8,7 +8,7 @@ import uuid # Import uuid for UUID type handling
 import enum # Import enum for Enum type handling
 from typing import List, Dict, Any, Generator, Optional
 from sqlalchemy.orm import Session
-from sqlalchemy import inspect, text, asc, desc
+from sqlalchemy import inspect, text, asc, desc, func
 from src.database.models import Person, Company, Vehicle # Import relevant models
 from src.integrations.supabase.client import supabase # Assuming supabase client is available
 import logging
@@ -140,6 +140,7 @@ async def generate_presigned_url(bucket_name: str, file_path: str, expires_in: i
 def get_data_from_db(
     db: Session, 
     export_type: str, 
+    tenant_id: uuid.UUID, # Added tenant_id parameter
     filters: Dict[str, Any], 
     sort_by: Optional[str] = None,
     fields: Optional[List[str]] = None,
@@ -151,6 +152,13 @@ def get_data_from_db(
     """
     model = get_model_by_export_type(export_type)
     query = db.query(model)
+
+    # Apply tenant_id filter if the model has a tenant_id column
+    if hasattr(model, 'tenant_id'):
+        query = query.filter(getattr(model, 'tenant_id') == tenant_id)
+    else:
+        logger.warning(f"Model {export_type} does not have a 'tenant_id' column. Data will not be filtered by tenant.")
+
 
     # Apply filters
     for key, value in filters.items():
@@ -228,3 +236,42 @@ def get_fieldnames_for_export_type(export_type: str) -> List[str]:
     """Returns a list of column names for a given export type."""
     model = get_model_by_export_type(export_type)
     return [column.name for column in inspect(model).columns]
+
+def get_latest_update_timestamp_for_export_type(
+    db: Session, 
+    export_type: str, 
+    tenant_id: uuid.UUID,
+    filters: Dict[str, Any]
+) -> Optional[datetime.datetime]:
+    """
+    Retrieves the latest 'updated_at' timestamp for a given export type and filters.
+    Used for ETag generation.
+    """
+    model = get_model_by_export_type(export_type)
+    
+    # Check if the model has an 'updated_at' column
+    if not hasattr(model, 'updated_at'):
+        return None
+
+    query = db.query(func.max(model.updated_at))
+
+    # Apply tenant_id filter if the model has a tenant_id column
+    if hasattr(model, 'tenant_id'):
+        query = query.filter(getattr(model, 'tenant_id') == tenant_id)
+    
+    # Apply filters (similar to get_data_from_db)
+    for key, value in filters.items():
+        if hasattr(model, key):
+            column = getattr(model, key)
+            if isinstance(value, dict):
+                if "gte" in value:
+                    query = query.filter(column >= value["gte"])
+                if "lte" in value:
+                    query = query.filter(column <= value["lte"])
+                if "in" in value and isinstance(value["in"], list):
+                    query = query.filter(column.in_(value["in"]))
+            else:
+                query = query.filter(column == value)
+
+    latest_timestamp = query.scalar()
+    return latest_timestamp

@@ -1,6 +1,6 @@
 import datetime
 import os
-from fastapi import APIRouter, HTTPException, Depends, Header, BackgroundTasks, Response, Query, Request
+from fastapi import APIRouter, HTTPException, Depends, Header, BackgroundTasks, Response, Query, Request, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from uuid import UUID
@@ -11,9 +11,13 @@ from src.webapp.security import get_current_tenant_id, authorize_with_scopes
 from src.scheduler.scheduler import schedule_job
 from src.utils.export_utils import (
     get_data_from_db, generate_csv_stream, generate_ndjson_stream, generate_json_stream,
-    get_fieldnames_for_export_type
+    get_fieldnames_for_export_type, get_latest_update_timestamp_for_export_type
 )
 import logging
+import hashlib
+import json
+import io
+import gzip
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -107,7 +111,8 @@ async def get_data_direct(
     filters: Optional[str] = Query(None, description="JSON string of filters, e.g., '{\"field\":\"value\"}' or '{\"field\":{\"gte\":\"value\"}}'"),
     sort_by: Optional[str] = Query(None, description="Field to sort by, e.g., 'created_at' or '-created_at' for descending."),
     fields: Optional[str] = Query(None, description="Comma-separated list of fields to include, e.g., 'id,name,email'"),
-    mask_pii: bool = Query(True, description="Apply PII masking to sensitive fields (e.g., personal numbers, salaries). Requires 'data:read' scope.")
+    mask_pii: bool = Query(True, description="Apply PII masking to sensitive fields (e.g., personal numbers, salaries). Requires 'data:read' scope."),
+    if_none_match: Optional[str] = Header(None, alias="If-None-Match")
 ):
     """
     Directly retrieves data in specified format (CSV, NDJSON, JSON).
@@ -122,8 +127,26 @@ async def get_data_direct(
 
     parsed_fields = fields.split(',') if fields else None
 
+    # Determine ETag based on data content and filters
+    # For simplicity, ETag is based on a hash of filters and the latest update timestamp
+    # A more robust ETag would involve hashing the actual data content or a version ID.
+    latest_update = get_latest_update_timestamp_for_export_type(db, export_type, tenant_id, parsed_filters)
+    etag_content = {
+        "export_type": export_type,
+        "filters": parsed_filters,
+        "sort_by": sort_by,
+        "fields": parsed_fields,
+        "mask_pii": mask_pii,
+        "latest_update": latest_update.isoformat() if latest_update else "none"
+    }
+    current_etag = f'"{hashlib.sha256(json.dumps(etag_content, sort_keys=True).encode()).hexdigest()}"'
+
+    # Check If-None-Match header for conditional GET
+    if if_none_match == current_etag:
+        return Response(status_code=status.HTTP_304_NOT_MODIFIED)
+
     # Pass mask_pii to the data retrieval function
-    data_generator = get_data_from_db(db, export_type, parsed_filters, sort_by, parsed_fields, mask_pii=mask_pii)
+    data_generator = get_data_from_db(db, export_type, tenant_id, parsed_filters, sort_by, parsed_fields, mask_pii=mask_pii)
     fieldnames = parsed_fields if parsed_fields else get_fieldnames_for_export_type(export_type)
 
     # Determine format based on query param or Accept header
@@ -156,6 +179,8 @@ async def get_data_direct(
 
     headers = {
         "Content-Disposition": f"attachment; filename={export_type}_data.{response_format}",
+        "ETag": current_etag,
+        "Cache-Control": "public, max-age=60" # Short TTL for dynamic data
     }
     if compress:
         headers["Content-Encoding"] = "gzip"
