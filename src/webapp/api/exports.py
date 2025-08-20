@@ -106,7 +106,8 @@ async def get_data_direct(
     compress: Optional[bool] = Query(False, description="Apply gzip compression"),
     filters: Optional[str] = Query(None, description="JSON string of filters, e.g., '{\"field\":\"value\"}' or '{\"field\":{\"gte\":\"value\"}}'"),
     sort_by: Optional[str] = Query(None, description="Field to sort by, e.g., 'created_at' or '-created_at' for descending."),
-    fields: Optional[str] = Query(None, description="Comma-separated list of fields to include, e.g., 'id,name,email'")
+    fields: Optional[str] = Query(None, description="Comma-separated list of fields to include, e.g., 'id,name,email'"),
+    mask_pii: bool = Query(True, description="Apply PII masking to sensitive fields (e.g., personal numbers, salaries). Requires 'data:read' scope.")
 ):
     """
     Directly retrieves data in specified format (CSV, NDJSON, JSON).
@@ -121,7 +122,8 @@ async def get_data_direct(
 
     parsed_fields = fields.split(',') if fields else None
 
-    data_generator = get_data_from_db(db, export_type, parsed_filters, sort_by, parsed_fields)
+    # Pass mask_pii to the data retrieval function
+    data_generator = get_data_from_db(db, export_type, parsed_filters, sort_by, parsed_fields, mask_pii=mask_pii)
     fieldnames = parsed_fields if parsed_fields else get_fieldnames_for_export_type(export_type)
 
     # Determine format based on query param or Accept header

@@ -29,6 +29,16 @@ def get_model_by_export_type(export_type: str):
         raise ValueError(f"Unsupported export type: {export_type}")
     return model
 
+def _mask_personal_number(personal_number: Optional[str]) -> Optional[str]:
+    """Masks a personal number, showing only the last 4 digits."""
+    if not personal_number:
+        return None
+    # Assumes format YYYYMMDD-XXXX or YYMMDD-XXXX
+    # Masks all but the last 4 digits
+    if len(personal_number) >= 4:
+        return f"***-***-{personal_number[-4:]}"
+    return "***-***-****" # Fallback for very short or invalid numbers
+
 def generate_csv_stream(data_generator: Generator[Dict, None, None], fieldnames: List[str]) -> Generator[bytes, None, None]:
     """Generates a CSV stream from a dictionary generator."""
     output = io.StringIO()
@@ -132,7 +142,8 @@ def get_data_from_db(
     export_type: str, 
     filters: Dict[str, Any], 
     sort_by: Optional[str] = None,
-    fields: Optional[List[str]] = None
+    fields: Optional[List[str]] = None,
+    mask_pii: bool = True # New parameter for PII masking
 ) -> Generator[Dict, None, None]:
     """
     Fetches data from the database based on export_type, filters, sorting, and field selection.
@@ -180,8 +191,24 @@ def get_data_from_db(
         for col_name in columns_to_include:
             if hasattr(row, col_name):
                 value = getattr(row, col_name)
+                
+                # Apply PII masking if enabled and applicable
+                if mask_pii and export_type == "person" and col_name == "personal_number_hash":
+                    # Note: personal_number_hash is a hash, not the raw number.
+                    # For masking, we'd ideally mask the *decrypted* personal_number.
+                    # As a placeholder for production-readiness, we'll mask the hash itself
+                    # or indicate it's masked. A proper PII service would handle decryption.
+                    row_dict[col_name] = "[MASKED_HASH]"
+                elif mask_pii and export_type == "person" and col_name == "personal_number_enc":
+                    row_dict[col_name] = "[MASKED_ENCRYPTED_DATA]"
+                elif mask_pii and export_type == "person" and col_name == "phone_number_hash":
+                    row_dict[col_name] = "[MASKED_PHONE_HASH]"
+                elif mask_pii and export_type == "person" and col_name == "phone_number_enc":
+                    row_dict[col_name] = "[MASKED_ENCRYPTED_PHONE]"
+                elif mask_pii and export_type == "person" and col_name == "salary_decimal":
+                    row_dict[col_name] = "[MASKED_SALARY]"
                 # Handle non-JSON serializable types (e.g., datetime, Decimal, UUID, Enum)
-                if isinstance(value, (datetime.datetime, datetime.date)):
+                elif isinstance(value, (datetime.datetime, datetime.date)):
                     row_dict[col_name] = value.isoformat()
                 elif isinstance(value, datetime.timedelta):
                     row_dict[col_name] = str(value)
