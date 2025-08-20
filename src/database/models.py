@@ -35,62 +35,611 @@ class JobStatus(str, enum.Enum):
     CANCELLED = "cancelled"
 
 # --- Core Schema Models ---
-# ... (existing models remain unchanged)
 class Person(Base):
     __tablename__ = "persons"
     person_id = Column(BigInteger, primary_key=True)
-    # ... columns
-    
+    personal_number_enc = Column(LargeBinary)
+    personal_number_hash = Column(Text)
+    first_name = Column(Text)
+    middle_name = Column(Text)
+    last_name = Column(Text)
+    birth_date = Column(Date)
+    gender = Column(SAEnum(GenderEnum, name='gender_enum'), default=GenderEnum.unknown)
+    civil_status = Column(Text)
+    economy_summary = Column(Text)
+    salary_decimal = Column(Numeric)
+    has_remarks = Column(Boolean)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
 class PersonAddress(Base):
     __tablename__ = "person_addresses"
     address_id = Column(BigInteger, primary_key=True)
-    # ... columns
+    person_id = Column(BigInteger, ForeignKey('persons.person_id'), nullable=False)
+    street = Column(Text)
+    postal_code = Column(Text)
+    city = Column(Text)
+    municipality = Column(Text)
+    county = Column(Text)
+    special_address = Column(Text)
+    start_date = Column(Date)
+    end_date = Column(Date)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 class PersonContact(Base):
     __tablename__ = "person_contacts"
     contact_id = Column(BigInteger, primary_key=True)
-    # ... columns
+    person_id = Column(BigInteger, ForeignKey('persons.person_id'), nullable=False)
+    phone_number_enc = Column(LargeBinary)
+    phone_number_hash = Column(Text)
+    operator = Column(Text)
+    user_type = Column(Text)
+    last_porting_date = Column(Date)
+    previous_operator = Column(Text)
+    kind = Column(Text)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 class Company(Base):
     __tablename__ = "companies"
     company_id = Column(BigInteger, primary_key=True)
-    # ... columns
+    org_number = Column(Text, unique=True)
+    name = Column(Text)
+    email = Column(Text)
+    website = Column(Text)
+    registration_date = Column(Date)
+    status = Column(Text)
+    company_form = Column(Text)
+    county_seat = Column(Text)
+    municipal_seat = Column(Text)
+    sni_code = Column(Text)
+    industry = Column(Text)
+    remark_control = Column(Text)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
 class CompanyRole(Base):
     __tablename__ = "company_roles"
     role_id = Column(BigInteger, primary_key=True)
-    # ... columns
+    person_id = Column(BigInteger, ForeignKey('persons.person_id'), nullable=False)
+    company_id = Column(BigInteger, ForeignKey('companies.company_id'), nullable=False)
+    role_name = Column(Text)
+    is_beneficial_owner = Column(Boolean, default=False)
+    start_date = Column(Date)
+    end_date = Column(Date)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 class CompanyFinancials(Base):
     __tablename__ = "company_financials"
     finance_id = Column(BigInteger, primary_key=True)
-    # ... columns
+    company_id = Column(BigInteger, ForeignKey('companies.company_id'), nullable=False)
+    fiscal_year = Column(Date, nullable=False)
+    turnover = Column(Numeric)
+    result_after_financial_items = Column(Numeric)
+    annual_result = Column(Numeric)
+    total_assets = Column(Numeric)
+    profit_margin = Column(Numeric)
+    cash_liquidity = Column(Numeric)
+    solidity = Column(Numeric)
+    employee_count = Column(Integer)
+    share_capital = Column(Numeric)
+    risk_buffer = Column(Numeric)
+    report_url = Column(Text)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 class Vehicle(Base):
     __tablename__ = "vehicles"
     vehicle_id = Column(BigInteger, primary_key=True)
-    # ... columns
+    registration_number = Column(Text, unique=True)
+    vin = Column(Text, unique=True)
+    make = Column(Text)
+    model = Column(Text)
+    model_year = Column(Integer)
+    import_status = Column(Text)
+    stolen_status = Column(Text)
+    traffic_status = Column(Text)
+    owner_count = Column(Integer)
+    first_registration_date = Column(Date)
+    traffic_in_sweden_since = Column(Date)
+    next_inspection = Column(Date)
+    emission_class = Column(Text)
+    tax_year1_3 = Column(Numeric)
+    tax_year4 = Column(Numeric)
+    tax_month = Column(Integer)
+    is_financed = Column(Boolean)
+    is_leased = Column(Boolean)
+    eu_category = Column(Text)
+    type_approval_number = Column(Text)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
 class VehicleTechnicalSpecs(Base):
     __tablename__ = "vehicle_technical_specs"
     spec_id = Column(BigInteger, primary_key=True)
-    # ... columns
+    vehicle_id = Column(BigInteger, ForeignKey('vehicles.vehicle_id'), nullable=False)
+    engine_power_kw = Column(Numeric)
+    engine_volume_cc = Column(Integer)
+    top_speed_kmh = Column(Integer)
+    fuel_type = Column(Text)
+    gearbox = Column(Text)
+    drive_type = Column(Text)
+    wltp_consumption_l_100km = Column(Numeric)
+    wltp_co2_g_km = Column(Numeric)
+    noise_drive_db = Column(Integer)
+    passenger_count = Column(Integer)
+    airbag_info = Column(Text)
+    length_mm = Column(Integer)
+    width_mm = Column(Integer)
+    height_mm = Column(Integer)
+    curb_weight_kg = Column(Integer)
+    total_weight_kg = Column(Integer)
+    payload_kg = Column(Integer)
+    trailer_braked_kg = Column(Integer)
+    trailer_unbraked_kg = Column(Integer)
+    trailer_total_b_kg = Column(Integer)
+    trailer_total_b_plus_kg = Column(Integer)
+    wheelbase_mm = Column(Integer)
+    tire_front = Column(Text)
+    tire_rear = Column(Text)
+    rim_front = Column(Text)
+    rim_rear = Column(Text)
+    body_type = Column(Text)
+    color = Column(Text)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 class VehicleOwnership(Base):
     __tablename__ = "vehicle_ownership"
     vehicle_owner_id = Column(BigInteger, primary_key=True)
-    # ... columns
+    vehicle_id = Column(BigInteger, ForeignKey('vehicles.vehicle_id'), nullable=False)
+    owner_kind = Column(SAEnum(OwnerKindEnum, name='owner_kind_enum'), nullable=False)
+    person_id = Column(BigInteger, ForeignKey('persons.person_id'))
+    company_id = Column(BigInteger, ForeignKey('companies.company_id'))
+    role = Column(Text)
+    start_date = Column(Date)
+    end_date = Column(Date)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 class VehicleHistory(Base):
     __tablename__ = "vehicle_history"
     history_id = Column(BigInteger, primary_key=True)
-    # ... columns
+    vehicle_id = Column(BigInteger, ForeignKey('vehicles.vehicle_id'), nullable=False)
+    event_date = Column(Date)
+    event_kind = Column(Text)
+    event_desc = Column(Text)
+    event_link = Column(Text)
+    raw_json = Column(JSONB)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-# --- Operational Models ---
+class DataQualityMetric(Base):
+    __tablename__ = "data_quality_metrics"
+    metric_id = Column(BigInteger, primary_key=True)
+    entity_type = Column(Text)
+    entity_id = Column(BigInteger)
+    field_name = Column(Text)
+    completeness = Column(Numeric)
+    validity = Column(Numeric)
+    consistency = Column(Numeric)
+    measured_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class GCSFile(Base):
+    __tablename__ = "gcs_files"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    bucket_name = Column(Text, nullable=False)
+    object_name = Column(Text, nullable=False)
+    size = Column(BigInteger)
+    content_type = Column(Text)
+    md5_hash = Column(Text)
+    gcs_updated_at = Column(DateTime(timezone=True))
+    metadata = Column(JSONB, nullable=False, default={})
+    project_id = Column(Text)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    synced_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class SiteSetting(Base):
+    __tablename__ = "site_settings"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    cv_file_url = Column(Text)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+class AboutMe(Base):
+    __tablename__ = "about_me"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    title = Column(Text)
+    subtitle = Column(Text)
+    intro = Column(Text)
+    full_text = Column(Text)
+    profile_image_url = Column(Text)
+    job_title = Column(Text)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+class Article(Base):
+    __tablename__ = "articles"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    title = Column(Text, nullable=False)
+    content = Column(Text)
+    published = Column(Boolean, nullable=False, default=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+class Project(Base):
+    __tablename__ = "projects"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    title = Column(Text, nullable=False)
+    description = Column(Text)
+    active = Column(Boolean, nullable=False, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+class VehicleRegistry(Base):
+    __tablename__ = "vehicle_registry"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    reg_plate = Column(Text)
+    brand = Column(Text)
+    model = Column(Text)
+    year = Column(Integer)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+class PageView(Base):
+    __tablename__ = "page_views"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    page_path = Column(Text, nullable=False)
+    viewed_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class Profile(Base):
+    __tablename__ = "profiles"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('auth.users.id', ondelete='CASCADE'))
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey('auth.users.id', ondelete='CASCADE'), nullable=False) # New column
+    email = Column(Text, nullable=False)
+    full_name = Column(Text)
+    company = Column(Text)
+    phone = Column(Text)
+    avatar_url = Column(Text)
+    bio = Column(Text)
+    preferences = Column(JSONB, default={})
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+class Subscriber(Base):
+    __tablename__ = "subscribers"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('auth.users.id', ondelete='CASCADE'))
+    email = Column(Text, nullable=False)
+    stripe_customer_id = Column(Text)
+    subscribed = Column(Boolean, nullable=False, default=False)
+    subscription_tier = Column(Text)
+    subscription_end = Column(DateTime(timezone=True))
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class UserAPIKey(Base):
+    __tablename__ = "user_api_keys"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('auth.users.id', ondelete='CASCADE'))
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey('auth.users.id', ondelete='CASCADE'), nullable=False) # New column
+    key_name = Column(Text, nullable=False)
+    api_key_hash = Column(Text, nullable=False)
+    permissions = Column(JSONB, default=[])
+    last_used_at = Column(DateTime(timezone=True))
+    expires_at = Column(DateTime(timezone=True))
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class UserDataset(Base):
+    __tablename__ = "user_datasets"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('auth.users.id', ondelete='CASCADE'))
+    name = Column(Text, nullable=False)
+    description = Column(Text)
+    data_source = Column(Text)
+    size_mb = Column(Numeric)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    access_level = Column(Text, default='private')
+
+class UserDashboard(Base):
+    __tablename__ = "user_dashboards"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('auth.users.id', ondelete='CASCADE'))
+    name = Column(Text, nullable=False)
+    description = Column(Text)
+    dashboard_config = Column(JSONB)
+    is_shared = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+class UserCredit(Base):
+    __tablename__ = "user_credits"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('auth.users.id', ondelete='CASCADE'))
+    balance = Column(Integer, nullable=False, default=0)
+    total_earned = Column(Integer, nullable=False, default=0)
+    total_spent = Column(Integer, nullable=False, default=0)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+class CreditTransaction(Base):
+    __tablename__ = "credit_transactions"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('auth.users.id', ondelete='CASCADE'))
+    amount = Column(Integer, nullable=False)
+    transaction_type = Column(Text, nullable=False)
+    description = Column(Text)
+    reference_id = Column(UUID(as_uuid=True))
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class Team(Base):
+    __tablename__ = "teams"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(Text, nullable=False)
+    description = Column(Text)
+    created_by = Column(UUID(as_uuid=True), ForeignKey('auth.users.id', ondelete='SET NULL'))
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+class TeamMember(Base):
+    __tablename__ = "team_members"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    team_id = Column(UUID(as_uuid=True), ForeignKey('teams.id', ondelete='CASCADE'))
+    user_id = Column(UUID(as_uuid=True), ForeignKey('auth.users.id', ondelete='CASCADE'))
+    role = Column(Text, nullable=False)
+    joined_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class ExportHistory(Base):
+    __tablename__ = "export_history"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('auth.users.id', ondelete='CASCADE'))
+    export_type = Column(Text, nullable=False)
+    file_name = Column(Text, nullable=False)
+    file_size_mb = Column(Numeric)
+    credits_used = Column(Integer, nullable=False, default=0)
+    status = Column(Text, nullable=False, default='processing')
+    download_url = Column(Text)
+    expires_at = Column(DateTime(timezone=True))
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class Referral(Base):
+    __tablename__ = "referrals"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    referrer_id = Column(UUID(as_uuid=True), ForeignKey('auth.users.id', ondelete='CASCADE'))
+    referred_email = Column(Text, nullable=False)
+    referred_user_id = Column(UUID(as_uuid=True), ForeignKey('auth.users.id', ondelete='SET NULL'))
+    status = Column(Text, nullable=False, default='pending')
+    credits_earned = Column(Integer, default=0)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    activated_at = Column(DateTime(timezone=True))
+
+class Course(Base):
+    __tablename__ = "courses"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    title = Column(Text, nullable=False)
+    description = Column(Text)
+    content = Column(JSONB)
+    difficulty_level = Column(Text, default='beginner')
+    estimated_duration = Column(Integer)
+    is_published = Column(Boolean, default=False)
+    order_index = Column(Integer, default=0)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+class UserCourseProgress(Base):
+    __tablename__ = "user_course_progress"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('auth.users.id', ondelete='CASCADE'), nullable=False)
+    course_id = Column(UUID(as_uuid=True), ForeignKey('courses.id', ondelete='CASCADE'), nullable=False)
+    progress_percentage = Column(Integer, default=0)
+    completed_modules = Column(JSONB, default=[])
+    started_at = Column(DateTime(timezone=True), server_default=func.now())
+    completed_at = Column(DateTime(timezone=True))
+    last_accessed = Column(DateTime(timezone=True), server_default=func.now())
+
+class News(Base):
+    __tablename__ = "news"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    title = Column(Text, nullable=False)
+    content = Column(Text)
+    excerpt = Column(Text)
+    author_id = Column(UUID(as_uuid=True), ForeignKey('auth.users.id', ondelete='SET NULL'))
+    featured_image_url = Column(Text)
+    is_published = Column(Boolean, default=False)
+    published_at = Column(DateTime(timezone=True))
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+class SubscriptionPlan(Base):
+    __tablename__ = "subscription_plans"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(Text, nullable=False)
+    description = Column(Text)
+    price_monthly = Column(Numeric)
+    price_yearly = Column(Numeric)
+    features = Column(JSONB, default=[])
+    max_team_members = Column(Integer, default=1)
+    credits_per_month = Column(Integer, default=0)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+class UserSetting(Base):
+    __tablename__ = "user_settings"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('auth.users.id', ondelete='CASCADE'), nullable=False)
+    notification_preferences = Column(JSONB, default={'push': True, 'email': True, 'marketing': False})
+    privacy_settings = Column(JSONB, default={'data_sharing': False, 'profile_public': False})
+    language_preference = Column(Text, default='sv')
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+class UserDevice(Base):
+    __tablename__ = "user_devices"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('auth.users.id', ondelete='CASCADE'), nullable=False)
+    device_name = Column(Text, nullable=False)
+    device_type = Column(Text, nullable=False)
+    browser = Column(Text)
+    operating_system = Column(Text)
+    last_login = Column(DateTime(timezone=True), server_default=func.now())
+    is_current_device = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class BillingInfo(Base):
+    __tablename__ = "billing_info"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('auth.users.id', ondelete='CASCADE'), nullable=False)
+    company_name = Column(Text)
+    org_number = Column(Text)
+    billing_address = Column(Text)
+    billing_city = Column(Text)
+    billing_postal_code = Column(Text)
+    billing_country = Column(Text, default='Sweden')
+    vat_number = Column(Text)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+class Transaction(Base):
+    __tablename__ = "transactions"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('auth.users.id', ondelete='CASCADE'), nullable=False)
+    amount = Column(Numeric, nullable=False)
+    currency = Column(Text, default='SEK')
+    transaction_type = Column(Text, nullable=False)
+    status = Column(Text, default='completed')
+    description = Column(Text)
+    stripe_payment_id = Column(Text)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class UserRole(Base):
+    __tablename__ = "user_roles"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('auth.users.id', ondelete='CASCADE'), nullable=False)
+    role = Column(Text, nullable=False, default='user')
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+class UserSubscription(Base):
+    __tablename__ = "user_subscriptions"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('auth.users.id', ondelete='CASCADE'), nullable=False)
+    subscription_tier = Column(Text, nullable=False, default='free')
+    subscribed = Column(Boolean, nullable=False, default=False)
+    subscription_start = Column(Date)
+    subscription_end = Column(Date)
+    stripe_customer_id = Column(Text)
+    stripe_subscription_id = Column(Text)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+class ContactMessage(Base):
+    __tablename__ = "contact_messages"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(Text, nullable=False)
+    email = Column(Text, nullable=False)
+    subject = Column(Text, nullable=False)
+    message = Column(Text, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class Template(Base):
+    __tablename__ = "templates"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey('auth.users.id', ondelete='CASCADE'), nullable=False) # New column
+    name = Column(String, nullable=False, unique=True)
+    dsl = Column(JSONB, nullable=False)
+    version = Column(Integer, nullable=False, default=1)
+    created_by = Column(UUID(as_uuid=True))
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+class ProvenanceRecord(Base):
+    __tablename__ = "provenance_records"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    entity_table = Column(Text, nullable=False)
+    entity_id = Column(UUID(as_uuid=True), nullable=False)
+    source_url = Column(Text)
+    job_id = Column(UUID(as_uuid=True))
+    template_id = Column(UUID(as_uuid=True))
+    template_version = Column(Integer)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class ErasureTombstone(Base):
+    __tablename__ = "erasure_tombstones"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    entity_table = Column(Text, nullable=False)
+    entity_id = Column(UUID(as_uuid=True), nullable=False)
+    erasure_reason = Column(Text)
+    requested_by = Column(UUID(as_uuid=True))
+    erased_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class Page(Base):
+    __tablename__ = "pages"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    url = Column(Text, nullable=False)
+    canonical_url = Column(Text)
+    host = Column(Text, nullable=False)
+    depth = Column(Integer)
+    http_status = Column(Integer)
+    last_fetch_at = Column(DateTime(timezone=True))
+    etag = Column(Text)
+    last_modified = Column(Text)
+    template_guess = Column(Text)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class Link(Base):
+    __tablename__ = "links"
+    id = Column(BigInteger, primary_key=True)
+    source_page_id = Column(UUID(as_uuid=True), ForeignKey('pages.id', ondelete='CASCADE'), nullable=False)
+    destination_url = Column(Text, nullable=False)
+    rel_attr = Column(Text)
+    anchor_text = Column(Text)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class Fetch(Base):
+    __tablename__ = "fetches"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    page_id = Column(UUID(as_uuid=True), ForeignKey('pages.id', ondelete='CASCADE'), nullable=False)
+    started_at = Column(DateTime(timezone=True), nullable=False)
+    duration_ms = Column(Integer)
+    http_status = Column(Integer)
+    proxy_id = Column(Text)
+    bytes_downloaded = Column(BigInteger)
+    error_message = Column(Text)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class ScrapingJob(Base):
+    __tablename__ = "scraping_jobs"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey('auth.users.id', ondelete='CASCADE'), nullable=False) # New column
+    job_type = Column(String, nullable=False)
+    status = Column(String, default=JobStatus.PENDING.value, nullable=False)
+    domain = Column(Text)
+    template_id = Column(BigInteger) # Assuming this links to a template table
+    params_json = Column(JSONB)
+    started_at = Column(DateTime(timezone=True))
+    finished_at = Column(DateTime(timezone=True))
+    error_text = Column(Text)
+    result_location = Column(Text)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class StagingExtract(Base):
+    __tablename__ = "staging_extracts"
+    staging_id = Column(BigInteger, primary_key=True)
+    job_id = Column(BigInteger, ForeignKey('scraping_jobs.id'))
+    domain = Column(Text, nullable=False)
+    url = Column(Text, nullable=False)
+    template_key = Column(Text)
+    fetched_at = Column(DateTime(timezone=True), nullable=False)
+    status = Column(Text)
+    payload_json = Column(JSONB)
+    issues_json = Column(JSONB)
+    snapshot_ref = Column(Text)
+    fingerprint = Column(Text)
+
+# --- Operational Models (Existing, updated with tenant_id) ---
 
 class Job(Base):
     __tablename__ = "scraping_jobs"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey('auth.users.id', ondelete='CASCADE'), nullable=False) # New column
     job_type = Column(String, nullable=False)
     start_url = Column(String, nullable=False)
     status = Column(String, default=JobStatus.PENDING.value, nullable=False)
@@ -100,19 +649,78 @@ class Job(Base):
     started_at = Column(DateTime(timezone=True))
     finished_at = Column(DateTime(timezone=True))
 
-class Template(Base):
-    __tablename__ = "templates"
+class OAuthClient(Base):
+    __tablename__ = "oauth_clients"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    name = Column(String, nullable=False, unique=True)
-    dsl = Column(JSONB, nullable=False)
-    version = Column(Integer, nullable=False, default=1)
-    created_by = Column(UUID(as_uuid=True))
+    client_id = Column(Text, nullable=False, unique=True)
+    client_secret_hash = Column(Text, nullable=False)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey('auth.users.id', ondelete='CASCADE'), nullable=False)
+    scopes = Column(JSONB, default=[])
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
-# ... other operational models
+class RolePermission(Base):
+    __tablename__ = "role_permissions"
+    role_name = Column(Text, primary_key=True)
+    scope = Column(Text, primary_key=True)
+
+class IdempotencyKey(Base):
+    __tablename__ = "idempotency_keys"
+    key = Column(Text, primary_key=True)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey('auth.users.id', ondelete='CASCADE'), nullable=False)
+    path = Column(Text, nullable=False)
+    method = Column(Text, nullable=False)
+    response_status = Column(Integer)
+    response_body = Column(JSONB)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class UserQuota(Base):
+    __tablename__ = "user_quotas"
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey('auth.users.id', ondelete='CASCADE'), primary_key=True)
+    quota_type = Column(Text, primary_key=True) # e.g., 'http_requests', 'browser_requests', 'data_exports_mb'
+    current_usage = Column(Numeric, nullable=False, default=0)
+    limit = Column(Numeric, nullable=False)
+    period_start = Column(DateTime(timezone=True), server_default=func.now())
+    period_end = Column(DateTime(timezone=True))
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
 
 # --- Pydantic Models for API ---
+
+# OAuth2 Models
+class TokenRequest(BaseModel):
+    grant_type: str
+    client_id: str
+    client_secret: str
+    scope: Optional[str] = None
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "Bearer"
+    expires_in: int
+    scope: str
+
+# API Key Models
+class APIKeyCreate(BaseModel):
+    key_name: str
+    scopes: List[str] = Field(default_factory=list)
+    expires_in_days: Optional[int] = None
+
+class APIKeyRead(BaseModel):
+    id: uuid.UUID
+    key_name: str
+    scopes: List[str]
+    last_used_at: Optional[datetime.datetime]
+    expires_at: Optional[datetime.datetime]
+    is_active: bool
+    created_at: datetime.datetime
+    tenant_id: uuid.UUID # Include tenant_id in read model
+
+    class Config:
+        orm_mode = True
+
+class APIKeySecret(APIKeyRead):
+    secret: str # Only returned on creation
 
 # Crawl Job Models
 class FeatureFlags(BaseModel):
@@ -190,6 +798,7 @@ class ScrapeJobCreate(BaseModel):
 # General Job Models
 class JobRead(BaseModel):
     id: uuid.UUID
+    tenant_id: uuid.UUID # New column
     job_type: JobType
     start_url: str
     status: JobStatus
@@ -216,9 +825,11 @@ class TemplateUpdate(TemplateBase):
 
 class TemplateRead(TemplateBase):
     id: uuid.UUID
+    tenant_id: uuid.UUID # New column
     version: int
     created_at: datetime.datetime
     updated_at: Optional[datetime.datetime] = None
+    etag: Optional[str] = None # For optimistic concurrency
 
     class Config:
         orm_mode = True

@@ -1,10 +1,27 @@
-# Webhook dependencies
+# Core dependencies
 fastapi>=0.95.0
-httpx>=0.24.0
-python-multipart>=0.0.6
-pyjwt>=2.6.0
-cryptography>=40.0.0
-pydantic>=1.10.7
 uvicorn>=0.22.0
+sqlalchemy>=1.4.0
+psycopg2-binary>=2.9.0 # For PostgreSQL
+python-dotenv>=1.0.0
+httpx>=0.24.0
+redis>=4.5.0
+pydantic>=1.10.7
+pyyaml>=6.0
+lxml>=4.9.2
+cssselect>=1.2.0
 python-dateutil>=2.8.2
+robotexclusionrulesparser>=1.0.0
+structlog>=23.1.0
+python-json-logger>=2.0.7
+prometheus_client>=0.17.0
+opentelemetry-sdk>=1.19.0
+opentelemetry-exporter-otlp-proto-grpc>=1.19.0
+opentelemetry-instrumentation-fastapi>=0.41b0
+tenacity>=8.2.2
 backoff>=2.2.1
+apscheduler>=3.10.1
+
+# New dependencies for Auth & Rate Limiting
+passlib[bcrypt]>=1.7.4 # For password hashing
+python-jose[cryptography]>=3.3.0 # For JWT

@@ -1,68 +1,112 @@
-from fastapi import APIRouter, HTTPException, Depends, Header
+from fastapi import APIRouter, HTTPException, Depends, Header, Request
 from sqlalchemy.orm import Session
 from uuid import UUID
 from typing import List, Optional
 from src.database.models import Template, TemplateCreate, TemplateRead, TemplateUpdate
 from src.database.manager import get_db
-from src.webapp.security import get_api_key
+from src.webapp.security import get_current_tenant_id, authorize_with_scopes
 import logging
+import hashlib
+import json
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-@router.post("/templates", response_model=TemplateRead, status_code=201, dependencies=[Depends(get_api_key)])
+def _generate_etag(template: Template) -> str:
+    """Generates an ETag for a template based on its content and version."""
+    content_hash = hashlib.sha256(json.dumps(template.dsl, sort_keys=True).encode()).hexdigest()
+    return f'"{content_hash}-{template.version}"'
+
+@router.post("/templates", response_model=TemplateRead, status_code=201, dependencies=[Depends(authorize_with_scopes(["templates:write"]))])
 async def create_template(
     template: TemplateCreate, 
+    tenant_id: UUID = Depends(get_current_tenant_id),
     db: Session = Depends(get_db),
     idempotency_key: Optional[str] = Header(None)
 ):
     """Creates a new scraping template."""
-    # Note: Full idempotency logic would check the key against a cache/DB.
-    logger.info(f"Creating template: {template.name}", extra={"idempotency_key": idempotency_key})
+    logger.info(f"Creating template: {template.name}", extra={"idempotency_key": idempotency_key, "tenant_id": str(tenant_id)})
     
-    db_template = db.query(Template).filter(Template.name == template.name).first()
+    db_template = db.query(Template).filter(Template.name == template.name, Template.tenant_id == tenant_id).first()
     if db_template:
-        raise HTTPException(status_code=409, detail="Template with this name already exists")
+        raise HTTPException(status_code=409, detail="Template with this name already exists for this tenant.")
         
-    new_template = Template(**template.model_dump())
+    new_template = Template(tenant_id=tenant_id, **template.model_dump())
     db.add(new_template)
     db.commit()
     db.refresh(new_template)
-    return new_template
+    
+    # Add ETag to the response model
+    template_read = TemplateRead.from_orm(new_template)
+    template_read.etag = _generate_etag(new_template)
+    return template_read
 
-@router.get("/templates", response_model=List[TemplateRead], dependencies=[Depends(get_api_key)])
-async def get_all_templates(db: Session = Depends(get_db)):
-    """Retrieves all templates."""
-    return db.query(Template).all()
+@router.get("/templates", response_model=List[TemplateRead], dependencies=[Depends(authorize_with_scopes(["templates:read"]))])
+async def get_all_templates(
+    tenant_id: UUID = Depends(get_current_tenant_id),
+    db: Session = Depends(get_db)
+):
+    """Retrieves all templates for the authenticated tenant."""
+    templates = db.query(Template).filter(Template.tenant_id == tenant_id).all()
+    return [TemplateRead.from_orm(t).copy(update={"etag": _generate_etag(t)}) for t in templates]
 
-@router.get("/templates/{template_id}", response_model=TemplateRead, dependencies=[Depends(get_api_key)])
-async def get_template(template_id: UUID, db: Session = Depends(get_db)):
+@router.get("/templates/{template_id}", response_model=TemplateRead, dependencies=[Depends(authorize_with_scopes(["templates:read"]))])
+async def get_template(
+    template_id: UUID, 
+    tenant_id: UUID = Depends(get_current_tenant_id),
+    db: Session = Depends(get_db)
+):
     """Retrieves a specific template by its ID."""
-    db_template = db.query(Template).filter(Template.id == template_id).first()
-    if not db_template:
-        raise HTTPException(status_code=404, detail="Template not found")
-    return db_template
-
-@router.put("/templates/{template_id}", response_model=TemplateRead, dependencies=[Depends(get_api_key)])
-async def update_template(template_id: UUID, template: TemplateUpdate, db: Session = Depends(get_db)):
-    """Updates an existing template."""
-    db_template = db.query(Template).filter(Template.id == template_id).first()
+    db_template = db.query(Template).filter(Template.id == template_id, Template.tenant_id == tenant_id).first()
     if not db_template:
         raise HTTPException(status_code=404, detail="Template not found")
     
-    update_data = template.model_dump(exclude_unset=True)
+    template_read = TemplateRead.from_orm(db_template)
+    template_read.etag = _generate_etag(db_template)
+    return template_read
+
+@router.put("/templates/{template_id}", response_model=TemplateRead, dependencies=[Depends(authorize_with_scopes(["templates:write"]))])
+async def update_template(
+    template_id: UUID, 
+    template_update: TemplateUpdate, 
+    tenant_id: UUID = Depends(get_current_tenant_id),
+    db: Session = Depends(get_db),
+    if_match: Optional[str] = Header(None) # For optimistic concurrency
+):
+    """Updates an existing template."""
+    db_template = db.query(Template).filter(Template.id == template_id, Template.tenant_id == tenant_id).first()
+    if not db_template:
+        raise HTTPException(status_code=404, detail="Template not found")
+    
+    # Optimistic concurrency check
+    expected_etag = _generate_etag(db_template)
+    if if_match and if_match != expected_etag:
+        raise HTTPException(
+            status_code=status.HTTP_412_PRECONDITION_FAILED,
+            detail="Precondition Failed: ETag mismatch. The resource has been modified.",
+            headers={"ETag": expected_etag}
+        )
+
+    update_data = template_update.model_dump(exclude_unset=True)
     for key, value in update_data.items():
         setattr(db_template, key, value)
     
     db_template.version += 1 # Increment version on update
     db.commit()
     db.refresh(db_template)
-    return db_template
+    
+    template_read = TemplateRead.from_orm(db_template)
+    template_read.etag = _generate_etag(db_template)
+    return template_read
 
-@router.delete("/templates/{template_id}", status_code=204, dependencies=[Depends(get_api_key)])
-async def delete_template(template_id: UUID, db: Session = Depends(get_db)):
+@router.delete("/templates/{template_id}", status_code=204, dependencies=[Depends(authorize_with_scopes(["templates:write"]))])
+async def delete_template(
+    template_id: UUID, 
+    tenant_id: UUID = Depends(get_current_tenant_id),
+    db: Session = Depends(get_db)
+):
     """Deletes a template."""
-    db_template = db.query(Template).filter(Template.id == template_id).first()
+    db_template = db.query(Template).filter(Template.id == template_id, Template.tenant_id == tenant_id).first()
     if not db_template:
         raise HTTPException(status_code=404, detail="Template not found")
     

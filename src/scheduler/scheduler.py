@@ -40,11 +40,12 @@ def _run_job(job_id: str):
     db = SessionLocal()
     log_extra = {"job_id": job_id, "run_id": f"run_{datetime.datetime.utcnow().isoformat()}"}
     try:
-        job = db.query(Job).filter(Job.id == job_id).first()
+        job = db.query(Job).filter(Job.id == UUID(job_id)).first() # Use UUID for lookup
         if not job:
             logger.error(f"Job {job_id} not found", extra=log_extra)
             return
 
+        log_extra["tenant_id"] = str(job.tenant_id) # Add tenant_id to logs
         log_extra["domain"] = urlparse(job.start_url).netloc
         job.status = JobStatus.RUNNING.value
         job.started_at = datetime.datetime.utcnow()
