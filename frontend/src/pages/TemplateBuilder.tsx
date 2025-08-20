@@ -12,6 +12,9 @@ const TemplateBuilder: React.FC = () => {
   return (
     <div>
       <h1>Template Builder (Point-and-Extract Mock)</h1>
+      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+        Note: This builder currently works with the latest template version. Full historical versioning and retrieval via `/templates/{id}/versions/{ver}` is a future enhancement.
+      </p>
       <div style={{ border: '1px solid black', padding: '1rem', marginTop: '1rem' }}>
         <h3>Mock Website Content</h3>
         <div onClick={handleElementClick}>

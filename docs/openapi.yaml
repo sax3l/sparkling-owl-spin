@@ -104,6 +104,18 @@ components:
         export: { $ref: "#/components/schemas/ExportConfig" }
         tags: { type: array, items: { type: string } }
 
+    # New Diagnostic Job Schema
+    DiagnosticJobCreate:
+      type: object
+      required: [template_id]
+      properties:
+        template_id: { type: string }
+        template_version: { type: string }
+        target_url: { type: string, format: uri, nullable: true, description: "URL to run diagnostic against. Cannot be used with sample_html." }
+        sample_html: { type: string, nullable: true, description: "Inline HTML content for diagnostic. Cannot be used with target_url." }
+        tags: { type: array, items: { type: string } }
+      description: "Creates a job to run a template against a specific URL or inline HTML for diagnostic purposes."
+
     # New Export Schemas
     ExportCreate:
       type: object
@@ -212,6 +224,24 @@ paths:
         '409': { description: "Conflict", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
         '429': { description: "Too Many Requests", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
 
+  /jobs/diagnostic:
+    post:
+      summary: "Submit a new diagnostic job"
+      operationId: "submit_diagnostic_job"
+      security: [{ ApiKeyAuth: [] }]
+      parameters:
+        - { name: "Idempotency-Key", in: "header", required: false, schema: { type: "string", format: "uuid" } }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/DiagnosticJobCreate" } } }
+      responses:
+        '202':
+          description: "Diagnostic job accepted and queued for execution."
+          content: { application/json: { schema: { $ref: "#/components/schemas/JobAcceptedResponse" } } }
+        '400': { description: "Bad Request", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
+        '409': { description: "Conflict", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
+        '429': { description: "Too Many Requests", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
+
   /exports:
     post:
       summary: "Initiate a new asynchronous data export job"
@@ -305,7 +335,15 @@ paths:
         - name: mask_pii
           in: query
           schema: { type: boolean, default: true }
-          description: "Apply PII masking to sensitive fields (e.g., personal numbers, salaries). Requires 'data:read' scope."
+          description: "Apply PII masking to sensitive fields (e.g., personal numbers, salaries). Requires 'data:read:pii' scope to disable."
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1 }
+          description: "Maximum number of records to return."
+        - name: offset
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+          description: "Number of records to skip."
       responses:
         '200':
           description: "Streamed data in the requested format."
@@ -320,7 +358,7 @@ paths:
               schema: { type: string, format: binary }
         '400': { description: "Bad Request", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
         '401': { description: "Unauthorized", content: { application: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
-        '404': { description: "Export type not found", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
+        '404': { description: "Export type not found", content: { application: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
   
   /monitoring/proxy-stats:
     get:
@@ -357,9 +395,84 @@ paths:
                 type: object
                 properties:
                   message: { type: string }
-        '400': { description: "Bad Request", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
+        '400': { description: "Bad Request", content: { application: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
         '401': { description: "Unauthorized", content: { application: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
         '403': { description: "Forbidden", content: { application: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
+
+  /templates:
+    post:
+      summary: "Creates a new scraping template."
+      operationId: "create_template"
+      security: [{ ApiKeyAuth: [] }]
+      parameters:
+        - { name: "Idempotency-Key", in: "header", required: false, schema: { type: "string", format: "uuid" } }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/TemplateCreate" } } }
+      responses:
+        '201':
+          description: "Template created successfully."
+          content: { application/json: { schema: { $ref: "#/components/schemas/TemplateRead" } } }
+        '409': { description: "Conflict", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
+    get:
+      summary: "Retrieves all templates for the authenticated tenant."
+      operationId: "get_all_templates"
+      security: [{ ApiKeyAuth: [] }]
+      responses:
+        '200':
+          description: "A list of templates."
+          content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/TemplateRead" } } } }
+
+  /templates/{template_id}:
+    get:
+      summary: "Retrieves a specific template by its ID."
+      operationId: "get_template"
+      security: [{ ApiKeyAuth: [] }]
+      parameters:
+        - name: template_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: "Template details."
+          content: { application/json: { schema: { $ref: "#/components/schemas/TemplateRead" } } }
+        '404': { description: "Template not found", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
+    put:
+      summary: "Updates an existing template."
+      operationId: "update_template"
+      security: [{ ApiKeyAuth: [] }]
+      parameters:
+        - name: template_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: If-Match
+          in: header
+          required: true
+          schema: { type: string }
+          description: "ETag of the template for optimistic concurrency control."
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/TemplateUpdate" } } }
+      responses:
+        '200':
+          description: "Template updated successfully."
+          content: { application/json: { schema: { $ref: "#/components/schemas/TemplateRead" } } }
+        '404': { description: "Template not found", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
+        '412': { description: "Precondition Failed: ETag mismatch.", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
+    delete:
+      summary: "Deletes a template."
+      operationId: "delete_template"
+      security: [{ ApiKeyAuth: [] }]
+      parameters:
+        - name: template_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '204': { description: "Template deleted successfully." }
+        '404': { description: "Template not found", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
 
   /templates/{template_id}/status:
     patch:
@@ -385,3 +498,106 @@ paths:
         '401': { description: "Unauthorized", content: { application: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
         '403': { description: "Forbidden", content: { application: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
         '404': { description: "Template not found", content: { application: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
+
+  /webhooks/endpoints:
+    post:
+      summary: "Registers a new webhook endpoint for a tenant."
+      operationId: "create_webhook_endpoint"
+      security: [{ ApiKeyAuth: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/WebhookEndpointCreate" } } }
+      responses:
+        '201':
+          description: "Webhook endpoint created successfully."
+          content: { application/json: { schema: { $ref: "#/components/schemas/WebhookEndpoint" } } }
+    get:
+      summary: "Lists all webhook endpoints for the authenticated tenant."
+      operationId: "list_webhook_endpoints"
+      security: [{ ApiKeyAuth: [] }]
+      parameters:
+        - name: active
+          in: query
+          schema: { type: boolean }
+          description: "Filter by active status."
+        - name: event_type
+          in: query
+          schema: { $ref: "#/components/schemas/WebhookEventType" }
+          description: "Filter by event type."
+      responses:
+        '200':
+          description: "A list of webhook endpoints."
+          content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/WebhookEndpoint" } } } }
+
+  /webhooks/endpoints/{endpoint_id}:
+    patch:
+      summary: "Updates an existing webhook endpoint (e.g., activate/deactivate, rotate secret)."
+      operationId: "update_webhook_endpoint"
+      security: [{ ApiKeyAuth: [] }]
+      parameters:
+        - name: endpoint_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, properties: { active: { type: boolean }, secret_rotate: { type: boolean } } } } }
+      responses:
+        '200':
+          description: "Webhook endpoint updated successfully."
+          content: { application/json: { schema: { $ref: "#/components/schemas/WebhookEndpoint" } } }
+        '404': { description: "Webhook endpoint not found", content: { application/json: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
+
+  /webhooks/deliveries:
+    get:
+      summary: "Lists webhook delivery attempts for the authenticated tenant."
+      operationId: "list_webhook_deliveries"
+      security: [{ ApiKeyAuth: [] }]
+      parameters:
+        - name: endpoint_id
+          in: query
+          schema: { type: string, format: uuid }
+          description: "Filter by endpoint ID."
+        - name: event_id
+          in: query
+          schema: { type: string }
+          description: "Filter by event ID."
+        - name: status_code
+          in: query
+          schema: { type: integer }
+          description: "Filter by HTTP status code of the delivery."
+        - name: limit
+          in: query
+          schema: { type: integer, default: 100, minimum: 1, maximum: 1000 }
+          description: "Maximum number of results to return."
+        - name: offset
+          in: query
+          schema: { type: integer, default: 0, minimum: 0 }
+          description: "Number of results to skip."
+      responses:
+        '200':
+          description: "A list of webhook deliveries."
+          content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/WebhookDelivery" } } } }
+
+  /oauth/token:
+    post:
+      summary: "OAuth2 Client Credentials flow to generate an access token."
+      operationId: "generate_oauth_token"
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                grant_type: { type: string, enum: ["client_credentials"] }
+                username: { type: string, description: "Your client_id." }
+                password: { type: string, description: "Your client_secret." }
+                scope: { type: string, description: "Space-separated list of requested scopes." }
+              required: [grant_type, username, password]
+      responses:
+        '200':
+          description: "Access token generated successfully."
+          content: { application/json: { schema: { $ref: "#/components/schemas/APIKeySecret" } } }
+        '400': { description: "Bad Request", content: { application: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }
+        '401': { description: "Unauthorized", content: { application: { schema: { $ref: "#/components/schemas/ErrorResponse" } } } }

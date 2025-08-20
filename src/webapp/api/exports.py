@@ -111,9 +111,10 @@ async def get_data_direct(
     filters: Optional[str] = Query(None, description="JSON string of filters, e.g., '{\"field\":\"value\"}' or '{\"field\":{\"gte\":\"value\"}}'"),
     sort_by: Optional[str] = Query(None, description="Field to sort by, e.g., 'created_at' or '-created_at' for descending."),
     fields: Optional[str] = Query(None, description="Comma-separated list of fields to include, e.g., 'id,name,email'"),
-    mask_pii: bool = Query(True, description="Apply PII masking to sensitive fields (e.g., personal numbers, salaries). Requires 'data:read' scope to disable."), # Updated description
-    if_none_match: Optional[str] = Header(None, alias="If-None-Match"),
-    request: Request = Request # Inject Request object to access state.scopes
+    mask_pii: bool = Query(True, description="Apply PII masking to sensitive fields (e.g., personal numbers, salaries). Requires 'data:read:pii' scope to disable."),
+    limit: Optional[int] = Query(None, ge=1, description="Maximum number of records to return."), # Added limit
+    offset: Optional[int] = Query(0, ge=0, description="Number of records to skip."), # Added offset
+    if_none_match: Optional[str] = Header(None, alias="If-None-Match")
 ):
     """
     Directly retrieves data in specified format (CSV, NDJSON, JSON).
@@ -144,8 +145,10 @@ async def get_data_direct(
         "filters": parsed_filters,
         "sort_by": sort_by,
         "fields": parsed_fields,
-        "mask_pii": mask_pii, # Include mask_pii in ETag calculation
-        "latest_update": latest_update.isoformat() if latest_update else "none"
+        "mask_pii": mask_pii,
+        "latest_update": latest_update.isoformat() if latest_update else "none",
+        "limit": limit, # Include limit in ETag
+        "offset": offset # Include offset in ETag
     }
     current_etag = f'"{hashlib.sha256(json.dumps(etag_content, sort_keys=True).encode()).hexdigest()}"'
 
@@ -153,8 +156,8 @@ async def get_data_direct(
     if if_none_match == current_etag:
         return Response(status_code=status.HTTP_304_NOT_MODIFIED)
 
-    # Pass mask_pii to the data retrieval function
-    data_generator = get_data_from_db(db, export_type, tenant_id, parsed_filters, sort_by, parsed_fields, mask_pii=mask_pii)
+    # Pass mask_pii, limit, and offset to the data retrieval function
+    data_generator = get_data_from_db(db, export_type, tenant_id, parsed_filters, sort_by, parsed_fields, mask_pii=mask_pii, limit=limit, offset=offset)
     fieldnames = parsed_fields if parsed_fields else get_fieldnames_for_export_type(export_type)
 
     # Determine format based on query param or Accept header

@@ -51,7 +51,7 @@ def _run_job(job_id: str, job_type: str, params: Dict[str, Any]):
             logger.info(f"EXPORT job {job_id} execution initiated.", extra=log_extra)
             return # Export job updates its own status
         
-        # For CRAWL/SCRAPE jobs, fetch from Job table
+        # For CRAWL/SCRAPE/DIAGNOSTIC jobs, fetch from Job table
         job = db.query(Job).filter(Job.id == UUID(job_id)).first()
         if not job:
             logger.error(f"Job {job_id} not found", extra=log_extra)
@@ -67,6 +67,8 @@ def _run_job(job_id: str, job_type: str, params: Dict[str, Any]):
             _execute_crawl_job(job, log_extra)
         elif job.job_type == JobType.SCRAPE.value:
             _execute_scrape_job(job, log_extra)
+        elif job.job_type == JobType.DIAGNOSTIC.value:
+            _execute_diagnostic_job(job, log_extra)
         else:
             logger.warning(f"Unknown job type: {job.job_type}", extra=log_extra)
             job.status = JobStatus.FAILED.value
@@ -121,6 +123,36 @@ def _execute_scrape_job(job: Job, log_extra: dict):
     DQ_SCORE.labels(domain=domain, template=template_id).observe(dq_metrics.get("dq_score", 0))
     
     logger.info(f"SCRAPE job completed successfully.", extra=log_extra)
+
+def _execute_diagnostic_job(job: Job, log_extra: dict):
+    logger.info(f"Executing DIAGNOSTIC job for template: {job.params.get('template_id')}", extra=log_extra)
+    
+    template_id = job.params.get("template_id")
+    target_url = job.params.get("target_url")
+    sample_html = job.params.get("sample_html")
+    
+    try:
+        template = _load_template(template_id)
+        html_content = ""
+        if target_url:
+            # In a real scenario, you'd fetch the URL using TransportManager
+            logger.info(f"Fetching target URL for diagnostic: {target_url}", extra=log_extra)
+            # html_content, status_code = TransportManager().fetch(target_url, PolicyManager(redis_url=REDIS_URL).get_policy(urlparse(target_url).netloc))
+            html_content = "<html><body>Mock HTML from target URL</body></html>" # Mock for now
+        elif sample_html:
+            html_content = sample_html
+            logger.info("Using inline HTML for diagnostic.", extra=log_extra)
+        
+        record, dq_metrics = run_template(html_content, template)
+        
+        job.result = {"data": record, "dq_metrics": dq_metrics, "status": "success"}
+        job.status = JobStatus.COMPLETED.value
+        logger.info(f"DIAGNOSTIC job completed successfully.", extra=log_extra)
+
+    except Exception as e:
+        job.result = {"error": str(e), "status": "failed"}
+        job.status = JobStatus.FAILED.value
+        logger.error(f"DIAGNOSTIC job failed: {e}", exc_info=True, extra=log_extra)
 
 def schedule_job(job_id: str, job_type: str = JobType.CRAWL.value, params: Dict[str, Any] = None):
     """Adds a job to the scheduler to be run immediately."""

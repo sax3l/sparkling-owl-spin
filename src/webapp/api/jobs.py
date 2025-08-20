@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException, Depends, Header, Query, status
 from sqlalchemy.orm import Session
 from uuid import UUID
 from typing import Optional, List, Dict, Any
-from src.database.models import Job, CrawlJobCreate, ScrapeJobCreate, JobRead, JobStatus, JobType, JobProgress, JobMetrics, JobExport, JobExportArtifact, JobLogs, JobLinks
+from src.database.models import Job, CrawlJobCreate, ScrapeJobCreate, DiagnosticJobCreate, JobRead, JobStatus, JobType, JobProgress, JobMetrics, JobExport, JobExportArtifact, JobLogs, JobLinks
 from src.database.manager import get_db
 from src.scheduler.scheduler import schedule_job
 from src.webapp.security import get_current_tenant_id, authorize_with_scopes
@@ -76,6 +76,39 @@ async def submit_scrape_job(
     schedule_job(str(job.id), job_type=JobType.SCRAPE.value, params=task.model_dump())
 
     # Construct JobRead from the ORM object, which will use the model_validator
+    return JobRead.model_validate(job)
+
+@router.post("/jobs/diagnostic", response_model=JobRead, status_code=202, dependencies=[Depends(authorize_with_scopes(["jobs:write"]))])
+async def submit_diagnostic_job(
+    task: DiagnosticJobCreate,
+    tenant_id: UUID = Depends(get_current_tenant_id),
+    db: Session = Depends(get_db),
+    idempotency_key: Optional[str] = Header(None)
+):
+    """
+    Submits a new diagnostic job to run a template against a target URL or inline HTML.
+    This is used for "stagingkörning" of templates.
+    """
+    logger.info(f"Received diagnostic job submission for template: {task.template_id}", extra={"idempotency_key": idempotency_key, "tenant_id": str(tenant_id)})
+
+    start_url = task.target_url if task.target_url else "inline_html_diagnostic"
+
+    job = Job(
+        tenant_id=tenant_id,
+        start_url=start_url,
+        job_type=JobType.DIAGNOSTIC.value,
+        params=task.model_dump(),
+        status=JobStatus.QUEUED.value,
+        created_at=datetime.datetime.utcnow()
+    )
+
+    db.add(job)
+    db.commit()
+    db.refresh(job)
+
+    logger.info(f"Diagnostic job {job.id} created and queued.", extra={"job_id": str(job.id), "tenant_id": str(tenant_id)})
+    schedule_job(str(job.id), job_type=JobType.DIAGNOSTIC.value, params=task.model_dump())
+
     return JobRead.model_validate(job)
 
 @router.get("/jobs/{job_id}", response_model=JobRead, dependencies=[Depends(authorize_with_scopes(["data:read"]))])

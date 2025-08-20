@@ -76,12 +76,14 @@ export const listExports = async (status?: JobStatus, exportType?: string): Prom
   }
 };
 
-export const getDirectData = async (exportType: string, format: 'csv' | 'ndjson' | 'json', filters?: Record<string, any>, compress: boolean = false): Promise<Response> => {
+export const getDirectData = async (exportType: string, format: 'csv' | 'ndjson' | 'json', filters?: Record<string, any>, compress: boolean = false, limit?: number, offset?: number): Promise<Response> => {
   try {
     const params = new URLSearchParams();
     params.append('format', format);
     params.append('compress', String(compress));
     if (filters) params.append('filters', JSON.stringify(filters));
+    if (limit !== undefined) params.append('limit', String(limit));
+    if (offset !== undefined) params.append('offset', String(offset));
 
     const headers: HeadersInit = {};
     if (format === 'csv') headers['Accept'] = 'text/csv';
@@ -95,6 +97,28 @@ export const getDirectData = async (exportType: string, format: 'csv' | 'ndjson'
     return response;
   } catch (error) {
     console.error(`Failed to fetch direct data for ${exportType}:`, error);
+    throw error;
+  }
+};
+
+export const submitDiagnosticJob = async (templateId: string, targetUrl?: string, sampleHtml?: string, tags?: string[]) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/jobs/diagnostic`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ template_id: templateId, target_url: targetUrl, sample_html: sampleHtml, tags: tags || [] }),
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.json();
+      throw new Error(`HTTP error! status: ${response.status}, detail: ${errorBody.detail || response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Failed to submit diagnostic job:", error);
     throw error;
   }
 };

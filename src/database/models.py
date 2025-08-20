@@ -25,7 +25,7 @@ class OwnerKindEnum(enum.Enum):
 class JobType(str, enum.Enum):
     CRAWL = "crawl"
     SCRAPE = "scrape"
-    EXPORT = "export" # Added EXPORT job type
+    EXPORT = "export"
     DIAGNOSTIC = "diagnostic" # Added DIAGNOSTIC job type
 
 class JobStatus(str, enum.Enum):
@@ -810,7 +810,7 @@ class ScrapeCaps(BaseModel):
     browser_pool_size: int = 4
 
 class ExportDestination(BaseModel):
-    type: Literal["internal_staging", "s3_presigned", "gcs_signed", "supabase_storage"] = "internal_staging" # Added supabase_storage
+    type: Literal["internal_staging", "s3_presigned", "gcs_signed", "supabase_storage"] = "internal_staging"
     retention_hours: int = 72
 
 class ExportConfig(BaseModel):
@@ -826,6 +826,22 @@ class ScrapeJobCreate(BaseModel):
     caps: ScrapeCaps = Field(default_factory=ScrapeCaps)
     export: ExportConfig = Field(default_factory=ExportConfig)
     tags: List[str] = Field(default_factory=list)
+
+# New Pydantic model for Diagnostic Job
+class DiagnosticJobCreate(BaseModel):
+    template_id: str
+    template_version: Optional[str] = None
+    target_url: Optional[str] = None # URL to run diagnostic against
+    sample_html: Optional[str] = None # Inline HTML for diagnostic
+    tags: List[str] = Field(default_factory=list)
+
+    @model_validator(mode='after')
+    def check_target_or_sample(self) -> 'DiagnosticJobCreate':
+        if not self.target_url and not self.sample_html:
+            raise ValueError('Either target_url or sample_html must be provided for a diagnostic job.')
+        if self.target_url and self.sample_html:
+            raise ValueError('Cannot provide both target_url and sample_html.')
+        return self
 
 # New Pydantic models for Export API
 class ExportCreate(BaseModel):

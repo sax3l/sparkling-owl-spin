@@ -1,7 +1,8 @@
 export enum JobType {
   CRAWL = "crawl",
   SCRAPE = "scrape",
-  EXPORT = "export", // Added EXPORT job type
+  EXPORT = "export",
+  DIAGNOSTIC = "diagnostic", // Added DIAGNOSTIC job type
 }
 
 export enum JobStatus {

@@ -144,7 +144,9 @@ def get_data_from_db(
     filters: Dict[str, Any], 
     sort_by: Optional[str] = None,
     fields: Optional[List[str]] = None,
-    mask_pii: bool = True # New parameter for PII masking
+    mask_pii: bool = True, # New parameter for PII masking
+    limit: Optional[int] = None, # Added limit
+    offset: Optional[int] = None # Added offset
 ) -> Generator[Dict, None, None]:
     """
     Fetches data from the database based on export_type, filters, sorting, and field selection.
@@ -189,6 +191,12 @@ def get_data_from_db(
                 query = query.order_by(asc(sort_column))
         else:
             logger.warning(f"Sort field '{sort_by}' not found in model '{export_type}'. Skipping sort.")
+
+    # Apply limit and offset for pagination
+    if offset is not None:
+        query = query.offset(offset)
+    if limit is not None:
+        query = query.limit(limit)
 
     # Fetch and yield data
     for row in query.all():
