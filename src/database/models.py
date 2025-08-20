@@ -687,6 +687,31 @@ class UserQuota(Base):
     period_end = Column(DateTime(timezone=True))
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
+# New SQLAlchemy models for Webhooks
+class WebhookEndpoint(Base):
+    __tablename__ = "webhook_endpoints"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey('auth.users.id', ondelete='CASCADE'), nullable=False)
+    url = Column(Text, nullable=False)
+    secret = Column(Text, nullable=False)
+    event_types = Column(JSONB, nullable=False) # Store as JSONB array of strings
+    description = Column(Text)
+    active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+class WebhookDelivery(Base):
+    __tablename__ = "webhook_deliveries"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    endpoint_id = Column(UUID(as_uuid=True), ForeignKey('webhook_endpoints.id', ondelete='CASCADE'), nullable=False)
+    event_id = Column(Text, nullable=False) # Corresponds to WebhookEvent.event_id
+    status_code = Column(Integer)
+    attempt_count = Column(Integer, default=0)
+    last_attempt_at = Column(DateTime(timezone=True))
+    next_attempt_at = Column(DateTime(timezone=True))
+    error_message = Column(Text)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
 
 # --- Pydantic Models for API ---
 

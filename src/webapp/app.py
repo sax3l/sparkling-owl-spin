@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import HTTPException, RequestValidationError
 from prometheus_client import make_asgi_app
-from src.webapp.api import jobs, templates, auth, exports
+from src.webapp.api import jobs, templates, auth, exports, webhooks # Import the new webhooks router
 from src.utils.logger import setup_logging
 from src.utils.telemetry import setup_telemetry
 from src.utils.rate_limiter import RateLimitMiddleware
@@ -97,3 +97,4 @@ app.include_router(jobs.router, prefix="/api/v1", tags=["Jobs"])
 app.include_router(templates.router, prefix="/api/v1", tags=["Templates"])
 app.include_router(auth.router, prefix="/api/v1", tags=["Authentication"])
 app.include_router(exports.router, prefix="/api/v1", tags=["Exports"])
+app.include_router(webhooks.router, prefix="/api/v1", tags=["Webhooks"]) # Include the new webhooks router
