@@ -53,6 +53,7 @@ class Person(Base):
     has_remarks = Column(Boolean)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    source_job_id = Column(UUID(as_uuid=True), ForeignKey('scraping_jobs.id')) # New field
 
 class PersonAddress(Base):
     __tablename__ = "person_addresses"
@@ -98,6 +99,7 @@ class Company(Base):
     remark_control = Column(Text)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    source_job_id = Column(UUID(as_uuid=True), ForeignKey('scraping_jobs.id')) # New field
 
 class CompanyRole(Base):
     __tablename__ = "company_roles"
@@ -153,6 +155,7 @@ class Vehicle(Base):
     type_approval_number = Column(Text)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    source_job_id = Column(UUID(as_uuid=True), ForeignKey('scraping_jobs.id')) # New field
 
 class VehicleTechnicalSpecs(Base):
     __tablename__ = "vehicle_technical_specs"
@@ -711,6 +714,7 @@ class WebhookDelivery(Base):
     next_attempt_at = Column(DateTime(timezone=True))
     error_message = Column(Text)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey('auth.users.id', ondelete='CASCADE'), nullable=False) # New field
 
 
 # --- Pydantic Models for API ---
