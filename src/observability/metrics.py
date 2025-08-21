@@ -1,360 +1,588 @@
 """
-Metrics collection and observability for the crawler application.
+Metrics Collection System
+========================
 
-Provides:
-- Performance metrics tracking
-- Business metrics collection  
-- System health monitoring
-- Custom metric types
-- Integration with monitoring systems
+Comprehensive metrics collection and monitoring for the ECaDP platform.
+Supports Prometheus metrics, custom counters, histograms, and gauges.
 """
 
 import time
-import asyncio
-from typing import Dict, Any, Optional, List, Union
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-from collections import defaultdict, deque
-import json
+import logging
 import threading
-from enum import Enum
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional, Any, Union
+from dataclasses import dataclass, field
+from collections import defaultdict, deque
+import asyncio
+import os
 
-from src.utils.logger import get_logger
+try:
+    import psutil
+    PSUTIL_AVAILABLE = True
+except ImportError:
+    PSUTIL_AVAILABLE = False
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
-class MetricType(Enum):
-    """Types of metrics that can be collected."""
-    COUNTER = "counter"
-    GAUGE = "gauge"
-    HISTOGRAM = "histogram"
-    TIMER = "timer"
+try:
+    from prometheus_client import (
+        Counter, Histogram, Gauge, Summary, Info,
+        CollectorRegistry, generate_latest, CONTENT_TYPE_LATEST
+    )
+    PROMETHEUS_AVAILABLE = True
+except ImportError:
+    PROMETHEUS_AVAILABLE = False
+    logger.warning("Prometheus client not available. Install with: pip install prometheus_client")
 
 @dataclass
-class Metric:
-    """Individual metric data point."""
-    name: str
-    value: Union[int, float]
-    metric_type: MetricType
+class MetricPoint:
+    """Single metric data point"""
     timestamp: datetime
+    value: Union[int, float]
+    labels: Dict[str, str] = field(default_factory=dict)
+
+@dataclass
+class MetricSeries:
+    """Time series of metric points"""
+    name: str
+    metric_type: str
+    description: str
+    points: deque = field(default_factory=lambda: deque(maxlen=1000))
     labels: Dict[str, str] = field(default_factory=dict)
     
+    def add_point(self, value: Union[int, float], labels: Optional[Dict[str, str]] = None):
+        """Add a new metric point"""
+        point = MetricPoint(
+            timestamp=datetime.utcnow(),
+            value=value,
+            labels=labels or {}
+        )
+        self.points.append(point)
+
 class MetricsCollector:
-    """Central metrics collection and management."""
+    """
+    Comprehensive metrics collection system
     
-    def __init__(self, flush_interval: int = 60):
-        self.flush_interval = flush_interval
-        self.metrics: Dict[str, List[Metric]] = defaultdict(list)
-        self.counters: Dict[str, float] = defaultdict(float)
-        self.gauges: Dict[str, float] = {}
-        self.histograms: Dict[str, deque] = defaultdict(lambda: deque(maxlen=1000))
-        self.timers: Dict[str, List[float]] = defaultdict(list)
-        self._lock = threading.Lock()
+    Features:
+    - Prometheus integration (if available)
+    - Custom metric storage
+    - System metrics collection
+    - Application metrics tracking
+    - Export capabilities
+    """
+    
+    def __init__(self, 
+                 enable_prometheus: bool = True,
+                 enable_system_metrics: bool = True,
+                 collection_interval: int = 30):
+        
+        self.enable_prometheus = enable_prometheus and PROMETHEUS_AVAILABLE
+        self.enable_system_metrics = enable_system_metrics and PSUTIL_AVAILABLE
+        self.collection_interval = collection_interval
+        
+        # Custom metrics storage
+        self.metrics: Dict[str, MetricSeries] = {}
+        self.lock = threading.RLock()
+        
+        # Prometheus registry and metrics
+        if self.enable_prometheus:
+            self.registry = CollectorRegistry()
+            self._init_prometheus_metrics()
+        
+        # System metrics collection
+        self._last_cpu_percent = 0
+        self._last_network_io = None
+        self._last_disk_io = None
+        
+        # Background collection task
+        self._collection_task = None
         self._running = False
-        self._flush_task = None
+        
+        # Initialize built-in metrics
+        self._init_builtin_metrics()
     
-    def start(self):
-        """Start the metrics collector background tasks."""
+    def _init_prometheus_metrics(self):
+        """Initialize Prometheus metrics"""
+        if not self.enable_prometheus:
+            return
+        
+        # System metrics
+        self.cpu_usage = Gauge(
+            'ecadp_cpu_usage_percent',
+            'CPU usage percentage',
+            registry=self.registry
+        )
+        
+        self.memory_usage = Gauge(
+            'ecadp_memory_usage_bytes',
+            'Memory usage in bytes',
+            registry=self.registry
+        )
+        
+        self.disk_usage = Gauge(
+            'ecadp_disk_usage_percent',
+            'Disk usage percentage',
+            ['device'],
+            registry=self.registry
+        )
+        
+        # Application metrics
+        self.http_requests_total = Counter(
+            'ecadp_http_requests_total',
+            'Total HTTP requests',
+            ['method', 'endpoint', 'status'],
+            registry=self.registry
+        )
+        
+        self.http_request_duration = Histogram(
+            'ecadp_http_request_duration_seconds',
+            'HTTP request duration',
+            ['method', 'endpoint'],
+            registry=self.registry
+        )
+        
+        self.job_duration = Histogram(
+            'ecadp_job_duration_seconds',
+            'Job execution duration',
+            ['job_type', 'status'],
+            registry=self.registry
+        )
+        
+        self.job_counter = Counter(
+            'ecadp_jobs_total',
+            'Total jobs executed',
+            ['job_type', 'status'],
+            registry=self.registry
+        )
+        
+        self.crawler_requests = Counter(
+            'ecadp_crawler_requests_total',
+            'Total crawler requests',
+            ['domain', 'status'],
+            registry=self.registry
+        )
+        
+        self.scraper_extractions = Counter(
+            'ecadp_scraper_extractions_total',
+            'Total data extractions',
+            ['template', 'status'],
+            registry=self.registry
+        )
+        
+        self.proxy_usage = Gauge(
+            'ecadp_proxy_pool_size',
+            'Current proxy pool size',
+            ['status'],
+            registry=self.registry
+        )
+        
+        self.webhook_events = Counter(
+            'ecadp_webhook_events_total',
+            'Total webhook events',
+            ['event_type', 'status'],
+            registry=self.registry
+        )
+        
+        # Database metrics
+        self.db_connections = Gauge(
+            'ecadp_db_connections_active',
+            'Active database connections',
+            registry=self.registry
+        )
+        
+        self.db_query_duration = Histogram(
+            'ecadp_db_query_duration_seconds',
+            'Database query duration',
+            ['operation'],
+            registry=self.registry
+        )
+    
+    def _init_builtin_metrics(self):
+        """Initialize built-in metric series"""
+        builtin_metrics = [
+            ('system_cpu_percent', 'gauge', 'System CPU usage percentage'),
+            ('system_memory_bytes', 'gauge', 'System memory usage in bytes'),
+            ('system_disk_percent', 'gauge', 'System disk usage percentage'),
+            ('http_requests_count', 'counter', 'HTTP requests count'),
+            ('http_response_time_ms', 'histogram', 'HTTP response time in milliseconds'),
+            ('job_execution_count', 'counter', 'Job execution count'),
+            ('job_execution_time_ms', 'histogram', 'Job execution time in milliseconds'),
+            ('crawler_requests_count', 'counter', 'Crawler requests count'),
+            ('scraper_extractions_count', 'counter', 'Scraper extractions count'),
+            ('webhook_events_count', 'counter', 'Webhook events count'),
+            ('error_count', 'counter', 'Error count'),
+            ('active_users', 'gauge', 'Active users count'),
+        ]
+        
+        for name, metric_type, description in builtin_metrics:
+            self.metrics[name] = MetricSeries(
+                name=name,
+                metric_type=metric_type,
+                description=description
+            )
+    
+    def start_collection(self):
+        """Start background metrics collection"""
         if self._running:
             return
         
         self._running = True
-        self._flush_task = asyncio.create_task(self._flush_loop())
-        logger.info("Metrics collector started")
+        if self.enable_system_metrics:
+            self._collection_task = asyncio.create_task(self._collection_loop())
     
-    async def stop(self):
-        """Stop the metrics collector."""
+    def stop_collection(self):
+        """Stop background metrics collection"""
         self._running = False
-        if self._flush_task:
-            self._flush_task.cancel()
-            try:
-                await self._flush_task
-            except asyncio.CancelledError:
-                pass
-        
-        # Final flush
-        await self._flush_metrics()
-        logger.info("Metrics collector stopped")
+        if self._collection_task:
+            self._collection_task.cancel()
     
-    def record_counter(self, name: str, value: float = 1.0, labels: Optional[Dict[str, str]] = None):
-        """Record a counter metric (monotonically increasing)."""
-        with self._lock:
-            key = self._metric_key(name, labels)
-            self.counters[key] += value
-            
-            metric = Metric(
-                name=name,
-                value=value,
-                metric_type=MetricType.COUNTER,
-                timestamp=datetime.utcnow(),
-                labels=labels or {}
-            )
-            self.metrics[name].append(metric)
-    
-    def record_gauge(self, name: str, value: float, labels: Optional[Dict[str, str]] = None):
-        """Record a gauge metric (can go up or down)."""
-        with self._lock:
-            key = self._metric_key(name, labels)
-            self.gauges[key] = value
-            
-            metric = Metric(
-                name=name,
-                value=value,
-                metric_type=MetricType.GAUGE,
-                timestamp=datetime.utcnow(),
-                labels=labels or {}
-            )
-            self.metrics[name].append(metric)
-    
-    def record_histogram(self, name: str, value: float, labels: Optional[Dict[str, str]] = None):
-        """Record a histogram metric (distribution of values)."""
-        with self._lock:
-            key = self._metric_key(name, labels)
-            self.histograms[key].append(value)
-            
-            metric = Metric(
-                name=name,
-                value=value,
-                metric_type=MetricType.HISTOGRAM,
-                timestamp=datetime.utcnow(),
-                labels=labels or {}
-            )
-            self.metrics[name].append(metric)
-    
-    def record_timer(self, name: str, duration: float, labels: Optional[Dict[str, str]] = None):
-        """Record a timer metric (duration of operations)."""
-        with self._lock:
-            key = self._metric_key(name, labels)
-            self.timers[key].append(duration)
-            
-            metric = Metric(
-                name=name,
-                value=duration,
-                metric_type=MetricType.TIMER,
-                timestamp=datetime.utcnow(),
-                labels=labels or {}
-            )
-            self.metrics[name].append(metric)
-    
-    def get_counter(self, name: str, labels: Optional[Dict[str, str]] = None) -> float:
-        """Get current counter value."""
-        key = self._metric_key(name, labels)
-        return self.counters.get(key, 0.0)
-    
-    def get_gauge(self, name: str, labels: Optional[Dict[str, str]] = None) -> Optional[float]:
-        """Get current gauge value."""
-        key = self._metric_key(name, labels)
-        return self.gauges.get(key)
-    
-    def get_histogram_stats(self, name: str, labels: Optional[Dict[str, str]] = None) -> Dict[str, float]:
-        """Get histogram statistics (min, max, avg, percentiles)."""
-        key = self._metric_key(name, labels)
-        values = list(self.histograms[key])
-        
-        if not values:
-            return {}
-        
-        values.sort()
-        n = len(values)
-        
-        return {
-            "count": n,
-            "min": values[0],
-            "max": values[-1],
-            "avg": sum(values) / n,
-            "p50": values[n // 2],
-            "p90": values[int(n * 0.9)] if n > 10 else values[-1],
-            "p95": values[int(n * 0.95)] if n > 20 else values[-1],
-            "p99": values[int(n * 0.99)] if n > 100 else values[-1]
-        }
-    
-    def get_timer_stats(self, name: str, labels: Optional[Dict[str, str]] = None) -> Dict[str, float]:
-        """Get timer statistics."""
-        key = self._metric_key(name, labels)
-        return self.get_histogram_stats(name, labels)  # Same logic
-    
-    def _metric_key(self, name: str, labels: Optional[Dict[str, str]] = None) -> str:
-        """Generate a unique key for a metric with labels."""
-        if not labels:
-            return name
-        
-        label_str = ",".join(f"{k}={v}" for k, v in sorted(labels.items()))
-        return f"{name}{{{label_str}}}"
-    
-    async def _flush_loop(self):
-        """Background task to periodically flush metrics."""
+    async def _collection_loop(self):
+        """Background collection loop"""
         while self._running:
             try:
-                await asyncio.sleep(self.flush_interval)
-                await self._flush_metrics()
+                await self._collect_system_metrics()
+                await asyncio.sleep(self.collection_interval)
             except asyncio.CancelledError:
                 break
             except Exception as e:
-                logger.error(f"Error in metrics flush loop: {e}")
+                logger.error(f"Error in metrics collection: {e}")
+                await asyncio.sleep(self.collection_interval)
     
-    async def _flush_metrics(self):
-        """Flush metrics to storage/monitoring systems."""
-        with self._lock:
-            if not any(self.metrics.values()):
-                return
+    async def _collect_system_metrics(self):
+        """Collect system metrics"""
+        if not PSUTIL_AVAILABLE:
+            return
             
-            # Prepare metrics for export
-            export_data = self._prepare_export_data()
+        try:
+            # CPU usage
+            cpu_percent = psutil.cpu_percent(interval=1)
+            self.record_gauge('system_cpu_percent', cpu_percent)
             
-            # Clear old metrics (keep recent for debugging)
-            self._cleanup_old_metrics()
+            if self.enable_prometheus:
+                self.cpu_usage.set(cpu_percent)
+            
+            # Memory usage
+            memory = psutil.virtual_memory()
+            self.record_gauge('system_memory_bytes', memory.used)
+            
+            if self.enable_prometheus:
+                self.memory_usage.set(memory.used)
+            
+            # Disk usage
+            disk = psutil.disk_usage('/')
+            disk_percent = (disk.used / disk.total) * 100
+            self.record_gauge('system_disk_percent', disk_percent)
+            
+            if self.enable_prometheus:
+                self.disk_usage.labels(device='/').set(disk_percent)
+            
+        except Exception as e:
+            logger.error(f"Error collecting system metrics: {e}")
+    
+    def record_counter(self, name: str, value: Union[int, float] = 1, labels: Optional[Dict[str, str]] = None):
+        """Record a counter metric"""
+        with self.lock:
+            if name not in self.metrics:
+                self.metrics[name] = MetricSeries(
+                    name=name,
+                    metric_type='counter',
+                    description=f'Counter metric: {name}'
+                )
+            
+            # For counters, we increment the last value
+            last_value = 0
+            if self.metrics[name].points:
+                last_value = self.metrics[name].points[-1].value
+            
+            self.metrics[name].add_point(last_value + value, labels)
+    
+    def record_gauge(self, name: str, value: Union[int, float], labels: Optional[Dict[str, str]] = None):
+        """Record a gauge metric"""
+        with self.lock:
+            if name not in self.metrics:
+                self.metrics[name] = MetricSeries(
+                    name=name,
+                    metric_type='gauge',
+                    description=f'Gauge metric: {name}'
+                )
+            
+            self.metrics[name].add_point(value, labels)
+    
+    def record_histogram(self, name: str, value: Union[int, float], labels: Optional[Dict[str, str]] = None):
+        """Record a histogram metric"""
+        with self.lock:
+            if name not in self.metrics:
+                self.metrics[name] = MetricSeries(
+                    name=name,
+                    metric_type='histogram',
+                    description=f'Histogram metric: {name}'
+                )
+            
+            self.metrics[name].add_point(value, labels)
+    
+    def increment_counter(self, name: str, labels: Optional[Dict[str, str]] = None):
+        """Increment a counter by 1"""
+        self.record_counter(name, 1, labels)
+    
+    def time_function(self, metric_name: str, labels: Optional[Dict[str, str]] = None):
+        """Decorator to time function execution"""
+        def decorator(func):
+            if asyncio.iscoroutinefunction(func):
+                async def async_wrapper(*args, **kwargs):
+                    start_time = time.time()
+                    try:
+                        result = await func(*args, **kwargs)
+                        return result
+                    finally:
+                        duration = (time.time() - start_time) * 1000  # Convert to ms
+                        self.record_histogram(metric_name, duration, labels)
+                return async_wrapper
+            else:
+                def sync_wrapper(*args, **kwargs):
+                    start_time = time.time()
+                    try:
+                        result = func(*args, **kwargs)
+                        return result
+                    finally:
+                        duration = (time.time() - start_time) * 1000  # Convert to ms
+                        self.record_histogram(metric_name, duration, labels)
+                return sync_wrapper
+        return decorator
+    
+    # Application-specific metric methods
+    
+    def record_http_request(self, method: str, endpoint: str, status_code: int, duration: float):
+        """Record HTTP request metrics"""
+        labels = {'method': method, 'endpoint': endpoint, 'status': str(status_code)}
         
-        # Send to monitoring systems (Prometheus, etc.)
-        await self._export_to_prometheus(export_data)
-        await self._export_to_logging(export_data)
+        self.record_counter('http_requests_count', labels=labels)
+        self.record_histogram('http_response_time_ms', duration * 1000, labels)
+        
+        if self.enable_prometheus:
+            self.http_requests_total.labels(method=method, endpoint=endpoint, status=str(status_code)).inc()
+            self.http_request_duration.labels(method=method, endpoint=endpoint).observe(duration)
     
-    def _prepare_export_data(self) -> Dict[str, Any]:
-        """Prepare metrics data for export."""
-        export_data = {
-            "timestamp": datetime.utcnow().isoformat(),
-            "counters": dict(self.counters),
-            "gauges": dict(self.gauges),
-            "histograms": {},
-            "timers": {}
+    def record_job_execution(self, job_type: str, status: str, duration: float):
+        """Record job execution metrics"""
+        labels = {'job_type': job_type, 'status': status}
+        
+        self.record_counter('job_execution_count', labels=labels)
+        self.record_histogram('job_execution_time_ms', duration * 1000, labels)
+        
+        if self.enable_prometheus:
+            self.job_counter.labels(job_type=job_type, status=status).inc()
+            self.job_duration.labels(job_type=job_type, status=status).observe(duration)
+    
+    def record_crawler_request(self, domain: str, status: str):
+        """Record crawler request metrics"""
+        labels = {'domain': domain, 'status': status}
+        
+        self.record_counter('crawler_requests_count', labels=labels)
+        
+        if self.enable_prometheus:
+            self.crawler_requests.labels(domain=domain, status=status).inc()
+    
+    def record_scraper_extraction(self, template: str, status: str, records_count: int = 1):
+        """Record scraper extraction metrics"""
+        labels = {'template': template, 'status': status}
+        
+        self.record_counter('scraper_extractions_count', records_count, labels)
+        
+        if self.enable_prometheus:
+            self.scraper_extractions.labels(template=template, status=status).inc(records_count)
+    
+    def record_webhook_event(self, event_type: str, status: str):
+        """Record webhook event metrics"""
+        labels = {'event_type': event_type, 'status': status}
+        
+        self.record_counter('webhook_events_count', labels=labels)
+        
+        if self.enable_prometheus:
+            self.webhook_events.labels(event_type=event_type, status=status).inc()
+    
+    def update_proxy_pool_size(self, active_count: int, total_count: int):
+        """Update proxy pool metrics"""
+        self.record_gauge('proxy_pool_active', active_count)
+        self.record_gauge('proxy_pool_total', total_count)
+        
+        if self.enable_prometheus:
+            self.proxy_usage.labels(status='active').set(active_count)
+            self.proxy_usage.labels(status='total').set(total_count)
+    
+    def update_active_users(self, count: int):
+        """Update active users count"""
+        self.record_gauge('active_users', count)
+    
+    def record_error(self, error_type: str, component: str):
+        """Record error metrics"""
+        labels = {'error_type': error_type, 'component': component}
+        self.record_counter('error_count', labels=labels)
+    
+    # Export and query methods
+    
+    def get_metric(self, name: str) -> Optional[MetricSeries]:
+        """Get a specific metric series"""
+        return self.metrics.get(name)
+    
+    def get_all_metrics(self) -> Dict[str, MetricSeries]:
+        """Get all metric series"""
+        with self.lock:
+            return dict(self.metrics)
+    
+    def get_metric_summary(self, name: str, window_minutes: int = 60) -> Dict[str, Any]:
+        """Get summary statistics for a metric"""
+        metric = self.get_metric(name)
+        if not metric:
+            return {}
+        
+        # Filter points within time window
+        cutoff = datetime.utcnow() - timedelta(minutes=window_minutes)
+        recent_points = [p for p in metric.points if p.timestamp > cutoff]
+        
+        if not recent_points:
+            return {"name": name, "points": 0}
+        
+        values = [p.value for p in recent_points]
+        
+        summary = {
+            "name": name,
+            "type": metric.metric_type,
+            "points": len(recent_points),
+            "min": min(values),
+            "max": max(values),
+            "avg": sum(values) / len(values),
+            "latest": values[-1],
+            "window_minutes": window_minutes
         }
         
-        # Calculate histogram statistics
-        for name, values in self.histograms.items():
-            if values:
-                export_data["histograms"][name] = self._calculate_stats(list(values))
+        # Add additional stats for histograms
+        if metric.metric_type == 'histogram':
+            sorted_values = sorted(values)
+            count = len(sorted_values)
+            
+            summary.update({
+                "p50": sorted_values[int(count * 0.5)],
+                "p95": sorted_values[int(count * 0.95)],
+                "p99": sorted_values[int(count * 0.99)]
+            })
         
-        # Calculate timer statistics  
-        for name, values in self.timers.items():
-            if values:
-                export_data["timers"][name] = self._calculate_stats(values)
+        return summary
+    
+    def export_prometheus(self) -> str:
+        """Export metrics in Prometheus format"""
+        if not self.enable_prometheus:
+            return "# Prometheus not available\n"
+        
+        return generate_latest(self.registry).decode('utf-8')
+    
+    def export_json(self, window_minutes: int = 60) -> Dict[str, Any]:
+        """Export metrics as JSON"""
+        export_data = {
+            "timestamp": datetime.utcnow().isoformat(),
+            "window_minutes": window_minutes,
+            "metrics": {}
+        }
+        
+        for name in self.metrics:
+            export_data["metrics"][name] = self.get_metric_summary(name, window_minutes)
         
         return export_data
     
-    def _calculate_stats(self, values: List[float]) -> Dict[str, float]:
-        """Calculate statistics for a list of values."""
-        if not values:
-            return {}
+    def clear_old_metrics(self, max_age_hours: int = 24):
+        """Clear old metric points"""
+        cutoff = datetime.utcnow() - timedelta(hours=max_age_hours)
         
-        values.sort()
-        n = len(values)
-        
-        return {
-            "count": n,
-            "sum": sum(values),
-            "min": values[0],
-            "max": values[-1],
-            "avg": sum(values) / n,
-            "p50": values[n // 2],
-            "p90": values[int(n * 0.9)] if n > 10 else values[-1],
-            "p95": values[int(n * 0.95)] if n > 20 else values[-1],
-            "p99": values[int(n * 0.99)] if n > 100 else values[-1]
+        with self.lock:
+            for metric in self.metrics.values():
+                # Filter out old points
+                metric.points = deque(
+                    [p for p in metric.points if p.timestamp > cutoff],
+                    maxlen=metric.points.maxlen
+                )
+    
+    def get_health_status(self) -> Dict[str, Any]:
+        """Get system health status based on metrics"""
+        health = {
+            "status": "healthy",
+            "checks": {},
+            "timestamp": datetime.utcnow().isoformat()
         }
-    
-    def _cleanup_old_metrics(self):
-        """Clean up old metrics to prevent memory leaks."""
-        cutoff_time = datetime.utcnow() - timedelta(hours=1)
         
-        for name, metric_list in self.metrics.items():
-            # Keep only recent metrics
-            self.metrics[name] = [
-                m for m in metric_list 
-                if m.timestamp > cutoff_time
-            ]
-    
-    async def _export_to_prometheus(self, data: Dict[str, Any]):
-        """Export metrics to Prometheus format."""
-        # In a real implementation, this would write to a Prometheus push gateway
-        # or update metrics that Prometheus scrapes
-        logger.debug("Exporting metrics to Prometheus format")
-    
-    async def _export_to_logging(self, data: Dict[str, Any]):
-        """Export metrics to structured logs."""
-        logger.info("Metrics summary", extra={
-            "metrics": data,
-            "event_type": "metrics_flush"
-        })
+        # CPU check
+        cpu_metric = self.get_metric('system_cpu_percent')
+        if cpu_metric and cpu_metric.points:
+            cpu_value = cpu_metric.points[-1].value
+            health["checks"]["cpu"] = {
+                "status": "healthy" if cpu_value < 80 else "warning" if cpu_value < 95 else "unhealthy",
+                "value": cpu_value,
+                "unit": "percent"
+            }
+            if cpu_value >= 80:
+                health["status"] = "warning" if cpu_value < 95 else "unhealthy"
+        
+        # Memory check
+        memory_metric = self.get_metric('system_memory_bytes')
+        if memory_metric and memory_metric.points:
+            memory_bytes = memory_metric.points[-1].value
+            memory_gb = memory_bytes / (1024**3)
+            
+            # Simple threshold - adjust based on your system
+            memory_threshold_gb = 8  # 8GB threshold
+            memory_status = "healthy" if memory_gb < memory_threshold_gb else "warning"
+            
+            health["checks"]["memory"] = {
+                "status": memory_status,
+                "value": memory_gb,
+                "unit": "GB"
+            }
+            if memory_status != "healthy":
+                health["status"] = memory_status
+        
+        # Error rate check
+        error_metric = self.get_metric('error_count')
+        if error_metric and error_metric.points:
+            recent_errors = len([p for p in error_metric.points 
+                               if p.timestamp > datetime.utcnow() - timedelta(minutes=10)])
+            
+            error_status = "healthy" if recent_errors < 10 else "warning" if recent_errors < 50 else "unhealthy"
+            health["checks"]["errors"] = {
+                "status": error_status,
+                "value": recent_errors,
+                "unit": "count_per_10min"
+            }
+            if error_status != "healthy":
+                health["status"] = error_status
+        
+        return health
 
-# Context manager for timing operations
-class Timer:
-    """Context manager for timing operations."""
+
+# Global metrics collector instance
+metrics_collector = MetricsCollector()
+
+# Context managers for timing operations
+
+class TimingContext:
+    """Context manager for timing operations"""
     
-    def __init__(self, metrics_collector: MetricsCollector, name: str, 
-                 labels: Optional[Dict[str, str]] = None):
-        self.metrics_collector = metrics_collector
-        self.name = name
+    def __init__(self, metric_name: str, labels: Optional[Dict[str, str]] = None):
+        self.metric_name = metric_name
         self.labels = labels
         self.start_time = None
     
     def __enter__(self):
-        self.start_time = time.perf_counter()
+        self.start_time = time.time()
         return self
     
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if self.start_time is not None:
-            duration = time.perf_counter() - self.start_time
-            self.metrics_collector.record_timer(self.name, duration, self.labels)
+        if self.start_time:
+            duration = (time.time() - self.start_time) * 1000  # Convert to ms
+            metrics_collector.record_histogram(self.metric_name, duration, self.labels)
 
-# Decorator for timing functions
-def timed_function(metrics_collector: MetricsCollector, name: Optional[str] = None):
-    """Decorator to time function execution."""
-    def decorator(func):
-        def wrapper(*args, **kwargs):
-            timer_name = name or f"function.{func.__name__}"
-            with Timer(metrics_collector, timer_name):
-                return func(*args, **kwargs)
-        return wrapper
-    return decorator
+def time_operation(metric_name: str, labels: Optional[Dict[str, str]] = None):
+    """Create a timing context manager"""
+    return TimingContext(metric_name, labels)
 
-# Business-specific metrics
-class CrawlerMetrics:
-    """Crawler-specific business metrics."""
-    
-    def __init__(self, metrics_collector: MetricsCollector):
-        self.metrics = metrics_collector
-    
-    def record_page_scraped(self, site: str, template: str, success: bool):
-        """Record a page scraping attempt."""
-        labels = {"site": site, "template": template, "status": "success" if success else "failed"}
-        self.metrics.record_counter("pages_scraped_total", 1.0, labels)
-    
-    def record_proxy_usage(self, proxy_id: str, success: bool, response_time: float):
-        """Record proxy usage metrics."""
-        labels = {"proxy_id": proxy_id, "status": "success" if success else "failed"}
-        self.metrics.record_counter("proxy_requests_total", 1.0, labels)
-        
-        if success:
-            self.metrics.record_timer("proxy_response_time", response_time, {"proxy_id": proxy_id})
-    
-    def record_data_quality(self, site: str, template: str, completeness_score: float):
-        """Record data quality metrics."""
-        labels = {"site": site, "template": template}
-        self.metrics.record_gauge("data_quality_score", completeness_score, labels)
-    
-    def record_template_drift(self, site: str, template: str, drift_score: float):
-        """Record template drift detection."""
-        labels = {"site": site, "template": template}
-        self.metrics.record_gauge("template_drift_score", drift_score, labels)
-        
-        if drift_score > 0.7:  # High drift threshold
-            self.metrics.record_counter("template_drift_alerts", 1.0, labels)
-
-# Global metrics instance
-_metrics_instance: Optional[MetricsCollector] = None
-
+# Convenience functions
 def get_metrics_collector() -> MetricsCollector:
-    """Get the global metrics collector instance."""
-    global _metrics_instance
-    
-    if _metrics_instance is None:
-        _metrics_instance = MetricsCollector()
-        _metrics_instance.start()
-    
-    return _metrics_instance
-
-async def shutdown_metrics():
-    """Shutdown the global metrics collector."""
-    global _metrics_instance
-    
-    if _metrics_instance:
-        await _metrics_instance.stop()
-        _metrics_instance = None
+    """Get the global metrics collector instance"""
+    return metrics_collector
