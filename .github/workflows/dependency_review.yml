@@ -1,0 +1,469 @@
+name: Dependency Review
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Review dependencies weekly
+    - cron: '0 6 * * 1'
+
+permissions:
+  contents: read
+  pull-requests: write
+  security-events: write
+
+jobs:
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Dependency Review
+      uses: actions/dependency-review-action@v4
+      with:
+        fail-on-severity: moderate
+        allow-licenses: Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, MIT
+        deny-licenses: GPL-2.0, GPL-3.0, LGPL-2.1, LGPL-3.0
+        comment-summary-in-pr: always
+        vulnerability-check: true
+        license-check: true
+        base-ref: ${{ github.event.pull_request.base.sha }}
+        head-ref: ${{ github.event.pull_request.head.sha }}
+
+  python-dependencies:
+    name: Python Dependency Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install pip-audit
+      run: |
+        python -m pip install --upgrade pip
+        pip install pip-audit
+
+    - name: Audit Python dependencies
+      run: |
+        pip-audit --format=json --output=python-audit.json || true
+        pip-audit --format=cyclonedx-json --output=python-sbom.json || true
+
+    - name: Check for dependency conflicts
+      run: |
+        pip install pipdeptree
+        pipdeptree --warn=conflict --warn=cycle
+
+    - name: Analyze dependency tree
+      run: |
+        pip install -r requirements.txt
+        pipdeptree --json > dependency-tree.json
+        pipdeptree --graph-output png > dependency-graph.png || true
+
+    - name: Upload Python dependency analysis
+      uses: actions/upload-artifact@v4
+      with:
+        name: python-dependency-analysis
+        path: |
+          python-audit.json
+          python-sbom.json
+          dependency-tree.json
+          dependency-graph.png
+
+  nodejs-dependencies:
+    name: Node.js Dependency Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Check for outdated packages
+      run: |
+        npm outdated --json > npm-outdated.json || true
+        npm outdated > npm-outdated.txt || true
+
+    - name: Analyze dependency tree
+      run: |
+        npm list --json > npm-tree.json || true
+        npm list > npm-tree.txt || true
+
+    - name: Check for duplicate packages
+      run: |
+        npx npm-check-duplicates > npm-duplicates.txt || true
+
+    - name: Frontend dependency analysis
+      run: |
+        cd frontend
+        npm ci
+        npm outdated --json > ../frontend-outdated.json || true
+        npm list --json > ../frontend-tree.json || true
+
+    - name: Upload Node.js dependency analysis
+      uses: actions/upload-artifact@v4
+      with:
+        name: nodejs-dependency-analysis
+        path: |
+          npm-outdated.*
+          npm-tree.*
+          npm-duplicates.txt
+          frontend-outdated.json
+          frontend-tree.json
+
+  license-compliance:
+    name: License Compliance Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install license tools
+      run: |
+        pip install pip-licenses licensecheck
+
+    - name: Check Python licenses
+      run: |
+        pip install -r requirements.txt
+        pip-licenses --format=json --with-urls --with-description > python-licenses-detailed.json
+        pip-licenses --format=csv > python-licenses.csv
+        
+        # Check for forbidden licenses
+        pip-licenses --format=json | jq -r '.[] | select(.License | test("GPL|LGPL|AGPL")) | .Name + " - " + .License' > forbidden-licenses.txt || true
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Install Node.js license tools
+      run: npm install -g license-checker license-compatibility-checker
+
+    - name: Check Node.js licenses
+      run: |
+        npm ci
+        license-checker --json --out nodejs-licenses-detailed.json
+        license-checker --csv --out nodejs-licenses.csv
+        
+        # Check for license compatibility
+        license-compatibility-checker > license-compatibility.txt || true
+
+    - name: Frontend license check
+      run: |
+        cd frontend
+        npm ci
+        license-checker --json --out ../frontend-licenses-detailed.json
+        license-checker --csv --out ../frontend-licenses.csv
+
+    - name: Generate license report
+      run: |
+        echo "# License Compliance Report" > license-report.md
+        echo "" >> license-report.md
+        echo "## Python Dependencies" >> license-report.md
+        echo "\`\`\`" >> license-report.md
+        pip-licenses --format=plain >> license-report.md
+        echo "\`\`\`" >> license-report.md
+        echo "" >> license-report.md
+        echo "## Node.js Dependencies" >> license-report.md
+        echo "\`\`\`" >> license-report.md
+        license-checker >> license-report.md
+        echo "\`\`\`" >> license-report.md
+        
+        if [ -s forbidden-licenses.txt ]; then
+          echo "" >> license-report.md
+          echo "## ⚠️ Forbidden Licenses Found" >> license-report.md
+          echo "\`\`\`" >> license-report.md
+          cat forbidden-licenses.txt >> license-report.md
+          echo "\`\`\`" >> license-report.md
+        fi
+
+    - name: Upload license compliance results
+      uses: actions/upload-artifact@v4
+      with:
+        name: license-compliance
+        path: |
+          python-licenses*
+          nodejs-licenses*
+          frontend-licenses*
+          license-compatibility.txt
+          license-report.md
+          forbidden-licenses.txt
+
+  vulnerability-scan:
+    name: Vulnerability Scanning
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install Python security tools
+      run: |
+        pip install safety bandit semgrep
+
+    - name: Python vulnerability scan
+      run: |
+        pip install -r requirements.txt
+        safety check --json --output safety-report.json || true
+        safety check --output safety-report.txt || true
+
+    - name: Python code security scan
+      run: |
+        bandit -r src/ -f json -o bandit-report.json || true
+        bandit -r src/ -f txt -o bandit-report.txt || true
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Node.js vulnerability scan
+      run: |
+        npm ci
+        npm audit --audit-level=moderate --json > npm-audit-report.json || true
+        npm audit --audit-level=moderate > npm-audit-report.txt || true
+
+    - name: Frontend vulnerability scan
+      run: |
+        cd frontend
+        npm ci
+        npm audit --audit-level=moderate --json > ../frontend-audit-report.json || true
+        npm audit --audit-level=moderate > ../frontend-audit-report.txt || true
+
+    - name: Generate vulnerability summary
+      run: |
+        echo "# Vulnerability Scan Summary" > vulnerability-summary.md
+        echo "" >> vulnerability-summary.md
+        echo "## Python Safety Report" >> vulnerability-summary.md
+        
+        if [ -f safety-report.txt ]; then
+          echo "\`\`\`" >> vulnerability-summary.md
+          cat safety-report.txt >> vulnerability-summary.md
+          echo "\`\`\`" >> vulnerability-summary.md
+        fi
+        
+        echo "" >> vulnerability-summary.md
+        echo "## NPM Audit Report" >> vulnerability-summary.md
+        
+        if [ -f npm-audit-report.txt ]; then
+          echo "\`\`\`" >> vulnerability-summary.md
+          head -50 npm-audit-report.txt >> vulnerability-summary.md
+          echo "\`\`\`" >> vulnerability-summary.md
+        fi
+
+    - name: Upload vulnerability scan results
+      uses: actions/upload-artifact@v4
+      with:
+        name: vulnerability-scan
+        path: |
+          safety-report.*
+          bandit-report.*
+          npm-audit-report.*
+          frontend-audit-report.*
+          vulnerability-summary.md
+
+  supply-chain-analysis:
+    name: Supply Chain Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Analyze Python supply chain
+      run: |
+        pip install cyclonedx-bom
+        pip install -r requirements.txt
+        cyclonedx-py -o python-sbom.xml
+        cyclonedx-py -o python-sbom.json --format json
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Generate Node.js SBOM
+      run: |
+        npm ci
+        npx @cyclonedx/cyclonedx-npm --output-file nodejs-sbom.xml
+        npx @cyclonedx/cyclonedx-npm --output-format json --output-file nodejs-sbom.json
+
+    - name: Frontend SBOM generation
+      run: |
+        cd frontend
+        npm ci
+        npx @cyclonedx/cyclonedx-npm --output-file ../frontend-sbom.xml
+        npx @cyclonedx/cyclonedx-npm --output-format json --output-file ../frontend-sbom.json
+
+    - name: Upload SBOM files
+      uses: actions/upload-artifact@v4
+      with:
+        name: sbom-files
+        path: |
+          python-sbom.*
+          nodejs-sbom.*
+          frontend-sbom.*
+
+  dependency-update-check:
+    name: Dependency Update Recommendations
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Check Python updates
+      run: |
+        pip install pip-check-reqs
+        pip install -r requirements.txt
+        
+        # Check for missing or extra requirements
+        pip-missing-reqs src/ > python-missing-reqs.txt || true
+        pip-extra-reqs src/ > python-extra-reqs.txt || true
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Check Node.js updates
+      run: |
+        npm ci
+        npx npm-check --json > npm-check.json || true
+        npx npm-check > npm-check.txt || true
+
+    - name: Frontend update check
+      run: |
+        cd frontend
+        npm ci
+        npx npm-check --json > ../frontend-check.json || true
+        npx npm-check > ../frontend-check.txt || true
+
+    - name: Generate update recommendations
+      run: |
+        echo "# Dependency Update Recommendations" > update-recommendations.md
+        echo "" >> update-recommendations.md
+        echo "Generated on: $(date)" >> update-recommendations.md
+        echo "" >> update-recommendations.md
+        
+        if [ -f npm-check.txt ]; then
+          echo "## Node.js Updates" >> update-recommendations.md
+          echo "\`\`\`" >> update-recommendations.md
+          cat npm-check.txt >> update-recommendations.md
+          echo "\`\`\`" >> update-recommendations.md
+          echo "" >> update-recommendations.md
+        fi
+        
+        if [ -f frontend-check.txt ]; then
+          echo "## Frontend Updates" >> update-recommendations.md
+          echo "\`\`\`" >> update-recommendations.md
+          cat frontend-check.txt >> update-recommendations.md
+          echo "\`\`\`" >> update-recommendations.md
+        fi
+
+    - name: Upload update recommendations
+      uses: actions/upload-artifact@v4
+      with:
+        name: update-recommendations
+        path: |
+          python-missing-reqs.txt
+          python-extra-reqs.txt
+          npm-check.*
+          frontend-check.*
+          update-recommendations.md
+
+  summary-report:
+    name: Generate Summary Report
+    runs-on: ubuntu-latest
+    needs: [dependency-review, python-dependencies, nodejs-dependencies, license-compliance, vulnerability-scan, supply-chain-analysis, dependency-update-check]
+    if: always()
+    
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+
+    - name: Create comprehensive report
+      run: |
+        echo "# Dependency Review Summary Report" > dependency-review-summary.md
+        echo "" >> dependency-review-summary.md
+        echo "**Generated:** $(date)" >> dependency-review-summary.md
+        echo "**Event:** ${{ github.event_name }}" >> dependency-review-summary.md
+        echo "**Repository:** ${{ github.repository }}" >> dependency-review-summary.md
+        echo "**Ref:** ${{ github.ref }}" >> dependency-review-summary.md
+        echo "" >> dependency-review-summary.md
+        
+        echo "## Job Results" >> dependency-review-summary.md
+        echo "- Dependency Review: ${{ needs.dependency-review.result }}" >> dependency-review-summary.md
+        echo "- Python Dependencies: ${{ needs.python-dependencies.result }}" >> dependency-review-summary.md
+        echo "- Node.js Dependencies: ${{ needs.nodejs-dependencies.result }}" >> dependency-review-summary.md
+        echo "- License Compliance: ${{ needs.license-compliance.result }}" >> dependency-review-summary.md
+        echo "- Vulnerability Scan: ${{ needs.vulnerability-scan.result }}" >> dependency-review-summary.md
+        echo "- Supply Chain Analysis: ${{ needs.supply-chain-analysis.result }}" >> dependency-review-summary.md
+        echo "- Update Recommendations: ${{ needs.dependency-update-check.result }}" >> dependency-review-summary.md
+        echo "" >> dependency-review-summary.md
+        
+        echo "## Artifacts Generated" >> dependency-review-summary.md
+        echo "The following artifacts were generated during this review:" >> dependency-review-summary.md
+        echo "" >> dependency-review-summary.md
+        ls -la > artifacts-list.txt
+        echo "\`\`\`" >> dependency-review-summary.md
+        cat artifacts-list.txt >> dependency-review-summary.md
+        echo "\`\`\`" >> dependency-review-summary.md
+
+    - name: Upload summary report
+      uses: actions/upload-artifact@v4
+      with:
+        name: dependency-review-summary
+        path: dependency-review-summary.md
+
+    - name: Comment on PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const summary = fs.readFileSync('dependency-review-summary.md', 'utf8');
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: summary
+          });

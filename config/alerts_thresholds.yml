@@ -1,0 +1,416 @@
+# Alert thresholds and monitoring configuration
+# This file defines thresholds for various system metrics and alerting rules
+
+# General system thresholds
+system:
+  cpu:
+    warning_threshold: 70    # CPU usage percentage
+    critical_threshold: 85
+    duration: "5m"           # Sustained for this duration
+  
+  memory:
+    warning_threshold: 75    # Memory usage percentage
+    critical_threshold: 90
+    duration: "3m"
+  
+  disk:
+    warning_threshold: 80    # Disk usage percentage
+    critical_threshold: 95
+    duration: "1m"
+  
+  network:
+    max_bandwidth_mbps: 1000
+    warning_threshold: 70    # % of max bandwidth
+    critical_threshold: 90
+
+# Scraping performance thresholds
+scraping:
+  success_rate:
+    warning_threshold: 95    # % successful requests
+    critical_threshold: 90
+    window: "15m"
+  
+  response_time:
+    warning_threshold: 5000  # milliseconds
+    critical_threshold: 10000
+    percentile: 95           # p95 response time
+    window: "10m"
+  
+  error_rates:
+    http_4xx:
+      warning_threshold: 5   # % of total requests
+      critical_threshold: 10
+      window: "10m"
+    
+    http_5xx:
+      warning_threshold: 2
+      critical_threshold: 5
+      window: "5m"
+    
+    timeouts:
+      warning_threshold: 3
+      critical_threshold: 7
+      window: "10m"
+    
+    connection_errors:
+      warning_threshold: 2
+      critical_threshold: 5
+      window: "5m"
+  
+  rate_limiting:
+    blocked_requests:
+      warning_threshold: 1   # % of total requests
+      critical_threshold: 5
+      window: "15m"
+    
+    captcha_encounters:
+      warning_threshold: 0.5
+      critical_threshold: 2
+      window: "30m"
+  
+  data_quality:
+    extraction_failures:
+      warning_threshold: 5   # % of pages processed
+      critical_threshold: 15
+      window: "30m"
+    
+    validation_failures:
+      warning_threshold: 10
+      critical_threshold: 25
+      window: "30m"
+    
+    empty_extractions:
+      warning_threshold: 15
+      critical_threshold: 30
+      window: "1h"
+
+# Proxy pool health thresholds
+proxy_pool:
+  pool_size:
+    minimum_warning: 50      # Minimum number of working proxies
+    minimum_critical: 20
+  
+  proxy_health:
+    success_rate:
+      warning_threshold: 80  # % successful proxy tests
+      critical_threshold: 60
+      window: "15m"
+    
+    response_time:
+      warning_threshold: 3000 # milliseconds
+      critical_threshold: 8000
+      percentile: 90
+      window: "10m"
+    
+    rotation_rate:
+      max_per_minute: 100    # Maximum proxy rotations per minute
+      warning_threshold: 80
+      critical_threshold: 95
+  
+  proxy_sources:
+    source_failure_rate:
+      warning_threshold: 20  # % of sources failing
+      critical_threshold: 50
+      window: "1h"
+    
+    validation_lag:
+      warning_threshold: 300 # seconds since last validation
+      critical_threshold: 600
+
+# Database performance thresholds
+database:
+  connections:
+    warning_threshold: 70    # % of max connections
+    critical_threshold: 90
+  
+  query_performance:
+    slow_queries:
+      warning_threshold: 1000 # milliseconds
+      critical_threshold: 5000
+      percentile: 95
+    
+    lock_wait_time:
+      warning_threshold: 100  # milliseconds
+      critical_threshold: 500
+  
+  storage:
+    table_size_gb:
+      warning_threshold: 50
+      critical_threshold: 100
+    
+    index_bloat:
+      warning_threshold: 20   # % bloat
+      critical_threshold: 40
+  
+  backup:
+    backup_age:
+      warning_threshold: 25   # hours since last backup
+      critical_threshold: 49
+    
+    backup_size_change:
+      warning_threshold: 50   # % change from previous backup
+      critical_threshold: 100
+
+# Queue and job processing thresholds
+queues:
+  queue_depth:
+    crawl_queue:
+      warning_threshold: 10000  # Number of items in queue
+      critical_threshold: 50000
+    
+    scrape_queue:
+      warning_threshold: 5000
+      critical_threshold: 25000
+    
+    export_queue:
+      warning_threshold: 1000
+      critical_threshold: 5000
+  
+  processing_rate:
+    crawl_rate:
+      minimum_warning: 100   # Items processed per minute
+      minimum_critical: 50
+    
+    scrape_rate:
+      minimum_warning: 50
+      minimum_critical: 20
+    
+    export_rate:
+      minimum_warning: 10
+      minimum_critical: 5
+  
+  job_duration:
+    crawl_job:
+      warning_threshold: 3600  # seconds
+      critical_threshold: 7200
+    
+    scrape_job:
+      warning_threshold: 1800
+      critical_threshold: 3600
+    
+    export_job:
+      warning_threshold: 900
+      critical_threshold: 1800
+  
+  failed_jobs:
+    failure_rate:
+      warning_threshold: 5   # % of total jobs
+      critical_threshold: 15
+      window: "1h"
+    
+    retry_exhaustion:
+      warning_threshold: 1   # % of jobs that exhausted retries
+      critical_threshold: 5
+      window: "1h"
+
+# Business logic thresholds
+business:
+  data_freshness:
+    stale_data_hours:
+      warning_threshold: 48  # Hours since last update
+      critical_threshold: 96
+  
+  coverage:
+    domain_coverage:
+      warning_threshold: 90  # % of configured domains being crawled
+      critical_threshold: 75
+    
+    template_coverage:
+      warning_threshold: 85  # % of pages matching templates
+      critical_threshold: 70
+  
+  compliance:
+    robots_txt_violations:
+      warning_threshold: 0   # Any violation is a warning
+      critical_threshold: 5  # Multiple violations are critical
+      window: "1h"
+    
+    rate_limit_violations:
+      warning_threshold: 1   # % of requests violating rate limits
+      critical_threshold: 5
+      window: "30m"
+
+# Cost monitoring thresholds
+cost:
+  infrastructure:
+    monthly_spend_usd:
+      warning_threshold: 1000
+      critical_threshold: 1500
+    
+    daily_burn_rate:
+      warning_threshold: 50
+      critical_threshold: 75
+  
+  proxy_costs:
+    cost_per_request:
+      warning_threshold: 0.01  # USD per request
+      critical_threshold: 0.02
+    
+    monthly_proxy_spend:
+      warning_threshold: 200
+      critical_threshold: 300
+  
+  cloud_services:
+    storage_costs_daily:
+      warning_threshold: 10
+      critical_threshold: 20
+    
+    compute_costs_daily:
+      warning_threshold: 30
+      critical_threshold: 50
+
+# Security thresholds
+security:
+  authentication:
+    failed_login_attempts:
+      warning_threshold: 10  # Failed attempts per hour
+      critical_threshold: 50
+      window: "1h"
+    
+    suspicious_ips:
+      warning_threshold: 5   # Number of suspicious IPs
+      critical_threshold: 20
+      window: "1h"
+  
+  access_patterns:
+    unusual_api_usage:
+      warning_threshold: 200 # % increase from baseline
+      critical_threshold: 500
+      window: "30m"
+    
+    privilege_escalation:
+      warning_threshold: 0   # Any attempt is a warning
+      critical_threshold: 3
+      window: "1h"
+  
+  data_access:
+    bulk_data_access:
+      warning_threshold: 10000 # Records accessed per hour
+      critical_threshold: 50000
+      window: "1h"
+    
+    export_volume:
+      warning_threshold: 1000000 # Records exported per day
+      critical_threshold: 5000000
+      window: "24h"
+
+# Alert routing and escalation
+alerting:
+  notification_channels:
+    slack:
+      webhook_url: "${SLACK_WEBHOOK_URL}"
+      channel: "#alerts"
+      username: "ScrapingMonitor"
+      icon_emoji: ":warning:"
+    
+    email:
+      smtp_server: "${SMTP_SERVER}"
+      smtp_port: 587
+      sender: "alerts@yourcompany.com"
+      recipients:
+        - "ops-team@yourcompany.com"
+        - "data-team@yourcompany.com"
+    
+    pagerduty:
+      integration_key: "${PAGERDUTY_INTEGRATION_KEY}"
+      severity_mapping:
+        warning: "warning"
+        critical: "error"
+
+  escalation_rules:
+    immediate:
+      severity: "critical"
+      channels: ["slack", "pagerduty"]
+      repeat_interval: "5m"
+    
+    business_hours:
+      severity: "warning"
+      channels: ["slack", "email"]
+      business_hours: "09:00-17:00"
+      timezone: "Europe/Stockholm"
+    
+    non_critical:
+      severity: "info"
+      channels: ["slack"]
+      suppress_duration: "1h"
+
+  silence_rules:
+    maintenance_windows:
+      enabled: true
+      schedule:
+        - day: "Sunday"
+          start: "02:00"
+          end: "04:00"
+          timezone: "Europe/Stockholm"
+    
+    development_environment:
+      enabled: true
+      alerts_to_suppress:
+        - "high_error_rate"
+        - "slow_response_time"
+    
+    known_issues:
+      temporary_suppressions:
+        - alert: "proxy_pool_size_low"
+          until: "2025-09-01T00:00:00Z"
+          reason: "Planned proxy provider maintenance"
+
+# Metric collection intervals
+collection:
+  system_metrics: "30s"
+  application_metrics: "1m"
+  business_metrics: "5m"
+  cost_metrics: "1h"
+  security_metrics: "1m"
+
+# Retention policies for alert data
+retention:
+  alert_history: "90d"
+  metric_data: "30d"
+  notification_logs: "7d"
+
+# Environment-specific overrides
+environments:
+  development:
+    # More lenient thresholds for development
+    scraping:
+      success_rate:
+        warning_threshold: 85
+        critical_threshold: 70
+      error_rates:
+        http_4xx:
+          warning_threshold: 15
+          critical_threshold: 25
+    
+    alerting:
+      notification_channels:
+        slack:
+          channel: "#dev-alerts"
+      escalation_rules:
+        immediate:
+          channels: ["slack"]  # No PagerDuty in dev
+  
+  staging:
+    # Similar to production but with email-only escalation
+    alerting:
+      escalation_rules:
+        immediate:
+          channels: ["slack", "email"]  # No PagerDuty in staging
+  
+  production:
+    # Strictest thresholds and full escalation
+    business:
+      compliance:
+        robots_txt_violations:
+          critical_threshold: 1  # Zero tolerance in production
+    
+    security:
+      access_patterns:
+        privilege_escalation:
+          critical_threshold: 1  # Immediate escalation
+    
+    alerting:
+      escalation_rules:
+        immediate:
+          channels: ["slack", "email", "pagerduty"]
+          repeat_interval: "2m"  # Faster escalation in production

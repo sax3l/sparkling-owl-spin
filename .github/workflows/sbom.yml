@@ -1,0 +1,461 @@
+name: SBOM Generation and Signing
+
+on:
+  push:
+    branches: [ main, develop ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Generate SBOMs weekly
+    - cron: '0 6 * * 1'
+
+permissions:
+  contents: read
+  packages: write
+  security-events: write
+  id-token: write  # For OIDC token generation
+  attestations: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  generate-source-sbom:
+    name: Generate Source Code SBOM
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Generate Python SBOM with CycloneDX
+      run: |
+        pip install cyclonedx-bom
+        cyclonedx-py -o python-sbom.xml
+        cyclonedx-py -o python-sbom.json --format json
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Install Node.js dependencies
+      run: |
+        npm ci
+        cd frontend && npm ci
+
+    - name: Generate Node.js SBOM
+      run: |
+        npx @cyclonedx/cyclonedx-npm --output-file nodejs-sbom.xml
+        npx @cyclonedx/cyclonedx-npm --output-format json --output-file nodejs-sbom.json
+
+    - name: Generate Frontend SBOM
+      run: |
+        cd frontend
+        npx @cyclonedx/cyclonedx-npm --output-file ../frontend-sbom.xml
+        npx @cyclonedx/cyclonedx-npm --output-format json --output-file ../frontend-sbom.json
+
+    - name: Generate comprehensive SBOM with Syft
+      uses: anchore/sbom-action@v0
+      with:
+        path: .
+        format: spdx-json
+        output-file: comprehensive-sbom.spdx.json
+
+    - name: Generate SBOM with Syft (CycloneDX format)
+      uses: anchore/sbom-action@v0
+      with:
+        path: .
+        format: cyclonedx-json
+        output-file: comprehensive-sbom.cyclonedx.json
+
+    - name: Upload source SBOMs
+      uses: actions/upload-artifact@v4
+      with:
+        name: source-sboms
+        path: |
+          python-sbom.*
+          nodejs-sbom.*
+          frontend-sbom.*
+          comprehensive-sbom.*
+
+  build-and-generate-container-sboms:
+    name: Build Images and Generate Container SBOMs
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        component: [app, worker, browser]
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.component }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=sha
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=raw,value=latest,enable={{is_default_branch}}
+
+    - name: Build Docker image
+      id: build
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./docker/Dockerfile.${{ matrix.component }}
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        platforms: linux/amd64,linux/arm64
+        provenance: true  # Enable provenance attestation
+        sbom: true        # Enable SBOM attestation
+
+    - name: Generate SBOM with Syft
+      uses: anchore/sbom-action@v0
+      with:
+        image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.component }}:${{ github.sha }}
+        format: spdx-json
+        output-file: container-sbom-${{ matrix.component }}.spdx.json
+
+    - name: Generate SBOM with Syft (CycloneDX)
+      uses: anchore/sbom-action@v0
+      with:
+        image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.component }}:${{ github.sha }}
+        format: cyclonedx-json
+        output-file: container-sbom-${{ matrix.component }}.cyclonedx.json
+
+    - name: Generate detailed vulnerability report
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.component }}:${{ github.sha }}
+        format: 'json'
+        output: 'vulnerability-report-${{ matrix.component }}.json'
+
+    - name: Upload container SBOMs and reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: container-sboms-${{ matrix.component }}
+        path: |
+          container-sbom-${{ matrix.component }}.*
+          vulnerability-report-${{ matrix.component }}.json
+
+  sign-images:
+    name: Sign Container Images
+    runs-on: ubuntu-latest
+    needs: [build-and-generate-container-sboms]
+    if: github.event_name != 'pull_request'  # Only sign on push/tag events
+    
+    strategy:
+      matrix:
+        component: [app, worker, browser]
+    
+    steps:
+    - name: Install Cosign
+      uses: sigstore/cosign-installer@v3
+      with:
+        cosign-release: 'v2.2.0'
+
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Sign container image
+      run: |
+        cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.component }}:${{ github.sha }}
+
+    - name: Download SBOM
+      uses: actions/download-artifact@v4
+      with:
+        name: container-sboms-${{ matrix.component }}
+
+    - name: Sign SBOM
+      run: |
+        cosign sign-blob --yes \
+          --output-signature container-sbom-${{ matrix.component }}.spdx.json.sig \
+          container-sbom-${{ matrix.component }}.spdx.json
+
+    - name: Attach SBOM to image
+      run: |
+        cosign attach sbom --sbom container-sbom-${{ matrix.component }}.spdx.json \
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.component }}:${{ github.sha }}
+
+    - name: Sign attached SBOM
+      run: |
+        cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.component }}:sha256-$(cosign triangulate ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.component }}:${{ github.sha }} | cut -d: -f2).sbom
+
+    - name: Upload signed artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: signed-artifacts-${{ matrix.component }}
+        path: |
+          container-sbom-${{ matrix.component }}.spdx.json.sig
+
+  generate-slsa-provenance:
+    name: Generate SLSA Provenance
+    runs-on: ubuntu-latest
+    needs: [build-and-generate-container-sboms]
+    permissions:
+      id-token: write
+      contents: read
+      actions: read
+    
+    strategy:
+      matrix:
+        component: [app, worker, browser]
+    
+    steps:
+    - name: Generate SLSA provenance
+      uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.9.0
+      with:
+        image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.component }}
+        digest: ${{ needs.build-and-generate-container-sboms.outputs.digest }}
+        registry-username: ${{ github.actor }}
+      secrets:
+        registry-password: ${{ secrets.GITHUB_TOKEN }}
+
+  verify-signatures:
+    name: Verify Signatures and Attestations
+    runs-on: ubuntu-latest
+    needs: [sign-images]
+    if: github.event_name != 'pull_request'
+    
+    strategy:
+      matrix:
+        component: [app, worker, browser]
+    
+    steps:
+    - name: Install Cosign
+      uses: sigstore/cosign-installer@v3
+      with:
+        cosign-release: 'v2.2.0'
+
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Verify image signature
+      run: |
+        cosign verify ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.component }}:${{ github.sha }} \
+          --certificate-identity-regexp="https://github.com/${{ github.repository }}" \
+          --certificate-oidc-issuer="https://token.actions.githubusercontent.com"
+
+    - name: Verify SBOM signature
+      run: |
+        cosign verify-attestation ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.component }}:${{ github.sha }} \
+          --type spdxjson \
+          --certificate-identity-regexp="https://github.com/${{ github.repository }}" \
+          --certificate-oidc-issuer="https://token.actions.githubusercontent.com"
+
+  compliance-check:
+    name: Compliance and License Check
+    runs-on: ubuntu-latest
+    needs: [generate-source-sbom, build-and-generate-container-sboms]
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Download all SBOMs
+      uses: actions/download-artifact@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install compliance tools
+      run: |
+        pip install cyclonedx-bom
+        npm install -g license-checker
+
+    - name: Check Python licenses
+      run: |
+        pip install pip-licenses
+        pip install -r requirements.txt
+        pip-licenses --format=json --with-urls > python-licenses.json
+        
+        # Check for forbidden licenses
+        pip-licenses --format=json | jq -r '.[] | select(.License | test("GPL|LGPL|AGPL")) | .Name + " - " + .License' > forbidden-licenses.txt || true
+
+    - name: Check Node.js licenses
+      run: |
+        npm ci
+        license-checker --json --out nodejs-licenses.json
+        
+        cd frontend
+        npm ci
+        license-checker --json --out ../frontend-licenses.json
+
+    - name: Generate compliance report
+      run: |
+        python -c "
+        import json
+        import os
+        
+        # Load license data
+        with open('python-licenses.json', 'r') as f:
+            python_licenses = json.load(f)
+        
+        with open('nodejs-licenses.json', 'r') as f:
+            nodejs_licenses = json.load(f)
+        
+        # Generate report
+        report = {
+            'scan_date': '$(date -Iseconds)',
+            'python_packages': len(python_licenses),
+            'nodejs_packages': len(nodejs_licenses),
+            'forbidden_licenses_found': os.path.exists('forbidden-licenses.txt') and os.path.getsize('forbidden-licenses.txt') > 0
+        }
+        
+        with open('compliance-report.json', 'w') as f:
+            json.dump(report, f, indent=2)
+        "
+
+    - name: Fail on forbidden licenses
+      run: |
+        if [ -s forbidden-licenses.txt ]; then
+          echo "❌ Forbidden licenses found:"
+          cat forbidden-licenses.txt
+          exit 1
+        else
+          echo "✅ No forbidden licenses found"
+        fi
+
+    - name: Upload compliance artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: compliance-reports
+        path: |
+          python-licenses.json
+          nodejs-licenses.json
+          frontend-licenses.json
+          compliance-report.json
+          forbidden-licenses.txt
+
+  publish-sboms:
+    name: Publish SBOMs to Registry
+    runs-on: ubuntu-latest
+    needs: [verify-signatures, compliance-check]
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+    
+    steps:
+    - name: Download all SBOMs
+      uses: actions/download-artifact@v4
+
+    - name: Set up ORAS
+      uses: oras-project/setup-oras@v1
+
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Push SBOMs to registry
+      run: |
+        # Create a manifest with all SBOMs
+        mkdir -p sbom-bundle
+        
+        # Copy all SBOM files
+        find . -name "*.spdx.json" -exec cp {} sbom-bundle/ \;
+        find . -name "*.cyclonedx.json" -exec cp {} sbom-bundle/ \;
+        
+        # Create metadata
+        echo '{
+          "generated_at": "'$(date -Iseconds)'",
+          "commit_sha": "'${{ github.sha }}'",
+          "repository": "'${{ github.repository }}'",
+          "ref": "'${{ github.ref }}'"
+        }' > sbom-bundle/metadata.json
+        
+        # Push SBOM bundle to registry
+        oras push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-sboms:${{ github.sha }} \
+          --annotation "org.opencontainers.image.title=SBOM Bundle" \
+          --annotation "org.opencontainers.image.description=Software Bill of Materials for ${{ github.repository }}" \
+          --annotation "org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}" \
+          --annotation "org.opencontainers.image.revision=${{ github.sha }}" \
+          sbom-bundle/
+
+    - name: Push latest SBOM bundle
+      if: github.ref == 'refs/heads/main'
+      run: |
+        oras push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-sboms:latest \
+          --annotation "org.opencontainers.image.title=SBOM Bundle (Latest)" \
+          sbom-bundle/
+
+  notify-completion:
+    name: Notify SBOM Generation Complete
+    runs-on: ubuntu-latest
+    needs: [publish-sboms, compliance-check]
+    if: always()
+    
+    steps:
+    - name: Determine status
+      id: status
+      run: |
+        if [[ "${{ needs.publish-sboms.result }}" == "success" && "${{ needs.compliance-check.result }}" == "success" ]]; then
+          echo "status=success" >> $GITHUB_OUTPUT
+          echo "message=✅ SBOM generation and signing completed successfully" >> $GITHUB_OUTPUT
+        else
+          echo "status=failure" >> $GITHUB_OUTPUT
+          echo "message=❌ SBOM generation or compliance check failed" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Notify Slack
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ steps.status.outputs.status }}
+        channel: '#security'
+        message: |
+          ${{ steps.status.outputs.message }}
+          
+          **Repository:** ${{ github.repository }}
+          **Commit:** ${{ github.sha }}
+          **Event:** ${{ github.event_name }}
+          **Workflow:** ${{ github.workflow }}
+          
+          **Artifacts Generated:**
+          • Source code SBOMs (Python, Node.js, Frontend)
+          • Container SBOMs (App, Worker, Browser)
+          • Signed container images
+          • SLSA provenance attestations
+          • Compliance reports
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

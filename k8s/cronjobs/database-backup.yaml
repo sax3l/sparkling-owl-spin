@@ -1,0 +1,424 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: database-backup
+  namespace: scrapy-system
+  labels:
+    app: scrapy
+    component: backup
+    tier: ops
+spec:
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  timeZone: "UTC"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 5
+  startingDeadlineSeconds: 600
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: scrapy
+            component: backup
+            cronjob: database-backup
+        spec:
+          restartPolicy: OnFailure
+          serviceAccountName: scrapy-backup
+          containers:
+          - name: backup
+            image: postgres:15-alpine
+            imagePullPolicy: IfNotPresent
+            env:
+            - name: PGHOST
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: host
+            - name: PGPORT
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: port
+            - name: PGUSER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: username
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: password
+            - name: PGDATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: database
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: aws-credentials
+                  key: access-key-id
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: aws-credentials
+                  key: secret-access-key
+            - name: AWS_DEFAULT_REGION
+              value: "eu-west-1"
+            - name: S3_BUCKET
+              value: "scrapy-backups-prod"
+            - name: BACKUP_RETENTION_DAYS
+              value: "30"
+            command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              
+              # Install required tools
+              apk add --no-cache aws-cli gzip
+              
+              # Generate backup filename with timestamp
+              TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
+              BACKUP_NAME="scrapy_db_backup_${TIMESTAMP}.sql.gz"
+              BACKUP_PATH="/tmp/${BACKUP_NAME}"
+              
+              echo "Starting database backup: ${BACKUP_NAME}"
+              
+              # Create compressed database dump
+              pg_dump \
+                --verbose \
+                --no-password \
+                --format=custom \
+                --compress=9 \
+                --exclude-table-data='audit_logs*' \
+                --exclude-table-data='raw_data*' \
+                --exclude-table-data='performance_metrics*' \
+                | gzip > "${BACKUP_PATH}"
+              
+              # Verify backup file was created and has content
+              if [ ! -s "${BACKUP_PATH}" ]; then
+                echo "ERROR: Backup file is empty or was not created"
+                exit 1
+              fi
+              
+              BACKUP_SIZE=$(stat -c%s "${BACKUP_PATH}")
+              echo "Backup file created: ${BACKUP_SIZE} bytes"
+              
+              # Upload to S3 with metadata
+              aws s3 cp "${BACKUP_PATH}" "s3://${S3_BUCKET}/daily/${BACKUP_NAME}" \
+                --metadata "timestamp=${TIMESTAMP},size=${BACKUP_SIZE},type=daily" \
+                --storage-class STANDARD_IA \
+                --server-side-encryption AES256
+              
+              echo "Backup uploaded to S3: s3://${S3_BUCKET}/daily/${BACKUP_NAME}"
+              
+              # Create schema-only backup for documentation
+              SCHEMA_BACKUP="scrapy_schema_${TIMESTAMP}.sql"
+              pg_dump \
+                --verbose \
+                --no-password \
+                --schema-only \
+                --format=plain \
+                > "/tmp/${SCHEMA_BACKUP}"
+              
+              aws s3 cp "/tmp/${SCHEMA_BACKUP}" "s3://${S3_BUCKET}/schemas/${SCHEMA_BACKUP}" \
+                --storage-class STANDARD_IA \
+                --server-side-encryption AES256
+              
+              # Clean up old backups (keep retention policy)
+              echo "Cleaning up old backups older than ${BACKUP_RETENTION_DAYS} days"
+              CUTOFF_DATE=$(date -d "${BACKUP_RETENTION_DAYS} days ago" '+%Y-%m-%d')
+              
+              aws s3 ls "s3://${S3_BUCKET}/daily/" --recursive | \
+                while read -r line; do
+                  BACKUP_DATE=$(echo "$line" | awk '{print $1}')
+                  BACKUP_FILE=$(echo "$line" | awk '{print $4}')
+                  
+                  if [ "$BACKUP_DATE" \< "$CUTOFF_DATE" ]; then
+                    echo "Deleting old backup: $BACKUP_FILE"
+                    aws s3 rm "s3://${S3_BUCKET}/$BACKUP_FILE"
+                  fi
+                done
+              
+              # Test backup integrity (sample restore to temp database)
+              echo "Testing backup integrity..."
+              TEMP_DB="test_restore_${TIMESTAMP}"
+              
+              # Create temporary database
+              createdb "$TEMP_DB" || echo "Warning: Could not create test database"
+              
+              # Attempt to restore (just check if it starts successfully)
+              if psql -d "$TEMP_DB" -c "SELECT version();" > /dev/null 2>&1; then
+                zcat "${BACKUP_PATH}" | head -n 100 | psql -d "$TEMP_DB" > /dev/null 2>&1 || echo "Warning: Backup test failed"
+                dropdb "$TEMP_DB" || echo "Warning: Could not drop test database"
+                echo "Backup integrity test completed"
+              else
+                echo "Warning: Could not test backup integrity"
+              fi
+              
+              # Clean up local files
+              rm -f "${BACKUP_PATH}" "/tmp/${SCHEMA_BACKUP}"
+              
+              echo "Database backup completed successfully"
+              
+              # Send notification (optional)
+              if [ -n "$SLACK_WEBHOOK_URL" ]; then
+                curl -X POST -H 'Content-type: application/json' \
+                  --data "{\"text\":\"✅ Database backup completed: ${BACKUP_NAME} (${BACKUP_SIZE} bytes)\"}" \
+                  "$SLACK_WEBHOOK_URL"
+              fi
+            
+            resources:
+              requests:
+                memory: "256Mi"
+                cpu: "100m"
+              limits:
+                memory: "1Gi"
+                cpu: "500m"
+            
+            volumeMounts:
+            - name: backup-temp
+              mountPath: /tmp
+          
+          volumes:
+          - name: backup-temp
+            emptyDir:
+              sizeLimit: 2Gi
+          
+          # Security context
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 999
+            fsGroup: 999
+            seccompProfile:
+              type: RuntimeDefault
+          
+          # Node selection
+          nodeSelector:
+            node-type: workers
+          
+          tolerations:
+          - key: "scrapy/ops"
+            operator: "Equal"
+            value: "true"
+            effect: "NoSchedule"
+
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: weekly-full-backup
+  namespace: scrapy-system
+  labels:
+    app: scrapy
+    component: backup
+    tier: ops
+spec:
+  schedule: "0 1 * * 0"  # Weekly on Sunday at 1 AM
+  timeZone: "UTC"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 3
+  startingDeadlineSeconds: 1800
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: scrapy
+            component: backup
+            cronjob: weekly-full-backup
+        spec:
+          restartPolicy: OnFailure
+          serviceAccountName: scrapy-backup
+          containers:
+          - name: full-backup
+            image: postgres:15-alpine
+            imagePullPolicy: IfNotPresent
+            env:
+            - name: PGHOST
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: host
+            - name: PGPORT
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: port
+            - name: PGUSER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: username
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: password
+            - name: PGDATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: database
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: aws-credentials
+                  key: access-key-id
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: aws-credentials
+                  key: secret-access-key
+            - name: AWS_DEFAULT_REGION
+              value: "eu-west-1"
+            - name: S3_BUCKET
+              value: "scrapy-backups-prod"
+            command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              
+              # Install required tools
+              apk add --no-cache aws-cli gzip
+              
+              # Generate backup filename with timestamp
+              TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
+              BACKUP_NAME="scrapy_full_backup_${TIMESTAMP}.sql.gz"
+              BACKUP_PATH="/tmp/${BACKUP_NAME}"
+              
+              echo "Starting full database backup: ${BACKUP_NAME}"
+              
+              # Create compressed full database dump (including all data)
+              pg_dump \
+                --verbose \
+                --no-password \
+                --format=custom \
+                --compress=9 \
+                | gzip > "${BACKUP_PATH}"
+              
+              # Verify backup file
+              if [ ! -s "${BACKUP_PATH}" ]; then
+                echo "ERROR: Full backup file is empty or was not created"
+                exit 1
+              fi
+              
+              BACKUP_SIZE=$(stat -c%s "${BACKUP_PATH}")
+              echo "Full backup file created: ${BACKUP_SIZE} bytes"
+              
+              # Upload to S3
+              aws s3 cp "${BACKUP_PATH}" "s3://${S3_BUCKET}/weekly/${BACKUP_NAME}" \
+                --metadata "timestamp=${TIMESTAMP},size=${BACKUP_SIZE},type=weekly" \
+                --storage-class STANDARD_IA \
+                --server-side-encryption AES256
+              
+              echo "Full backup uploaded to S3: s3://${S3_BUCKET}/weekly/${BACKUP_NAME}"
+              
+              # Keep only last 4 weekly backups
+              echo "Cleaning up old weekly backups (keeping last 4)"
+              aws s3 ls "s3://${S3_BUCKET}/weekly/" --recursive | \
+                sort -k1,2 | \
+                head -n -4 | \
+                while read -r line; do
+                  BACKUP_FILE=$(echo "$line" | awk '{print $4}')
+                  echo "Deleting old weekly backup: $BACKUP_FILE"
+                  aws s3 rm "s3://${S3_BUCKET}/$BACKUP_FILE"
+                done
+              
+              # Clean up local file
+              rm -f "${BACKUP_PATH}"
+              
+              echo "Weekly full backup completed successfully"
+              
+              # Send notification
+              if [ -n "$SLACK_WEBHOOK_URL" ]; then
+                curl -X POST -H 'Content-type: application/json' \
+                  --data "{\"text\":\"✅ Weekly full backup completed: ${BACKUP_NAME} (${BACKUP_SIZE} bytes)\"}" \
+                  "$SLACK_WEBHOOK_URL"
+              fi
+            
+            resources:
+              requests:
+                memory: "512Mi"
+                cpu: "200m"
+              limits:
+                memory: "2Gi"
+                cpu: "1000m"
+            
+            volumeMounts:
+            - name: backup-temp
+              mountPath: /tmp
+          
+          volumes:
+          - name: backup-temp
+            emptyDir:
+              sizeLimit: 5Gi
+          
+          # Security context
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 999
+            fsGroup: 999
+            seccompProfile:
+              type: RuntimeDefault
+          
+          # Node selection for larger workload
+          nodeSelector:
+            node-type: workers
+            instance-size: large
+          
+          tolerations:
+          - key: "scrapy/ops"
+            operator: "Equal"
+            value: "true"
+            effect: "NoSchedule"
+
+---
+# ServiceAccount for backup operations
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: scrapy-backup
+  namespace: scrapy-system
+  labels:
+    app: scrapy
+    component: backup
+
+---
+# Role for backup operations
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: scrapy-backup
+  namespace: scrapy-system
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "list"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list"]
+- apiGroups: ["batch"]
+  resources: ["jobs", "cronjobs"]
+  verbs: ["get", "list"]
+
+---
+# RoleBinding for backup ServiceAccount
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: scrapy-backup
+  namespace: scrapy-system
+subjects:
+- kind: ServiceAccount
+  name: scrapy-backup
+  namespace: scrapy-system
+roleRef:
+  kind: Role
+  name: scrapy-backup
+  apiGroup: rbac.authorization.k8s.io

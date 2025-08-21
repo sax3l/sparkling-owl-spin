@@ -1,0 +1,56 @@
+groups:
+- name: scraping.alerts
+  rules:
+  - alert: ScrapingErrorRateHigh
+    expr: |
+      (
+        sum(rate(scraping_errors_total[5m])) by (instance) /
+        sum(rate(scraping_requests_total[5m])) by (instance)
+      ) * 100 > 10
+    for: 2m
+    labels:
+      severity: warning
+      service: scraping
+    annotations:
+      summary: "High scraping error rate detected"
+      description: "Scraping error rate is {{ $value }}% on instance {{ $labels.instance }}"
+
+  - alert: ScrapingLatencyHigh
+    expr: histogram_quantile(0.95, sum(rate(scraping_duration_seconds_bucket[5m])) by (le)) > 30
+    for: 5m
+    labels:
+      severity: warning
+      service: scraping
+    annotations:
+      summary: "High scraping latency detected"
+      description: "95th percentile scraping latency is {{ $value }}s"
+
+  - alert: ScrapingThroughputLow
+    expr: sum(rate(scraping_success_total[5m])) < 10
+    for: 10m
+    labels:
+      severity: critical
+      service: scraping
+    annotations:
+      summary: "Low scraping throughput"
+      description: "Scraping throughput is {{ $value }} requests/sec"
+
+  - alert: WorkerPodsDown
+    expr: up{job="scraping-workers"} == 0
+    for: 1m
+    labels:
+      severity: critical
+      service: scraping
+    annotations:
+      summary: "Scraping worker pods are down"
+      description: "No scraping worker pods are running"
+
+  - alert: QueueBacklogHigh
+    expr: scraping_queue_size > 10000
+    for: 5m
+    labels:
+      severity: warning
+      service: scraping
+    annotations:
+      summary: "High queue backlog"
+      description: "Scraping queue has {{ $value }} pending items"

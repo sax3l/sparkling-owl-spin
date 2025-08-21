@@ -1,0 +1,240 @@
+name: Build and Push Docker Images
+
+on:
+  push:
+    branches: [ main, develop ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      security-events: write
+
+    strategy:
+      matrix:
+        service: [api, worker, proxy-pool, frontend]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to Container Registry
+      if: github.event_name != 'pull_request'
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.service }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=semver,pattern={{major}}
+          type=sha,prefix={{branch}}-
+        labels: |
+          org.opencontainers.image.title=${{ matrix.service }}
+          org.opencontainers.image.description=ECaDP ${{ matrix.service }} service
+          org.opencontainers.image.vendor=ECaDP
+          org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+
+    - name: Set build context
+      id: context
+      run: |
+        case "${{ matrix.service }}" in
+          api)
+            echo "context=." >> $GITHUB_OUTPUT
+            echo "dockerfile=./docker/Dockerfile" >> $GITHUB_OUTPUT
+            echo "target=api" >> $GITHUB_OUTPUT
+            ;;
+          worker)
+            echo "context=." >> $GITHUB_OUTPUT
+            echo "dockerfile=./docker/Dockerfile" >> $GITHUB_OUTPUT
+            echo "target=worker" >> $GITHUB_OUTPUT
+            ;;
+          proxy-pool)
+            echo "context=." >> $GITHUB_OUTPUT
+            echo "dockerfile=./docker/Dockerfile" >> $GITHUB_OUTPUT
+            echo "target=proxy-pool" >> $GITHUB_OUTPUT
+            ;;
+          frontend)
+            echo "context=./frontend" >> $GITHUB_OUTPUT
+            echo "dockerfile=./frontend/Dockerfile" >> $GITHUB_OUTPUT
+            echo "target=" >> $GITHUB_OUTPUT
+            ;;
+        esac
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: ${{ steps.context.outputs.context }}
+        file: ${{ steps.context.outputs.dockerfile }}
+        target: ${{ steps.context.outputs.target }}
+        push: ${{ github.event_name != 'pull_request' }}
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        platforms: linux/amd64,linux/arm64
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        build-args: |
+          BUILDKIT_INLINE_CACHE=1
+          BUILD_DATE=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.created'] }}
+          BUILD_REVISION=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.revision'] }}
+          BUILD_VERSION=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.version'] }}
+
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.service }}:${{ steps.meta.outputs.version }}
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+  sign-images:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    strategy:
+      matrix:
+        service: [api, worker, proxy-pool, frontend]
+
+    steps:
+    - name: Install Cosign
+      uses: sigstore/cosign-installer@v3
+
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.service }}
+
+    - name: Sign images with Cosign
+      run: |
+        images=$(echo '${{ steps.meta.outputs.tags }}' | tr '\n' ' ')
+        for image in $images; do
+          echo "Signing $image"
+          cosign sign --yes $image
+        done
+
+  generate-sbom:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+    permissions:
+      contents: read
+      packages: write
+
+    strategy:
+      matrix:
+        service: [api, worker, proxy-pool, frontend]
+
+    steps:
+    - name: Generate SBOM
+      uses: anchore/sbom-action@v0
+      with:
+        image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.service }}:latest
+        format: spdx-json
+        output-file: sbom-${{ matrix.service }}.spdx.json
+
+    - name: Upload SBOM
+      uses: actions/upload-artifact@v4
+      with:
+        name: sbom-${{ matrix.service }}
+        path: sbom-${{ matrix.service }}.spdx.json
+
+    - name: Attach SBOM to image
+      run: |
+        echo "Attaching SBOM to image"
+        # This would typically use cosign attest or similar tool
+        # cosign attest --predicate sbom-${{ matrix.service }}.spdx.json ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.service }}:latest
+
+  update-deployment:
+    needs: [build-and-push, sign-images]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+    - name: Trigger deployment update
+      run: |
+        echo "Triggering deployment update for main branch"
+        # This would typically trigger a deployment pipeline
+        # or update Kubernetes manifests in a GitOps repository
+
+    - name: Create deployment notification
+      uses: actions/github-script@v7
+      with:
+        script: |
+          github.rest.repos.createDeployment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            ref: context.sha,
+            environment: 'staging',
+            description: 'Automated deployment from main branch',
+            auto_merge: false,
+            required_contexts: []
+          });
+
+  cleanup:
+    needs: [build-and-push, sign-images, generate-sbom]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - name: Cleanup old packages
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const packages = await github.rest.packages.getAllPackageVersionsForPackageOwnedByOrg({
+            package_type: 'container',
+            package_name: context.repo.repo.toLowerCase(),
+            org: context.repo.owner
+          });
+          
+          // Keep last 10 versions, delete older ones
+          const versionsToDelete = packages.data.slice(10);
+          
+          for (const version of versionsToDelete) {
+            if (version.metadata?.container?.tags?.length === 0) {
+              await github.rest.packages.deletePackageVersionForOrg({
+                package_type: 'container',
+                package_name: context.repo.repo.toLowerCase(),
+                org: context.repo.owner,
+                package_version_id: version.id
+              });
+            }
+          }

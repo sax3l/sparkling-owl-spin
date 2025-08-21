@@ -1,0 +1,349 @@
+# Export target configurations for various data destinations
+# This file defines predefined export configurations for different target systems
+
+export_targets:
+  # CSV Exports
+  csv:
+    local_storage:
+      type: "csv"
+      enabled: true
+      config:
+        output_path: "data/exports/csv/"
+        delimiter: ","
+        quote_char: '"'
+        encoding: "utf-8"
+        include_headers: true
+        date_format: "%Y-%m-%d %H:%M:%S"
+        compression: "gzip"
+        chunk_size: 10000
+    
+    s3_archive:
+      type: "csv"
+      enabled: true
+      config:
+        s3_bucket: "${S3_EXPORTS_BUCKET}"
+        s3_prefix: "csv-exports/"
+        delimiter: ","
+        encoding: "utf-8"
+        compression: "gzip"
+        include_metadata: true
+
+  # JSON Exports
+  json:
+    local_storage:
+      type: "json"
+      enabled: true
+      config:
+        output_path: "data/exports/json/"
+        format: "jsonl"  # or "pretty", "compact"
+        encoding: "utf-8"
+        compression: "gzip"
+        include_metadata: true
+        chunk_size: 5000
+    
+    elasticsearch:
+      type: "json"
+      enabled: false
+      config:
+        host: "${ELASTICSEARCH_HOST}"
+        port: 9200
+        index_pattern: "scraped-data-{yyyy.MM.dd}"
+        auth:
+          username: "${ELASTICSEARCH_USER}"
+          password: "${ELASTICSEARCH_PASSWORD}"
+        settings:
+          number_of_shards: 1
+          number_of_replicas: 1
+        batch_size: 1000
+
+  # Excel Exports
+  excel:
+    local_storage:
+      type: "excel"
+      enabled: true
+      config:
+        output_path: "data/exports/excel/"
+        sheet_name: "Scraped Data"
+        include_charts: false
+        freeze_panes: "A2"
+        auto_filter: true
+        styling:
+          header_style:
+            font_bold: true
+            bg_color: "#4472C4"
+            font_color: "#FFFFFF"
+          data_style:
+            border: true
+            wrap_text: false
+
+  # Google Sheets
+  google_sheets:
+    default:
+      type: "google_sheets"
+      enabled: false
+      config:
+        credentials_file: "${GOOGLE_SHEETS_CREDENTIALS}"
+        spreadsheet_template_id: "${GOOGLE_SHEETS_TEMPLATE_ID}"
+        folder_id: "${GOOGLE_DRIVE_FOLDER_ID}"
+        sharing:
+          type: "domain"
+          domain: "yourcompany.com"
+          role: "reader"
+        formatting:
+          freeze_rows: 1
+          auto_resize_columns: true
+          apply_filters: true
+
+  # BigQuery
+  bigquery:
+    production:
+      type: "bigquery"
+      enabled: false
+      config:
+        project_id: "${GCP_PROJECT_ID}"
+        dataset_id: "scraped_data"
+        credentials_file: "${GOOGLE_APPLICATION_CREDENTIALS}"
+        location: "EU"
+        tables:
+          vehicles:
+            table_id: "vehicle_details"
+            write_disposition: "WRITE_APPEND"
+            create_disposition: "CREATE_IF_NEEDED"
+          companies:
+            table_id: "company_profiles"
+            write_disposition: "WRITE_APPEND"
+            create_disposition: "CREATE_IF_NEEDED"
+          persons:
+            table_id: "person_profiles"
+            write_disposition: "WRITE_APPEND"
+            create_disposition: "CREATE_IF_NEEDED"
+        batch_size: 1000
+        timeout: 300
+
+  # Snowflake
+  snowflake:
+    production:
+      type: "snowflake"
+      enabled: false
+      config:
+        account: "${SNOWFLAKE_ACCOUNT}"
+        user: "${SNOWFLAKE_USER}"
+        password: "${SNOWFLAKE_PASSWORD}"
+        warehouse: "COMPUTE_WH"
+        database: "SCRAPED_DATA"
+        schema: "PUBLIC"
+        tables:
+          vehicles: "VEHICLE_DETAILS"
+          companies: "COMPANY_PROFILES"
+          persons: "PERSON_PROFILES"
+        batch_size: 5000
+        timeout: 600
+
+  # Database exports
+  postgresql:
+    local_db:
+      type: "postgresql"
+      enabled: true
+      config:
+        host: "${DB_HOST}"
+        port: 5432
+        database: "${DB_NAME}"
+        user: "${DB_USER}"
+        password: "${DB_PASSWORD}"
+        schema: "exports"
+        tables:
+          vehicles: "exported_vehicles"
+          companies: "exported_companies"
+          persons: "exported_persons"
+        on_conflict: "update"  # or "ignore", "replace"
+        batch_size: 1000
+
+  # Webhook exports (for real-time streaming)
+  webhooks:
+    default:
+      type: "webhook"
+      enabled: false
+      config:
+        endpoint: "${WEBHOOK_ENDPOINT}"
+        method: "POST"
+        headers:
+          Content-Type: "application/json"
+          Authorization: "Bearer ${WEBHOOK_TOKEN}"
+        hmac:
+          enabled: true
+          secret: "${WEBHOOK_HMAC_SECRET}"
+          algorithm: "sha256"
+          header: "X-Hub-Signature-256"
+        retry:
+          max_attempts: 3
+          backoff_multiplier: 2
+          initial_delay: 1
+        timeout: 30
+        batch_size: 100
+
+# Export scheduling and automation
+scheduling:
+  # Automatic export triggers
+  triggers:
+    on_job_complete:
+      enabled: true
+      targets: ["csv.local_storage", "json.local_storage"]
+      conditions:
+        min_records: 10
+        job_status: "success"
+    
+    daily_export:
+      enabled: false
+      cron: "0 2 * * *"  # 2 AM daily
+      targets: ["bigquery.production", "s3_archive"]
+      conditions:
+        min_records: 100
+    
+    weekly_report:
+      enabled: false
+      cron: "0 6 * * 1"  # 6 AM on Mondays
+      targets: ["excel.local_storage", "google_sheets.default"]
+      include_summary: true
+
+  # Export retention
+  retention:
+    local_files:
+      days: 30
+      cleanup_empty_dirs: true
+    
+    cloud_storage:
+      days: 365
+      archive_after_days: 90
+
+# Data transformation rules for exports
+transformations:
+  # Common field mappings
+  field_mappings:
+    vehicles:
+      internal_id: "id"
+      registration_number: "reg_nr"
+      manufactured_year: "year"
+      created_timestamp: "scraped_at"
+    
+    companies:
+      organization_number: "org_nr"
+      company_name: "name"
+      registered_address: "address"
+    
+    persons:
+      personal_number: "person_nr"
+      full_name: "name"
+      birth_date: "birth_date"
+
+  # Data sanitization
+  sanitization:
+    remove_pii: false  # Set to true to remove sensitive data
+    hash_identifiers: false  # Hash personal identifiers
+    anonymize_names: false  # Replace names with placeholders
+    
+  # Data validation
+  validation:
+    required_fields:
+      vehicles: ["reg_nr", "make", "model"]
+      companies: ["org_nr", "name"]
+      persons: ["name"]
+    
+    data_quality_checks:
+      enabled: true
+      fail_on_errors: false
+      max_error_rate: 0.05  # 5%
+
+# Export monitoring and notifications
+monitoring:
+  metrics:
+    export_duration: true
+    export_size: true
+    export_errors: true
+    data_quality_score: true
+  
+  notifications:
+    on_failure:
+      enabled: true
+      channels: ["email", "slack"]
+      template: "export_failure"
+    
+    on_large_export:
+      enabled: true
+      threshold_gb: 1.0
+      channels: ["slack"]
+    
+    daily_summary:
+      enabled: false
+      cron: "0 9 * * *"  # 9 AM daily
+      channels: ["email"]
+
+# Security and compliance
+security:
+  encryption:
+    at_rest:
+      enabled: true
+      algorithm: "AES-256"
+    
+    in_transit:
+      enabled: true
+      tls_version: "1.2"
+  
+  access_control:
+    require_auth: true
+    allowed_roles: ["admin", "analyst", "operator"]
+    audit_exports: true
+  
+  data_masking:
+    pii_fields:
+      - "personal_number"
+      - "email"
+      - "phone"
+    masking_method: "partial"  # or "hash", "remove"
+
+# Environment-specific overrides
+environments:
+  development:
+    export_targets:
+      bigquery:
+        production:
+          enabled: false
+      snowflake:
+        production:
+          enabled: false
+    
+    scheduling:
+      triggers:
+        daily_export:
+          enabled: false
+  
+  staging:
+    export_targets:
+      bigquery:
+        production:
+          config:
+            dataset_id: "scraped_data_staging"
+    
+    security:
+      data_masking:
+        pii_fields:
+          - "personal_number"
+          - "email"
+          - "phone"
+        masking_method: "hash"
+  
+  production:
+    monitoring:
+      notifications:
+        on_failure:
+          enabled: true
+        daily_summary:
+          enabled: true
+    
+    security:
+      access_control:
+        audit_exports: true
+      encryption:
+        at_rest:
+          enabled: true
+        in_transit:
+          enabled: true

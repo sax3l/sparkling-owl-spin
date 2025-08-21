@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: data
+  labels:
+    name: data
+    environment: production
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: data-limit-range
+  namespace: data
+spec:
+  limits:
+  - default:
+      memory: "2Gi"
+      cpu: "1000m"
+    defaultRequest:
+      memory: "512Mi"
+      cpu: "200m"
+    type: Container
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: data-quota
+  namespace: data
+spec:
+  hard:
+    requests.cpu: "6"
+    requests.memory: 12Gi
+    limits.cpu: "12"
+    limits.memory: 24Gi
+    pods: "15"
+    services: "8"
+    persistentvolumeclaims: "10"

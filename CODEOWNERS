@@ -1,0 +1,95 @@
+# Code Owners
+
+# Global owners (fallback)
+* @sax3l
+
+# Root configuration files
+/.github/ @sax3l
+/*.yml @sax3l
+/*.yaml @sax3l
+/*.toml @sax3l
+/*.ini @sax3l
+/Makefile @sax3l
+/requirements*.txt @sax3l
+
+# Documentation
+/docs/ @sax3l
+/README.md @sax3l
+/CHANGELOG.md @sax3l
+/CONTRIBUTING.md @sax3l
+
+# Source code ownership
+/src/ @sax3l
+
+# Core crawler components
+/src/crawler/ @sax3l
+/src/scraper/ @sax3l
+
+# Infrastructure and operations
+/src/proxy_pool/ @sax3l
+/src/anti_bot/ @sax3l
+
+# Database and storage
+/src/database/ @sax3l
+/supabase/ @sax3l
+
+# Scheduler and jobs
+/src/scheduler/ @sax3l
+
+# Web application
+/src/webapp/ @sax3l
+/frontend/ @sax3l
+
+# APIs and integrations
+/src/graphql/ @sax3l
+/src/webhooks/ @sax3l
+/src/connectors/ @sax3l
+
+# Machine learning and analysis
+/src/ml/ @sax3l
+/src/analysis/ @sax3l
+
+# Testing
+/tests/ @sax3l
+
+# Infrastructure as Code
+/docker/ @sax3l
+/k8s/ @sax3l
+/infra/ @sax3l
+
+# CI/CD and automation
+/.github/workflows/ @sax3l
+/scripts/ @sax3l
+
+# Monitoring and observability
+/monitoring/ @sax3l
+/src/observability/ @sax3l
+
+# Configuration
+/config/ @sax3l
+
+# Security-sensitive files
+/infra/vault/ @sax3l
+/.env.example @sax3l
+/src/auth/ @sax3l
+
+# SDK and client libraries
+/sdk/ @sax3l
+
+# Browser extension
+/extension/ @sax3l
+
+# Data and exports
+/data/ @sax3l
+/src/scraper/exporters/ @sax3l
+
+# Utilities and helpers
+/src/utils/ @sax3l
+
+# Performance and scaling
+/tests/k6/ @sax3l
+/tests/chaos/ @sax3l
+
+# Compliance and policies
+/docs/policies/ @sax3l
+/ops/ @sax3l

@@ -1,0 +1,645 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: metrics-collection
+  namespace: scrapy-system
+  labels:
+    app: scrapy
+    component: monitoring
+    tier: ops
+spec:
+  schedule: "*/5 * * * *"  # Every 5 minutes
+  timeZone: "UTC"
+  concurrencyPolicy: Replace
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 5
+  startingDeadlineSeconds: 180
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: scrapy
+            component: monitoring
+            cronjob: metrics-collection
+        spec:
+          restartPolicy: OnFailure
+          serviceAccountName: scrapy-metrics
+          containers:
+          - name: metrics-collector
+            image: python:3.11-alpine
+            imagePullPolicy: IfNotPresent
+            env:
+            - name: POSTGRES_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: host
+            - name: POSTGRES_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: port
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: password
+            - name: POSTGRES_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: database
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: redis-credentials
+                  key: url
+            - name: PROMETHEUS_GATEWAY
+              value: "http://prometheus-pushgateway:9091"
+            - name: KUBERNETES_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              
+              # Install required packages
+              pip install --no-cache-dir psycopg2-binary redis requests kubernetes
+              
+              # Create metrics collection script
+              cat > /tmp/metrics_collector.py << 'EOF'
+              import psycopg2
+              import redis
+              import requests
+              import json
+              import os
+              import time
+              import logging
+              from datetime import datetime, timedelta
+              from kubernetes import client, config
+              from collections import defaultdict
+              
+              logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+              logger = logging.getLogger(__name__)
+              
+              class MetricsCollector:
+                  def __init__(self):
+                      self.db_config = {
+                          'host': os.getenv('POSTGRES_HOST'),
+                          'port': os.getenv('POSTGRES_PORT'),
+                          'user': os.getenv('POSTGRES_USER'),
+                          'password': os.getenv('POSTGRES_PASSWORD'),
+                          'database': os.getenv('POSTGRES_DATABASE')
+                      }
+                      
+                      redis_url = os.getenv('REDIS_URL')
+                      self.redis_client = redis.from_url(redis_url) if redis_url else None
+                      
+                      self.prometheus_gateway = os.getenv('PROMETHEUS_GATEWAY')
+                      self.namespace = os.getenv('KUBERNETES_NAMESPACE', 'scrapy-system')
+                      
+                      # Initialize Kubernetes client
+                      try:
+                          config.load_incluster_config()
+                          self.k8s_v1 = client.CoreV1Api()
+                          self.k8s_apps_v1 = client.AppsV1Api()
+                          self.k8s_metrics = client.CustomObjectsApi()
+                      except Exception as e:
+                          logger.warning(f"Could not initialize Kubernetes client: {e}")
+                          self.k8s_v1 = None
+                          self.k8s_apps_v1 = None
+                          self.k8s_metrics = None
+              
+                  def get_database_connection(self):
+                      return psycopg2.connect(**self.db_config)
+              
+                  def collect_database_metrics(self):
+                      """Collect database performance and usage metrics"""
+                      metrics = {}
+                      
+                      conn = self.get_database_connection()
+                      try:
+                          with conn.cursor() as cursor:
+                              # Database size
+                              cursor.execute("SELECT pg_database_size(current_database());")
+                              db_size = cursor.fetchone()[0]
+                              metrics['database_size_bytes'] = db_size
+                              
+                              # Table sizes and row counts
+                              cursor.execute("""
+                                  SELECT 
+                                      schemaname, 
+                                      tablename, 
+                                      n_tup_ins as inserts,
+                                      n_tup_upd as updates,
+                                      n_tup_del as deletes,
+                                      n_live_tup as live_rows,
+                                      n_dead_tup as dead_rows,
+                                      pg_total_relation_size(schemaname||'.'||tablename) as size_bytes
+                                  FROM pg_stat_user_tables 
+                                  WHERE schemaname = 'public'
+                              """)
+                              
+                              table_stats = cursor.fetchall()
+                              for schema, table, inserts, updates, deletes, live_rows, dead_rows, size_bytes in table_stats:
+                                  table_prefix = f'table_{table}'
+                                  metrics[f'{table_prefix}_inserts_total'] = inserts or 0
+                                  metrics[f'{table_prefix}_updates_total'] = updates or 0
+                                  metrics[f'{table_prefix}_deletes_total'] = deletes or 0
+                                  metrics[f'{table_prefix}_live_rows'] = live_rows or 0
+                                  metrics[f'{table_prefix}_dead_rows'] = dead_rows or 0
+                                  metrics[f'{table_prefix}_size_bytes'] = size_bytes or 0
+                              
+                              # Connection statistics
+                              cursor.execute("""
+                                  SELECT 
+                                      COUNT(*) as total_connections,
+                                      COUNT(*) FILTER (WHERE state = 'active') as active_connections,
+                                      COUNT(*) FILTER (WHERE state = 'idle') as idle_connections
+                                  FROM pg_stat_activity
+                              """)
+                              
+                              total_conn, active_conn, idle_conn = cursor.fetchone()
+                              metrics['database_connections_total'] = total_conn
+                              metrics['database_connections_active'] = active_conn
+                              metrics['database_connections_idle'] = idle_conn
+                              
+                              # Lock statistics
+                              cursor.execute("""
+                                  SELECT mode, COUNT(*) 
+                                  FROM pg_locks 
+                                  WHERE granted = true 
+                                  GROUP BY mode
+                              """)
+                              
+                              locks = cursor.fetchall()
+                              for mode, count in locks:
+                                  metrics[f'database_locks_{mode.lower()}'] = count
+                              
+                              # Scraping job statistics
+                              cursor.execute("""
+                                  SELECT 
+                                      status,
+                                      COUNT(*) as count,
+                                      AVG(EXTRACT(EPOCH FROM (completed_at - started_at))) as avg_duration
+                                  FROM scraping_jobs 
+                                  WHERE updated_at >= NOW() - INTERVAL '1 hour'
+                                  GROUP BY status
+                              """)
+                              
+                              job_stats = cursor.fetchall()
+                              for status, count, avg_duration in job_stats:
+                                  metrics[f'scraping_jobs_{status}_count'] = count
+                                  if avg_duration:
+                                      metrics[f'scraping_jobs_{status}_avg_duration_seconds'] = avg_duration
+                              
+                              # Data processing metrics
+                              cursor.execute("""
+                                  SELECT 
+                                      COUNT(*) as total_raw_data,
+                                      COUNT(*) FILTER (WHERE processing_status = 'pending') as pending_processing,
+                                      COUNT(*) FILTER (WHERE processing_status = 'completed') as completed_processing,
+                                      COUNT(*) FILTER (WHERE processing_status = 'failed') as failed_processing,
+                                      AVG(quality_score) as avg_quality_score
+                                  FROM raw_data 
+                                  WHERE scraped_at >= NOW() - INTERVAL '1 hour'
+                              """)
+                              
+                              raw_data_stats = cursor.fetchone()
+                              if raw_data_stats:
+                                  total_raw, pending_proc, completed_proc, failed_proc, avg_quality = raw_data_stats
+                                  metrics['raw_data_total_count'] = total_raw or 0
+                                  metrics['raw_data_pending_processing'] = pending_proc or 0
+                                  metrics['raw_data_completed_processing'] = completed_proc or 0
+                                  metrics['raw_data_failed_processing'] = failed_proc or 0
+                                  if avg_quality:
+                                      metrics['raw_data_avg_quality_score'] = float(avg_quality)
+                              
+                              # Proxy statistics
+                              cursor.execute("""
+                                  SELECT 
+                                      status,
+                                      COUNT(*) as count,
+                                      AVG(success_rate) as avg_success_rate,
+                                      AVG(avg_response_time_ms) as avg_response_time
+                                  FROM proxies 
+                                  GROUP BY status
+                              """)
+                              
+                              proxy_stats = cursor.fetchall()
+                              for status, count, avg_success, avg_response in proxy_stats:
+                                  metrics[f'proxies_{status}_count'] = count
+                                  if avg_success:
+                                      metrics[f'proxies_{status}_avg_success_rate'] = float(avg_success)
+                                  if avg_response:
+                                      metrics[f'proxies_{status}_avg_response_time_ms'] = float(avg_response)
+                              
+                              # Export statistics
+                              cursor.execute("""
+                                  SELECT 
+                                      export_type,
+                                      status,
+                                      COUNT(*) as count,
+                                      SUM(records_exported) as total_records_exported
+                                  FROM export_jobs 
+                                  WHERE last_export_at >= NOW() - INTERVAL '1 hour'
+                                  GROUP BY export_type, status
+                              """)
+                              
+                              export_stats = cursor.fetchall()
+                              for export_type, status, count, total_records in export_stats:
+                                  metrics[f'export_jobs_{export_type}_{status}_count'] = count
+                                  if total_records:
+                                      metrics[f'export_jobs_{export_type}_records_exported'] = total_records
+                      
+                      finally:
+                          conn.close()
+                      
+                      return metrics
+              
+                  def collect_redis_metrics(self):
+                      """Collect Redis performance metrics"""
+                      metrics = {}
+                      
+                      if not self.redis_client:
+                          logger.warning("Redis client not available")
+                          return metrics
+                      
+                      try:
+                          # Redis info
+                          info = self.redis_client.info()
+                          
+                          metrics['redis_connected_clients'] = info.get('connected_clients', 0)
+                          metrics['redis_used_memory_bytes'] = info.get('used_memory', 0)
+                          metrics['redis_used_memory_peak_bytes'] = info.get('used_memory_peak', 0)
+                          metrics['redis_total_commands_processed'] = info.get('total_commands_processed', 0)
+                          metrics['redis_instantaneous_ops_per_sec'] = info.get('instantaneous_ops_per_sec', 0)
+                          metrics['redis_keyspace_hits'] = info.get('keyspace_hits', 0)
+                          metrics['redis_keyspace_misses'] = info.get('keyspace_misses', 0)
+                          metrics['redis_expired_keys'] = info.get('expired_keys', 0)
+                          metrics['redis_evicted_keys'] = info.get('evicted_keys', 0)
+                          
+                          # Calculate hit rate
+                          hits = info.get('keyspace_hits', 0)
+                          misses = info.get('keyspace_misses', 0)
+                          if hits + misses > 0:
+                              metrics['redis_hit_rate'] = hits / (hits + misses)
+                          
+                          # Database info
+                          for db_key, db_info in info.items():
+                              if db_key.startswith('db'):
+                                  if isinstance(db_info, dict):
+                                      db_num = db_key[2:]  # Remove 'db' prefix
+                                      metrics[f'redis_db{db_num}_keys'] = db_info.get('keys', 0)
+                                      metrics[f'redis_db{db_num}_expires'] = db_info.get('expires', 0)
+                          
+                          # Queue lengths (if using Redis for queues)
+                          queue_names = ['scraping_queue', 'processing_queue', 'export_queue']
+                          for queue_name in queue_names:
+                              try:
+                                  queue_length = self.redis_client.llen(queue_name)
+                                  metrics[f'redis_queue_{queue_name}_length'] = queue_length
+                              except:
+                                  pass
+                      
+                      except Exception as e:
+                          logger.error(f"Error collecting Redis metrics: {e}")
+                      
+                      return metrics
+              
+                  def collect_kubernetes_metrics(self):
+                      """Collect Kubernetes cluster metrics"""
+                      metrics = {}
+                      
+                      if not self.k8s_v1:
+                          logger.warning("Kubernetes client not available")
+                          return metrics
+                      
+                      try:
+                          # Pod statistics
+                          pods = self.k8s_v1.list_namespaced_pod(namespace=self.namespace)
+                          
+                          pod_phases = defaultdict(int)
+                          container_restarts = 0
+                          
+                          for pod in pods.items:
+                              pod_phases[pod.status.phase] += 1
+                              
+                              if pod.status.container_statuses:
+                                  for container in pod.status.container_statuses:
+                                      container_restarts += container.restart_count
+                          
+                          for phase, count in pod_phases.items():
+                              metrics[f'kubernetes_pods_{phase.lower()}_count'] = count
+                          
+                          metrics['kubernetes_container_restarts_total'] = container_restarts
+                          
+                          # Deployment statistics
+                          deployments = self.k8s_apps_v1.list_namespaced_deployment(namespace=self.namespace)
+                          
+                          deployment_ready = 0
+                          deployment_total = 0
+                          
+                          for deployment in deployments.items:
+                              deployment_total += 1
+                              if (deployment.status.ready_replicas or 0) == (deployment.spec.replicas or 0):
+                                  deployment_ready += 1
+                          
+                          metrics['kubernetes_deployments_total'] = deployment_total
+                          metrics['kubernetes_deployments_ready'] = deployment_ready
+                          
+                          # Node statistics (if accessible)
+                          try:
+                              nodes = self.k8s_v1.list_node()
+                              
+                              node_ready = 0
+                              node_total = 0
+                              
+                              for node in nodes.items:
+                                  node_total += 1
+                                  for condition in node.status.conditions:
+                                      if condition.type == 'Ready' and condition.status == 'True':
+                                          node_ready += 1
+                                          break
+                              
+                              metrics['kubernetes_nodes_total'] = node_total
+                              metrics['kubernetes_nodes_ready'] = node_ready
+                          except:
+                              pass  # May not have permissions to list nodes
+                      
+                      except Exception as e:
+                          logger.error(f"Error collecting Kubernetes metrics: {e}")
+                      
+                      return metrics
+              
+                  def collect_application_metrics(self):
+                      """Collect application-specific metrics"""
+                      metrics = {}
+                      
+                      # Collect from Redis cache if available
+                      if self.redis_client:
+                          try:
+                              # Active scraping sessions
+                              active_sessions = self.redis_client.scard('active_scraping_sessions') or 0
+                              metrics['application_active_scraping_sessions'] = active_sessions
+                              
+                              # Queue processing rates
+                              for queue_name in ['scraping_queue', 'processing_queue', 'export_queue']:
+                                  # Get processing rate from last hour's data
+                                  rate_key = f'{queue_name}_processing_rate'
+                                  processing_rate = self.redis_client.get(rate_key)
+                                  if processing_rate:
+                                      metrics[f'application_{queue_name}_processing_rate'] = float(processing_rate)
+                              
+                              # Error rates
+                              error_counts = self.redis_client.hgetall('error_counts')
+                              for error_type, count in error_counts.items():
+                                  metrics[f'application_errors_{error_type.decode()}_count'] = int(count)
+                              
+                              # Cache hit rates for different components
+                              for component in ['dns', 'robots', 'templates']:
+                                  hits = self.redis_client.get(f'{component}_cache_hits') or 0
+                                  misses = self.redis_client.get(f'{component}_cache_misses') or 0
+                                  total = int(hits) + int(misses)
+                                  if total > 0:
+                                      metrics[f'application_{component}_cache_hit_rate'] = int(hits) / total
+                          
+                          except Exception as e:
+                              logger.error(f"Error collecting application metrics from Redis: {e}")
+                      
+                      return metrics
+              
+                  def store_metrics_in_database(self, metrics):
+                      """Store collected metrics in the performance_metrics table"""
+                      if not metrics:
+                          return
+                      
+                      conn = self.get_database_connection()
+                      try:
+                          with conn.cursor() as cursor:
+                              timestamp = datetime.now()
+                              
+                              for metric_name, metric_value in metrics.items():
+                                  cursor.execute("""
+                                      INSERT INTO performance_metrics (metric_name, metric_value, metric_unit, recorded_at)
+                                      VALUES (%s, %s, %s, %s)
+                                  """, (metric_name, metric_value, self._get_metric_unit(metric_name), timestamp))
+                              
+                              conn.commit()
+                              logger.info(f"Stored {len(metrics)} metrics in database")
+                      
+                      except Exception as e:
+                          logger.error(f"Error storing metrics in database: {e}")
+                          conn.rollback()
+                      finally:
+                          conn.close()
+              
+                  def push_metrics_to_prometheus(self, metrics):
+                      """Push metrics to Prometheus Pushgateway"""
+                      if not self.prometheus_gateway or not metrics:
+                          return
+                      
+                      try:
+                          # Format metrics for Prometheus
+                          prometheus_metrics = []
+                          
+                          for metric_name, metric_value in metrics.items():
+                              # Clean metric name for Prometheus
+                              clean_name = metric_name.replace('-', '_').replace('.', '_')
+                              prometheus_metrics.append(f"{clean_name} {metric_value}")
+                          
+                          # Push to gateway
+                          gateway_url = f"{self.prometheus_gateway}/metrics/job/scrapy_metrics/instance/cronjob"
+                          
+                          headers = {'Content-Type': 'text/plain'}
+                          data = '\n'.join(prometheus_metrics) + '\n'
+                          
+                          response = requests.post(gateway_url, data=data, headers=headers, timeout=10)
+                          
+                          if response.status_code == 200:
+                              logger.info(f"Pushed {len(metrics)} metrics to Prometheus")
+                          else:
+                              logger.warning(f"Failed to push metrics to Prometheus: {response.status_code}")
+                      
+                      except Exception as e:
+                          logger.error(f"Error pushing metrics to Prometheus: {e}")
+              
+                  def _get_metric_unit(self, metric_name):
+                      """Determine the unit for a metric based on its name"""
+                      if 'bytes' in metric_name:
+                          return 'bytes'
+                      elif 'seconds' in metric_name or 'duration' in metric_name:
+                          return 'seconds'
+                      elif 'rate' in metric_name or 'ratio' in metric_name:
+                          return 'ratio'
+                      elif 'count' in metric_name or 'total' in metric_name:
+                          return 'count'
+                      elif 'ms' in metric_name:
+                          return 'milliseconds'
+                      elif 'percent' in metric_name:
+                          return 'percent'
+                      else:
+                          return 'gauge'
+              
+                  def collect_all_metrics(self):
+                      """Collect all metrics from different sources"""
+                      logger.info("Starting metrics collection...")
+                      
+                      all_metrics = {}
+                      
+                      # Collect from different sources
+                      sources = [
+                          ('database', self.collect_database_metrics),
+                          ('redis', self.collect_redis_metrics),
+                          ('kubernetes', self.collect_kubernetes_metrics),
+                          ('application', self.collect_application_metrics)
+                      ]
+                      
+                      for source_name, collect_func in sources:
+                          try:
+                              logger.info(f"Collecting {source_name} metrics...")
+                              source_metrics = collect_func()
+                              
+                              # Add source prefix to metric names
+                              for metric_name, metric_value in source_metrics.items():
+                                  prefixed_name = f"{source_name}_{metric_name}" if not metric_name.startswith(source_name) else metric_name
+                                  all_metrics[prefixed_name] = metric_value
+                              
+                              logger.info(f"Collected {len(source_metrics)} {source_name} metrics")
+                          
+                          except Exception as e:
+                              logger.error(f"Error collecting {source_name} metrics: {e}")
+                      
+                      logger.info(f"Total metrics collected: {len(all_metrics)}")
+                      
+                      # Store and push metrics
+                      if all_metrics:
+                          self.store_metrics_in_database(all_metrics)
+                          self.push_metrics_to_prometheus(all_metrics)
+                      
+                      return all_metrics
+              
+              def main():
+                  collector = MetricsCollector()
+                  metrics = collector.collect_all_metrics()
+                  logger.info("Metrics collection completed")
+                  return metrics
+              
+              if __name__ == "__main__":
+                  main()
+              EOF
+              
+              # Run the metrics collection
+              python /tmp/metrics_collector.py
+            
+            resources:
+              requests:
+                memory: "128Mi"
+                cpu: "100m"
+              limits:
+                memory: "256Mi"
+                cpu: "200m"
+          
+          # Security context
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 999
+            fsGroup: 999
+            seccompProfile:
+              type: RuntimeDefault
+          
+          # Node selection
+          nodeSelector:
+            node-type: workers
+          
+          tolerations:
+          - key: "scrapy/ops"
+            operator: "Equal"
+            value: "true"
+            effect: "NoSchedule"
+
+---
+# ServiceAccount for metrics collection
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: scrapy-metrics
+  namespace: scrapy-system
+  labels:
+    app: scrapy
+    component: monitoring
+
+---
+# Role for metrics collection
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: scrapy-metrics
+  namespace: scrapy-system
+rules:
+- apiGroups: [""]
+  resources: ["secrets", "pods", "nodes"]
+  verbs: ["get", "list"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "replicasets"]
+  verbs: ["get", "list"]
+- apiGroups: ["batch"]
+  resources: ["jobs", "cronjobs"]
+  verbs: ["get", "list"]
+- apiGroups: ["metrics.k8s.io"]
+  resources: ["nodes", "pods"]
+  verbs: ["get", "list"]
+
+---
+# ClusterRole for node-level metrics (optional)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: scrapy-metrics-cluster
+rules:
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["get", "list"]
+- apiGroups: ["metrics.k8s.io"]
+  resources: ["nodes"]
+  verbs: ["get", "list"]
+
+---
+# RoleBinding for metrics ServiceAccount
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: scrapy-metrics
+  namespace: scrapy-system
+subjects:
+- kind: ServiceAccount
+  name: scrapy-metrics
+  namespace: scrapy-system
+roleRef:
+  kind: Role
+  name: scrapy-metrics
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# ClusterRoleBinding for node metrics (optional)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: scrapy-metrics-cluster
+subjects:
+- kind: ServiceAccount
+  name: scrapy-metrics
+  namespace: scrapy-system
+roleRef:
+  kind: ClusterRole
+  name: scrapy-metrics-cluster
+  apiGroup: rbac.authorization.k8s.io

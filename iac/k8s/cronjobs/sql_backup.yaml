@@ -1,0 +1,71 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: sql-backup
+  namespace: data
+spec:
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: sql-backup
+            image: postgres:14
+            env:
+            - name: PGHOST
+              value: "postgres-service"
+            - name: PGPORT
+              value: "5432"
+            - name: PGUSER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: username
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: password
+            - name: PGDATABASE
+              value: "scraping_db"
+            - name: S3_BUCKET
+              value: "scraping-backups"
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: aws-credentials
+                  key: access-key-id
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: aws-credentials
+                  key: secret-access-key
+            command:
+            - /bin/bash
+            - -c
+            - |
+              set -e
+              BACKUP_NAME="backup_$(date +%Y%m%d_%H%M%S).sql"
+              echo "Starting backup: $BACKUP_NAME"
+              
+              # Create backup
+              pg_dump -h $PGHOST -p $PGPORT -U $PGUSER -d $PGDATABASE --no-password > /tmp/$BACKUP_NAME
+              
+              # Compress backup
+              gzip /tmp/$BACKUP_NAME
+              
+              # Upload to S3
+              aws s3 cp /tmp/${BACKUP_NAME}.gz s3://$S3_BUCKET/sql-backups/
+              
+              echo "Backup completed and uploaded: ${BACKUP_NAME}.gz"
+            resources:
+              requests:
+                memory: "256Mi"
+                cpu: "100m"
+              limits:
+                memory: "512Mi"
+                cpu: "500m"
+          restartPolicy: OnFailure
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1

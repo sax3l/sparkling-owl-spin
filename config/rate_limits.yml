@@ -1,0 +1,163 @@
+# Rate limiting configuration using token bucket algorithm
+
+global_limits:
+  # Global rate limits across all domains
+  default_requests_per_second: 1.0
+  burst_capacity: 5
+  max_concurrent_requests: 50
+  
+  # IP-based limits (to prevent abuse)
+  per_ip_requests_per_minute: 60
+  per_ip_burst_capacity: 10
+
+# Domain-specific rate limits
+domain_limits:
+  # High-volume public APIs
+  "api.example.com":
+    requests_per_second: 10.0
+    burst_capacity: 20
+    max_concurrent_requests: 5
+    
+  # Government/public data - more permissive
+  "*.gov.se":
+    requests_per_second: 2.0
+    burst_capacity: 5
+    max_concurrent_requests: 3
+    
+  # Commercial sites - conservative
+  "*.biluppgifter.se":
+    requests_per_second: 0.5
+    burst_capacity: 2
+    max_concurrent_requests: 2
+    
+  "*.merinfo.se":
+    requests_per_second: 0.3
+    burst_capacity: 1
+    max_concurrent_requests: 1
+    
+  # Social media APIs (if needed)
+  "api.twitter.com":
+    requests_per_second: 1.0
+    burst_capacity: 3
+    max_concurrent_requests: 2
+    
+  # Search engines (for meta-crawling)
+  "*.google.com":
+    requests_per_second: 0.1
+    burst_capacity: 1
+    max_concurrent_requests: 1
+
+# Path-specific overrides
+path_limits:
+  # API endpoints typically have different limits
+  "/api/":
+    requests_per_second: 5.0
+    burst_capacity: 10
+    
+  # Search endpoints are often rate-limited
+  "/search":
+    requests_per_second: 0.5
+    burst_capacity: 2
+    
+  # Static resources can be faster
+  "/static/":
+    requests_per_second: 10.0
+    burst_capacity: 20
+
+# Adaptive rate limiting
+adaptive:
+  enabled: true
+  
+  # Response time-based adjustment
+  response_time_thresholds:
+    slow_threshold_ms: 2000
+    very_slow_threshold_ms: 5000
+    
+  # Automatic rate reduction
+  slow_response_rate_multiplier: 0.5
+  very_slow_response_rate_multiplier: 0.2
+  
+  # Server load indicators
+  server_load_indicators:
+    - status_code: 429  # Too Many Requests
+      action: "reduce_rate"
+      multiplier: 0.1
+      duration_minutes: 30
+      
+    - status_code: 503  # Service Unavailable
+      action: "pause"
+      duration_minutes: 60
+      
+    - status_code: 502  # Bad Gateway
+      action: "reduce_rate"
+      multiplier: 0.3
+      duration_minutes: 15
+
+# Time-based rate adjustments
+time_based:
+  # Business hours - normal rates
+  business_hours:
+    timezone: "Europe/Stockholm"
+    weekdays:
+      start: "09:00"
+      end: "17:00"
+      rate_multiplier: 1.0
+      
+  # Off-hours - can be more aggressive
+  off_hours:
+    rate_multiplier: 2.0
+    
+  # Weekend - reduced activity expected
+  weekends:
+    rate_multiplier: 1.5
+    
+  # Night time - minimal activity
+  night_hours:
+    start: "23:00"
+    end: "07:00"
+    rate_multiplier: 0.5
+
+# Token bucket configuration
+token_bucket:
+  # How often to refill tokens
+  refill_interval_seconds: 1
+  
+  # Maximum tokens that can be stored
+  max_tokens_multiplier: 10  # max_tokens = requests_per_second * this
+  
+  # Minimum tokens required for a request
+  min_tokens_per_request: 1
+
+# Circuit breaker integration
+circuit_breaker:
+  enabled: true
+  
+  # Error thresholds
+  error_threshold_percentage: 50
+  min_requests_for_circuit: 10
+  
+  # Timing
+  circuit_open_duration_minutes: 5
+  half_open_max_requests: 3
+
+# Monitoring and metrics
+monitoring:
+  track_rate_limit_hits: true
+  track_adaptive_adjustments: true
+  track_token_bucket_state: true
+  
+  alerts:
+    high_rate_limit_hit_percentage: 80
+    frequent_adaptive_reductions: true
+    circuit_breaker_trips: true
+
+# Emergency controls
+emergency:
+  global_rate_limit_override: null  # Set to override all rates
+  pause_all_requests: false
+  
+  # Emergency rate limits (very conservative)
+  emergency_rates:
+    requests_per_second: 0.1
+    burst_capacity: 1
+    max_concurrent_requests: 1

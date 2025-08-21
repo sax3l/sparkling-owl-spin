@@ -1,0 +1,152 @@
+# Domain-specific policies for robots.txt compliance and ethical scraping
+
+domains:
+  # Example configurations for different types of sites
+  
+  # Government/public data sites - Generally permissive
+  "*.gov.se":
+    robots_compliance: strict
+    respect_crawl_delay: true
+    max_requests_per_second: 1
+    user_agent: "ECaDP-Crawler/1.0 (+https://your-domain.com/bot-info)"
+    ethical_guidelines:
+      - respect_server_load
+      - business_hours_only
+    allowed_paths:
+      - "/open-data/*"
+      - "/public/*"
+    forbidden_paths:
+      - "/admin/*"
+      - "/login/*"
+      - "/personal/*"
+    max_depth: 10
+    session_limits:
+      max_duration_minutes: 60
+      cooldown_minutes: 30
+      
+  # Commercial vehicle sites
+  "*.biluppgifter.se":
+    robots_compliance: strict
+    respect_crawl_delay: true
+    max_requests_per_second: 0.5  # Conservative rate
+    user_agent: "ECaDP-Crawler/1.0 (+https://your-domain.com/bot-info)"
+    ethical_guidelines:
+      - respect_terms_of_service
+      - no_personal_data_collection
+      - business_hours_only
+    allowed_paths:
+      - "/vehicle/*"
+      - "/search/*"
+    forbidden_paths:
+      - "/user/*"
+      - "/account/*"
+      - "/payment/*"
+    max_depth: 5
+    session_limits:
+      max_duration_minutes: 30
+      cooldown_minutes: 60
+      
+  # Company information sites
+  "*.merinfo.se":
+    robots_compliance: strict
+    respect_crawl_delay: true
+    max_requests_per_second: 0.3
+    user_agent: "ECaDP-Crawler/1.0 (+https://your-domain.com/bot-info)"
+    ethical_guidelines:
+      - respect_terms_of_service
+      - public_data_only
+      - business_hours_only
+    allowed_paths:
+      - "/company/*"
+      - "/search/*"
+      - "/report/*"
+    forbidden_paths:
+      - "/premium/*"
+      - "/subscriber/*"
+      - "/login/*"
+    max_depth: 3
+    session_limits:
+      max_duration_minutes: 45
+      cooldown_minutes: 90
+
+  # Default policy for unknown domains
+  "*":
+    robots_compliance: strict
+    respect_crawl_delay: true
+    max_requests_per_second: 0.1  # Very conservative
+    user_agent: "ECaDP-Crawler/1.0 (+https://your-domain.com/bot-info)"
+    ethical_guidelines:
+      - respect_robots_txt
+      - respect_terms_of_service
+      - no_personal_data_collection
+      - business_hours_only
+      - server_load_monitoring
+    forbidden_paths:
+      - "/admin/*"
+      - "/login/*"
+      - "/user/*"
+      - "/account/*"
+      - "/private/*"
+      - "/personal/*"
+      - "/api/private/*"
+    max_depth: 3
+    session_limits:
+      max_duration_minutes: 15
+      cooldown_minutes: 120
+
+# Time-based restrictions
+time_restrictions:
+  business_hours:
+    enabled: true
+    timezone: "Europe/Stockholm"
+    weekdays:
+      start: "09:00"
+      end: "17:00"
+    weekends:
+      enabled: false
+  
+  maintenance_windows:
+    # Don't crawl during typical maintenance windows
+    - start: "02:00"
+      end: "04:00"
+      timezone: "Europe/Stockholm"
+
+# Compliance settings
+compliance:
+  gdpr:
+    enabled: true
+    data_minimization: true
+    purpose_limitation: true
+    storage_limitation: true
+    
+  robots_txt:
+    cache_duration_hours: 24
+    respect_crawl_delay: true
+    minimum_delay_seconds: 1
+    
+  rate_limiting:
+    adaptive: true
+    respect_server_response_time: true
+    backoff_strategy: "exponential"
+    max_backoff_seconds: 300
+
+# Monitoring and alerts
+monitoring:
+  track_compliance_violations: true
+  alert_on_429_responses: true
+  alert_on_robots_violations: true
+  
+  metrics:
+    requests_per_domain: true
+    response_time_by_domain: true
+    compliance_score: true
+
+# Emergency controls
+emergency_controls:
+  global_pause: false
+  domain_blacklist: []
+  ip_whitelist: []
+  
+  rate_limits:
+    emergency_max_rps: 0.05
+    emergency_cooldown_minutes: 300

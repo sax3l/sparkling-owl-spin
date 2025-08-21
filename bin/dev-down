@@ -1,0 +1,16 @@
+#!/bin/bash
+# Development environment shutdown script
+
+set -e
+
+echo "🛑 Stopping development environment..."
+
+# Stop containers
+echo "📦 Stopping containers..."
+docker-compose -f docker/docker-compose.yml -f docker/docker-compose.dev.yml down
+
+# Clean up
+echo "🧹 Cleaning up..."
+docker system prune -f
+
+echo "✅ Development environment stopped!"

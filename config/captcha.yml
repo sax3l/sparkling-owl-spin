@@ -1,0 +1,298 @@
+# CAPTCHA Service Configuration
+# Third-party CAPTCHA solving services configuration (use only when legally compliant)
+
+# IMPORTANT LEGAL NOTICE:
+# CAPTCHA solving should only be used in compliance with:
+# 1. Website Terms of Service
+# 2. Local and international laws
+# 3. Ethical scraping guidelines
+# 4. Explicit permission from website owners
+# This configuration is provided for educational/research purposes only.
+
+captcha:
+  # Global CAPTCHA handling settings
+  enabled: false  # Disabled by default - enable only with legal approval
+  
+  # Detection settings
+  detection:
+    enabled: true
+    timeout_seconds: 30
+    retry_attempts: 3
+    
+    # Common CAPTCHA indicators
+    indicators:
+      - "captcha"
+      - "recaptcha"
+      - "hcaptcha" 
+      - "verification"
+      - "prove you are human"
+      - "security check"
+      
+    # CSS selectors for CAPTCHA elements
+    selectors:
+      - "iframe[src*='recaptcha']"
+      - "div[class*='captcha']"
+      - "form[class*='captcha']"
+      - ".g-recaptcha"
+      - ".h-captcha"
+      - "#captcha"
+      
+  # Fallback strategies when CAPTCHA is detected
+  fallback_strategies:
+    # Strategy 1: Human intervention
+    human_intervention:
+      enabled: true
+      priority: 1
+      notification_channels:
+        - "email"
+        - "slack"
+        - "webhook"
+      timeout_minutes: 30
+      
+    # Strategy 2: Skip and retry later
+    skip_and_retry:
+      enabled: true
+      priority: 2
+      retry_delay_hours: 24
+      max_retries: 3
+      
+    # Strategy 3: Mark as failed
+    mark_failed:
+      enabled: true
+      priority: 3
+      log_reason: true
+      
+  # Third-party CAPTCHA solving services (use only with legal approval)
+  services:
+    # 2captcha service
+    twocaptcha:
+      enabled: false  # Disabled by default
+      api_key_env: "TWOCAPTCHA_API_KEY"
+      api_url: "http://2captcha.com"
+      timeout_seconds: 120
+      max_attempts: 3
+      
+      # Service-specific settings
+      settings:
+        soft_id: 0  # Developer ID
+        language: "en"
+        
+      # Supported CAPTCHA types
+      supported_types:
+        - "recaptcha_v2"
+        - "recaptcha_v3"
+        - "hcaptcha"
+        - "image_captcha"
+        - "text_captcha"
+        
+      # Pricing and limits (for cost control)
+      limits:
+        max_daily_solves: 100
+        max_cost_per_day_usd: 10.0
+        cost_per_solve_usd: 0.002
+        
+    # AntiCaptcha service
+    anticaptcha:
+      enabled: false  # Disabled by default
+      api_key_env: "ANTICAPTCHA_API_KEY"
+      api_url: "https://api.anti-captcha.com"
+      timeout_seconds: 120
+      max_attempts: 3
+      
+      supported_types:
+        - "RecaptchaV2TaskProxyless"
+        - "RecaptchaV3TaskProxyless"
+        - "HCaptchaTaskProxyless"
+        - "ImageToTextTask"
+        
+      limits:
+        max_daily_solves: 100
+        max_cost_per_day_usd: 10.0
+        
+    # CapMonster service
+    capmonster:
+      enabled: false  # Disabled by default
+      api_key_env: "CAPMONSTER_API_KEY"
+      api_url: "https://api.capmonster.cloud"
+      timeout_seconds: 120
+      max_attempts: 3
+      
+      supported_types:
+        - "RecaptchaV2Task"
+        - "RecaptchaV3Task"
+        - "HCaptchaTask"
+        - "ImageToTextTask"
+        
+      limits:
+        max_daily_solves: 100
+        max_cost_per_day_usd: 10.0
+
+# CAPTCHA type specific configurations
+captcha_types:
+  # Google reCAPTCHA v2
+  recaptcha_v2:
+    site_key_extraction:
+      selectors:
+        - "div[data-sitekey]"
+        - ".g-recaptcha[data-sitekey]"
+      attribute: "data-sitekey"
+      
+    solving:
+      timeout_seconds: 120
+      check_interval_seconds: 5
+      
+  # Google reCAPTCHA v3
+  recaptcha_v3:
+    site_key_extraction:
+      # v3 keys are often in JavaScript
+      javascript_patterns:
+        - "grecaptcha.execute\\(['\"]([^'\"]+)['\"]"
+        - "sitekey['\"]?\\s*[:=]\\s*['\"]([^'\"]+)['\"]"
+        
+    solving:
+      timeout_seconds: 60
+      min_score: 0.3  # Minimum score threshold
+      action: "verify"  # Default action
+      
+  # hCaptcha
+  hcaptcha:
+    site_key_extraction:
+      selectors:
+        - ".h-captcha[data-sitekey]"
+        - "div[data-sitekey][data-hcaptcha-site-key]"
+      attribute: "data-sitekey"
+      
+    solving:
+      timeout_seconds: 120
+      check_interval_seconds: 5
+      
+  # Image CAPTCHAs
+  image_captcha:
+    extraction:
+      selectors:
+        - "img[src*='captcha']"
+        - "canvas[id*='captcha']"
+        - ".captcha-image img"
+        
+    preprocessing:
+      enhance_contrast: true
+      remove_noise: true
+      resize_for_ocr: true
+      
+    solving:
+      timeout_seconds: 60
+      confidence_threshold: 0.8
+
+# Legal and compliance settings
+compliance:
+  # Legal requirements
+  legal_checks:
+    enabled: true
+    required_approvals:
+      - "legal_team_approval"
+      - "website_owner_permission"
+      - "terms_of_service_compliance"
+      
+  # Usage restrictions
+  restrictions:
+    # Only allow on specific domains with explicit permission
+    allowed_domains: []  # Empty by default - must be explicitly configured
+    
+    # Block on protected domains
+    blocked_domains:
+      - "*.gov"
+      - "*.edu"
+      - "*.bank"
+      - "*.finance"
+      
+    # Maximum usage limits
+    limits:
+      max_per_domain_per_day: 10
+      max_per_session: 3
+      cooldown_hours: 24
+      
+  # Documentation requirements
+  documentation:
+    require_justification: true
+    require_approval_ticket: true
+    log_all_attempts: true
+    retention_days: 2555  # 7 years for compliance
+
+# Monitoring and alerting
+monitoring:
+  # Track CAPTCHA encounters
+  tracking:
+    enabled: true
+    metrics:
+      - "captcha_detected_total"
+      - "captcha_solved_total"
+      - "captcha_failed_total"
+      - "captcha_cost_total"
+      - "captcha_response_time"
+      
+  # Alerts
+  alerts:
+    high_captcha_rate:
+      threshold: 0.1  # Alert if >10% of requests encounter CAPTCHAs
+      window_minutes: 60
+      
+    cost_threshold:
+      daily_cost_usd: 5.0
+      monthly_cost_usd: 100.0
+      
+    solving_failures:
+      failure_rate_threshold: 0.3  # Alert if >30% solving failures
+      window_minutes: 30
+      
+  # Reporting
+  reporting:
+    daily_summary: true
+    weekly_analysis: true
+    cost_breakdown: true
+    success_rate_tracking: true
+
+# Development and testing
+development:
+  # Mock CAPTCHA for testing
+  mock_captcha:
+    enabled: false  # Enable in test environments only
+    always_solve: true
+    response_delay_seconds: 2
+    
+  # Bypass for local development
+  bypass_in_dev:
+    enabled: false  # Use with caution
+    log_bypassed: true
+    
+# Research and analysis
+research:
+  # CAPTCHA pattern analysis
+  pattern_analysis:
+    enabled: true
+    track_types: true
+    track_frequency: true
+    track_domains: true
+    
+  # Effectiveness metrics
+  effectiveness:
+    track_success_rates: true
+    analyze_correlation_with_blocks: true
+    identify_trigger_patterns: true
+    
+# Ethical guidelines
+ethics:
+  principles:
+    - "Only use with explicit legal permission"
+    - "Respect website Terms of Service"
+    - "Avoid automated solving on sensitive sites"
+    - "Implement reasonable rate limits"
+    - "Document all usage for compliance"
+    - "Prefer human intervention over automated solving"
+    - "Respect CAPTCHA as legitimate protection"
+    
+  best_practices:
+    - "Always check robots.txt first"
+    - "Implement progressive delays"
+    - "Use least intrusive methods"
+    - "Maintain audit trails"
+    - "Regular compliance reviews"

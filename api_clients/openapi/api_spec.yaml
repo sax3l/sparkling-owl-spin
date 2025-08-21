@@ -1,0 +1,109 @@
+openapi: 3.0.3
+info:
+  title: Scraping Platform API
+  description: REST API for the web scraping platform
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: api-support@scrapingplatform.com
+    url: https://docs.scrapingplatform.com
+
+servers:
+  - url: http://localhost:8000
+    description: Development server
+  - url: https://api.scrapingplatform.com
+    description: Production server
+
+security:
+  - ApiKeyAuth: []
+
+paths:
+  /api/v1/crawl:
+    post:
+      summary: Start a new crawling job
+      operationId: startCrawl
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CrawlRequest'
+      responses:
+        '200':
+          description: Crawl job started successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CrawlResponse'
+        '400':
+          description: Invalid request
+        '401':
+          description: Unauthorized
+
+  /api/v1/jobs/{jobId}:
+    get:
+      summary: Get job status
+      operationId: getJobStatus
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Job status retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobStatus'
+        '404':
+          description: Job not found
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+
+  schemas:
+    CrawlRequest:
+      type: object
+      required:
+        - url
+        - template
+      properties:
+        url:
+          type: string
+          format: uri
+        template:
+          type: string
+        options:
+          type: object
+
+    CrawlResponse:
+      type: object
+      properties:
+        jobId:
+          type: string
+        status:
+          type: string
+        estimatedDuration:
+          type: integer
+
+    JobStatus:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+          enum: [pending, running, completed, failed]
+        progress:
+          type: number
+        results:
+          type: object
+        createdAt:
+          type: string
+          format: date-time

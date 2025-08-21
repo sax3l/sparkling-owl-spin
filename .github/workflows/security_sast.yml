@@ -1,0 +1,460 @@
+name: Security SAST Scanning
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run weekly security scans
+    - cron: '0 2 * * 1'
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  codeql:
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'python', 'javascript' ]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: ${{ matrix.language }}
+        queries: security-extended,security-and-quality
+
+    - name: Set up Python
+      if: matrix.language == 'python'
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: Install Python dependencies
+      if: matrix.language == 'python'
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        if [ -f requirements_dev.txt ]; then pip install -r requirements_dev.txt; fi
+
+    - name: Set up Node.js
+      if: matrix.language == 'javascript'
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: '**/package-lock.json'
+
+    - name: Install Node.js dependencies
+      if: matrix.language == 'javascript'
+      run: |
+        npm ci
+        cd frontend && npm ci
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+      with:
+        category: "/language:${{matrix.language}}"
+
+  semgrep:
+    name: Semgrep Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Run Semgrep
+      uses: semgrep/semgrep-action@v1
+      with:
+        config: >-
+          p/security-audit
+          p/secrets
+          p/owasp-top-ten
+          p/python
+          p/javascript
+        generateSarif: "1"
+
+    - name: Upload Semgrep results to GitHub
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: semgrep.sarif
+
+  bandit:
+    name: Bandit Python Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install Bandit
+      run: |
+        python -m pip install --upgrade pip
+        pip install bandit[toml]
+
+    - name: Run Bandit
+      run: |
+        bandit -r src/ -f json -o bandit-results.json || true
+        bandit -r src/ -f txt -o bandit-results.txt || true
+
+    - name: Convert Bandit results to SARIF
+      uses: microsoft/bandit-sarif@v1
+      if: always()
+      with:
+        bandit-results: bandit-results.json
+        sarif-file: bandit-results.sarif
+
+    - name: Upload Bandit results to GitHub
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: bandit-results.sarif
+
+    - name: Upload Bandit results as artifact
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: bandit-results
+        path: bandit-results.*
+
+  safety:
+    name: Safety Python Vulnerability Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install Safety
+      run: |
+        python -m pip install --upgrade pip
+        pip install safety
+
+    - name: Install project dependencies
+      run: |
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: Run Safety check
+      run: |
+        safety check --json --output safety-results.json || true
+        safety check --output safety-results.txt || true
+
+    - name: Upload Safety results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: safety-results
+        path: safety-results.*
+
+  npm-audit:
+    name: NPM Security Audit
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run npm audit
+      run: |
+        npm audit --audit-level moderate --json > npm-audit-results.json || true
+        npm audit --audit-level moderate > npm-audit-results.txt || true
+
+    - name: Frontend npm audit
+      run: |
+        cd frontend
+        npm ci
+        npm audit --audit-level moderate --json > ../frontend-audit-results.json || true
+        npm audit --audit-level moderate > ../frontend-audit-results.txt || true
+
+    - name: Upload npm audit results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: npm-audit-results
+        path: |
+          npm-audit-results.*
+          frontend-audit-results.*
+
+  docker-security:
+    name: Docker Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build Docker image for scanning
+      run: |
+        docker build -t ecadp-security-scan:latest -f docker/Dockerfile .
+
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'ecadp-security-scan:latest'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+
+    - name: Upload Trivy scan results
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+    - name: Run Trivy filesystem scan
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-fs-results.sarif'
+
+    - name: Upload Trivy filesystem scan results
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: 'trivy-fs-results.sarif'
+
+  secrets-scan:
+    name: Secrets Detection
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: TruffleHog OSS
+      uses: trufflesecurity/trufflehog@main
+      with:
+        path: ./
+        base: main
+        head: HEAD
+        extra_args: --debug --only-verified
+
+    - name: GitLeaks scan
+      uses: gitleaks/gitleaks-action@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE}}
+
+  dependency-check:
+    name: OWASP Dependency Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Run OWASP Dependency Check
+      uses: dependency-check/Dependency-Check_Action@main
+      with:
+        project: 'ECaDP'
+        path: '.'
+        format: 'ALL'
+        args: >
+          --enableRetired
+          --enableExperimental
+          --failOnCVSS 7
+
+    - name: Upload OWASP Dependency Check results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: dependency-check-results
+        path: reports/
+
+  license-scan:
+    name: License Compliance Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install license scanner
+      run: |
+        pip install pip-licenses licensecheck
+
+    - name: Scan Python licenses
+      run: |
+        pip install -r requirements.txt
+        pip-licenses --format=json --output-file=python-licenses.json
+        pip-licenses --format=plain --output-file=python-licenses.txt
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Install license-checker
+      run: npm install -g license-checker
+
+    - name: Scan Node.js licenses
+      run: |
+        npm ci
+        license-checker --json --out nodejs-licenses.json
+        license-checker --out nodejs-licenses.txt
+
+    - name: Frontend license scan
+      run: |
+        cd frontend
+        npm ci
+        license-checker --json --out ../frontend-licenses.json
+        license-checker --out ../frontend-licenses.txt
+
+    - name: Upload license scan results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: license-scan-results
+        path: |
+          python-licenses.*
+          nodejs-licenses.*
+          frontend-licenses.*
+
+  security-summary:
+    name: Security Scan Summary
+    runs-on: ubuntu-latest
+    needs: [codeql, semgrep, bandit, safety, npm-audit, docker-security, secrets-scan, dependency-check, license-scan]
+    if: always()
+    
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+
+    - name: Create security summary
+      run: |
+        echo "# Security Scan Summary" > security-summary.md
+        echo "" >> security-summary.md
+        echo "## Scan Results" >> security-summary.md
+        echo "- CodeQL: ${{ needs.codeql.result }}" >> security-summary.md
+        echo "- Semgrep: ${{ needs.semgrep.result }}" >> security-summary.md
+        echo "- Bandit: ${{ needs.bandit.result }}" >> security-summary.md
+        echo "- Safety: ${{ needs.safety.result }}" >> security-summary.md
+        echo "- NPM Audit: ${{ needs.npm-audit.result }}" >> security-summary.md
+        echo "- Docker Security: ${{ needs.docker-security.result }}" >> security-summary.md
+        echo "- Secrets Scan: ${{ needs.secrets-scan.result }}" >> security-summary.md
+        echo "- Dependency Check: ${{ needs.dependency-check.result }}" >> security-summary.md
+        echo "- License Scan: ${{ needs.license-scan.result }}" >> security-summary.md
+        echo "" >> security-summary.md
+        echo "Generated: $(date)" >> security-summary.md
+
+    - name: Upload security summary
+      uses: actions/upload-artifact@v4
+      with:
+        name: security-summary
+        path: security-summary.md
+
+    - name: Comment on PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const summary = fs.readFileSync('security-summary.md', 'utf8');
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: summary
+          });
+
+  security-policy-check:
+    name: Security Policy Compliance
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Check for security policy
+      run: |
+        if [ ! -f SECURITY.md ]; then
+          echo "❌ SECURITY.md file is missing"
+          exit 1
+        fi
+        echo "✅ SECURITY.md file exists"
+
+    - name: Check for code of conduct
+      run: |
+        if [ ! -f CODE_OF_CONDUCT.md ]; then
+          echo "❌ CODE_OF_CONDUCT.md file is missing"
+          exit 1
+        fi
+        echo "✅ CODE_OF_CONDUCT.md file exists"
+
+    - name: Check for contributing guidelines
+      run: |
+        if [ ! -f CONTRIBUTING.md ]; then
+          echo "❌ CONTRIBUTING.md file is missing"
+          exit 1
+        fi
+        echo "✅ CONTRIBUTING.md file exists"
+
+    - name: Validate security configurations
+      run: |
+        # Check for secure headers in configs
+        echo "Checking security configurations..."
+        
+        # Check for secure Docker configurations
+        if [ -f docker/Dockerfile ]; then
+          if ! grep -q "USER" docker/Dockerfile; then
+            echo "⚠️  Warning: Dockerfile should specify a non-root USER"
+          fi
+        fi
+        
+        # Check for secure API configurations
+        if [ -f config/app_config.yml ]; then
+          if grep -qi "debug.*true" config/app_config.yml; then
+            echo "⚠️  Warning: Debug mode should be disabled in production"
+          fi
+        fi
+        
+        echo "Security configuration check completed"

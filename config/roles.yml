@@ -1,0 +1,474 @@
+# Role-Based Access Control (RBAC) Configuration
+# Detailed role definitions, permissions matrix, and access control policies
+
+# Role hierarchy and inheritance
+hierarchy:
+  # Roles inherit permissions from lower levels
+  # Level 1 (Basic)
+  - name: "guest"
+    level: 1
+    description: "Limited read-only access for demonstration purposes"
+    
+  - name: "viewer"
+    level: 2
+    description: "Read-only access to data and reports"
+    inherits_from: ["guest"]
+    
+  # Level 2 (Operational)
+  - name: "analyst"
+    level: 3
+    description: "Data analysis, templating, and basic export capabilities"
+    inherits_from: ["viewer"]
+    
+  - name: "operator"
+    level: 4
+    description: "Job execution, proxy management, and system operations"
+    inherits_from: ["analyst"]
+    
+  # Level 3 (Administrative)
+  - name: "admin"
+    level: 5
+    description: "System administration and user management"
+    inherits_from: ["operator"]
+    
+  - name: "superadmin"
+    level: 6
+    description: "Full system access and configuration"
+    inherits_from: ["admin"]
+
+# Detailed role definitions
+roles:
+  guest:
+    permissions:
+      # Basic read access for demos
+      - "api:access"
+      - "docs:read"
+      - "health:check"
+      - "metrics:read_public"
+    
+    restrictions:
+      rate_limit_tier: "demo"
+      max_concurrent_sessions: 1
+      allowed_endpoints: ["/docs", "/health", "/api/v1/status"]
+      data_access_scope: "sample_only"
+      
+  viewer:
+    permissions:
+      # Data access
+      - "data:read"
+      - "data:search"
+      - "data:filter"
+      - "data:preview"
+      
+      # Template access  
+      - "templates:read"
+      - "templates:list"
+      - "templates:validate"
+      
+      # Report access
+      - "reports:read"
+      - "reports:list"
+      - "reports:download"
+      
+      # Export access (own data only)
+      - "exports:read_own"
+      - "exports:download_own"
+      
+      # Job monitoring (read-only)
+      - "jobs:read_own"
+      - "jobs:status"
+      
+    restrictions:
+      rate_limit_tier: "basic"
+      max_concurrent_sessions: 3
+      data_access_scope: "assigned_projects"
+      export_formats: ["csv", "json"]
+      max_export_rows: 10000
+      
+  analyst:
+    permissions:
+      # Enhanced data access
+      - "data:analyze"
+      - "data:aggregate"
+      - "data:join"
+      - "data:transform"
+      
+      # Template management
+      - "templates:create"
+      - "templates:update_own"
+      - "templates:test"
+      - "templates:fork"
+      
+      # Advanced reporting
+      - "reports:create"
+      - "reports:schedule"
+      - "reports:share"
+      
+      # Enhanced exports
+      - "exports:create"
+      - "exports:schedule"
+      - "exports:read_team"
+      
+      # Query execution
+      - "queries:execute"
+      - "queries:save"
+      - "queries:optimize"
+      
+      # Data quality
+      - "dq:read"
+      - "dq:validate"
+      
+    restrictions:
+      rate_limit_tier: "professional"
+      max_concurrent_sessions: 5
+      data_access_scope: "team_projects"
+      export_formats: ["csv", "json", "excel", "parquet"]
+      max_export_rows: 100000
+      can_create_scheduled_jobs: true
+      
+  operator:
+    permissions:
+      # Data management
+      - "data:write"
+      - "data:bulk_import"
+      - "data:cleanup"
+      
+      # Template administration
+      - "templates:publish"
+      - "templates:delete_own"
+      - "templates:manage_versions"
+      
+      # Job management
+      - "jobs:create"
+      - "jobs:start"
+      - "jobs:stop"
+      - "jobs:restart"
+      - "jobs:schedule"
+      - "jobs:delete_own"
+      - "jobs:priority_set"
+      
+      # Proxy management
+      - "proxies:read"
+      - "proxies:test"
+      - "proxies:rotate"
+      - "proxies:blacklist"
+      
+      # System monitoring
+      - "monitoring:read"
+      - "monitoring:alerts_own"
+      
+      # Export management
+      - "exports:manage_own"
+      - "exports:bulk_create"
+      
+    restrictions:
+      rate_limit_tier: "enterprise"
+      max_concurrent_sessions: 10
+      data_access_scope: "all_projects"
+      max_export_rows: 1000000
+      can_manage_system_jobs: false
+      can_access_raw_logs: false
+      
+  admin:
+    permissions:
+      # User management
+      - "users:read"
+      - "users:create"
+      - "users:update"
+      - "users:disable"
+      - "users:reset_password"
+      
+      # Role management
+      - "roles:assign"
+      - "roles:revoke"
+      - "roles:create_custom"
+      
+      # System configuration
+      - "system:configure"
+      - "system:backup"
+      - "system:maintenance"
+      
+      # Advanced monitoring
+      - "monitoring:full_access"
+      - "monitoring:configure_alerts"
+      - "logs:read"
+      - "logs:search"
+      
+      # Template governance
+      - "templates:approve"
+      - "templates:delete_any"
+      - "templates:set_global"
+      
+      # Job administration
+      - "jobs:manage_all"
+      - "jobs:force_stop"
+      - "jobs:priority_override"
+      
+      # Proxy administration
+      - "proxies:add"
+      - "proxies:remove"
+      - "proxies:configure"
+      
+      # Export administration
+      - "exports:manage_all"
+      - "exports:configure_targets"
+      
+    restrictions:
+      rate_limit_tier: "unlimited"
+      max_concurrent_sessions: 20
+      data_access_scope: "global"
+      requires_mfa: true
+      session_timeout_minutes: 30
+      
+  superadmin:
+    permissions:
+      # Full system access
+      - "*:*"  # Wildcard - all permissions
+      
+      # Specific sensitive operations
+      - "system:restore"
+      - "system:emergency_stop"
+      - "system:reset"
+      - "database:direct_access"
+      - "secrets:read"
+      - "secrets:write"
+      - "audit:configure"
+      - "security:configure"
+      
+    restrictions:
+      rate_limit_tier: "unlimited"
+      max_concurrent_sessions: 5
+      requires_mfa: true
+      requires_approval_for: ["system:reset", "database:direct_access"]
+      session_timeout_minutes: 15
+      ip_whitelist_required: true
+
+# Permission categories and detailed definitions
+permissions:
+  categories:
+    api:
+      - "api:access"           # Basic API access
+      - "api:rate_limit_info"  # View rate limit status
+      
+    data:
+      - "data:read"            # Read data records
+      - "data:write"           # Create/update data
+      - "data:delete"          # Delete data records
+      - "data:search"          # Search functionality
+      - "data:filter"          # Apply filters
+      - "data:aggregate"       # Aggregation queries
+      - "data:analyze"         # Statistical analysis
+      - "data:transform"       # Data transformation
+      - "data:preview"         # Preview data samples
+      - "data:bulk_import"     # Bulk data operations
+      - "data:cleanup"         # Data cleanup operations
+      - "data:join"            # Cross-dataset joins
+      
+    templates:
+      - "templates:read"           # View templates
+      - "templates:create"         # Create new templates
+      - "templates:update_own"     # Update own templates
+      - "templates:update_any"     # Update any template
+      - "templates:delete_own"     # Delete own templates
+      - "templates:delete_any"     # Delete any template
+      - "templates:publish"        # Publish templates
+      - "templates:approve"        # Approve template changes
+      - "templates:test"           # Test templates
+      - "templates:validate"       # Validate template syntax
+      - "templates:fork"           # Fork existing templates
+      - "templates:set_global"     # Set as global template
+      - "templates:manage_versions" # Version management
+      
+    jobs:
+      - "jobs:read_own"        # View own jobs
+      - "jobs:read_team"       # View team jobs
+      - "jobs:read_all"        # View all jobs
+      - "jobs:create"          # Create new jobs
+      - "jobs:start"           # Start jobs
+      - "jobs:stop"            # Stop jobs
+      - "jobs:restart"         # Restart jobs
+      - "jobs:schedule"        # Schedule jobs
+      - "jobs:delete_own"      # Delete own jobs
+      - "jobs:delete_any"      # Delete any job
+      - "jobs:priority_set"    # Set job priority
+      - "jobs:priority_override" # Override job priority
+      - "jobs:force_stop"      # Force stop any job
+      - "jobs:manage_all"      # Full job management
+      - "jobs:status"          # View job status
+      
+    exports:
+      - "exports:read_own"         # View own exports
+      - "exports:read_team"        # View team exports
+      - "exports:read_all"         # View all exports
+      - "exports:create"           # Create exports
+      - "exports:schedule"         # Schedule exports
+      - "exports:download_own"     # Download own exports
+      - "exports:download_any"     # Download any export
+      - "exports:manage_own"       # Manage own exports
+      - "exports:manage_all"       # Manage all exports
+      - "exports:bulk_create"      # Bulk export operations
+      - "exports:configure_targets" # Configure export targets
+      
+    proxies:
+      - "proxies:read"         # View proxy status
+      - "proxies:test"         # Test proxy connectivity
+      - "proxies:rotate"       # Trigger proxy rotation
+      - "proxies:blacklist"    # Blacklist proxies
+      - "proxies:add"          # Add new proxies
+      - "proxies:remove"       # Remove proxies
+      - "proxies:configure"    # Configure proxy settings
+      
+    monitoring:
+      - "monitoring:read"              # Basic monitoring access
+      - "monitoring:alerts_own"        # Own alerts
+      - "monitoring:alerts_all"        # All alerts
+      - "monitoring:configure_alerts"  # Configure alerts
+      - "monitoring:full_access"       # Full monitoring access
+      - "metrics:read_public"          # Public metrics
+      - "metrics:read_private"         # Private metrics
+      - "logs:read"                    # Read logs
+      - "logs:search"                  # Search logs
+      
+    system:
+      - "system:configure"         # System configuration
+      - "system:backup"            # System backup
+      - "system:restore"           # System restore
+      - "system:maintenance"       # Maintenance mode
+      - "system:emergency_stop"    # Emergency shutdown
+      - "system:reset"             # System reset
+      - "health:check"             # Health checks
+      
+    users:
+      - "users:read"               # View users
+      - "users:create"             # Create users
+      - "users:update"             # Update users
+      - "users:disable"            # Disable users
+      - "users:reset_password"     # Reset passwords
+      
+    security:
+      - "roles:assign"             # Assign roles
+      - "roles:revoke"             # Revoke roles
+      - "roles:create_custom"      # Create custom roles
+      - "secrets:read"             # Read secrets
+      - "secrets:write"            # Write secrets
+      - "audit:read"               # Read audit logs
+      - "audit:configure"          # Configure auditing
+      - "security:configure"       # Security configuration
+
+# Access control policies
+policies:
+  # Data access scoping
+  data_scoping:
+    sample_only:
+      description: "Access to sample/demo data only"
+      filters:
+        - "dataset_type = 'sample'"
+        - "row_limit = 100"
+        
+    assigned_projects:
+      description: "Access to explicitly assigned projects"
+      filters:
+        - "project_id IN (user.assigned_projects)"
+        
+    team_projects:
+      description: "Access to team projects"
+      filters:
+        - "project_id IN (user.team.projects)"
+        
+    all_projects:
+      description: "Access to all projects within organization"
+      filters:
+        - "organization_id = user.organization_id"
+        
+    global:
+      description: "Unrestricted access"
+      filters: []
+  
+  # Rate limiting tiers
+  rate_limits:
+    demo:
+      requests_per_minute: 5
+      requests_per_hour: 50
+      requests_per_day: 200
+      
+    basic:
+      requests_per_minute: 20
+      requests_per_hour: 500
+      requests_per_day: 2000
+      
+    professional:
+      requests_per_minute: 60
+      requests_per_hour: 2000
+      requests_per_day: 10000
+      
+    enterprise:
+      requests_per_minute: 200
+      requests_per_hour: 10000
+      requests_per_day: 100000
+      
+    unlimited:
+      requests_per_minute: 1000
+      requests_per_hour: 50000
+      requests_per_day: 1000000
+
+# Special access rules
+special_rules:
+  # Emergency access
+  emergency:
+    enabled: true
+    roles_with_emergency_access: ["admin", "superadmin"]
+    emergency_permissions:
+      - "system:emergency_stop"
+      - "jobs:force_stop_all"
+      - "monitoring:emergency_alerts"
+    requires_justification: true
+    auto_expires_minutes: 60
+    
+  # Temporary elevation
+  temporary_elevation:
+    enabled: true
+    max_duration_hours: 24
+    requires_approval: true
+    approvers: ["admin", "superadmin"]
+    audit_enhanced: true
+    
+  # Break glass access
+  break_glass:
+    enabled: true
+    roles: ["superadmin"]
+    requires_multiple_approvers: 2
+    max_duration_minutes: 30
+    full_audit_trail: true
+    automatic_notifications: true
+
+# Role assignment rules
+assignment:
+  # Default assignments
+  defaults:
+    new_user_role: "viewer"
+    service_account_role: "operator"
+    
+  # Auto-assignment rules
+  auto_assignment:
+    enabled: true
+    rules:
+      - condition: "user.email.endswith('@company.com')"
+        role: "analyst"
+      - condition: "user.department == 'data'"
+        role: "analyst"
+      - condition: "user.department == 'ops'"
+        role: "operator"
+        
+  # Assignment restrictions
+  restrictions:
+    # Who can assign which roles
+    admin:
+      can_assign: ["guest", "viewer", "analyst", "operator"]
+    superadmin:
+      can_assign: ["guest", "viewer", "analyst", "operator", "admin"]
+      
+    # Maximum number of users per role
+    limits:
+      superadmin: 3
+      admin: 10
+      operator: 50

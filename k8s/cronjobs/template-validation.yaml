@@ -1,0 +1,748 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: template-validation
+  namespace: scrapy-system
+  labels:
+    app: scrapy
+    component: validation
+    tier: ops
+spec:
+  schedule: "0 */4 * * *"  # Every 4 hours
+  timeZone: "UTC"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 5
+  startingDeadlineSeconds: 900
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: scrapy
+            component: validation
+            cronjob: template-validation
+        spec:
+          restartPolicy: OnFailure
+          serviceAccountName: scrapy-validation
+          containers:
+          - name: template-validator
+            image: python:3.11-alpine
+            imagePullPolicy: IfNotPresent
+            env:
+            - name: POSTGRES_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: host
+            - name: POSTGRES_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: port
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: password
+            - name: POSTGRES_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: database
+            - name: VALIDATION_TIMEOUT_SECONDS
+              value: "60"
+            - name: MAX_CONCURRENT_VALIDATIONS
+              value: "5"
+            - name: DRIFT_THRESHOLD_PERCENT
+              value: "20"
+            - name: SLACK_WEBHOOK_URL
+              valueFrom:
+                secretKeyRef:
+                  name: notification-secrets
+                  key: slack-webhook-url
+                  optional: true
+            command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              
+              # Install required packages
+              pip install --no-cache-dir psycopg2-binary requests beautifulsoup4 lxml selenium webdriver-manager aiohttp asyncio jsonschema
+              
+              # Create template validation script
+              cat > /tmp/template_validator.py << 'EOF'
+              import asyncio
+              import aiohttp
+              import psycopg2
+              import json
+              import os
+              import time
+              import logging
+              from datetime import datetime, timedelta
+              from bs4 import BeautifulSoup
+              from jsonschema import validate, ValidationError
+              import hashlib
+              from urllib.parse import urljoin, urlparse
+              import re
+              
+              logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+              logger = logging.getLogger(__name__)
+              
+              class TemplateValidator:
+                  def __init__(self):
+                      self.db_config = {
+                          'host': os.getenv('POSTGRES_HOST'),
+                          'port': os.getenv('POSTGRES_PORT'),
+                          'user': os.getenv('POSTGRES_USER'),
+                          'password': os.getenv('POSTGRES_PASSWORD'),
+                          'database': os.getenv('POSTGRES_DATABASE')
+                      }
+                      
+                      self.validation_timeout = int(os.getenv('VALIDATION_TIMEOUT_SECONDS', '60'))
+                      self.max_concurrent = int(os.getenv('MAX_CONCURRENT_VALIDATIONS', '5'))
+                      self.drift_threshold = float(os.getenv('DRIFT_THRESHOLD_PERCENT', '20'))
+                      self.slack_webhook = os.getenv('SLACK_WEBHOOK_URL')
+              
+                  def get_database_connection(self):
+                      return psycopg2.connect(**self.db_config)
+              
+                  def get_active_templates(self):
+                      """Get all active templates that need validation"""
+                      conn = self.get_database_connection()
+                      try:
+                          with conn.cursor() as cursor:
+                              cursor.execute("""
+                                  SELECT 
+                                      t.id,
+                                      t.site_id,
+                                      t.name,
+                                      t.version,
+                                      t.template_type,
+                                      t.selector_config,
+                                      t.validation_rules,
+                                      t.test_urls,
+                                      t.expected_fields,
+                                      s.base_url,
+                                      s.name as site_name,
+                                      s.custom_headers,
+                                      s.user_agent_rotation
+                                  FROM templates t
+                                  JOIN sites s ON t.site_id = s.id
+                                  WHERE t.is_active = true 
+                                  AND s.status = 'active'
+                                  AND (
+                                      t.updated_at >= NOW() - INTERVAL '24 hours'
+                                      OR NOT EXISTS (
+                                          SELECT 1 FROM performance_metrics pm
+                                          WHERE pm.tags->>'template_id' = t.id::text
+                                          AND pm.metric_name = 'template_validation_last_run'
+                                          AND pm.recorded_at >= NOW() - INTERVAL '4 hours'
+                                      )
+                                  )
+                                  ORDER BY t.updated_at DESC
+                              """)
+                              return cursor.fetchall()
+                      finally:
+                          conn.close()
+              
+                  async def validate_template(self, session, template_info):
+                      """Validate a single template against its test URLs"""
+                      (template_id, site_id, name, version, template_type, selector_config, 
+                       validation_rules, test_urls, expected_fields, base_url, site_name, 
+                       custom_headers, user_agent_rotation) = template_info
+                      
+                      results = {
+                          'template_id': template_id,
+                          'template_name': name,
+                          'site_name': site_name,
+                          'validation_status': 'unknown',
+                          'tests_passed': 0,
+                          'tests_failed': 0,
+                          'drift_detected': False,
+                          'errors': [],
+                          'warnings': [],
+                          'performance_metrics': {},
+                          'extracted_samples': []
+                      }
+                      
+                      if not test_urls:
+                          results['warnings'].append("No test URLs defined for template")
+                          results['validation_status'] = 'warning'
+                          return results
+                      
+                      try:
+                          # Parse selector configuration
+                          selectors = json.loads(selector_config) if isinstance(selector_config, str) else selector_config
+                          
+                          # Parse validation rules
+                          validation_schema = None
+                          if validation_rules:
+                              validation_schema = json.loads(validation_rules) if isinstance(validation_rules, str) else validation_rules
+                          
+                          # Setup headers
+                          headers = {
+                              'User-Agent': 'TemplateValidator/1.0 (Scrapy Template Validation)',
+                              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                              'Accept-Language': 'en-US,en;q=0.5',
+                              'Accept-Encoding': 'gzip, deflate',
+                              'DNT': '1',
+                              'Connection': 'keep-alive',
+                              'Cache-Control': 'no-cache'
+                          }
+                          
+                          if custom_headers:
+                              custom = json.loads(custom_headers) if isinstance(custom_headers, str) else custom_headers
+                              headers.update(custom)
+                          
+                          # Test each URL
+                          for i, test_url in enumerate(test_urls):
+                              try:
+                                  # Resolve relative URLs
+                                  if not test_url.startswith(('http://', 'https://')):
+                                      test_url = urljoin(base_url, test_url)
+                                  
+                                  logger.info(f"Testing template {name} on URL: {test_url}")
+                                  
+                                  start_time = time.time()
+                                  
+                                  async with session.get(
+                                      test_url,
+                                      headers=headers,
+                                      timeout=aiohttp.ClientTimeout(total=self.validation_timeout),
+                                      allow_redirects=True
+                                  ) as response:
+                                      response_time = time.time() - start_time
+                                      
+                                      if response.status != 200:
+                                          results['tests_failed'] += 1
+                                          results['errors'].append(f"HTTP {response.status} for {test_url}")
+                                          continue
+                                      
+                                      html_content = await response.text()
+                                      
+                                      # Parse HTML
+                                      soup = BeautifulSoup(html_content, 'lxml')
+                                      
+                                      # Extract data using selectors
+                                      extracted_data = await self.extract_data_with_selectors(soup, selectors)
+                                      
+                                      # Validate extracted data
+                                      validation_result = self.validate_extracted_data(
+                                          extracted_data, 
+                                          validation_schema, 
+                                          expected_fields
+                                      )
+                                      
+                                      if validation_result['valid']:
+                                          results['tests_passed'] += 1
+                                      else:
+                                          results['tests_failed'] += 1
+                                          results['errors'].extend(validation_result['errors'])
+                                      
+                                      # Check for template drift
+                                      drift_result = await self.check_template_drift(
+                                          template_id, 
+                                          html_content, 
+                                          extracted_data
+                                      )
+                                      
+                                      if drift_result['drift_detected']:
+                                          results['drift_detected'] = True
+                                          results['warnings'].extend(drift_result['warnings'])
+                                      
+                                      # Store performance metrics
+                                      results['performance_metrics'][f'url_{i+1}_response_time'] = response_time
+                                      results['performance_metrics'][f'url_{i+1}_content_size'] = len(html_content)
+                                      results['performance_metrics'][f'url_{i+1}_extracted_fields'] = len(extracted_data)
+                                      
+                                      # Store sample extracted data
+                                      sample_data = {
+                                          'url': test_url,
+                                          'extracted_data': extracted_data,
+                                          'response_time': response_time,
+                                          'timestamp': datetime.now().isoformat()
+                                      }
+                                      results['extracted_samples'].append(sample_data)
+                              
+                              except asyncio.TimeoutError:
+                                  results['tests_failed'] += 1
+                                  results['errors'].append(f"Timeout for {test_url}")
+                              
+                              except Exception as e:
+                                  results['tests_failed'] += 1
+                                  results['errors'].append(f"Error testing {test_url}: {str(e)}")
+                              
+                              # Small delay between requests
+                              await asyncio.sleep(1)
+                          
+                          # Determine overall validation status
+                          total_tests = results['tests_passed'] + results['tests_failed']
+                          if total_tests == 0:
+                              results['validation_status'] = 'no_tests'
+                          elif results['tests_failed'] == 0:
+                              results['validation_status'] = 'passed'
+                          elif results['tests_passed'] / total_tests >= 0.8:
+                              results['validation_status'] = 'warning'
+                          else:
+                              results['validation_status'] = 'failed'
+                      
+                      except Exception as e:
+                          results['validation_status'] = 'error'
+                          results['errors'].append(f"Template validation error: {str(e)}")
+                      
+                      return results
+              
+                  async def extract_data_with_selectors(self, soup, selectors):
+                      """Extract data using configured selectors"""
+                      extracted_data = {}
+                      
+                      try:
+                          for field_name, selector_config in selectors.items():
+                              if isinstance(selector_config, str):
+                                  # Simple CSS selector
+                                  elements = soup.select(selector_config)
+                                  extracted_data[field_name] = [elem.get_text(strip=True) for elem in elements]
+                              
+                              elif isinstance(selector_config, dict):
+                                  # Advanced selector configuration
+                                  selector = selector_config.get('selector')
+                                  attribute = selector_config.get('attribute', 'text')
+                                  transform = selector_config.get('transform')
+                                  multiple = selector_config.get('multiple', True)
+                                  
+                                  if not selector:
+                                      continue
+                                  
+                                  elements = soup.select(selector)
+                                  
+                                  if not multiple and elements:
+                                      elements = elements[:1]
+                                  
+                                  values = []
+                                  for elem in elements:
+                                      if attribute == 'text':
+                                          value = elem.get_text(strip=True)
+                                      else:
+                                          value = elem.get(attribute, '')
+                                      
+                                      # Apply transformation if specified
+                                      if transform and value:
+                                          value = self.apply_transformation(value, transform)
+                                      
+                                      if value:
+                                          values.append(value)
+                                  
+                                  extracted_data[field_name] = values if multiple else (values[0] if values else None)
+                      
+                      except Exception as e:
+                          logger.error(f"Error extracting data with selectors: {e}")
+                      
+                      return extracted_data
+              
+                  def apply_transformation(self, value, transform):
+                      """Apply transformation rules to extracted values"""
+                      try:
+                          if transform.get('type') == 'regex':
+                              pattern = transform.get('pattern')
+                              if pattern:
+                                  match = re.search(pattern, value)
+                                  if match:
+                                      return match.group(1) if match.groups() else match.group(0)
+                          
+                          elif transform.get('type') == 'replace':
+                              old = transform.get('old', '')
+                              new = transform.get('new', '')
+                              return value.replace(old, new)
+                          
+                          elif transform.get('type') == 'strip':
+                              chars = transform.get('chars')
+                              return value.strip(chars) if chars else value.strip()
+                          
+                          elif transform.get('type') == 'lower':
+                              return value.lower()
+                          
+                          elif transform.get('type') == 'upper':
+                              return value.upper()
+                      
+                      except Exception as e:
+                          logger.error(f"Error applying transformation: {e}")
+                      
+                      return value
+              
+                  def validate_extracted_data(self, extracted_data, validation_schema, expected_fields):
+                      """Validate extracted data against schema and expected fields"""
+                      result = {
+                          'valid': True,
+                          'errors': [],
+                          'warnings': []
+                      }
+                      
+                      try:
+                          # Check expected fields
+                          if expected_fields:
+                              for field in expected_fields:
+                                  if field not in extracted_data:
+                                      result['valid'] = False
+                                      result['errors'].append(f"Missing expected field: {field}")
+                                  elif not extracted_data[field]:
+                                      result['warnings'].append(f"Empty value for expected field: {field}")
+                          
+                          # Validate against JSON schema if provided
+                          if validation_schema:
+                              try:
+                                  validate(instance=extracted_data, schema=validation_schema)
+                              except ValidationError as e:
+                                  result['valid'] = False
+                                  result['errors'].append(f"Schema validation error: {e.message}")
+                      
+                      except Exception as e:
+                          result['valid'] = False
+                          result['errors'].append(f"Validation error: {str(e)}")
+                      
+                      return result
+              
+                  async def check_template_drift(self, template_id, html_content, extracted_data):
+                      """Check for template drift by comparing with historical data"""
+                      result = {
+                          'drift_detected': False,
+                          'warnings': [],
+                          'drift_percentage': 0
+                      }
+                      
+                      try:
+                          # Calculate content hash for drift detection
+                          content_hash = hashlib.md5(html_content.encode()).hexdigest()
+                          
+                          # Get historical data
+                          conn = self.get_database_connection()
+                          try:
+                              with conn.cursor() as cursor:
+                                  # Get recent extractions for this template
+                                  cursor.execute("""
+                                      SELECT structured_data
+                                      FROM processed_data pd
+                                      JOIN raw_data rd ON pd.raw_data_id = rd.id
+                                      JOIN scraping_jobs sj ON rd.job_id = sj.id
+                                      WHERE sj.template_id = %s
+                                      AND pd.processed_at >= NOW() - INTERVAL '7 days'
+                                      AND pd.validation_status = 'valid'
+                                      ORDER BY pd.processed_at DESC
+                                      LIMIT 50
+                                  """, (template_id,))
+                                  
+                                  historical_data = cursor.fetchall()
+                                  
+                                  if historical_data:
+                                      # Compare field counts and structure
+                                      historical_fields = set()
+                                      for (structured_data,) in historical_data:
+                                          if structured_data:
+                                              data = json.loads(structured_data) if isinstance(structured_data, str) else structured_data
+                                              historical_fields.update(data.keys())
+                                      
+                                      current_fields = set(extracted_data.keys())
+                                      
+                                      # Calculate field drift
+                                      missing_fields = historical_fields - current_fields
+                                      new_fields = current_fields - historical_fields
+                                      
+                                      if missing_fields:
+                                          drift_percentage = len(missing_fields) / len(historical_fields) * 100
+                                          if drift_percentage > self.drift_threshold:
+                                              result['drift_detected'] = True
+                                              result['warnings'].append(f"Missing {len(missing_fields)} historical fields: {', '.join(list(missing_fields)[:5])}")
+                                              result['drift_percentage'] = drift_percentage
+                                      
+                                      if new_fields:
+                                          result['warnings'].append(f"New fields detected: {', '.join(list(new_fields)[:5])}")
+                          
+                          finally:
+                              conn.close()
+                      
+                      except Exception as e:
+                          logger.error(f"Error checking template drift: {e}")
+                      
+                      return result
+              
+                  async def run_validation(self):
+                      """Run validation on all active templates"""
+                      logger.info("Starting template validation...")
+                      
+                      templates = self.get_active_templates()
+                      logger.info(f"Found {len(templates)} templates to validate")
+                      
+                      if not templates:
+                          logger.info("No templates found for validation")
+                          return
+                      
+                      # Create semaphore to limit concurrent validations
+                      semaphore = asyncio.Semaphore(self.max_concurrent)
+                      
+                      async def validate_with_semaphore(session, template_info):
+                          async with semaphore:
+                              return await self.validate_template(session, template_info)
+                      
+                      # Run validations concurrently
+                      connector = aiohttp.TCPConnector(limit=self.max_concurrent)
+                      timeout = aiohttp.ClientTimeout(total=self.validation_timeout * 2)
+                      
+                      async with aiohttp.ClientSession(
+                          connector=connector,
+                          timeout=timeout
+                      ) as session:
+                          tasks = [validate_with_semaphore(session, template) for template in templates]
+                          results = await asyncio.gather(*tasks, return_exceptions=True)
+                      
+                      # Process results
+                      await self.process_validation_results(results)
+              
+                  async def process_validation_results(self, results):
+                      """Process validation results and update database"""
+                      conn = self.get_database_connection()
+                      
+                      try:
+                          with conn.cursor() as cursor:
+                              validation_summary = {
+                                  'total_templates': len(results),
+                                  'passed': 0,
+                                  'failed': 0,
+                                  'warnings': 0,
+                                  'errors': 0,
+                                  'drift_detected': 0
+                              }
+                              
+                              alerts = []
+                              
+                              for result in results:
+                                  if isinstance(result, Exception):
+                                      logger.error(f"Validation error: {result}")
+                                      validation_summary['errors'] += 1
+                                      continue
+                                  
+                                  template_id = result['template_id']
+                                  status = result['validation_status']
+                                  
+                                  # Update summary
+                                  if status == 'passed':
+                                      validation_summary['passed'] += 1
+                                  elif status == 'failed':
+                                      validation_summary['failed'] += 1
+                                  elif status == 'warning':
+                                      validation_summary['warnings'] += 1
+                                  else:
+                                      validation_summary['errors'] += 1
+                                  
+                                  if result['drift_detected']:
+                                      validation_summary['drift_detected'] += 1
+                                  
+                                  # Store validation metrics
+                                  timestamp = datetime.now()
+                                  
+                                  cursor.execute("""
+                                      INSERT INTO performance_metrics (metric_name, metric_value, metric_unit, tags, recorded_at)
+                                      VALUES (%s, %s, %s, %s, %s)
+                                  """, (
+                                      'template_validation_status',
+                                      1 if status == 'passed' else 0,
+                                      'boolean',
+                                      json.dumps({'template_id': template_id, 'status': status}),
+                                      timestamp
+                                  ))
+                                  
+                                  cursor.execute("""
+                                      INSERT INTO performance_metrics (metric_name, metric_value, metric_unit, tags, recorded_at)
+                                      VALUES (%s, %s, %s, %s, %s)
+                                  """, (
+                                      'template_validation_last_run',
+                                      time.time(),
+                                      'timestamp',
+                                      json.dumps({'template_id': template_id}),
+                                      timestamp
+                                  ))
+                                  
+                                  # Store performance metrics
+                                  for metric_name, metric_value in result['performance_metrics'].items():
+                                      cursor.execute("""
+                                          INSERT INTO performance_metrics (metric_name, metric_value, metric_unit, tags, recorded_at)
+                                          VALUES (%s, %s, %s, %s, %s)
+                                      """, (
+                                          f'template_{metric_name}',
+                                          metric_value,
+                                          'seconds' if 'time' in metric_name else 'count',
+                                          json.dumps({'template_id': template_id}),
+                                          timestamp
+                                      ))
+                                  
+                                  # Create alerts for failures and drift
+                                  if status == 'failed':
+                                      alerts.append({
+                                          'type': 'template_validation_failed',
+                                          'template_id': template_id,
+                                          'template_name': result['template_name'],
+                                          'site_name': result['site_name'],
+                                          'errors': result['errors'][:3]  # Limit to first 3 errors
+                                      })
+                                  
+                                  if result['drift_detected']:
+                                      alerts.append({
+                                          'type': 'template_drift_detected',
+                                          'template_id': template_id,
+                                          'template_name': result['template_name'],
+                                          'site_name': result['site_name'],
+                                          'warnings': result['warnings'][:3]
+                                      })
+                              
+                              conn.commit()
+                              
+                              # Log summary
+                              logger.info("Template Validation Summary:")
+                              logger.info(f"  Total: {validation_summary['total_templates']}")
+                              logger.info(f"  Passed: {validation_summary['passed']}")
+                              logger.info(f"  Failed: {validation_summary['failed']}")
+                              logger.info(f"  Warnings: {validation_summary['warnings']}")
+                              logger.info(f"  Errors: {validation_summary['errors']}")
+                              logger.info(f"  Drift Detected: {validation_summary['drift_detected']}")
+                              
+                              # Send alerts
+                              if alerts and self.slack_webhook:
+                                  await self.send_alerts(alerts, validation_summary)
+                      
+                      except Exception as e:
+                          logger.error(f"Error processing validation results: {e}")
+                          conn.rollback()
+                          raise
+                      finally:
+                          conn.close()
+              
+                  async def send_alerts(self, alerts, summary):
+                      """Send validation alerts to Slack"""
+                      try:
+                          if not self.slack_webhook:
+                              return
+                          
+                          # Prepare alert message
+                          alert_message = f"🔍 Template Validation Report\n\n"
+                          alert_message += f"📊 Summary: {summary['passed']} passed, {summary['failed']} failed, "
+                          alert_message += f"{summary['warnings']} warnings, {summary['drift_detected']} drift detected\n\n"
+                          
+                          if summary['failed'] > 0 or summary['drift_detected'] > 0:
+                              alert_message += "⚠️ Issues Detected:\n"
+                              
+                              for alert in alerts[:5]:  # Limit to 5 alerts
+                                  if alert['type'] == 'template_validation_failed':
+                                      alert_message += f"❌ **{alert['template_name']}** ({alert['site_name']}) - Validation Failed\n"
+                                      for error in alert['errors']:
+                                          alert_message += f"   • {error}\n"
+                                  
+                                  elif alert['type'] == 'template_drift_detected':
+                                      alert_message += f"📈 **{alert['template_name']}** ({alert['site_name']}) - Drift Detected\n"
+                                      for warning in alert['warnings']:
+                                          alert_message += f"   • {warning}\n"
+                              
+                              if len(alerts) > 5:
+                                  alert_message += f"... and {len(alerts) - 5} more issues\n"
+                          else:
+                              alert_message += "✅ All templates validated successfully!"
+                          
+                          # Send to Slack
+                          payload = {"text": alert_message}
+                          
+                          async with aiohttp.ClientSession() as session:
+                              async with session.post(self.slack_webhook, json=payload) as response:
+                                  if response.status == 200:
+                                      logger.info("Validation alerts sent to Slack")
+                                  else:
+                                      logger.warning(f"Failed to send alerts to Slack: {response.status}")
+                      
+                      except Exception as e:
+                          logger.error(f"Error sending alerts: {e}")
+              
+              async def main():
+                  validator = TemplateValidator()
+                  await validator.run_validation()
+                  logger.info("Template validation completed")
+              
+              if __name__ == "__main__":
+                  asyncio.run(main())
+              EOF
+              
+              # Run the template validation
+              python /tmp/template_validator.py
+            
+            resources:
+              requests:
+                memory: "256Mi"
+                cpu: "200m"
+              limits:
+                memory: "512Mi"
+                cpu: "500m"
+          
+          # Security context
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 999
+            fsGroup: 999
+            seccompProfile:
+              type: RuntimeDefault
+          
+          # Node selection
+          nodeSelector:
+            node-type: workers
+          
+          tolerations:
+          - key: "scrapy/ops"
+            operator: "Equal"
+            value: "true"
+            effect: "NoSchedule"
+
+---
+# ServiceAccount for template validation
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: scrapy-validation
+  namespace: scrapy-system
+  labels:
+    app: scrapy
+    component: validation
+
+---
+# Role for template validation
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: scrapy-validation
+  namespace: scrapy-system
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "list"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list"]
+- apiGroups: ["batch"]
+  resources: ["jobs", "cronjobs"]
+  verbs: ["get", "list"]
+
+---
+# RoleBinding for validation ServiceAccount
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: scrapy-validation
+  namespace: scrapy-system
+subjects:
+- kind: ServiceAccount
+  name: scrapy-validation
+  namespace: scrapy-system
+roleRef:
+  kind: Role
+  name: scrapy-validation
+  apiGroup: rbac.authorization.k8s.io

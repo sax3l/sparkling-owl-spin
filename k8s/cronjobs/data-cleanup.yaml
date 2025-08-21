@@ -1,0 +1,568 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: data-cleanup
+  namespace: scrapy-system
+  labels:
+    app: scrapy
+    component: cleanup
+    tier: ops
+spec:
+  schedule: "0 3 * * *"  # Daily at 3 AM
+  timeZone: "UTC"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 5
+  startingDeadlineSeconds: 600
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: scrapy
+            component: cleanup
+            cronjob: data-cleanup
+        spec:
+          restartPolicy: OnFailure
+          serviceAccountName: scrapy-cleanup
+          containers:
+          - name: cleanup
+            image: postgres:15-alpine
+            imagePullPolicy: IfNotPresent
+            env:
+            - name: PGHOST
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: host
+            - name: PGPORT
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: port
+            - name: PGUSER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: username
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: password
+            - name: PGDATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: database
+            - name: RAW_DATA_RETENTION_DAYS
+              value: "90"
+            - name: AUDIT_LOG_RETENTION_DAYS
+              value: "365"
+            - name: FAILED_JOB_RETENTION_DAYS
+              value: "30"
+            - name: PERFORMANCE_METRICS_RETENTION_DAYS
+              value: "90"
+            - name: TEMP_DATA_RETENTION_HOURS
+              value: "24"
+            - name: SLACK_WEBHOOK_URL
+              valueFrom:
+                secretKeyRef:
+                  name: notification-secrets
+                  key: slack-webhook-url
+                  optional: true
+            command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              
+              echo "Starting data cleanup process..."
+              START_TIME=$(date)
+              
+              # Function to execute SQL and log results
+              execute_cleanup() {
+                local description="$1"
+                local sql="$2"
+                
+                echo "Executing: $description"
+                
+                # Execute and capture affected rows
+                RESULT=$(psql -v ON_ERROR_STOP=1 -t -c "$sql" | xargs)
+                
+                if [ -n "$RESULT" ] && [ "$RESULT" != "0" ]; then
+                  echo "  ✓ $description: $RESULT rows affected"
+                  return 0
+                else
+                  echo "  - $description: No rows affected"
+                  return 0
+                fi
+              }
+              
+              # 1. Clean up old raw data
+              execute_cleanup "Clean old raw data (${RAW_DATA_RETENTION_DAYS} days)" "
+                WITH deleted AS (
+                  DELETE FROM raw_data 
+                  WHERE scraped_at < NOW() - INTERVAL '${RAW_DATA_RETENTION_DAYS} days'
+                  AND processing_status IN ('completed', 'failed', 'skipped')
+                  RETURNING id
+                )
+                SELECT COUNT(*) FROM deleted;
+              "
+              
+              # 2. Clean up old audit logs
+              execute_cleanup "Clean old audit logs (${AUDIT_LOG_RETENTION_DAYS} days)" "
+                WITH deleted AS (
+                  DELETE FROM audit_logs 
+                  WHERE changed_at < NOW() - INTERVAL '${AUDIT_LOG_RETENTION_DAYS} days'
+                  RETURNING id
+                )
+                SELECT COUNT(*) FROM deleted;
+              "
+              
+              # 3. Clean up failed scraping jobs
+              execute_cleanup "Clean failed scraping jobs (${FAILED_JOB_RETENTION_DAYS} days)" "
+                WITH deleted AS (
+                  DELETE FROM scraping_jobs 
+                  WHERE status = 'failed' 
+                  AND updated_at < NOW() - INTERVAL '${FAILED_JOB_RETENTION_DAYS} days'
+                  RETURNING id
+                )
+                SELECT COUNT(*) FROM deleted;
+              "
+              
+              # 4. Clean up old performance metrics
+              execute_cleanup "Clean old performance metrics (${PERFORMANCE_METRICS_RETENTION_DAYS} days)" "
+                WITH deleted AS (
+                  DELETE FROM performance_metrics 
+                  WHERE recorded_at < NOW() - INTERVAL '${PERFORMANCE_METRICS_RETENTION_DAYS} days'
+                  RETURNING id
+                )
+                SELECT COUNT(*) FROM deleted;
+              "
+              
+              # 5. Clean up temporary/expired data
+              execute_cleanup "Clean expired processed data" "
+                WITH deleted AS (
+                  DELETE FROM processed_data 
+                  WHERE expires_at IS NOT NULL 
+                  AND expires_at < NOW()
+                  RETURNING id
+                )
+                SELECT COUNT(*) FROM deleted;
+              "
+              
+              # 6. Clean up orphaned export records
+              execute_cleanup "Clean orphaned export records" "
+                WITH deleted AS (
+                  DELETE FROM export_records er
+                  WHERE NOT EXISTS (
+                    SELECT 1 FROM processed_data pd WHERE pd.id = er.processed_data_id
+                  )
+                  RETURNING id
+                )
+                SELECT COUNT(*) FROM deleted;
+              "
+              
+              # 7. Clean up old completed export jobs
+              execute_cleanup "Clean old completed export jobs (30 days)" "
+                WITH deleted AS (
+                  DELETE FROM export_jobs 
+                  WHERE status = 'completed' 
+                  AND last_export_at < NOW() - INTERVAL '30 days'
+                  RETURNING id
+                )
+                SELECT COUNT(*) FROM deleted;
+              "
+              
+              # 8. Clean up temporary files and cache data (if stored in DB)
+              execute_cleanup "Clean temporary data (${TEMP_DATA_RETENTION_HOURS} hours)" "
+                WITH deleted AS (
+                  DELETE FROM raw_data 
+                  WHERE content_type LIKE '%temp%' 
+                  AND scraped_at < NOW() - INTERVAL '${TEMP_DATA_RETENTION_HOURS} hours'
+                  RETURNING id
+                )
+                SELECT COUNT(*) FROM deleted;
+              "
+              
+              # 9. Update proxy statistics (remove old failure records)
+              execute_cleanup "Clean old proxy failure records" "
+                UPDATE proxies 
+                SET failure_count = GREATEST(0, failure_count - 1),
+                    monthly_usage = 0
+                WHERE last_successful_use < NOW() - INTERVAL '7 days'
+                AND failure_count > 0;
+                
+                SELECT COUNT(*) FROM proxies 
+                WHERE last_successful_use < NOW() - INTERVAL '7 days';
+              "
+              
+              # 10. Archive old partitions (PostgreSQL specific)
+              echo "Checking for old partitions to drop..."
+              
+              # Get list of old partitions for raw_data
+              OLD_PARTITIONS=$(psql -t -c "
+                SELECT schemaname||'.'||tablename 
+                FROM pg_tables 
+                WHERE tablename ~ '^raw_data_y[0-9]{4}m[0-9]{2}$'
+                AND tablename < 'raw_data_y' || EXTRACT(YEAR FROM (NOW() - INTERVAL '${RAW_DATA_RETENTION_DAYS} days'))::text || 'm' || LPAD(EXTRACT(MONTH FROM (NOW() - INTERVAL '${RAW_DATA_RETENTION_DAYS} days'))::text, 2, '0')
+              " | xargs)
+              
+              if [ -n "$OLD_PARTITIONS" ]; then
+                for partition in $OLD_PARTITIONS; do
+                  echo "Dropping old partition: $partition"
+                  psql -c "DROP TABLE IF EXISTS $partition CASCADE;"
+                done
+              else
+                echo "No old partitions to drop"
+              fi
+              
+              # 11. Vacuum and analyze tables after cleanup
+              echo "Running VACUUM ANALYZE on cleaned tables..."
+              
+              TABLES_TO_VACUUM="raw_data processed_data audit_logs performance_metrics scraping_jobs export_jobs export_records proxies"
+              
+              for table in $TABLES_TO_VACUUM; do
+                echo "VACUUM ANALYZE $table..."
+                psql -c "VACUUM ANALYZE $table;" || echo "Warning: Could not vacuum $table"
+              done
+              
+              # 12. Update table statistics
+              echo "Updating database statistics..."
+              psql -c "ANALYZE;" || echo "Warning: Could not update statistics"
+              
+              # 13. Check database size after cleanup
+              DB_SIZE_AFTER=$(psql -t -c "
+                SELECT pg_size_pretty(pg_database_size(current_database()));
+              " | xargs)
+              
+              echo "Database size after cleanup: $DB_SIZE_AFTER"
+              
+              # 14. Generate cleanup report
+              CLEANUP_REPORT=$(psql -t -c "
+                WITH stats AS (
+                  SELECT 
+                    'raw_data' as table_name,
+                    COUNT(*) as row_count,
+                    pg_size_pretty(pg_total_relation_size('raw_data')) as size
+                  FROM raw_data
+                  UNION ALL
+                  SELECT 
+                    'processed_data',
+                    COUNT(*),
+                    pg_size_pretty(pg_total_relation_size('processed_data'))
+                  FROM processed_data
+                  UNION ALL
+                  SELECT 
+                    'audit_logs',
+                    COUNT(*),
+                    pg_size_pretty(pg_total_relation_size('audit_logs'))
+                  FROM audit_logs
+                  UNION ALL
+                  SELECT 
+                    'scraping_jobs',
+                    COUNT(*),
+                    pg_size_pretty(pg_total_relation_size('scraping_jobs'))
+                  FROM scraping_jobs
+                )
+                SELECT table_name || ': ' || row_count || ' rows (' || size || ')'
+                FROM stats;
+              ")
+              
+              END_TIME=$(date)
+              
+              echo "Data cleanup completed successfully"
+              echo "Started: $START_TIME"
+              echo "Completed: $END_TIME"
+              echo ""
+              echo "Table Statistics After Cleanup:"
+              echo "$CLEANUP_REPORT"
+              
+              # 15. Send notification if webhook is configured
+              if [ -n "$SLACK_WEBHOOK_URL" ]; then
+                NOTIFICATION_TEXT="✅ Data cleanup completed successfully
+              
+              📊 Database size: $DB_SIZE_AFTER
+              ⏱️ Duration: $START_TIME to $END_TIME
+              
+              📈 Current table sizes:
+              $CLEANUP_REPORT"
+                
+                curl -X POST -H 'Content-type: application/json' \
+                  --data "{\"text\":\"$NOTIFICATION_TEXT\"}" \
+                  "$SLACK_WEBHOOK_URL" || echo "Warning: Could not send notification"
+              fi
+              
+              echo "Cleanup process finished"
+            
+            resources:
+              requests:
+                memory: "128Mi"
+                cpu: "100m"
+              limits:
+                memory: "512Mi"
+                cpu: "300m"
+          
+          # Security context
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 999
+            fsGroup: 999
+            seccompProfile:
+              type: RuntimeDefault
+          
+          # Node selection
+          nodeSelector:
+            node-type: workers
+          
+          tolerations:
+          - key: "scrapy/ops"
+            operator: "Equal"
+            value: "true"
+            effect: "NoSchedule"
+
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: log-archive
+  namespace: scrapy-system
+  labels:
+    app: scrapy
+    component: cleanup
+    tier: ops
+spec:
+  schedule: "0 4 * * 0"  # Weekly on Sunday at 4 AM
+  timeZone: "UTC"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 3
+  startingDeadlineSeconds: 1800
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: scrapy
+            component: cleanup
+            cronjob: log-archive
+        spec:
+          restartPolicy: OnFailure
+          serviceAccountName: scrapy-cleanup
+          containers:
+          - name: log-archive
+            image: postgres:15-alpine
+            imagePullPolicy: IfNotPresent
+            env:
+            - name: PGHOST
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: host
+            - name: PGPORT
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: port
+            - name: PGUSER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: username
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: password
+            - name: PGDATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: database
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: aws-credentials
+                  key: access-key-id
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: aws-credentials
+                  key: secret-access-key
+            - name: AWS_DEFAULT_REGION
+              value: "eu-west-1"
+            - name: S3_BUCKET
+              value: "scrapy-archives-prod"
+            command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              
+              # Install required tools
+              apk add --no-cache aws-cli gzip
+              
+              echo "Starting log archival process..."
+              TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
+              
+              # Archive old audit logs to S3
+              AUDIT_ARCHIVE="audit_logs_archive_${TIMESTAMP}.csv.gz"
+              
+              echo "Archiving audit logs older than 90 days..."
+              psql -c "
+                COPY (
+                  SELECT * FROM audit_logs 
+                  WHERE changed_at < NOW() - INTERVAL '90 days'
+                  ORDER BY changed_at
+                ) TO STDOUT WITH CSV HEADER
+              " | gzip > "/tmp/${AUDIT_ARCHIVE}"
+              
+              if [ -s "/tmp/${AUDIT_ARCHIVE}" ]; then
+                aws s3 cp "/tmp/${AUDIT_ARCHIVE}" "s3://${S3_BUCKET}/audit_logs/${AUDIT_ARCHIVE}" \
+                  --storage-class GLACIER \
+                  --server-side-encryption AES256
+                
+                echo "Audit logs archived to S3: ${AUDIT_ARCHIVE}"
+                rm "/tmp/${AUDIT_ARCHIVE}"
+              else
+                echo "No audit logs to archive"
+                rm -f "/tmp/${AUDIT_ARCHIVE}"
+              fi
+              
+              # Archive old performance metrics
+              METRICS_ARCHIVE="performance_metrics_archive_${TIMESTAMP}.csv.gz"
+              
+              echo "Archiving performance metrics older than 90 days..."
+              psql -c "
+                COPY (
+                  SELECT * FROM performance_metrics 
+                  WHERE recorded_at < NOW() - INTERVAL '90 days'
+                  ORDER BY recorded_at
+                ) TO STDOUT WITH CSV HEADER
+              " | gzip > "/tmp/${METRICS_ARCHIVE}"
+              
+              if [ -s "/tmp/${METRICS_ARCHIVE}" ]; then
+                aws s3 cp "/tmp/${METRICS_ARCHIVE}" "s3://${S3_BUCKET}/metrics/${METRICS_ARCHIVE}" \
+                  --storage-class GLACIER \
+                  --server-side-encryption AES256
+                
+                echo "Performance metrics archived to S3: ${METRICS_ARCHIVE}"
+                rm "/tmp/${METRICS_ARCHIVE}"
+              else
+                echo "No performance metrics to archive"
+                rm -f "/tmp/${METRICS_ARCHIVE}"
+              fi
+              
+              # Archive processed data for completed jobs older than 6 months
+              PROCESSED_ARCHIVE="processed_data_archive_${TIMESTAMP}.jsonl.gz"
+              
+              echo "Archiving processed data older than 6 months..."
+              psql -t -c "
+                SELECT jsonb_build_object(
+                  'id', id,
+                  'entity_type', entity_type,
+                  'entity_id', entity_id,
+                  'structured_data', structured_data,
+                  'confidence_score', confidence_score,
+                  'processed_at', processed_at
+                )
+                FROM processed_data pd
+                JOIN raw_data rd ON pd.raw_data_id = rd.id
+                WHERE rd.scraped_at < NOW() - INTERVAL '6 months'
+                AND pd.validation_status = 'valid'
+              " | gzip > "/tmp/${PROCESSED_ARCHIVE}"
+              
+              if [ -s "/tmp/${PROCESSED_ARCHIVE}" ]; then
+                aws s3 cp "/tmp/${PROCESSED_ARCHIVE}" "s3://${S3_BUCKET}/processed_data/${PROCESSED_ARCHIVE}" \
+                  --storage-class GLACIER \
+                  --server-side-encryption AES256
+                
+                echo "Processed data archived to S3: ${PROCESSED_ARCHIVE}"
+                rm "/tmp/${PROCESSED_ARCHIVE}"
+              else
+                echo "No processed data to archive"
+                rm -f "/tmp/${PROCESSED_ARCHIVE}"
+              fi
+              
+              echo "Log archival completed successfully"
+            
+            resources:
+              requests:
+                memory: "256Mi"
+                cpu: "100m"
+              limits:
+                memory: "1Gi"
+                cpu: "500m"
+            
+            volumeMounts:
+            - name: archive-temp
+              mountPath: /tmp
+          
+          volumes:
+          - name: archive-temp
+            emptyDir:
+              sizeLimit: 2Gi
+          
+          # Security context
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 999
+            fsGroup: 999
+            seccompProfile:
+              type: RuntimeDefault
+          
+          # Node selection
+          nodeSelector:
+            node-type: workers
+          
+          tolerations:
+          - key: "scrapy/ops"
+            operator: "Equal"
+            value: "true"
+            effect: "NoSchedule"
+
+---
+# ServiceAccount for cleanup operations
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: scrapy-cleanup
+  namespace: scrapy-system
+  labels:
+    app: scrapy
+    component: cleanup
+
+---
+# Role for cleanup operations
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: scrapy-cleanup
+  namespace: scrapy-system
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "list"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list"]
+- apiGroups: ["batch"]
+  resources: ["jobs", "cronjobs"]
+  verbs: ["get", "list"]
+
+---
+# RoleBinding for cleanup ServiceAccount
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: scrapy-cleanup
+  namespace: scrapy-system
+subjects:
+- kind: ServiceAccount
+  name: scrapy-cleanup
+  namespace: scrapy-system
+roleRef:
+  kind: Role
+  name: scrapy-cleanup
+  apiGroup: rbac.authorization.k8s.io

@@ -1,0 +1,154 @@
+# Feature flags configuration
+# Controls feature toggles across different environments
+
+features:
+  # Core features
+  crawler:
+    enabled: true
+    sitemap_generation: true
+    template_detection: true
+    robots_compliance: true
+    
+  scraper:
+    enabled: true
+    http_mode: true
+    browser_mode: true
+    template_extraction: true
+    
+  proxy_pool:
+    enabled: true
+    health_monitoring: true
+    rotation: true
+    quality_filtering: true
+    
+  anti_bot:
+    enabled: true
+    browser_stealth: true
+    fingerprint_rotation: true
+    cloudflare_handling: true
+    captcha_solving: false  # Disabled by default for compliance
+    
+  # Advanced features
+  ml_assist:
+    enabled: false  # Disabled until ML models are trained
+    template_classification: false
+    drift_detection: false
+    selector_ranking: false
+    
+  observability:
+    enabled: true
+    metrics_collection: true
+    distributed_tracing: true
+    log_aggregation: true
+    
+  # API features
+  rest_api:
+    enabled: true
+    rate_limiting: true
+    authentication: true
+    
+  graphql_api:
+    enabled: true
+    introspection: false  # Disabled in production
+    
+  webhooks:
+    enabled: true
+    signature_verification: true
+    retry_mechanism: true
+    
+  # UI features
+  webapp:
+    enabled: true
+    template_builder: true
+    visual_selector: true
+    job_dashboard: true
+    
+  browser_extension:
+    enabled: false  # Not ready yet
+    
+  # Data features
+  exports:
+    enabled: true
+    csv_export: true
+    json_export: true
+    excel_export: true
+    google_sheets: false  # Requires setup
+    bigquery: false       # Requires setup
+    
+  data_quality:
+    enabled: true
+    validation_rules: true
+    anomaly_detection: false  # ML-based, disabled initially
+    
+  # Compliance features
+  gdpr:
+    enabled: true
+    data_erasure: true
+    retention_policies: true
+    audit_logging: true
+    
+  # Performance features
+  caching:
+    enabled: true
+    redis_cache: true
+    memory_cache: true
+    
+  async_processing:
+    enabled: true
+    celery_workers: true
+    job_queues: true
+    
+  # Security features
+  security:
+    enabled: true
+    rbac: true
+    audit_trail: true
+    encryption_at_rest: true
+    
+  # Development features (only for dev/staging)
+  debug:
+    enabled: false
+    debug_mode: false
+    profiling: false
+    mock_external_apis: false
+
+# Environment-specific overrides
+environments:
+  development:
+    debug:
+      enabled: true
+      debug_mode: true
+      profiling: true
+      mock_external_apis: true
+    graphql_api:
+      introspection: true
+    ml_assist:
+      enabled: true  # Can test ML features in dev
+      
+  staging:
+    debug:
+      enabled: false
+      profiling: true
+    ml_assist:
+      enabled: true
+    browser_extension:
+      enabled: true  # Test in staging
+      
+  production:
+    debug:
+      enabled: false
+    security:
+      encryption_at_rest: true
+      audit_trail: true
+    # All production-ready features enabled by default
+
+# Feature dependencies
+dependencies:
+  ml_assist:
+    requires: ["observability.metrics_collection"]
+  browser_extension:
+    requires: ["webapp.enabled", "rest_api.enabled"]
+  data_quality:
+    requires: ["observability.enabled"]
+  gdpr:
+    requires: ["security.audit_trail"]

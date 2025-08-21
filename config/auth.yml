@@ -1,0 +1,360 @@
+# Authentication and Authorization Configuration
+# OAuth2 clients, API keys, RBAC roles, and security policies
+
+authentication:
+  # Authentication methods enabled
+  methods:
+    - "api_key"
+    - "jwt"
+    - "oauth2"
+  
+  # Default authentication method
+  default_method: "api_key"
+  
+  # Session configuration
+  session:
+    secret_key_env: "SESSION_SECRET_KEY"
+    timeout_minutes: 60
+    secure_cookies: true
+    same_site: "strict"
+
+# JWT (JSON Web Token) configuration
+jwt:
+  # Signing configuration
+  secret_key_env: "JWT_SECRET_KEY"
+  algorithm: "HS256"
+  
+  # Token expiration
+  access_token:
+    expire_minutes: 60
+    
+  refresh_token:
+    expire_days: 30
+    
+  # Token claims
+  claims:
+    issuer: "ethical-crawler-platform"
+    audience: "api-users"
+    include_user_id: true
+    include_roles: true
+    include_permissions: true
+    
+  # Token validation
+  validation:
+    verify_signature: true
+    verify_expiration: true
+    verify_audience: true
+    verify_issuer: true
+    leeway_seconds: 30  # Clock skew tolerance
+
+# API Key authentication
+api_keys:
+  # Storage configuration
+  storage: "database"  # Options: database, redis, file
+  
+  # Key generation
+  generation:
+    length: 32
+    alphabet: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    prefix: "eca_"  # Ethical Crawler API
+    
+  # Key validation
+  validation:
+    max_age_days: 365
+    check_permissions: true
+    rate_limit_per_key: true
+    
+  # Headers and query parameters
+  headers:
+    - "X-API-Key"
+    - "Authorization"  # Format: "Bearer <api_key>"
+    
+  query_params:
+    - "api_key"
+    - "key"
+
+# OAuth2 provider configuration
+oauth2:
+  # Provider settings
+  providers:
+    google:
+      enabled: true
+      client_id_env: "GOOGLE_OAUTH_CLIENT_ID"
+      client_secret_env: "GOOGLE_OAUTH_CLIENT_SECRET"
+      redirect_uri: "/auth/oauth2/google/callback"
+      scopes:
+        - "openid"
+        - "email"
+        - "profile"
+      authorization_url: "https://accounts.google.com/o/oauth2/auth"
+      token_url: "https://oauth2.googleapis.com/token"
+      userinfo_url: "https://www.googleapis.com/oauth2/v2/userinfo"
+      
+    github:
+      enabled: false
+      client_id_env: "GITHUB_OAUTH_CLIENT_ID"
+      client_secret_env: "GITHUB_OAUTH_CLIENT_SECRET"
+      redirect_uri: "/auth/oauth2/github/callback"
+      scopes:
+        - "user:email"
+        - "read:user"
+      authorization_url: "https://github.com/login/oauth/authorize"
+      token_url: "https://github.com/login/oauth/access_token"
+      userinfo_url: "https://api.github.com/user"
+      
+    microsoft:
+      enabled: false
+      client_id_env: "MICROSOFT_OAUTH_CLIENT_ID"
+      client_secret_env: "MICROSOFT_OAUTH_CLIENT_SECRET"
+      redirect_uri: "/auth/oauth2/microsoft/callback"
+      scopes:
+        - "openid"
+        - "email"
+        - "profile"
+      authorization_url: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize"
+      token_url: "https://login.microsoftonline.com/common/oauth2/v2.0/token"
+      userinfo_url: "https://graph.microsoft.com/v1.0/me"
+
+# Role-Based Access Control (RBAC)
+rbac:
+  enabled: true
+  
+  # Default role for new users
+  default_role: "viewer"
+  
+  # Role hierarchy (higher roles inherit lower role permissions)
+  hierarchy:
+    - "viewer"      # Level 1
+    - "analyst"     # Level 2
+    - "operator"    # Level 3
+    - "admin"       # Level 4
+    - "superadmin"  # Level 5
+  
+  # Role definitions
+  roles:
+    viewer:
+      description: "Read-only access to data and reports"
+      permissions:
+        - "data:read"
+        - "templates:read"
+        - "reports:read"
+        - "exports:read_own"
+        
+    analyst:
+      description: "Data analysis and export capabilities"
+      permissions:
+        - "data:read"
+        - "data:analyze"
+        - "templates:read"
+        - "templates:create"
+        - "reports:read"
+        - "reports:create"
+        - "exports:read"
+        - "exports:create"
+        - "queries:execute"
+        
+    operator:
+      description: "Operations and job management"
+      permissions:
+        - "data:read"
+        - "data:write"
+        - "templates:read"
+        - "templates:write"
+        - "jobs:read"
+        - "jobs:create"
+        - "jobs:start"
+        - "jobs:stop"
+        - "proxies:read"
+        - "proxies:manage"
+        - "exports:all"
+        
+    admin:
+      description: "System administration"
+      permissions:
+        - "*:read"
+        - "*:write"
+        - "*:delete"
+        - "users:manage"
+        - "roles:assign"
+        - "system:configure"
+        - "monitoring:access"
+        
+    superadmin:
+      description: "Full system access"
+      permissions:
+        - "*:*"  # All permissions
+
+# Permissions system
+permissions:
+  # Permission format: "resource:action"
+  # Resources: data, templates, jobs, proxies, exports, users, system, etc.
+  # Actions: read, write, create, update, delete, manage, execute, etc.
+  
+  # Permission groups
+  groups:
+    data_access:
+      - "data:read"
+      - "data:search"
+      - "data:filter"
+      
+    data_management:
+      - "data:create"
+      - "data:update"
+      - "data:delete"
+      - "data:import"
+      - "data:export"
+      
+    template_access:
+      - "templates:read"
+      - "templates:list"
+      - "templates:validate"
+      
+    template_management:
+      - "templates:create"
+      - "templates:update"
+      - "templates:delete"
+      - "templates:publish"
+      
+    job_operations:
+      - "jobs:create"
+      - "jobs:start"
+      - "jobs:stop"
+      - "jobs:restart"
+      - "jobs:schedule"
+      
+    system_admin:
+      - "system:configure"
+      - "system:backup"
+      - "system:restore"
+      - "system:monitor"
+      - "users:manage"
+
+# Security policies
+security:
+  # Password requirements (for local accounts)
+  password:
+    min_length: 12
+    require_uppercase: true
+    require_lowercase: true
+    require_numbers: true
+    require_special_chars: true
+    forbidden_patterns:
+      - "password"
+      - "123456"
+      - "qwerty"
+    max_age_days: 90
+    
+  # Account lockout
+  lockout:
+    enabled: true
+    max_failed_attempts: 5
+    lockout_duration_minutes: 30
+    reset_failed_attempts_after_minutes: 60
+    
+  # IP whitelisting/blacklisting
+  ip_filtering:
+    enabled: false
+    whitelist: []
+    blacklist: []
+    
+  # Multi-factor authentication
+  mfa:
+    enabled: false
+    required_for_admin: true
+    methods:
+      - "totp"  # Time-based One-Time Password
+      - "sms"
+      - "email"
+    
+  # Session security
+  session_security:
+    max_concurrent_sessions: 5
+    invalidate_on_password_change: true
+    secure_cookies: true
+    http_only_cookies: true
+    
+  # HTTPS enforcement
+  https:
+    enforce: true
+    hsts_max_age: 31536000  # 1 year
+    include_subdomains: true
+
+# User management
+users:
+  # User registration
+  registration:
+    enabled: false  # Set to true to allow self-registration
+    require_email_verification: true
+    default_role: "viewer"
+    
+  # User profiles
+  profiles:
+    required_fields:
+      - "email"
+      - "full_name"
+    optional_fields:
+      - "company"
+      - "phone"
+      - "timezone"
+      
+  # User data retention
+  retention:
+    inactive_user_days: 365
+    delete_after_days: 1095  # 3 years
+    anonymize_after_deletion: true
+
+# Audit logging
+audit:
+  enabled: true
+  
+  # Events to log
+  events:
+    - "user_login"
+    - "user_logout"
+    - "api_key_created"
+    - "api_key_deleted"
+    - "role_assigned"
+    - "permission_granted"
+    - "permission_revoked"
+    - "job_created"
+    - "job_started"
+    - "job_stopped"
+    - "data_exported"
+    - "template_created"
+    - "template_modified"
+    - "system_config_changed"
+    
+  # Audit log retention
+  retention_days: 2555  # 7 years for compliance
+  
+  # Audit log storage
+  storage: "database"  # Options: database, file, syslog, elasticsearch
+
+# Environment-specific overrides
+environments:
+  development:
+    jwt:
+      access_token:
+        expire_minutes: 480  # 8 hours for dev convenience
+    security:
+      password:
+        min_length: 8  # Relaxed for development
+      https:
+        enforce: false
+        
+  staging:
+    oauth2:
+      providers:
+        google:
+          redirect_uri: "/auth/oauth2/google/callback"  # Staging URL
+          
+  production:
+    security:
+      password:
+        min_length: 16  # Stricter for production
+      mfa:
+        required_for_admin: true
+      https:
+        enforce: true
+    audit:
+      enabled: true

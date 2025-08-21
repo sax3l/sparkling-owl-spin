@@ -1,0 +1,38 @@
+#!/bin/bash
+# Format code using various formatters
+
+set -e
+
+echo "🎨 Formatting code..."
+
+# Python formatting
+echo "🐍 Formatting Python code..."
+if command -v black > /dev/null; then
+    black src/ scripts/ tests/
+else
+    echo "⚠️ Black not found, skipping Python formatting"
+fi
+
+if command -v isort > /dev/null; then
+    isort src/ scripts/ tests/
+else
+    echo "⚠️ isort not found, skipping import sorting"
+fi
+
+# TypeScript/JavaScript formatting
+echo "📝 Formatting TypeScript/JavaScript code..."
+if command -v prettier > /dev/null; then
+    prettier --write "frontend/**/*.{ts,tsx,js,jsx,json,css,md}"
+else
+    echo "⚠️ Prettier not found, skipping JS/TS formatting"
+fi
+
+# YAML formatting
+echo "📄 Formatting YAML files..."
+if command -v prettier > /dev/null; then
+    prettier --write "**/*.{yml,yaml}" --ignore-path .gitignore
+else
+    echo "⚠️ Prettier not found, skipping YAML formatting"
+fi
+
+echo "✅ Code formatting complete!"

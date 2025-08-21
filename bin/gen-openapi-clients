@@ -1,0 +1,37 @@
+#!/bin/bash
+# Generate OpenAPI clients for various languages
+
+set -e
+
+echo "🔧 Generating OpenAPI clients..."
+
+# Ensure output directories exist
+mkdir -p api_clients/openapi/python
+mkdir -p api_clients/openapi/typescript
+
+# Generate Python client
+echo "🐍 Generating Python client..."
+if command -v openapi-generator-cli > /dev/null; then
+    openapi-generator-cli generate \
+        -i docs/openapi.yaml \
+        -g python \
+        -o api_clients/openapi/python \
+        --package-name scraping_client \
+        --additional-properties=packageName=scraping_client,projectName=scraping-api-client
+else
+    echo "⚠️ openapi-generator-cli not found"
+fi
+
+# Generate TypeScript client
+echo "📝 Generating TypeScript client..."
+if command -v openapi-generator-cli > /dev/null; then
+    openapi-generator-cli generate \
+        -i docs/openapi.yaml \
+        -g typescript-axios \
+        -o api_clients/openapi/typescript \
+        --additional-properties=npmName=scraping-api-client,npmVersion=1.0.0
+else
+    echo "⚠️ openapi-generator-cli not found"
+fi
+
+echo "✅ OpenAPI clients generated!"

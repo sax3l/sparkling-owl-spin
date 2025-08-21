@@ -1,0 +1,72 @@
+{
+  "info": {
+    "name": "Scraping Platform API",
+    "description": "API collection for the comprehensive scraping platform",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Jobs",
+      "item": [
+        {
+          "name": "List Jobs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/jobs",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "jobs"]
+            }
+          }
+        },
+        {
+          "name": "Create Job",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"template_id\": \"vehicle_detail_v3\",\n  \"urls\": [\"https://example.com/car/123\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/jobs",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "jobs"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Templates",
+      "item": [
+        {
+          "name": "List Templates",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/templates",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "templates"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    }
+  ]
+}

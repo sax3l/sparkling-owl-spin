@@ -1,0 +1,921 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: proxy-health-check
+  namespace: scrapy-system
+  labels:
+    app: scrapy
+    component: proxy-monitor
+    tier: ops
+spec:
+  schedule: "*/15 * * * *"  # Every 15 minutes
+  timeZone: "UTC"
+  concurrencyPolicy: Replace
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 5
+  startingDeadlineSeconds: 300
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: scrapy
+            component: proxy-monitor
+            cronjob: proxy-health-check
+        spec:
+          restartPolicy: OnFailure
+          serviceAccountName: scrapy-proxy-monitor
+          containers:
+          - name: proxy-checker
+            image: python:3.11-alpine
+            imagePullPolicy: IfNotPresent
+            env:
+            - name: POSTGRES_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: host
+            - name: POSTGRES_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: port
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: password
+            - name: POSTGRES_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: database
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: redis-credentials
+                  key: url
+            - name: MAX_CONCURRENT_CHECKS
+              value: "20"
+            - name: CHECK_TIMEOUT_SECONDS
+              value: "30"
+            - name: FAILURE_THRESHOLD
+              value: "3"
+            - name: SUCCESS_THRESHOLD
+              value: "2"
+            command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              
+              # Install required packages
+              pip install --no-cache-dir psycopg2-binary requests redis aiohttp asyncio
+              
+              # Create proxy health check script
+              cat > /tmp/proxy_health_check.py << 'EOF'
+              import asyncio
+              import aiohttp
+              import psycopg2
+              import redis
+              import json
+              import os
+              import time
+              from datetime import datetime, timedelta
+              from urllib.parse import urlparse
+              import logging
+              
+              logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+              logger = logging.getLogger(__name__)
+              
+              class ProxyHealthChecker:
+                  def __init__(self):
+                      self.db_config = {
+                          'host': os.getenv('POSTGRES_HOST'),
+                          'port': os.getenv('POSTGRES_PORT'),
+                          'user': os.getenv('POSTGRES_USER'),
+                          'password': os.getenv('POSTGRES_PASSWORD'),
+                          'database': os.getenv('POSTGRES_DATABASE')
+                      }
+                      
+                      redis_url = os.getenv('REDIS_URL')
+                      self.redis_client = redis.from_url(redis_url) if redis_url else None
+                      
+                      self.max_concurrent = int(os.getenv('MAX_CONCURRENT_CHECKS', '20'))
+                      self.check_timeout = int(os.getenv('CHECK_TIMEOUT_SECONDS', '30'))
+                      self.failure_threshold = int(os.getenv('FAILURE_THRESHOLD', '3'))
+                      self.success_threshold = int(os.getenv('SUCCESS_THRESHOLD', '2'))
+                      
+                      # Test URLs for different scenarios
+                      self.test_urls = [
+                          'http://httpbin.org/ip',
+                          'https://httpbin.org/user-agent',
+                          'http://httpbin.org/headers',
+                          'https://www.google.com',
+                          'http://example.com'
+                      ]
+              
+                  def get_database_connection(self):
+                      return psycopg2.connect(**self.db_config)
+              
+                  def get_active_proxies(self):
+                      """Get all active proxies from database"""
+                      conn = self.get_database_connection()
+                      try:
+                          with conn.cursor() as cursor:
+                              cursor.execute("""
+                                  SELECT id, proxy_url, proxy_type, username, password_hash, 
+                                         success_rate, failure_count, last_successful_use,
+                                         country_code, provider
+                                  FROM proxies 
+                                  WHERE status IN ('active', 'testing')
+                                  ORDER BY success_rate DESC, failure_count ASC
+                              """)
+                              return cursor.fetchall()
+                      finally:
+                          conn.close()
+              
+                  async def check_proxy(self, session, proxy_info):
+                      """Check a single proxy health"""
+                      proxy_id, proxy_url, proxy_type, username, password_hash, success_rate, failure_count, last_successful_use, country_code, provider = proxy_info
+                      
+                      results = {
+                          'proxy_id': proxy_id,
+                          'proxy_url': proxy_url,
+                          'tests_passed': 0,
+                          'tests_failed': 0,
+                          'response_times': [],
+                          'errors': [],
+                          'last_successful_test': None,
+                          'country_detected': None,
+                          'ip_address': None
+                      }
+                      
+                      # Parse proxy URL
+                      parsed = urlparse(proxy_url)
+                      proxy_dict = {
+                          'http': proxy_url,
+                          'https': proxy_url
+                      }
+                      
+                      # Add authentication if available
+                      if username and password_hash:
+                          # Note: In real implementation, decrypt password_hash
+                          auth = aiohttp.BasicAuth(username, 'decrypted_password')
+                      else:
+                          auth = None
+                      
+                      # Test each URL
+                      for test_url in self.test_urls:
+                          try:
+                              start_time = time.time()
+                              
+                              async with session.get(
+                                  test_url,
+                                  proxy=proxy_url,
+                                  auth=auth,
+                                  timeout=aiohttp.ClientTimeout(total=self.check_timeout),
+                                  headers={'User-Agent': 'ProxyHealthChecker/1.0'}
+                              ) as response:
+                                  duration = time.time() - start_time
+                                  
+                                  if response.status == 200:
+                                      results['tests_passed'] += 1
+                                      results['response_times'].append(duration * 1000)  # Convert to ms
+                                      results['last_successful_test'] = datetime.now()
+                                      
+                                      # Extract IP info from httpbin responses
+                                      if 'httpbin.org/ip' in test_url:
+                                          try:
+                                              data = await response.json()
+                                              results['ip_address'] = data.get('origin')
+                                          except:
+                                              pass
+                                  else:
+                                      results['tests_failed'] += 1
+                                      results['errors'].append(f"HTTP {response.status} for {test_url}")
+                          
+                          except asyncio.TimeoutError:
+                              results['tests_failed'] += 1
+                              results['errors'].append(f"Timeout for {test_url}")
+                          
+                          except Exception as e:
+                              results['tests_failed'] += 1
+                              results['errors'].append(f"Error for {test_url}: {str(e)}")
+                          
+                          # Small delay between tests
+                          await asyncio.sleep(0.5)
+                      
+                      return results
+              
+                  async def run_health_checks(self):
+                      """Run health checks on all active proxies"""
+                      logger.info("Starting proxy health checks...")
+                      
+                      proxies = self.get_active_proxies()
+                      logger.info(f"Found {len(proxies)} active proxies to check")
+                      
+                      if not proxies:
+                          logger.info("No active proxies found")
+                          return
+                      
+                      # Create semaphore to limit concurrent checks
+                      semaphore = asyncio.Semaphore(self.max_concurrent)
+                      
+                      async def check_with_semaphore(session, proxy_info):
+                          async with semaphore:
+                              return await self.check_proxy(session, proxy_info)
+                      
+                      # Run checks concurrently
+                      connector = aiohttp.TCPConnector(limit=self.max_concurrent)
+                      timeout = aiohttp.ClientTimeout(total=self.check_timeout)
+                      
+                      async with aiohttp.ClientSession(
+                          connector=connector,
+                          timeout=timeout
+                      ) as session:
+                          tasks = [check_with_semaphore(session, proxy) for proxy in proxies]
+                          results = await asyncio.gather(*tasks, return_exceptions=True)
+                      
+                      # Process results
+                      await self.process_results(results)
+              
+                  async def process_results(self, results):
+                      """Process health check results and update database"""
+                      conn = self.get_database_connection()
+                      
+                      try:
+                          with conn.cursor() as cursor:
+                              updates = []
+                              status_changes = []
+                              
+                              for result in results:
+                                  if isinstance(result, Exception):
+                                      logger.error(f"Health check error: {result}")
+                                      continue
+                                  
+                                  proxy_id = result['proxy_id']
+                                  tests_passed = result['tests_passed']
+                                  tests_failed = result['tests_failed']
+                                  total_tests = tests_passed + tests_failed
+                                  
+                                  if total_tests == 0:
+                                      continue
+                                  
+                                  # Calculate new success rate
+                                  current_success_rate = (tests_passed / total_tests) * 100
+                                  
+                                  # Get current proxy data
+                                  cursor.execute("""
+                                      SELECT success_rate, failure_count, total_requests, status
+                                      FROM proxies WHERE id = %s
+                                  """, (proxy_id,))
+                                  
+                                  proxy_data = cursor.fetchone()
+                                  if not proxy_data:
+                                      continue
+                                  
+                                  old_success_rate, old_failure_count, old_total_requests, current_status = proxy_data
+                                  
+                                  # Calculate weighted success rate
+                                  weight = 0.7  # Weight for new measurement
+                                  new_success_rate = (weight * current_success_rate + 
+                                                    (1 - weight) * old_success_rate)
+                                  
+                                  # Update failure count
+                                  if tests_passed == 0:
+                                      new_failure_count = old_failure_count + 1
+                                  elif tests_passed >= self.success_threshold:
+                                      new_failure_count = max(0, old_failure_count - 1)
+                                  else:
+                                      new_failure_count = old_failure_count
+                                  
+                                  # Calculate average response time
+                                  avg_response_time = None
+                                  if result['response_times']:
+                                      avg_response_time = sum(result['response_times']) / len(result['response_times'])
+                                  
+                                  # Determine new status
+                                  new_status = current_status
+                                  if new_failure_count >= self.failure_threshold:
+                                      new_status = 'failed'
+                                      status_changes.append((proxy_id, current_status, 'failed', 'High failure count'))
+                                  elif new_success_rate > 80 and new_failure_count < 2:
+                                      if current_status in ['failed', 'testing']:
+                                          new_status = 'active'
+                                          status_changes.append((proxy_id, current_status, 'active', 'Recovered'))
+                                  elif new_success_rate < 50:
+                                      if current_status == 'active':
+                                          new_status = 'testing'
+                                          status_changes.append((proxy_id, current_status, 'testing', 'Low success rate'))
+                                  
+                                  # Prepare update
+                                  update_data = {
+                                      'proxy_id': proxy_id,
+                                      'success_rate': round(new_success_rate, 2),
+                                      'failure_count': new_failure_count,
+                                      'total_requests': old_total_requests + total_tests,
+                                      'status': new_status,
+                                      'avg_response_time_ms': int(avg_response_time) if avg_response_time else None,
+                                      'last_successful_use': result['last_successful_test']
+                                  }
+                                  
+                                  updates.append(update_data)
+                                  
+                                  # Cache results in Redis if available
+                                  if self.redis_client:
+                                      cache_key = f"proxy_health:{proxy_id}"
+                                      cache_data = {
+                                          'timestamp': datetime.now().isoformat(),
+                                          'success_rate': new_success_rate,
+                                          'response_time': avg_response_time,
+                                          'status': new_status,
+                                          'errors': result['errors']
+                                      }
+                                      self.redis_client.setex(cache_key, 900, json.dumps(cache_data))  # 15 min TTL
+                              
+                              # Batch update database
+                              for update in updates:
+                                  cursor.execute("""
+                                      UPDATE proxies SET
+                                          success_rate = %s,
+                                          failure_count = %s,
+                                          total_requests = %s,
+                                          status = %s,
+                                          avg_response_time_ms = %s,
+                                          last_successful_use = COALESCE(%s, last_successful_use),
+                                          updated_at = NOW()
+                                      WHERE id = %s
+                                  """, (
+                                      update['success_rate'],
+                                      update['failure_count'],
+                                      update['total_requests'],
+                                      update['status'],
+                                      update['avg_response_time_ms'],
+                                      update['last_successful_use'],
+                                      update['proxy_id']
+                                  ))
+                              
+                              # Log status changes
+                              for proxy_id, old_status, new_status, reason in status_changes:
+                                  logger.info(f"Proxy {proxy_id} status: {old_status} -> {new_status} ({reason})")
+                                  
+                                  # Insert audit log
+                                  cursor.execute("""
+                                      INSERT INTO audit_logs (table_name, record_id, operation, old_values, new_values)
+                                      VALUES ('proxies', %s, 'UPDATE', %s, %s)
+                                  """, (
+                                      proxy_id,
+                                      json.dumps({'status': old_status}),
+                                      json.dumps({'status': new_status, 'reason': reason})
+                                  ))
+                              
+                              conn.commit()
+                              
+                              logger.info(f"Updated {len(updates)} proxies")
+                              logger.info(f"Status changes: {len(status_changes)}")
+                              
+                              # Log summary statistics
+                              cursor.execute("""
+                                  SELECT status, COUNT(*), AVG(success_rate), AVG(avg_response_time_ms)
+                                  FROM proxies 
+                                  GROUP BY status
+                              """)
+                              
+                              status_summary = cursor.fetchall()
+                              logger.info("Proxy status summary:")
+                              for status, count, avg_success, avg_response in status_summary:
+                                  logger.info(f"  {status}: {count} proxies, {avg_success:.1f}% success, {avg_response:.0f}ms avg response")
+                      
+                      except Exception as e:
+                          logger.error(f"Error processing results: {e}")
+                          conn.rollback()
+                          raise
+                      finally:
+                          conn.close()
+              
+              async def main():
+                  checker = ProxyHealthChecker()
+                  await checker.run_health_checks()
+              
+              if __name__ == "__main__":
+                  asyncio.run(main())
+              EOF
+              
+              # Run the health check
+              python /tmp/proxy_health_check.py
+            
+            resources:
+              requests:
+                memory: "256Mi"
+                cpu: "200m"
+              limits:
+                memory: "512Mi"
+                cpu: "500m"
+          
+          # Security context
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 999
+            fsGroup: 999
+            seccompProfile:
+              type: RuntimeDefault
+          
+          # Node selection
+          nodeSelector:
+            node-type: workers
+          
+          tolerations:
+          - key: "scrapy/ops"
+            operator: "Equal"
+            value: "true"
+            effect: "NoSchedule"
+
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: proxy-rotation
+  namespace: scrapy-system
+  labels:
+    app: scrapy
+    component: proxy-monitor
+    tier: ops
+spec:
+  schedule: "0 */6 * * *"  # Every 6 hours
+  timeZone: "UTC"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 3
+  startingDeadlineSeconds: 600
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: scrapy
+            component: proxy-monitor
+            cronjob: proxy-rotation
+        spec:
+          restartPolicy: OnFailure
+          serviceAccountName: scrapy-proxy-monitor
+          containers:
+          - name: proxy-rotator
+            image: python:3.11-alpine
+            imagePullPolicy: IfNotPresent
+            env:
+            - name: POSTGRES_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: host
+            - name: POSTGRES_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: port
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: password
+            - name: POSTGRES_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: database
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: redis-credentials
+                  key: url
+            - name: ROTATION_STRATEGY
+              value: "performance"  # performance, round_robin, weighted
+            - name: MIN_SUCCESS_RATE
+              value: "70"
+            - name: MAX_FAILURE_COUNT
+              value: "5"
+            command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              
+              # Install required packages
+              pip install --no-cache-dir psycopg2-binary redis
+              
+              # Create proxy rotation script
+              cat > /tmp/proxy_rotation.py << 'EOF'
+              import psycopg2
+              import redis
+              import json
+              import os
+              import random
+              import logging
+              from datetime import datetime, timedelta
+              
+              logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+              logger = logging.getLogger(__name__)
+              
+              class ProxyRotationManager:
+                  def __init__(self):
+                      self.db_config = {
+                          'host': os.getenv('POSTGRES_HOST'),
+                          'port': os.getenv('POSTGRES_PORT'),
+                          'user': os.getenv('POSTGRES_USER'),
+                          'password': os.getenv('POSTGRES_PASSWORD'),
+                          'database': os.getenv('POSTGRES_DATABASE')
+                      }
+                      
+                      redis_url = os.getenv('REDIS_URL')
+                      self.redis_client = redis.from_url(redis_url) if redis_url else None
+                      
+                      self.rotation_strategy = os.getenv('ROTATION_STRATEGY', 'performance')
+                      self.min_success_rate = float(os.getenv('MIN_SUCCESS_RATE', '70'))
+                      self.max_failure_count = int(os.getenv('MAX_FAILURE_COUNT', '5'))
+              
+                  def get_database_connection(self):
+                      return psycopg2.connect(**self.db_config)
+              
+                  def update_rotation_priorities(self):
+                      """Update proxy rotation priorities based on performance"""
+                      conn = self.get_database_connection()
+                      
+                      try:
+                          with conn.cursor() as cursor:
+                              # Get all active proxies with statistics
+                              cursor.execute("""
+                                  SELECT id, proxy_url, success_rate, failure_count, 
+                                         avg_response_time_ms, last_successful_use, total_requests,
+                                         country_code, provider, rotation_priority
+                                  FROM proxies 
+                                  WHERE status = 'active'
+                                  ORDER BY success_rate DESC, avg_response_time_ms ASC
+                              """)
+                              
+                              proxies = cursor.fetchall()
+                              logger.info(f"Updating rotation priorities for {len(proxies)} active proxies")
+                              
+                              if not proxies:
+                                  logger.info("No active proxies found")
+                                  return
+                              
+                              # Calculate new priorities based on strategy
+                              updated_priorities = []
+                              
+                              if self.rotation_strategy == 'performance':
+                                  updated_priorities = self._calculate_performance_priorities(proxies)
+                              elif self.rotation_strategy == 'round_robin':
+                                  updated_priorities = self._calculate_round_robin_priorities(proxies)
+                              elif self.rotation_strategy == 'weighted':
+                                  updated_priorities = self._calculate_weighted_priorities(proxies)
+                              
+                              # Update database
+                              for proxy_id, new_priority in updated_priorities:
+                                  cursor.execute("""
+                                      UPDATE proxies 
+                                      SET rotation_priority = %s, updated_at = NOW()
+                                      WHERE id = %s
+                                  """, (new_priority, proxy_id))
+                              
+                              conn.commit()
+                              
+                              # Update Redis cache with rotation order
+                              if self.redis_client:
+                                  sorted_proxies = sorted(updated_priorities, key=lambda x: x[1], reverse=True)
+                                  rotation_order = [proxy_id for proxy_id, _ in sorted_proxies]
+                                  
+                                  self.redis_client.setex(
+                                      'proxy_rotation_order', 
+                                      21600,  # 6 hours TTL
+                                      json.dumps(rotation_order)
+                                  )
+                                  
+                                  logger.info(f"Updated rotation order in Redis with {len(rotation_order)} proxies")
+                              
+                              logger.info(f"Updated rotation priorities for {len(updated_priorities)} proxies")
+                              
+                              # Log priority distribution
+                              cursor.execute("""
+                                  SELECT rotation_priority, COUNT(*) 
+                                  FROM proxies 
+                                  WHERE status = 'active'
+                                  GROUP BY rotation_priority 
+                                  ORDER BY rotation_priority DESC
+                              """)
+                              
+                              priority_dist = cursor.fetchall()
+                              logger.info("Priority distribution:")
+                              for priority, count in priority_dist:
+                                  logger.info(f"  Priority {priority}: {count} proxies")
+                      
+                      except Exception as e:
+                          logger.error(f"Error updating rotation priorities: {e}")
+                          conn.rollback()
+                          raise
+                      finally:
+                          conn.close()
+              
+                  def _calculate_performance_priorities(self, proxies):
+                      """Calculate priorities based on performance metrics"""
+                      priorities = []
+                      
+                      for proxy in proxies:
+                          proxy_id, proxy_url, success_rate, failure_count, avg_response_time, last_successful_use, total_requests, country_code, provider, current_priority = proxy
+                          
+                          # Base score from success rate (0-100)
+                          score = success_rate or 0
+                          
+                          # Penalty for failures
+                          if failure_count:
+                              score -= min(failure_count * 10, 50)
+                          
+                          # Bonus for fast response times
+                          if avg_response_time:
+                              if avg_response_time < 1000:  # Under 1 second
+                                  score += 10
+                              elif avg_response_time < 2000:  # Under 2 seconds
+                                  score += 5
+                              elif avg_response_time > 5000:  # Over 5 seconds
+                                  score -= 10
+                          
+                          # Penalty for being offline too long
+                          if last_successful_use:
+                              hours_since_success = (datetime.now() - last_successful_use).total_seconds() / 3600
+                              if hours_since_success > 24:
+                                  score -= 20
+                              elif hours_since_success > 6:
+                                  score -= 10
+                          
+                          # Bonus for high usage (reliable proxies)
+                          if total_requests and total_requests > 1000:
+                              score += 5
+                          
+                          # Convert score to priority (1-10 scale)
+                          priority = max(1, min(10, int(score / 10)))
+                          priorities.append((proxy_id, priority))
+                      
+                      return priorities
+              
+                  def _calculate_round_robin_priorities(self, proxies):
+                      """Calculate priorities for round-robin rotation"""
+                      priorities = []
+                      
+                      # Assign equal priority to all active proxies with good performance
+                      for proxy in proxies:
+                          proxy_id, proxy_url, success_rate, failure_count, avg_response_time, last_successful_use, total_requests, country_code, provider, current_priority = proxy
+                          
+                          # Only give priority to proxies meeting minimum requirements
+                          if (success_rate or 0) >= self.min_success_rate and failure_count <= self.max_failure_count:
+                              priority = 5  # Equal priority for round-robin
+                          else:
+                              priority = 1  # Low priority for poor performers
+                          
+                          priorities.append((proxy_id, priority))
+                      
+                      return priorities
+              
+                  def _calculate_weighted_priorities(self, proxies):
+                      """Calculate weighted priorities based on multiple factors"""
+                      priorities = []
+                      
+                      # Calculate weights for each factor
+                      success_weight = 0.4
+                      response_time_weight = 0.3
+                      reliability_weight = 0.2
+                      freshness_weight = 0.1
+                      
+                      for proxy in proxies:
+                          proxy_id, proxy_url, success_rate, failure_count, avg_response_time, last_successful_use, total_requests, country_code, provider, current_priority = proxy
+                          
+                          # Success rate score (0-1)
+                          success_score = (success_rate or 0) / 100
+                          
+                          # Response time score (0-1, inverted - lower is better)
+                          if avg_response_time and avg_response_time > 0:
+                              response_score = max(0, 1 - (avg_response_time / 10000))  # Normalize to 10s max
+                          else:
+                              response_score = 0.5  # Default for unknown
+                          
+                          # Reliability score based on failure count
+                          reliability_score = max(0, 1 - (failure_count / 10))
+                          
+                          # Freshness score based on last successful use
+                          if last_successful_use:
+                              hours_since_success = (datetime.now() - last_successful_use).total_seconds() / 3600
+                              freshness_score = max(0, 1 - (hours_since_success / 48))  # 48 hour window
+                          else:
+                              freshness_score = 0
+                          
+                          # Calculate weighted score
+                          weighted_score = (
+                              success_score * success_weight +
+                              response_score * response_time_weight +
+                              reliability_score * reliability_weight +
+                              freshness_score * freshness_weight
+                          )
+                          
+                          # Convert to priority (1-10 scale)
+                          priority = max(1, min(10, int(weighted_score * 10)))
+                          priorities.append((proxy_id, priority))
+                      
+                      return priorities
+              
+                  def cleanup_failed_proxies(self):
+                      """Mark consistently failing proxies as inactive"""
+                      conn = self.get_database_connection()
+                      
+                      try:
+                          with conn.cursor() as cursor:
+                              # Find proxies that should be marked as failed
+                              cursor.execute("""
+                                  SELECT id, proxy_url, failure_count, success_rate
+                                  FROM proxies 
+                                  WHERE status = 'active'
+                                  AND (
+                                      failure_count > %s 
+                                      OR success_rate < %s
+                                      OR last_successful_use < NOW() - INTERVAL '7 days'
+                                  )
+                              """, (self.max_failure_count, self.min_success_rate))
+                              
+                              failed_proxies = cursor.fetchall()
+                              
+                              if failed_proxies:
+                                  logger.info(f"Marking {len(failed_proxies)} proxies as failed")
+                                  
+                                  for proxy_id, proxy_url, failure_count, success_rate in failed_proxies:
+                                      cursor.execute("""
+                                          UPDATE proxies 
+                                          SET status = 'failed', updated_at = NOW()
+                                          WHERE id = %s
+                                      """, (proxy_id,))
+                                      
+                                      logger.info(f"Marked proxy {proxy_id} as failed (failures: {failure_count}, success: {success_rate}%)")
+                                  
+                                  conn.commit()
+                              else:
+                                  logger.info("No proxies need to be marked as failed")
+                      
+                      except Exception as e:
+                          logger.error(f"Error cleaning up failed proxies: {e}")
+                          conn.rollback()
+                          raise
+                      finally:
+                          conn.close()
+              
+                  def generate_rotation_report(self):
+                      """Generate rotation statistics report"""
+                      conn = self.get_database_connection()
+                      
+                      try:
+                          with conn.cursor() as cursor:
+                              # Get overall statistics
+                              cursor.execute("""
+                                  SELECT 
+                                      status,
+                                      COUNT(*) as count,
+                                      AVG(success_rate) as avg_success_rate,
+                                      AVG(rotation_priority) as avg_priority,
+                                      AVG(avg_response_time_ms) as avg_response_time
+                                  FROM proxies
+                                  GROUP BY status
+                                  ORDER BY count DESC
+                              """)
+                              
+                              status_stats = cursor.fetchall()
+                              
+                              logger.info("Proxy Rotation Report:")
+                              logger.info("=" * 50)
+                              
+                              for status, count, avg_success, avg_priority, avg_response in status_stats:
+                                  logger.info(f"{status.upper()}: {count} proxies")
+                                  logger.info(f"  Avg Success Rate: {avg_success:.1f}%")
+                                  logger.info(f"  Avg Priority: {avg_priority:.1f}")
+                                  logger.info(f"  Avg Response Time: {avg_response:.0f}ms")
+                                  logger.info("")
+                              
+                              # Get top performing proxies
+                              cursor.execute("""
+                                  SELECT proxy_url, success_rate, avg_response_time_ms, rotation_priority
+                                  FROM proxies 
+                                  WHERE status = 'active'
+                                  ORDER BY rotation_priority DESC, success_rate DESC
+                                  LIMIT 5
+                              """)
+                              
+                              top_proxies = cursor.fetchall()
+                              
+                              logger.info("Top 5 Performing Proxies:")
+                              for i, (url, success_rate, response_time, priority) in enumerate(top_proxies, 1):
+                                  logger.info(f"{i}. {url[:50]}... (Success: {success_rate:.1f}%, Response: {response_time:.0f}ms, Priority: {priority})")
+                      
+                      finally:
+                          conn.close()
+              
+                  def run_rotation_management(self):
+                      """Run complete proxy rotation management"""
+                      logger.info("Starting proxy rotation management...")
+                      
+                      # Update rotation priorities
+                      self.update_rotation_priorities()
+                      
+                      # Cleanup failed proxies
+                      self.cleanup_failed_proxies()
+                      
+                      # Generate report
+                      self.generate_rotation_report()
+                      
+                      logger.info("Proxy rotation management completed")
+              
+              def main():
+                  manager = ProxyRotationManager()
+                  manager.run_rotation_management()
+              
+              if __name__ == "__main__":
+                  main()
+              EOF
+              
+              # Run the rotation management
+              python /tmp/proxy_rotation.py
+            
+            resources:
+              requests:
+                memory: "128Mi"
+                cpu: "100m"
+              limits:
+                memory: "256Mi"
+                cpu: "200m"
+          
+          # Security context
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 999
+            fsGroup: 999
+            seccompProfile:
+              type: RuntimeDefault
+          
+          # Node selection
+          nodeSelector:
+            node-type: workers
+          
+          tolerations:
+          - key: "scrapy/ops"
+            operator: "Equal"
+            value: "true"
+            effect: "NoSchedule"
+
+---
+# ServiceAccount for proxy monitoring operations
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: scrapy-proxy-monitor
+  namespace: scrapy-system
+  labels:
+    app: scrapy
+    component: proxy-monitor
+
+---
+# Role for proxy monitoring operations
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: scrapy-proxy-monitor
+  namespace: scrapy-system
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "list"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list"]
+- apiGroups: ["batch"]
+  resources: ["jobs", "cronjobs"]
+  verbs: ["get", "list"]
+
+---
+# RoleBinding for proxy monitoring ServiceAccount
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: scrapy-proxy-monitor
+  namespace: scrapy-system
+subjects:
+- kind: ServiceAccount
+  name: scrapy-proxy-monitor
+  namespace: scrapy-system
+roleRef:
+  kind: Role
+  name: scrapy-proxy-monitor
+  apiGroup: rbac.authorization.k8s.io
