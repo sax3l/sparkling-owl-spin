@@ -1,0 +1,244 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Docker image tag to deploy'
+        required: false
+        default: 'develop'
+
+env:
+  KUSTOMIZE_VERSION: 5.0.0
+  HELM_VERSION: v3.12.0
+  KUBECTL_VERSION: v1.28.0
+
+jobs:
+  deploy-staging:
+    runs-on: ubuntu-latest
+    environment: staging
+    
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ secrets.AWS_STAGING_ROLE_ARN }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    - name: Setup kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: ${{ env.KUBECTL_VERSION }}
+
+    - name: Setup Helm
+      uses: azure/setup-helm@v3
+      with:
+        version: ${{ env.HELM_VERSION }}
+
+    - name: Setup Kustomize
+      run: |
+        curl -L https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv${{ env.KUSTOMIZE_VERSION }}/kustomize_v${{ env.KUSTOMIZE_VERSION }}_linux_amd64.tar.gz | tar xz
+        sudo mv kustomize /usr/local/bin/
+
+    - name: Update kubeconfig
+      run: |
+        aws eks update-kubeconfig --name ${{ secrets.EKS_CLUSTER_NAME_STAGING }} --region ${{ secrets.AWS_REGION }}
+
+    - name: Determine image tag
+      id: image_tag
+      run: |
+        if [ "${{ github.event.inputs.image_tag }}" != "" ]; then
+          echo "tag=${{ github.event.inputs.image_tag }}" >> $GITHUB_OUTPUT
+        else
+          echo "tag=${GITHUB_SHA:0:7}" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Deploy database migrations
+      run: |
+        kubectl create job --from=cronjob/migration-job migration-$(date +%s) -n crawler-staging || true
+        kubectl wait --for=condition=complete job/migration-$(date +%s) -n crawler-staging --timeout=300s
+
+    - name: Update Kubernetes manifests
+      run: |
+        cd k8s/overlays/staging
+        kustomize edit set image \
+          app=ghcr.io/${{ github.repository }}/app:${{ steps.image_tag.outputs.tag }} \
+          worker=ghcr.io/${{ github.repository }}/worker:${{ steps.image_tag.outputs.tag }} \
+          browser=ghcr.io/${{ github.repository }}/browser:${{ steps.image_tag.outputs.tag }}
+
+    - name: Deploy to staging with Kustomize
+      run: |
+        kustomize build k8s/overlays/staging | kubectl apply -f -
+
+    - name: Deploy monitoring stack
+      run: |
+        helm upgrade --install monitoring-stack \
+          monitoring/helm/monitoring-stack \
+          --namespace monitoring-staging \
+          --create-namespace \
+          --values monitoring/helm/values-staging.yaml \
+          --set prometheus.ingress.hosts[0].host=prometheus-staging.${{ secrets.STAGING_DOMAIN }} \
+          --set grafana.ingress.hosts[0].host=grafana-staging.${{ secrets.STAGING_DOMAIN }}
+
+    - name: Wait for deployment rollout
+      run: |
+        kubectl rollout status deployment/crawler-api -n crawler-staging --timeout=600s
+        kubectl rollout status deployment/crawler-worker -n crawler-staging --timeout=600s
+        kubectl rollout status deployment/scraper-worker -n crawler-staging --timeout=600s
+
+    - name: Run smoke tests
+      run: |
+        # Wait for services to be ready
+        kubectl wait --for=condition=ready pod -l app=crawler-api -n crawler-staging --timeout=300s
+        
+        # Get service endpoint
+        API_ENDPOINT=$(kubectl get service crawler-api -n crawler-staging -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+        
+        # Run basic health checks
+        curl -f http://${API_ENDPOINT}/health || exit 1
+        curl -f http://${API_ENDPOINT}/api/v1/status || exit 1
+
+    - name: Run integration tests against staging
+      run: |
+        export API_BASE_URL=$(kubectl get service crawler-api -n crawler-staging -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+        export DATABASE_URL="${{ secrets.STAGING_DATABASE_URL }}"
+        export REDIS_URL="${{ secrets.STAGING_REDIS_URL }}"
+        
+        python -m pytest tests/integration/ \
+          --staging \
+          --maxfail=5 \
+          --tb=short \
+          -v
+
+    - name: Verify data quality metrics
+      run: |
+        python scripts/verify_data_quality.py \
+          --environment=staging \
+          --database-url="${{ secrets.STAGING_DATABASE_URL }}" \
+          --threshold=0.95
+
+    - name: Update deployment status
+      if: always()
+      run: |
+        if [ "${{ job.status }}" == "success" ]; then
+          kubectl annotate deployment crawler-api -n crawler-staging \
+            deployment.kubernetes.io/revision="$(date -u +%Y%m%d%H%M%S)" \
+            deployment.kubernetes.io/status="success" \
+            deployment.kubernetes.io/commit="${{ github.sha }}"
+        else
+          kubectl annotate deployment crawler-api -n crawler-staging \
+            deployment.kubernetes.io/status="failed"
+        fi
+
+    - name: Slack notification
+      if: always()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        channel: '#deployments'
+        webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+        fields: repo,message,commit,author,action,eventName,ref,workflow
+        custom_payload: |
+          {
+            "attachments": [{
+              "color": "${{ job.status }}" === "success" ? "good" : "danger",
+              "title": "Staging Deployment ${{ job.status }}",
+              "text": "Image: `${{ steps.image_tag.outputs.tag }}`\nCommit: `${{ github.sha }}`\nEnvironment: staging",
+              "fields": [
+                {
+                  "title": "Repository",
+                  "value": "${{ github.repository }}",
+                  "short": true
+                },
+                {
+                  "title": "Branch",
+                  "value": "${{ github.ref_name }}",
+                  "short": true
+                }
+              ]
+            }]
+          }
+
+  performance-test:
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    if: success()
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Install k6
+      run: |
+        curl https://github.com/grafana/k6/releases/download/v0.46.0/k6-v0.46.0-linux-amd64.tar.gz -L | tar xvz --strip-components 1
+
+    - name: Run performance tests
+      run: |
+        export API_BASE_URL=$(kubectl get service crawler-api -n crawler-staging -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+        ./k6 run tests/performance/load_test.js \
+          --out cloud \
+          --env API_URL=$API_BASE_URL
+
+    - name: Upload performance results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: performance-test-results
+        path: |
+          test-results/
+          *.json
+
+  security-scan-staging:
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    if: success()
+
+    steps:
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ secrets.AWS_STAGING_ROLE_ARN }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    - name: Setup kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: ${{ env.KUBECTL_VERSION }}
+
+    - name: Update kubeconfig
+      run: |
+        aws eks update-kubeconfig --name ${{ secrets.EKS_CLUSTER_NAME_STAGING }} --region ${{ secrets.AWS_REGION }}
+
+    - name: Run OWASP ZAP baseline scan
+      run: |
+        API_ENDPOINT=$(kubectl get service crawler-api -n crawler-staging -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+        
+        docker run -v $(pwd):/zap/wrk/:rw \
+          -t owasp/zap2docker-stable zap-baseline.py \
+          -t http://${API_ENDPOINT} \
+          -g gen.conf \
+          -r zap-report.html \
+          -x zap-report.xml
+
+    - name: Upload ZAP results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: zap-security-scan
+        path: |
+          zap-report.html
+          zap-report.xml

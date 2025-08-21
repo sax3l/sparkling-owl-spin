@@ -1,0 +1,414 @@
+name: Canary Production Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Docker image tag to deploy'
+        required: true
+      canary_percentage:
+        description: 'Percentage of traffic to route to canary (1-50)'
+        required: false
+        default: '10'
+      auto_promote:
+        description: 'Automatically promote if canary tests pass'
+        required: false
+        default: 'false'
+        type: boolean
+
+env:
+  KUBECTL_VERSION: v1.28.0
+  HELM_VERSION: v3.12.0
+  FLAGGER_VERSION: 1.32.0
+
+jobs:
+  validate-inputs:
+    runs-on: ubuntu-latest
+    outputs:
+      canary_percentage: ${{ steps.validate.outputs.percentage }}
+      
+    steps:
+    - name: Validate inputs
+      id: validate
+      run: |
+        # Validate canary percentage
+        percentage=${{ github.event.inputs.canary_percentage }}
+        if [ "$percentage" -lt 1 ] || [ "$percentage" -gt 50 ]; then
+          echo "Error: Canary percentage must be between 1 and 50"
+          exit 1
+        fi
+        echo "percentage=$percentage" >> $GITHUB_OUTPUT
+        
+        # Validate image tag exists
+        if ! docker manifest inspect ghcr.io/${{ github.repository }}/app:${{ github.event.inputs.image_tag }} > /dev/null 2>&1; then
+          echo "Error: Image tag ${{ github.event.inputs.image_tag }} does not exist"
+          exit 1
+        fi
+
+  pre-deployment-checks:
+    runs-on: ubuntu-latest
+    needs: validate-inputs
+    environment: production
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ vars.AWS_PRODUCTION_ROLE_ARN }}
+        aws-region: ${{ vars.AWS_REGION }}
+
+    - name: Setup kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: ${{ env.KUBECTL_VERSION }}
+
+    - name: Update kubeconfig
+      run: |
+        aws eks update-kubeconfig --name ${{ vars.EKS_CLUSTER_NAME_PRODUCTION }} --region ${{ vars.AWS_REGION }}
+
+    - name: Check production cluster health
+      run: |
+        kubectl get nodes
+        kubectl get pods -n crawler-production
+        kubectl top nodes
+        kubectl top pods -n crawler-production
+
+    - name: Verify current deployment stability
+      run: |
+        # Check that current deployment is stable before canary
+        python scripts/check_deployment_stability.py \
+          --namespace=crawler-production \
+          --deployment=crawler-api \
+          --min-ready-seconds=300 \
+          --error-rate-threshold=1
+
+    - name: Check resource availability
+      run: |
+        # Ensure cluster has enough resources for canary deployment
+        python scripts/check_cluster_resources.py \
+          --namespace=crawler-production \
+          --required-cpu=2000m \
+          --required-memory=4Gi
+
+  canary-deployment:
+    runs-on: ubuntu-latest
+    needs: [validate-inputs, pre-deployment-checks]
+    environment: production
+    
+    outputs:
+      canary_name: ${{ steps.deploy.outputs.canary_name }}
+      
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ vars.AWS_PRODUCTION_ROLE_ARN }}
+        aws-region: ${{ vars.AWS_REGION }}
+
+    - name: Setup tools
+      run: |
+        # Setup kubectl
+        curl -LO "https://dl.k8s.io/release/${{ env.KUBECTL_VERSION }}/bin/linux/amd64/kubectl"
+        sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+        
+        # Setup Helm
+        curl https://get.helm.sh/helm-${{ env.HELM_VERSION }}-linux-amd64.tar.gz | tar xz
+        sudo mv linux-amd64/helm /usr/local/bin/
+        
+        # Setup Flagger CLI
+        curl -s https://api.github.com/repos/fluxcd/flagger/releases/latest | \
+          grep browser_download_url | grep linux_amd64 | cut -d '"' -f 4 | xargs curl -L -o flagger
+        chmod +x flagger && sudo mv flagger /usr/local/bin/
+
+    - name: Update kubeconfig
+      run: |
+        aws eks update-kubeconfig --name ${{ vars.EKS_CLUSTER_NAME_PRODUCTION }} --region ${{ vars.AWS_REGION }}
+
+    - name: Deploy canary configuration
+      id: deploy
+      run: |
+        CANARY_NAME="crawler-api-canary-$(date +%Y%m%d%H%M%S)"
+        echo "canary_name=$CANARY_NAME" >> $GITHUB_OUTPUT
+        
+        # Update canary configuration
+        sed -i "s/IMAGE_TAG_PLACEHOLDER/${{ github.event.inputs.image_tag }}/g" k8s/canary/canary.yaml
+        sed -i "s/CANARY_PERCENTAGE_PLACEHOLDER/${{ needs.validate-inputs.outputs.canary_percentage }}/g" k8s/canary/canary.yaml
+        sed -i "s/CANARY_NAME_PLACEHOLDER/$CANARY_NAME/g" k8s/canary/canary.yaml
+        
+        # Apply canary configuration
+        kubectl apply -f k8s/canary/canary.yaml -n crawler-production
+
+    - name: Wait for canary initialization
+      run: |
+        echo "Waiting for canary to initialize..."
+        kubectl wait --for=condition=ready pod -l app=${{ steps.deploy.outputs.canary_name }} -n crawler-production --timeout=600s
+        
+        # Wait for traffic to start flowing
+        sleep 60
+
+    - name: Verify canary deployment
+      run: |
+        # Check canary pod status
+        kubectl get pods -l app=${{ steps.deploy.outputs.canary_name }} -n crawler-production
+        
+        # Check metrics
+        kubectl get canary -n crawler-production
+        
+        # Verify traffic split
+        python scripts/verify_traffic_split.py \
+          --namespace=crawler-production \
+          --service=crawler-api \
+          --expected-percentage=${{ needs.validate-inputs.outputs.canary_percentage }}
+
+  canary-analysis:
+    runs-on: ubuntu-latest
+    needs: [validate-inputs, canary-deployment]
+    environment: production
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ vars.AWS_PRODUCTION_ROLE_ARN }}
+        aws-region: ${{ vars.AWS_REGION }}
+
+    - name: Setup kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: ${{ env.KUBECTL_VERSION }}
+
+    - name: Update kubeconfig
+      run: |
+        aws eks update-kubeconfig --name ${{ vars.EKS_CLUSTER_NAME_PRODUCTION }} --region ${{ vars.AWS_REGION }}
+
+    - name: Monitor canary metrics
+      run: |
+        echo "Monitoring canary deployment for 10 minutes..."
+        
+        for i in {1..20}; do
+          echo "Check $i/20 - $(date)"
+          
+          # Get canary metrics
+          kubectl get canary -n crawler-production -o json > canary-status.json
+          
+          # Check error rate
+          python scripts/check_canary_metrics.py \
+            --canary-status=canary-status.json \
+            --max-error-rate=2 \
+            --min-success-rate=99
+            
+          # Check response time
+          python scripts/check_response_time.py \
+            --namespace=crawler-production \
+            --service=${{ needs.canary-deployment.outputs.canary_name }} \
+            --max-p99=2000
+            
+          # Check custom business metrics
+          python scripts/check_business_metrics.py \
+            --canary-name=${{ needs.canary-deployment.outputs.canary_name }} \
+            --min-throughput=100
+            
+          sleep 30
+        done
+
+    - name: Run canary tests
+      run: |
+        # Run specific tests against canary endpoint
+        export CANARY_ENDPOINT=$(kubectl get service ${{ needs.canary-deployment.outputs.canary_name }} -n crawler-production -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+        
+        python -m pytest tests/canary/ \
+          --canary-endpoint=$CANARY_ENDPOINT \
+          --production-endpoint=${{ vars.PRODUCTION_API_ENDPOINT }} \
+          --compare-responses \
+          --max-difference=5 \
+          -v
+
+    - name: Generate canary report
+      if: always()
+      run: |
+        python scripts/generate_canary_report.py \
+          --canary-name=${{ needs.canary-deployment.outputs.canary_name }} \
+          --duration=10m \
+          --output=canary-report.json
+
+    - name: Upload canary analysis
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: canary-analysis-${{ github.run_id }}
+        path: |
+          canary-report.json
+          canary-status.json
+          test-results/
+
+  promotion-decision:
+    runs-on: ubuntu-latest
+    needs: [validate-inputs, canary-deployment, canary-analysis]
+    environment: production
+    
+    outputs:
+      promote: ${{ steps.decide.outputs.promote }}
+      
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Download canary analysis
+      uses: actions/download-artifact@v4
+      with:
+        name: canary-analysis-${{ github.run_id }}
+
+    - name: Analyze canary results
+      id: decide
+      run: |
+        # Automated decision based on metrics
+        PROMOTE=$(python scripts/canary_promotion_decision.py \
+          --report=canary-report.json \
+          --auto-promote=${{ github.event.inputs.auto_promote }})
+        
+        echo "promote=$PROMOTE" >> $GITHUB_OUTPUT
+        
+        if [ "$PROMOTE" = "true" ]; then
+          echo "✅ Canary analysis passed - recommending promotion"
+        else
+          echo "❌ Canary analysis failed - recommending rollback"
+        fi
+
+    - name: Manual approval gate
+      if: github.event.inputs.auto_promote == 'false'
+      uses: trstringer/manual-approval@v1
+      with:
+        secret: ${{ github.TOKEN }}
+        approvers: ${{ vars.PRODUCTION_APPROVERS }}
+        minimum-approvals: 2
+        issue-title: "Canary Promotion Approval Required"
+        issue-body: |
+          ## Canary Deployment Promotion Request
+          
+          **Image Tag:** ${{ github.event.inputs.image_tag }}
+          **Canary Percentage:** ${{ needs.validate-inputs.outputs.canary_percentage }}%
+          **Automated Decision:** ${{ steps.decide.outputs.promote }}
+          
+          Please review the canary analysis and approve or reject the promotion.
+          
+          **Analysis Results:**
+          - [Canary Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          
+          Type "approve" to promote the canary to full production.
+          Type "reject" to rollback the canary deployment.
+
+  promote-or-rollback:
+    runs-on: ubuntu-latest
+    needs: [canary-deployment, promotion-decision]
+    environment: production
+    if: always()
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ vars.AWS_PRODUCTION_ROLE_ARN }}
+        aws-region: ${{ vars.AWS_REGION }}
+
+    - name: Setup kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: ${{ env.KUBECTL_VERSION }}
+
+    - name: Update kubeconfig
+      run: |
+        aws eks update-kubeconfig --name ${{ vars.EKS_CLUSTER_NAME_PRODUCTION }} --region ${{ vars.AWS_REGION }}
+
+    - name: Promote canary
+      if: needs.promotion-decision.outputs.promote == 'true'
+      run: |
+        echo "Promoting canary to full production..."
+        
+        # Update main deployment with new image
+        kubectl set image deployment/crawler-api \
+          crawler-api=ghcr.io/${{ github.repository }}/app:${{ github.event.inputs.image_tag }} \
+          -n crawler-production
+          
+        # Wait for rollout
+        kubectl rollout status deployment/crawler-api -n crawler-production --timeout=600s
+        
+        # Clean up canary resources
+        kubectl delete canary ${{ needs.canary-deployment.outputs.canary_name }} -n crawler-production
+
+    - name: Rollback canary
+      if: needs.promotion-decision.outputs.promote != 'true'
+      run: |
+        echo "Rolling back canary deployment..."
+        
+        # Delete canary resources
+        kubectl delete canary ${{ needs.canary-deployment.outputs.canary_name }} -n crawler-production
+        
+        # Ensure main deployment is stable
+        kubectl rollout status deployment/crawler-api -n crawler-production
+
+    - name: Post-deployment verification
+      if: needs.promotion-decision.outputs.promote == 'true'
+      run: |
+        # Verify full deployment is working
+        sleep 60
+        
+        python scripts/verify_production_health.py \
+          --namespace=crawler-production \
+          --deployment=crawler-api \
+          --min-replicas=3 \
+          --health-check-url=${{ vars.PRODUCTION_API_ENDPOINT }}/health
+
+    - name: Update deployment record
+      if: always()
+      run: |
+        python scripts/update_deployment_record.py \
+          --environment=production \
+          --image-tag=${{ github.event.inputs.image_tag }} \
+          --canary-percentage=${{ needs.validate-inputs.outputs.canary_percentage }} \
+          --promoted=${{ needs.promotion-decision.outputs.promote }} \
+          --timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+    - name: Notify deployment result
+      if: always()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        channel: '#deployments'
+        webhook_url: ${{ vars.SLACK_WEBHOOK_URL }}
+        custom_payload: |
+          {
+            "attachments": [{
+              "color": "${{ needs.promotion-decision.outputs.promote == 'true' && job.status == 'success' ? 'good' : 'danger' }}",
+              "title": "Production Canary Deployment Result",
+              "text": "${{ needs.promotion-decision.outputs.promote == 'true' ? 'Promoted' : 'Rolled Back' }}",
+              "fields": [
+                {
+                  "title": "Image Tag",
+                  "value": "${{ github.event.inputs.image_tag }}",
+                  "short": true
+                },
+                {
+                  "title": "Canary %",
+                  "value": "${{ needs.validate-inputs.outputs.canary_percentage }}%",
+                  "short": true
+                },
+                {
+                  "title": "Decision",
+                  "value": "${{ needs.promotion-decision.outputs.promote == 'true' ? 'Promoted to Production' : 'Rolled Back' }}",
+                  "short": false
+                }
+              ]
+            }]
+          }

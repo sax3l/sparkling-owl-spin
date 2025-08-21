@@ -1,0 +1,354 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crawler-api
+  namespace: crawler-production
+  labels:
+    app: crawler
+    component: api
+    version: v1
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: crawler
+      component: api
+  template:
+    metadata:
+      labels:
+        app: crawler
+        component: api
+        version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: crawler-api
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+      - name: api
+        image: ghcr.io/crawler-platform/app:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+          name: http
+          protocol: TCP
+        env:
+        - name: ENVIRONMENT
+          value: "production"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: crawler-secrets
+              key: database-url
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: crawler-secrets
+              key: redis-url
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: crawler-secrets
+              key: secret-key
+        - name: CELERY_BROKER_URL
+          valueFrom:
+            secretKeyRef:
+              name: crawler-secrets
+              key: celery-broker-url
+        - name: CELERY_RESULT_BACKEND
+          valueFrom:
+            secretKeyRef:
+              name: crawler-secrets
+              key: celery-result-backend
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        volumeMounts:
+        - name: config
+          mountPath: /app/config
+          readOnly: true
+        - name: logs
+          mountPath: /app/logs
+        - name: data
+          mountPath: /app/data
+      volumes:
+      - name: config
+        configMap:
+          name: crawler-config
+      - name: logs
+        emptyDir: {}
+      - name: data
+        persistentVolumeClaim:
+          claimName: crawler-data
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crawler-worker
+  namespace: crawler-production
+  labels:
+    app: crawler
+    component: worker
+    version: v1
+spec:
+  replicas: 4
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 2
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: crawler
+      component: worker
+  template:
+    metadata:
+      labels:
+        app: crawler
+        component: worker
+        version: v1
+        worker-type: crawler
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: crawler-worker
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+      - name: worker
+        image: ghcr.io/crawler-platform/worker:latest
+        imagePullPolicy: Always
+        command: ["./worker-entrypoint.sh", "crawler"]
+        env:
+        - name: ENVIRONMENT
+          value: "production"
+        - name: WORKER_TYPE
+          value: "crawler"
+        - name: WORKER_CONCURRENCY
+          value: "8"
+        - name: WORKER_LOG_LEVEL
+          value: "INFO"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: crawler-secrets
+              key: database-url
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: crawler-secrets
+              key: redis-url
+        - name: CELERY_BROKER_URL
+          valueFrom:
+            secretKeyRef:
+              name: crawler-secrets
+              key: celery-broker-url
+        - name: CELERY_RESULT_BACKEND
+          valueFrom:
+            secretKeyRef:
+              name: crawler-secrets
+              key: celery-result-backend
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        livenessProbe:
+          exec:
+            command:
+            - python
+            - -c
+            - "from src.services.health import check_worker_health; check_worker_health()"
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - python
+            - -c
+            - "from src.services.health import check_worker_ready; check_worker_ready()"
+          initialDelaySeconds: 30
+          periodSeconds: 15
+          timeoutSeconds: 5
+          failureThreshold: 3
+        volumeMounts:
+        - name: config
+          mountPath: /app/config
+          readOnly: true
+        - name: logs
+          mountPath: /app/logs
+        - name: data
+          mountPath: /app/data
+      volumes:
+      - name: config
+        configMap:
+          name: crawler-config
+      - name: logs
+        emptyDir: {}
+      - name: data
+        persistentVolumeClaim:
+          claimName: crawler-data
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scraper-worker
+  namespace: crawler-production
+  labels:
+    app: crawler
+    component: scraper
+    version: v1
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: crawler
+      component: scraper
+  template:
+    metadata:
+      labels:
+        app: crawler
+        component: scraper
+        version: v1
+        worker-type: scraper
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: crawler-worker
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+      - name: scraper
+        image: ghcr.io/crawler-platform/browser:latest
+        imagePullPolicy: Always
+        command: ["./start-with-display.sh", "./worker-entrypoint.sh", "scraper"]
+        env:
+        - name: ENVIRONMENT
+          value: "production"
+        - name: WORKER_TYPE
+          value: "scraper"
+        - name: WORKER_CONCURRENCY
+          value: "4"
+        - name: WORKER_LOG_LEVEL
+          value: "INFO"
+        - name: DISPLAY
+          value: ":99"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: crawler-secrets
+              key: database-url
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: crawler-secrets
+              key: redis-url
+        - name: CELERY_BROKER_URL
+          valueFrom:
+            secretKeyRef:
+              name: crawler-secrets
+              key: celery-broker-url
+        - name: CELERY_RESULT_BACKEND
+          valueFrom:
+            secretKeyRef:
+              name: crawler-secrets
+              key: celery-result-backend
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+        livenessProbe:
+          exec:
+            command:
+            - python
+            - -c
+            - "from playwright.sync_api import sync_playwright; p = sync_playwright().start(); p.chromium.launch(); p.stop()"
+          initialDelaySeconds: 120
+          periodSeconds: 60
+          timeoutSeconds: 30
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - python
+            - -c
+            - "from src.services.health import check_worker_ready; check_worker_ready()"
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        volumeMounts:
+        - name: config
+          mountPath: /app/config
+          readOnly: true
+        - name: logs
+          mountPath: /app/logs
+        - name: data
+          mountPath: /app/data
+        - name: shm
+          mountPath: /dev/shm
+      volumes:
+      - name: config
+        configMap:
+          name: crawler-config
+      - name: logs
+        emptyDir: {}
+      - name: data
+        persistentVolumeClaim:
+          claimName: crawler-data
+      - name: shm
+        emptyDir:
+          medium: Memory
+          sizeLimit: 2Gi

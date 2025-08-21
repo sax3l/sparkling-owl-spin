@@ -1,0 +1,67 @@
+# Docker image for background workers
+FROM python:3.11-slim-bullseye
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    DEBIAN_FRONTEND=noninteractive \
+    WORKER_TYPE=crawler \
+    WORKER_CONCURRENCY=4 \
+    WORKER_LOG_LEVEL=INFO
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    git \
+    gcc \
+    g++ \
+    libpq-dev \
+    libssl-dev \
+    libffi-dev \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user
+RUN groupadd -r worker && useradd -r -g worker worker
+
+# Set work directory
+WORKDIR /app
+
+# Copy requirements
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Install additional worker packages
+RUN pip install --no-cache-dir \
+    celery[redis] \
+    gunicorn \
+    rq \
+    dramatiq[redis] \
+    flower
+
+# Copy application code
+COPY --chown=worker:worker src/ ./src/
+COPY --chown=worker:worker config/ ./config/
+COPY --chown=worker:worker scripts/ ./scripts/
+
+# Create necessary directories
+RUN mkdir -p /app/data/logs /app/data/temp /app/data/cache && \
+    chown -R worker:worker /app/data
+
+# Copy worker entrypoint
+COPY --chown=worker:worker docker/worker-entrypoint.sh ./
+RUN chmod +x worker-entrypoint.sh
+
+# Switch to non-root user
+USER worker
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python -c "from src.services.health import check_worker_health; check_worker_health()" || exit 1
+
+# Expose worker monitoring port
+EXPOSE 5555
+
+# Start worker
+ENTRYPOINT ["./worker-entrypoint.sh"]
+CMD ["crawler"]

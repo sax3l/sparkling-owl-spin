@@ -1,0 +1,334 @@
+name: Selector Regression Tests
+
+on:
+  schedule:
+    # Run nightly at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      target_sites:
+        description: 'Comma-separated list of target sites to test'
+        required: false
+        default: 'all'
+      selector_version:
+        description: 'Selector configuration version to test'
+        required: false
+        default: 'latest'
+
+env:
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '18'
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      sites_matrix: ${{ steps.sites.outputs.matrix }}
+      test_id: ${{ steps.test_id.outputs.id }}
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Generate test ID
+      id: test_id
+      run: echo "id=regression-$(date +%Y%m%d%H%M%S)" >> $GITHUB_OUTPUT
+
+    - name: Prepare test sites matrix
+      id: sites
+      run: |
+        if [ "${{ github.event.inputs.target_sites }}" = "all" ] || [ "${{ github.event.inputs.target_sites }}" = "" ]; then
+          # Generate matrix for all configured sites
+          sites=$(python scripts/get_regression_sites.py --format=json)
+        else
+          # Use specified sites
+          sites=$(echo '${{ github.event.inputs.target_sites }}' | python scripts/parse_site_list.py --format=json)
+        fi
+        echo "matrix=${sites}" >> $GITHUB_OUTPUT
+
+  selector-regression:
+    runs-on: ubuntu-latest
+    needs: setup
+    if: fromJson(needs.setup.outputs.sites_matrix) != null
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        site: ${{ fromJson(needs.setup.outputs.sites_matrix) }}
+        browser: [chromium, firefox, webkit]
+    
+    timeout-minutes: 30
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+        pip install -r requirements_dev.txt
+        npm install -g @playwright/test
+        npx playwright install ${{ matrix.browser }}
+
+    - name: Setup test environment
+      run: |
+        # Create test database
+        python scripts/init_db.py --test-mode
+        
+        # Start Redis for testing
+        docker run -d --name redis-test -p 6379:6379 redis:7-alpine
+        
+        # Wait for services
+        python scripts/wait_for_services.py --timeout=60
+
+    - name: Download selector configurations
+      run: |
+        # Download latest selector configs or specified version
+        VERSION="${{ github.event.inputs.selector_version || 'latest' }}"
+        python scripts/download_selector_configs.py --version=$VERSION --site=${{ matrix.site.name }}
+
+    - name: Run selector regression tests
+      id: regression_test
+      run: |
+        export TEST_ID="${{ needs.setup.outputs.test_id }}"
+        export SITE_NAME="${{ matrix.site.name }}"
+        export SITE_URL="${{ matrix.site.url }}"
+        export BROWSER="${{ matrix.browser }}"
+        export SELECTOR_VERSION="${{ github.event.inputs.selector_version || 'latest' }}"
+        
+        python -m pytest tests/regression/test_selector_stability.py \
+          --site=${{ matrix.site.name }} \
+          --browser=${{ matrix.browser }} \
+          --baseline-data=data/regression/baselines/ \
+          --output-dir=test-results/${{ needs.setup.outputs.test_id }}/ \
+          --generate-report \
+          --capture-screenshots \
+          --max-retries=2 \
+          -v
+
+    - name: Analyze results
+      if: always()
+      run: |
+        python scripts/analyze_regression_results.py \
+          --test-id=${{ needs.setup.outputs.test_id }} \
+          --site=${{ matrix.site.name }} \
+          --browser=${{ matrix.browser }} \
+          --output-format=json
+
+    - name: Upload test artifacts
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: regression-results-${{ matrix.site.name }}-${{ matrix.browser }}
+        path: |
+          test-results/${{ needs.setup.outputs.test_id }}/
+          screenshots/
+          *.json
+
+    - name: Update regression baseline
+      if: success() && github.ref == 'refs/heads/main'
+      run: |
+        python scripts/update_regression_baseline.py \
+          --site=${{ matrix.site.name }} \
+          --browser=${{ matrix.browser }} \
+          --test-results=test-results/${{ needs.setup.outputs.test_id }}/
+
+    - name: Check failure threshold
+      if: failure()
+      run: |
+        python scripts/check_failure_threshold.py \
+          --site=${{ matrix.site.name }} \
+          --browser=${{ matrix.browser }} \
+          --threshold=10  # 10% failure threshold
+
+  aggregate-results:
+    runs-on: ubuntu-latest
+    needs: [setup, selector-regression]
+    if: always()
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Download all test results
+      uses: actions/download-artifact@v4
+      with:
+        pattern: regression-results-*
+        merge-multiple: true
+        path: all-results/
+
+    - name: Generate comprehensive report
+      run: |
+        python scripts/generate_regression_report.py \
+          --test-id=${{ needs.setup.outputs.test_id }} \
+          --input-dir=all-results/ \
+          --output-dir=reports/ \
+          --format=html,json,csv
+
+    - name: Calculate stability metrics
+      id: metrics
+      run: |
+        python scripts/calculate_stability_metrics.py \
+          --test-id=${{ needs.setup.outputs.test_id }} \
+          --input-dir=all-results/ \
+          --output-format=github
+
+    - name: Upload comprehensive report
+      uses: actions/upload-artifact@v4
+      with:
+        name: regression-report-${{ needs.setup.outputs.test_id }}
+        path: reports/
+
+    - name: Comment on PR (if applicable)
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const metrics = JSON.parse(fs.readFileSync('reports/metrics.json', 'utf8'));
+          
+          const comment = `## Selector Regression Test Results
+          
+          **Test ID:** ${{ needs.setup.outputs.test_id }}
+          
+          ### Overall Stability: ${metrics.overall_stability}%
+          
+          | Site | Browser | Status | Stability |
+          |------|---------|--------|-----------|
+          ${metrics.site_results.map(r => `| ${r.site} | ${r.browser} | ${r.status} | ${r.stability}% |`).join('\n')}
+          
+          ### Summary
+          - **Total Tests:** ${metrics.total_tests}
+          - **Passed:** ${metrics.passed}
+          - **Failed:** ${metrics.failed}
+          - **Threshold Met:** ${metrics.threshold_met ? '✅' : '❌'}
+          
+          ${metrics.threshold_met ? '' : '⚠️ Some sites are below the stability threshold. Review the detailed report.'}
+          `;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });
+
+    - name: Update status badge
+      if: github.ref == 'refs/heads/main'
+      run: |
+        python scripts/update_status_badge.py \
+          --metric=selector_stability \
+          --value="${{ steps.metrics.outputs.stability }}" \
+          --badge-file=docs/badges/selector_stability.svg
+
+  notify-results:
+    runs-on: ubuntu-latest
+    needs: [setup, aggregate-results]
+    if: always()
+    
+    steps:
+    - name: Determine overall status
+      id: status
+      run: |
+        if [ "${{ needs.selector-regression.result }}" = "success" ]; then
+          echo "status=success" >> $GITHUB_OUTPUT
+          echo "message=All selector regression tests passed" >> $GITHUB_OUTPUT
+        else
+          echo "status=failure" >> $GITHUB_OUTPUT
+          echo "message=Some selector regression tests failed" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Send Slack notification
+      if: always()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ steps.status.outputs.status }}
+        channel: '#quality-assurance'
+        webhook_url: ${{ vars.SLACK_WEBHOOK_URL }}
+        custom_payload: |
+          {
+            "attachments": [{
+              "color": "${{ steps.status.outputs.status }}" === "success" ? "good" : "danger",
+              "title": "Selector Regression Test Results",
+              "text": "${{ steps.status.outputs.message }}",
+              "fields": [
+                {
+                  "title": "Test ID",
+                  "value": "${{ needs.setup.outputs.test_id }}",
+                  "short": true
+                },
+                {
+                  "title": "Trigger",
+                  "value": "${{ github.event_name }}",
+                  "short": true
+                },
+                {
+                  "title": "Report",
+                  "value": "Available in GitHub Actions artifacts",
+                  "short": false
+                }
+              ]
+            }]
+          }
+
+    - name: Create GitHub issue on failure
+      if: failure() && github.event_name == 'schedule'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: 'Selector Regression Test Failure - ${{ needs.setup.outputs.test_id }}',
+            body: `## Automated Issue: Selector Regression Test Failure
+            
+            **Test ID:** ${{ needs.setup.outputs.test_id }}
+            **Date:** ${new Date().toISOString()}
+            **Workflow:** ${{ github.workflow }}
+            **Run:** ${{ github.run_id }}
+            
+            The nightly selector regression tests have detected failures. Please review the test results and update selectors as needed.
+            
+            ### Next Steps
+            1. Review the test report in the workflow artifacts
+            2. Identify which sites/selectors are failing
+            3. Update selector configurations
+            4. Test fixes manually
+            5. Close this issue when resolved
+            
+            ### Links
+            - [Workflow Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            - [Test Report Artifacts](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            `,
+            labels: ['bug', 'regression', 'automated']
+          });
+
+  cleanup:
+    runs-on: ubuntu-latest
+    needs: [setup, aggregate-results]
+    if: always()
+    
+    steps:
+    - name: Cleanup old test data
+      run: |
+        # Clean up test databases and temporary files
+        python scripts/cleanup_test_data.py \
+          --older-than=7d \
+          --test-type=regression
+
+    - name: Archive old reports
+      run: |
+        # Archive reports older than 30 days
+        python scripts/archive_regression_reports.py \
+          --older-than=30d \
+          --storage=s3://crawler-platform-reports/regression/

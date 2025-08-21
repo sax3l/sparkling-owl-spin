@@ -1,0 +1,228 @@
+name: Build, SBOM & Sign
+
+on:
+  push:
+    branches: [main, develop]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-sign:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      attestations: write
+
+    strategy:
+      matrix:
+        image:
+          - name: app
+            dockerfile: docker/Dockerfile.app
+            context: .
+          - name: worker
+            dockerfile: docker/Dockerfile.worker
+            context: .
+          - name: browser
+            dockerfile: docker/Dockerfile.browser
+            context: .
+          - name: synthetic
+            dockerfile: docker/Dockerfile.synthetic
+            context: .
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install cosign
+      if: github.event_name != 'pull_request'
+      uses: sigstore/cosign-installer@v3
+      with:
+        cosign-release: 'v2.2.0'
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to Container Registry
+      if: github.event_name != 'pull_request'
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.image.name }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=sha,prefix={{branch}}-
+
+    - name: Build and push Docker image
+      id: build
+      uses: docker/build-push-action@v5
+      with:
+        context: ${{ matrix.image.context }}
+        file: ${{ matrix.image.dockerfile }}
+        push: ${{ github.event_name != 'pull_request' }}
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        platforms: linux/amd64,linux/arm64
+        sbom: true
+        provenance: true
+
+    - name: Generate SBOM
+      if: github.event_name != 'pull_request'
+      uses: anchore/sbom-action@v0
+      with:
+        image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.image.name }}:${{ steps.meta.outputs.version }}
+        format: spdx-json
+        output-file: sbom-${{ matrix.image.name }}.spdx.json
+
+    - name: Upload SBOM
+      if: github.event_name != 'pull_request'
+      uses: actions/upload-artifact@v4
+      with:
+        name: sbom-${{ matrix.image.name }}
+        path: sbom-${{ matrix.image.name }}.spdx.json
+
+    - name: Sign container image with cosign
+      if: github.event_name != 'pull_request'
+      env:
+        TAGS: ${{ steps.meta.outputs.tags }}
+        DIGEST: ${{ steps.build.outputs.digest }}
+      run: |
+        echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
+
+    - name: Attest SBOM
+      if: github.event_name != 'pull_request'
+      uses: actions/attest-sbom@v1
+      with:
+        subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.image.name }}
+        subject-digest: ${{ steps.build.outputs.digest }}
+        sbom-path: sbom-${{ matrix.image.name }}.spdx.json
+        push-to-registry: true
+
+  vulnerability-scan:
+    runs-on: ubuntu-latest
+    needs: build-and-sign
+    if: github.event_name != 'pull_request'
+    
+    strategy:
+      matrix:
+        image: [app, worker, browser, synthetic]
+
+    steps:
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.image }}:${{ github.sha }}
+        format: 'sarif'
+        output: 'trivy-results-${{ matrix.image }}.sarif'
+
+    - name: Upload Trivy scan results
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: 'trivy-results-${{ matrix.image }}.sarif'
+        category: 'trivy-${{ matrix.image }}'
+
+  compliance-check:
+    runs-on: ubuntu-latest
+    needs: build-and-sign
+    if: github.event_name != 'pull_request'
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Run OPA Conftest
+      uses: instrumenta/conftest-action@master
+      with:
+        files: docker/
+        policy: policies/docker-security.rego
+
+    - name: CIS Docker Benchmark
+      run: |
+        docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+          -v /usr/bin/docker:/usr/bin/docker \
+          -v $(pwd):/app \
+          aquasec/docker-bench-security:latest
+
+  supply-chain-security:
+    runs-on: ubuntu-latest
+    needs: build-and-sign
+    if: github.event_name != 'pull_request'
+
+    steps:
+    - name: Verify signatures
+      env:
+        COSIGN_EXPERIMENTAL: 1
+      run: |
+        echo "Verifying container signatures..."
+        for image in app worker browser synthetic; do
+          cosign verify ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${image}:${{ github.sha }}
+        done
+
+    - name: Download SBOMs
+      uses: actions/download-artifact@v4
+      with:
+        pattern: sbom-*
+        merge-multiple: true
+
+    - name: Analyze dependencies
+      run: |
+        echo "Analyzing software bill of materials..."
+        for sbom in sbom-*.spdx.json; do
+          echo "Processing $sbom"
+          # Add custom SBOM analysis logic here
+          jq '.packages[] | select(.copyrightText != null) | {name: .name, version: .versionInfo, license: .licenseConcluded}' "$sbom"
+        done
+
+  release-artifacts:
+    runs-on: ubuntu-latest
+    needs: [build-and-sign, vulnerability-scan, compliance-check]
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+
+    - name: Create release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          sbom-*.spdx.json
+        body: |
+          ## Container Images
+          
+          This release includes the following signed container images:
+          
+          - `${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/app:${{ github.ref_name }}`
+          - `${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/worker:${{ github.ref_name }}`
+          - `${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/browser:${{ github.ref_name }}`
+          - `${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/synthetic:${{ github.ref_name }}`
+          
+          All images are signed with cosign and include Software Bill of Materials (SBOM).
+          
+          ## Verification
+          
+          Verify image signatures with:
+          ```bash
+          cosign verify ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/app:${{ github.ref_name }}
+          ```
+        draft: false
+        prerelease: contains(github.ref_name, '-')
+        generate_release_notes: true
