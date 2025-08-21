@@ -24,9 +24,22 @@ Main Components:
 """
 
 from .logger import get_logger, configure_logging
-from .auth_utils import AuthUtils, TokenManager
-from .validators import DataValidator, SchemaValidator
-from .rate_limiter import RateLimiter, RateLimitMiddleware
+from .auth_utils import (
+    verify_password, 
+    get_password_hash, 
+    create_access_token, 
+    decode_access_token, 
+    has_scope,
+    get_user_scopes
+)
+from .validators import (
+    BaseValidator, 
+    URLValidator, 
+    EmailValidator, 
+    ValidationResult, 
+    ValidationLevel
+)
+from .rate_limiter import TokenBucket, RateLimitMiddleware
 from .quota_manager import QuotaManager
 from .idempotency import IdempotencyHandler
 from .pattern_detector import PatternDetector
