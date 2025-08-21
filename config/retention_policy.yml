@@ -1,0 +1,94 @@
+# Data Retention Policies Configuration
+# Defines how long different types of data should be kept before automatic cleanup
+
+# Core data retention (in days)
+crawl_data:
+  days: 90
+  description: "Raw crawl results and parsed data from websites"
+  backup_before_delete: true
+
+exports:
+  days: 30
+  description: "Generated export files (CSV, JSON, Excel)"
+  backup_location: "s3://backups/exports/"
+
+proxy_data:
+  days: 7
+  description: "Proxy performance metrics and logs"
+  keep_aggregated: true  # Keep aggregated statistics longer
+
+logs:
+  days: 14
+  description: "Application logs and debug information"
+  keep_errors: 90  # Keep error logs longer
+  levels:
+    DEBUG: 3
+    INFO: 14
+    WARNING: 30
+    ERROR: 90
+    CRITICAL: 365
+
+failed_requests:
+  days: 3
+  description: "Failed request attempts and error details"
+  keep_patterns: true  # Keep failure patterns for analysis
+
+# Cache data retention (in hours)
+cache_data:
+  hours: 24
+  description: "Temporary cache entries"
+  exclude_patterns:
+    - "session:*"  # Keep session data longer
+    - "config:*"   # Keep config cache longer
+
+# Session data retention
+session_data:
+  days: 7
+  description: "User session and authentication data"
+  cleanup_inactive: 1  # Clean up inactive sessions after 1 day
+
+# Database-specific retention
+database:
+  vacuum_after_cleanup: true
+  reindex_after_cleanup: true
+  analyze_after_cleanup: true
+
+# S3 retention policies
+s3_lifecycle:
+  raw_html:
+    transition_to_ia: 30  # Days before moving to Infrequent Access
+    transition_to_glacier: 90  # Days before moving to Glacier
+    delete_after: 365  # Days before permanent deletion
+  
+  db_backups:
+    transition_to_ia: 7
+    transition_to_glacier: 30
+    delete_after: 1095  # 3 years
+  
+  exports:
+    transition_to_ia: 30
+    delete_after: 365
+
+# Compliance settings
+compliance:
+  gdpr_erasure_verification: true
+  audit_trail_retention: 2555  # 7 years in days
+  legal_hold_check: true
+
+# Job scheduling
+schedule:
+  daily_cleanup: "02:00"  # Run daily cleanup at 2 AM
+  weekly_deep_clean: "sun 03:00"  # Weekly deep clean on Sunday 3 AM
+  monthly_archive: "1 04:00"  # Monthly archival on 1st day at 4 AM
+
+# Performance settings
+performance:
+  batch_size: 1000
+  max_parallel_deletes: 5
+  pause_between_batches: 100  # milliseconds
+  
+# Notification settings
+notifications:
+  cleanup_summary: true
+  error_alerts: true
+  large_cleanup_threshold: 10000  # Alert if more than 10k records deleted

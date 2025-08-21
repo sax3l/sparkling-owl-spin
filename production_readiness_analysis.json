@@ -1,0 +1,1759 @@
+{
+  "analysis_timestamp": "1755731692.4377687",
+  "project_root": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project",
+  "modules": {
+    "anti_bot": {
+      "description": "Anti-bot detection and evasion - CRITICAL for avoiding blocks",
+      "priority": 1,
+      "production_critical": true,
+      "files": [
+        {
+          "file": "header_generator.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\anti_bot\\header_generator.py",
+          "status": "implemented",
+          "size": 1710,
+          "details": {
+            "functions": [
+              "get_headers"
+            ],
+            "classes": [],
+            "imports": 2,
+            "pass_count": 0,
+            "ellipsis_count": 0,
+            "todo_count": 0,
+            "meaningful_lines": 3
+          },
+          "production_critical": true
+        },
+        {
+          "file": "delay_strategy.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\anti_bot\\delay_strategy.py",
+          "status": "implemented",
+          "size": 9946,
+          "details": {
+            "functions": [
+              "apply_delay",
+              "__init__",
+              "calculate_delay",
+              "apply_delay",
+              "_extract_domain",
+              "_get_domain_state",
+              "_update_domain_state",
+              "_calculate_base_delay",
+              "_apply_strategy",
+              "_human_like_delay",
+              "_respectful_delay",
+              "_add_jitter",
+              "get_domain_stats",
+              "reset_domain_state"
+            ],
+            "classes": [
+              "DelayStrategy",
+              "DelayConfig",
+              "DomainDelayState",
+              "DelayManager"
+            ],
+            "imports": 9,
+            "pass_count": 0,
+            "ellipsis_count": 0,
+            "todo_count": 0,
+            "meaningful_lines": 27
+          },
+          "production_critical": true
+        },
+        {
+          "file": "session_manager.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\anti_bot\\session_manager.py",
+          "status": "implemented",
+          "size": 10269,
+          "details": {
+            "functions": [
+              "get_session_manager",
+              "success_rate",
+              "age_minutes",
+              "__init__",
+              "create_session",
+              "get_session",
+              "use_session",
+              "report_request_result",
+              "invalidate_session",
+              "get_session_stats",
+              "get_domain_stats",
+              "_should_rotate_session",
+              "_rotate_session",
+              "_cleanup_expired_sessions",
+              "_remove_session",
+              "_round_robin_selection",
+              "_least_used_selection",
+              "cleanup_all_sessions"
+            ],
+            "classes": [
+              "SessionInfo",
+              "SessionManager"
+            ],
+            "imports": 11,
+            "pass_count": 0,
+            "ellipsis_count": 0,
+            "todo_count": 0,
+            "meaningful_lines": 31
+          },
+          "production_critical": true
+        },
+        {
+          "file": "diagnostics\\diagnose_url.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\anti_bot\\diagnostics\\diagnose_url.py",
+          "status": "stub",
+          "size": 70,
+          "details": {
+            "functions": [],
+            "classes": [],
+            "imports": 0,
+            "pass_count": 1,
+            "ellipsis_count": 0,
+            "todo_count": 1,
+            "meaningful_lines": 0
+          },
+          "production_critical": false
+        },
+        {
+          "file": "browser_stealth\\stealth_browser.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\anti_bot\\browser_stealth\\stealth_browser.py",
+          "status": "stub",
+          "size": 121,
+          "details": {
+            "functions": [],
+            "classes": [],
+            "imports": 0,
+            "pass_count": 1,
+            "ellipsis_count": 0,
+            "todo_count": 1,
+            "meaningful_lines": 0
+          },
+          "production_critical": false
+        },
+        {
+          "file": "browser_stealth\\human_behavior.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\anti_bot\\browser_stealth\\human_behavior.py",
+          "status": "stub",
+          "size": 129,
+          "details": {
+            "functions": [],
+            "classes": [],
+            "imports": 0,
+            "pass_count": 1,
+            "ellipsis_count": 0,
+            "todo_count": 1,
+            "meaningful_lines": 0
+          },
+          "production_critical": false
+        },
+        {
+          "file": "browser_stealth\\captcha_solver.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\anti_bot\\browser_stealth\\captcha_solver.py",
+          "status": "stub",
+          "size": 225,
+          "details": {
+            "functions": [],
+            "classes": [],
+            "imports": 0,
+            "pass_count": 2,
+            "ellipsis_count": 0,
+            "todo_count": 0,
+            "meaningful_lines": 0
+          },
+          "production_critical": false
+        },
+        {
+          "file": "browser_stealth\\cloudflare_bypass.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\anti_bot\\browser_stealth\\cloudflare_bypass.py",
+          "status": "implemented",
+          "size": 304,
+          "details": {
+            "functions": [],
+            "classes": [],
+            "imports": 0,
+            "pass_count": 3,
+            "ellipsis_count": 0,
+            "todo_count": 0,
+            "meaningful_lines": 0
+          },
+          "production_critical": false
+        },
+        {
+          "file": "policy_manager.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\anti_bot\\policy_manager.py",
+          "status": "implemented",
+          "size": 6794,
+          "details": {
+            "functions": [
+              "__init__",
+              "get_policy",
+              "update_policy",
+              "update_on_failure",
+              "update_on_success",
+              "get_recommended_config",
+              "get_health_status",
+              "_analyze_domain",
+              "_recommend_transport",
+              "_recommend_proxy_type",
+              "_recommend_rate_limit",
+              "_recommend_headers",
+              "_recommend_session_policy"
+            ],
+            "classes": [
+              "DomainPolicy",
+              "PolicyManager"
+            ],
+            "imports": 4,
+            "pass_count": 0,
+            "ellipsis_count": 0,
+            "todo_count": 0,
+            "meaningful_lines": 19
+          },
+          "production_critical": false
+        },
+        {
+          "file": "fallback_strategy.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\anti_bot\\fallback_strategy.py",
+          "status": "implemented",
+          "size": 17902,
+          "details": {
+            "functions": [
+              "is_banned",
+              "__init__",
+              "should_attempt_fallback",
+              "get_fallback_strategy",
+              "record_fallback_result",
+              "_get_domain_state",
+              "_get_next_mode",
+              "_calculate_fallback_delay",
+              "_should_rotate_proxy",
+              "_get_additional_headers",
+              "_get_stealth_options",
+              "_get_timeout",
+              "_get_learned_mode",
+              "get_domain_stats",
+              "get_global_stats",
+              "reset_domain",
+              "unban_domain"
+            ],
+            "classes": [
+              "TransportMode",
+              "FallbackTrigger",
+              "FallbackAttempt",
+              "DomainFallbackState",
+              "FallbackStrategy"
+            ],
+            "imports": 7,
+            "pass_count": 2,
+            "ellipsis_count": 0,
+            "todo_count": 0,
+            "meaningful_lines": 29
+          },
+          "production_critical": false
+        },
+        {
+          "file": "credential_manager.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\anti_bot\\credential_manager.py",
+          "status": "implemented",
+          "size": 22183,
+          "details": {
+            "functions": [
+              "to_dict",
+              "from_dict",
+              "is_expired",
+              "age_minutes",
+              "update_activity",
+              "__init__",
+              "add_credential",
+              "get_credential",
+              "get_credentials_for_domain",
+              "get_decrypted_password",
+              "get_session",
+              "get_session_for_domain",
+              "_get_active_session",
+              "_get_domain_sessions",
+              "_invalidate_session",
+              "_cleanup_expired_sessions",
+              "validate_session",
+              "_load_credentials",
+              "_save_credentials",
+              "remove_credential",
+              "get_stats"
+            ],
+            "classes": [
+              "AuthMethod",
+              "SessionStatus",
+              "Credential",
+              "Session",
+              "CredentialManager"
+            ],
+            "imports": 12,
+            "pass_count": 27,
+            "ellipsis_count": 0,
+            "todo_count": 0,
+            "meaningful_lines": 38
+          },
+          "production_critical": false
+        },
+        {
+          "file": "policy.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\anti_bot\\policy.py",
+          "status": "implemented",
+          "size": 22528,
+          "details": {
+            "functions": [
+              "decide",
+              "feedback",
+              "matches",
+              "trigger",
+              "is_blocked",
+              "add_detection_signal",
+              "__init__",
+              "_initialize_default_rules",
+              "assess_request",
+              "report_detection",
+              "report_success",
+              "report_failure",
+              "_get_domain_profile",
+              "_calculate_delay",
+              "_get_recommendations",
+              "add_rule",
+              "remove_rule",
+              "enable_rule",
+              "disable_rule",
+              "get_domain_stats",
+              "get_global_stats",
+              "reset_domain",
+              "unblock_domain"
+            ],
+            "classes": [
+              "PolicyService",
+              "RiskLevel",
+              "PolicyAction",
+              "DetectionSignal",
+              "PolicyRule",
+              "DomainProfile",
+              "AntiBot"
+            ],
+            "imports": 9,
+            "pass_count": 2,
+            "ellipsis_count": 0,
+            "todo_count": 1,
+            "meaningful_lines": 39
+          },
+          "production_critical": false
+        }
+      ],
+      "total_files": 12,
+      "implemented": 8,
+      "stubs": 4,
+      "implementation_rate": 66.66666666666666,
+      "status": "needs_work"
+    },
+    "crawler": {
+      "description": "Web crawling engine - CORE functionality",
+      "priority": 1,
+      "production_critical": true,
+      "files": [
+        {
+          "file": "sitemap_generator.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\crawler\\sitemap_generator.py",
+          "status": "implemented",
+          "size": 3341,
+          "details": {
+            "functions": [
+              "__init__",
+              "crawl_domain"
+            ],
+            "classes": [
+              "Crawler"
+            ],
+            "imports": 9,
+            "pass_count": 0,
+            "ellipsis_count": 0,
+            "todo_count": 1,
+            "meaningful_lines": 12
+          },
+          "production_critical": true
+        },
+        {
+          "file": "url_queue.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\crawler\\url_queue.py",
+          "status": "implemented",
+          "size": 10359,
+          "details": {
+            "functions": [
+              "__post_init__",
+              "url_hash",
+              "__init__"
+            ],
+            "classes": [
+              "QueuedURL",
+              "URLQueue"
+            ],
+            "imports": 9,
+            "pass_count": 2,
+            "ellipsis_count": 0,
+            "todo_count": 0,
+            "meaningful_lines": 14
+          },
+          "production_critical": true
+        },
+        {
+          "file": "keywords_search.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\crawler\\keywords_search.py",
+          "status": "stub",
+          "size": 53,
+          "details": {
+            "functions": [],
+            "classes": [],
+            "imports": 0,
+            "pass_count": 1,
+            "ellipsis_count": 0,
+            "todo_count": 1,
+            "meaningful_lines": 0
+          },
+          "production_critical": false
+        },
+        {
+          "file": "template_detector.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\crawler\\template_detector.py",
+          "status": "implemented",
+          "size": 944,
+          "details": {
+            "functions": [
+              "__init__",
+              "classify"
+            ],
+            "classes": [
+              "TemplateDetector"
+            ],
+            "imports": 2,
+            "pass_count": 0,
+            "ellipsis_count": 0,
+            "todo_count": 0,
+            "meaningful_lines": 5
+          },
+          "production_critical": false
+        },
+        {
+          "file": "link_extractor.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\crawler\\link_extractor.py",
+          "status": "implemented",
+          "size": 1412,
+          "details": {
+            "functions": [
+              "extract_links"
+            ],
+            "classes": [],
+            "imports": 3,
+            "pass_count": 0,
+            "ellipsis_count": 0,
+            "todo_count": 0,
+            "meaningful_lines": 4
+          },
+          "production_critical": false
+        },
+        {
+          "file": "url_frontier.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\crawler\\url_frontier.py",
+          "status": "implemented",
+          "size": 1440,
+          "details": {
+            "functions": [
+              "__init__",
+              "add_url",
+              "get_next_url",
+              "mark_as_visited",
+              "clear"
+            ],
+            "classes": [
+              "URLFrontier"
+            ],
+            "imports": 3,
+            "pass_count": 0,
+            "ellipsis_count": 0,
+            "todo_count": 0,
+            "meaningful_lines": 9
+          },
+          "production_critical": false
+        },
+        {
+          "file": "robots_parser.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\crawler\\robots_parser.py",
+          "status": "implemented",
+          "size": 1611,
+          "details": {
+            "functions": [
+              "__init__",
+              "can_fetch"
+            ],
+            "classes": [
+              "RobotsParser"
+            ],
+            "imports": 4,
+            "pass_count": 0,
+            "ellipsis_count": 0,
+            "todo_count": 0,
+            "meaningful_lines": 7
+          },
+          "production_critical": false
+        }
+      ],
+      "total_files": 7,
+      "implemented": 6,
+      "stubs": 1,
+      "implementation_rate": 85.71428571428571,
+      "status": "production_ready"
+    },
+    "scheduler": {
+      "description": "Job scheduling and orchestration - CORE functionality",
+      "priority": 1,
+      "production_critical": true,
+      "files": [
+        {
+          "file": "job_definitions.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\scheduler\\job_definitions.py",
+          "status": "implemented",
+          "size": 4557,
+          "details": {
+            "functions": [
+              "get_job_definition",
+              "get_all_job_definitions",
+              "get_jobs_by_frequency",
+              "get_jobs_by_priority",
+              "get_enabled_jobs",
+              "__post_init__"
+            ],
+            "classes": [
+              "JobPriority",
+              "JobFrequency",
+              "JobDefinition"
+            ],
+            "imports": 4,
+            "pass_count": 0,
+            "ellipsis_count": 0,
+            "todo_count": 0,
+            "meaningful_lines": 13
+          },
+          "production_critical": true
+        },
+        {
+          "file": "scheduler.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\scheduler\\scheduler.py",
+          "status": "implemented",
+          "size": 15909,
+          "details": {
+            "functions": [
+              "_load_template",
+              "_execute_crawl_job",
+              "_execute_scrape_job",
+              "_execute_diagnostic_job",
+              "schedule_job",
+              "__init__",
+              "create_scraping_job",
+              "cancel_job",
+              "get_job_status",
+              "list_jobs",
+              "get_scheduler_stats",
+              "_execute_scraping_job",
+              "_complete_job",
+              "shutdown"
+            ],
+            "classes": [
+              "ECaDPScheduler"
+            ],
+            "imports": 22,
+            "pass_count": 0,
+            "ellipsis_count": 1,
+            "todo_count": 0,
+            "meaningful_lines": 37
+          },
+          "production_critical": true
+        },
+        {
+          "file": "jobs\\erasure_worker.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\scheduler\\jobs\\erasure_worker.py",
+          "status": "stub",
+          "size": 42,
+          "details": {
+            "functions": [],
+            "classes": [],
+            "imports": 0,
+            "pass_count": 1,
+            "ellipsis_count": 0,
+            "todo_count": 1,
+            "meaningful_lines": 0
+          },
+          "production_critical": false
+        },
+        {
+          "file": "jobs\\redis_snapshot_job.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\scheduler\\jobs\\redis_snapshot_job.py",
+          "status": "stub",
+          "size": 42,
+          "details": {
+            "functions": [],
+            "classes": [],
+            "imports": 0,
+            "pass_count": 1,
+            "ellipsis_count": 0,
+            "todo_count": 1,
+            "meaningful_lines": 0
+          },
+          "production_critical": false
+        },
+        {
+          "file": "jobs\\retention_job.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\scheduler\\jobs\\retention_job.py",
+          "status": "stub",
+          "size": 42,
+          "details": {
+            "functions": [],
+            "classes": [],
+            "imports": 0,
+            "pass_count": 1,
+            "ellipsis_count": 0,
+            "todo_count": 1,
+            "meaningful_lines": 0
+          },
+          "production_critical": false
+        },
+        {
+          "file": "jobs\\export_job.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\scheduler\\jobs\\export_job.py",
+          "status": "implemented",
+          "size": 4129,
+          "details": {
+            "functions": [],
+            "classes": [],
+            "imports": 11,
+            "pass_count": 1,
+            "ellipsis_count": 0,
+            "todo_count": 1,
+            "meaningful_lines": 11
+          },
+          "production_critical": false
+        },
+        {
+          "file": "jobs\\backup_sql_job.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\scheduler\\jobs\\backup_sql_job.py",
+          "status": "implemented",
+          "size": 8441,
+          "details": {
+            "functions": [
+              "__init__",
+              "_get_db_config",
+              "get_backup_stats"
+            ],
+            "classes": [
+              "SQLBackupJob"
+            ],
+            "imports": 8,
+            "pass_count": 6,
+            "ellipsis_count": 0,
+            "todo_count": 0,
+            "meaningful_lines": 12
+          },
+          "production_critical": false
+        },
+        {
+          "file": "job_monitor.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\scheduler\\job_monitor.py",
+          "status": "implemented",
+          "size": 11313,
+          "details": {
+            "functions": [
+              "__init__",
+              "start_job_monitoring",
+              "update_job_progress",
+              "complete_job_monitoring",
+              "_update_job_health",
+              "_calculate_health",
+              "_check_alerts",
+              "get_active_jobs",
+              "get_job_health_status",
+              "get_overall_health",
+              "reset_job_health",
+              "cleanup_old_data"
+            ],
+            "classes": [
+              "JobHealth",
+              "JobMetrics",
+              "JobHealthStatus",
+              "JobMonitor"
+            ],
+            "imports": 9,
+            "pass_count": 0,
+            "ellipsis_count": 0,
+            "todo_count": 0,
+            "meaningful_lines": 25
+          },
+          "production_critical": false
+        },
+        {
+          "file": "notifier.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\scheduler\\notifier.py",
+          "status": "implemented",
+          "size": 16731,
+          "details": {
+            "functions": [
+              "to_dict",
+              "__init__",
+              "_check_rate_limit",
+              "_should_skip_notification",
+              "_send_log",
+              "add_custom_handler",
+              "get_notification_history",
+              "clear_history"
+            ],
+            "classes": [
+              "NotificationType",
+              "NotificationChannel",
+              "NotificationConfig",
+              "Notification",
+              "NotificationManager"
+            ],
+            "imports": 12,
+            "pass_count": 3,
+            "ellipsis_count": 0,
+            "todo_count": 0,
+            "meaningful_lines": 25
+          },
+          "production_critical": false
+        },
+        {
+          "file": "jobs\\dq_job.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\scheduler\\jobs\\dq_job.py",
+          "status": "implemented",
+          "size": 19711,
+          "details": {
+            "functions": [
+              "__init__",
+              "_error_check",
+              "_calculate_overall_score",
+              "_get_quality_level",
+              "_generate_recommendations",
+              "_check_to_dict"
+            ],
+            "classes": [
+              "QualityLevel",
+              "QualityCheck",
+              "DataQualityJob"
+            ],
+            "imports": 9,
+            "pass_count": 38,
+            "ellipsis_count": 0,
+            "todo_count": 0,
+            "meaningful_lines": 18
+          },
+          "production_critical": false
+        }
+      ],
+      "total_files": 10,
+      "implemented": 7,
+      "stubs": 3,
+      "implementation_rate": 70.0,
+      "status": "needs_work"
+    },
+    "scraper": {
+      "description": "Data extraction engine - CORE functionality",
+      "priority": 1,
+      "production_critical": true,
+      "files": [
+        {
+          "file": "base_scraper.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\scraper\\base_scraper.py",
+          "status": "implemented",
+          "size": 7833,
+          "details": {
+            "functions": [
+              "__post_init__",
+              "__post_init__",
+              "__init__",
+              "validate_url",
+              "normalize_url",
+              "extract_domain",
+              "_prepare_headers",
+              "_handle_response_error",
+              "get_scraper_stats"
+            ],
+            "classes": [
+              "ScrapingResult",
+              "ScrapingConfig",
+              "BaseScraper"
+            ],
+            "imports": 8,
+            "pass_count": 2,
+            "ellipsis_count": 0,
+            "todo_count": 0,
+            "meaningful_lines": 20
+          },
+          "production_critical": true
+        },
+        {
+          "file": "http_scraper.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\scraper\\http_scraper.py",
+          "status": "implemented",
+          "size": 10713,
+          "details": {
+            "functions": [
+              "__init__",
+              "_extract_default_data",
+              "_clean_text",
+              "_has_next_page"
+            ],
+            "classes": [
+              "HttpScraper"
+            ],
+            "imports": 8,
+            "pass_count": 0,
+            "ellipsis_count": 0,
+            "todo_count": 0,
+            "meaningful_lines": 13
+          },
+          "production_critical": true
+        },
+        {
+          "file": "template_runtime.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\scraper\\template_runtime.py",
+          "status": "implemented",
+          "size": 13218,
+          "details": {
+            "functions": [
+              "load_template",
+              "_css_select",
+              "_xpath_select",
+              "_node_attr",
+              "_apply_transform",
+              "_run_transforms",
+              "_run_validators",
+              "_run_postprocessors",
+              "extract_fields_from_html",
+              "run_template_over_urls",
+              "__init__",
+              "fetch",
+              "__init__",
+              "fetch",
+              "fetch",
+              "__init__",
+              "fetch",
+              "write_batch",
+              "__init__",
+              "write_batch",
+              "close",
+              "__init__",
+              "_init_file",
+              "write_batch",
+              "close",
+              "__init__",
+              "write_batch"
+            ],
+            "classes": [
+              "TemplateRuntimeError",
+              "ValidationError",
+              "SelectorError",
+              "Fetcher",
+              "HttpxFetcher",
+              "FileFetcher",
+              "InlineFetcher",
+              "Writer",
+              "JsonlWriter",
+              "CsvWriter",
+              "SqlAlchemyWriter",
+              "RunConfig"
+            ],
+            "imports": 17,
+            "pass_count": 6,
+            "ellipsis_count": 0,
+            "todo_count": 0,
+            "meaningful_lines": 56
+          },
+          "production_critical": true
+        },
+        {
+          "file": "login_handler.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\scraper\\login_handler.py",
+          "status": "implemented",
+          "size": 685,
+          "details": {
+            "functions": [
+              "perform_login"
+            ],
+            "classes": [],
+            "imports": 0,
+            "pass_count": 0,
+            "ellipsis_count": 0,
+            "todo_count": 1,
+            "meaningful_lines": 1
+          },
+          "production_critical": false
+        },
+        {
+          "file": "xpath_suggester.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\scraper\\xpath_suggester.py",
+          "status": "implemented",
+          "size": 750,
+          "details": {
+            "functions": [
+              "suggest_selectors_for_template"
+            ],
+            "classes": [],
+            "imports": 0,
+            "pass_count": 0,
+            "ellipsis_count": 0,
+            "todo_count": 1,
+            "meaningful_lines": 1
+          },
+          "production_critical": false
+        },
+        {
+          "file": "transport.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\scraper\\transport.py",
+          "status": "implemented",
+          "size": 3285,
+          "details": {
+            "functions": [
+              "_apply_stealth_and_blockers",
+              "fetch",
+              "_fetch_with_http",
+              "_fetch_with_browser"
+            ],
+            "classes": [
+              "TransportManager"
+            ],
+            "imports": 4,
+            "pass_count": 0,
+            "ellipsis_count": 0,
+            "todo_count": 3,
+            "meaningful_lines": 9
+          },
+          "production_critical": false
+        },
+        {
+          "file": "dsl\\schema.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\scraper\\dsl\\schema.py",
+          "status": "implemented",
+          "size": 4383,
+          "details": {
+            "functions": [
+              "selector_not_empty",
+              "validate_url_pattern",
+              "json_schema"
+            ],
+            "classes": [
+              "TransformStrip",
+              "TransformUpper",
+              "TransformLower",
+              "TransformTitle",
+              "TransformNormalizeWhitespace",
+              "TransformNullIf",
+              "TransformRegexExtract",
+              "TransformRegexSub",
+              "TransformToInt",
+              "TransformToFloat",
+              "TransformParseDate",
+              "TransformMap",
+              "ValidatorRequired",
+              "ValidatorRegex",
+              "ValidatorLengthRange",
+              "ValidatorNumericRange",
+              "ValidatorEnum",
+              "FieldDef",
+              "PostEnsureFields",
+              "TemplateSamples",
+              "ScrapingTemplate"
+            ],
+            "imports": 4,
+            "pass_count": 0,
+            "ellipsis_count": 2,
+            "todo_count": 0,
+            "meaningful_lines": 28
+          },
+          "production_critical": false
+        },
+        {
+          "file": "dsl\\transformers.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\scraper\\dsl\\transformers.py",
+          "status": "implemented",
+          "size": 4574,
+          "details": {
+            "functions": [
+              "strip",
+              "normalize_whitespace",
+              "to_upper",
+              "to_lower",
+              "title_case",
+              "only_digits",
+              "regex_sub",
+              "parse_int",
+              "parse_decimal",
+              "parse_date",
+              "currency_normalize",
+              "unit_extract",
+              "map_value",
+              "json_parse"
+            ],
+            "classes": [],
+            "imports": 4,
+            "pass_count": 0,
+            "ellipsis_count": 0,
+            "todo_count": 0,
+            "meaningful_lines": 18
+          },
+          "production_critical": false
+        },
+        {
+          "file": "template_extractor.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\scraper\\template_extractor.py",
+          "status": "implemented",
+          "size": 17072,
+          "details": {
+            "functions": [
+              "success_rate",
+              "__init__",
+              "extract_data",
+              "_extract_field",
+              "_prepare_soup",
+              "_prepare_lxml",
+              "_extract_with_css",
+              "_extract_with_xpath",
+              "_extract_with_regex",
+              "_extract_with_jsonpath",
+              "_extract_element_value",
+              "_extract_lxml_value",
+              "_apply_transformations",
+              "_validate_field_value",
+              "extract_multiple_templates",
+              "get_extraction_stats",
+              "reset_stats"
+            ],
+            "classes": [
+              "ExtractionResult",
+              "FieldExtractionResult",
+              "TemplateExtractor"
+            ],
+            "imports": 13,
+            "pass_count": 0,
+            "ellipsis_count": 0,
+            "todo_count": 0,
+            "meaningful_lines": 33
+          },
+          "production_critical": false
+        },
+        {
+          "file": "regex_transformer.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\scraper\\regex_transformer.py",
+          "status": "implemented",
+          "size": 17766,
+          "details": {
+            "functions": [
+              "__post_init__",
+              "__init__",
+              "_initialize_common_patterns",
+              "_initialize_cleaning_rules",
+              "add_rule",
+              "remove_rule",
+              "extract",
+              "extract_all_groups",
+              "extract_named_groups",
+              "replace",
+              "split",
+              "validate",
+              "clean_text",
+              "apply_rule",
+              "batch_transform",
+              "extract_structured_data",
+              "normalize_text",
+              "format_phone_number",
+              "format_currency",
+              "get_pattern_library",
+              "get_rules"
+            ],
+            "classes": [
+              "TransformationType",
+              "RegexRule",
+              "RegexTransformer"
+            ],
+            "imports": 6,
+            "pass_count": 0,
+            "ellipsis_count": 0,
+            "todo_count": 0,
+            "meaningful_lines": 30
+          },
+          "production_critical": false
+        },
+        {
+          "file": "selenium_scraper.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\scraper\\selenium_scraper.py",
+          "status": "implemented",
+          "size": 18406,
+          "details": {
+            "functions": [
+              "__init__",
+              "_setup_driver",
+              "_setup_chrome",
+              "_setup_firefox",
+              "_setup_undetected_chrome",
+              "_apply_stealth",
+              "_get_random_user_agent",
+              "scrape",
+              "_wait_for_page_load",
+              "_execute_javascript_actions",
+              "_wait_for_elements",
+              "_handle_scrolling",
+              "_scroll_to_bottom",
+              "_infinite_scroll",
+              "_scroll_to_element",
+              "_click_element",
+              "_input_text",
+              "_extract_data",
+              "_extract_by_css",
+              "_extract_by_xpath",
+              "_extract_forms",
+              "_extract_links",
+              "close",
+              "__enter__",
+              "__exit__"
+            ],
+            "classes": [
+              "SeleniumScraper"
+            ],
+            "imports": 17,
+            "pass_count": 1,
+            "ellipsis_count": 0,
+            "todo_count": 0,
+            "meaningful_lines": 43
+          },
+          "production_critical": false
+        },
+        {
+          "file": "image_downloader.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\scraper\\image_downloader.py",
+          "status": "implemented",
+          "size": 19271,
+          "details": {
+            "functions": [
+              "__post_init__",
+              "__init__",
+              "_create_directories",
+              "_load_existing_files",
+              "_is_valid_url",
+              "_determine_file_type",
+              "_generate_filename",
+              "_calculate_file_hash",
+              "_extract_image_metadata",
+              "get_download_stats",
+              "get_download_results",
+              "find_duplicates",
+              "cleanup_duplicates"
+            ],
+            "classes": [
+              "DownloadResult",
+              "ImageDownloader"
+            ],
+            "imports": 14,
+            "pass_count": 0,
+            "ellipsis_count": 0,
+            "todo_count": 0,
+            "meaningful_lines": 29
+          },
+          "production_critical": false
+        }
+      ],
+      "total_files": 12,
+      "implemented": 12,
+      "stubs": 0,
+      "implementation_rate": 100.0,
+      "status": "production_ready"
+    },
+    "proxy_pool": {
+      "description": "Proxy management - CRITICAL for scale",
+      "priority": 2,
+      "production_critical": true,
+      "files": [
+        {
+          "file": "manager.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\proxy_pool\\manager.py",
+          "status": "implemented",
+          "size": 3505,
+          "details": {
+            "functions": [
+              "__init__",
+              "get_proxy",
+              "release",
+              "stats",
+              "__init__",
+              "get_proxy",
+              "release_proxy",
+              "get_stats",
+              "refresh_pool",
+              "_calculate_health",
+              "_get_availability_zones"
+            ],
+            "classes": [
+              "TransportService",
+              "ProxyPoolManager"
+            ],
+            "imports": 4,
+            "pass_count": 0,
+            "ellipsis_count": 0,
+            "todo_count": 3,
+            "meaningful_lines": 17
+          },
+          "production_critical": true
+        },
+        {
+          "file": "validator.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\proxy_pool\\validator.py",
+          "status": "implemented",
+          "size": 7420,
+          "details": {
+            "functions": [
+              "__post_init__",
+              "__init__",
+              "calculate_reliability_score",
+              "is_proxy_reliable"
+            ],
+            "classes": [
+              "ProxyValidationResult",
+              "ProxyValidator"
+            ],
+            "imports": 7,
+            "pass_count": 0,
+            "ellipsis_count": 0,
+            "todo_count": 0,
+            "meaningful_lines": 13
+          },
+          "production_critical": true
+        },
+        {
+          "file": "collector.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\proxy_pool\\collector.py",
+          "status": "implemented",
+          "size": 16216,
+          "details": {
+            "functions": [
+              "__post_init__",
+              "proxy_url",
+              "__hash__",
+              "__eq__",
+              "__init__",
+              "_load_sources",
+              "_parse_proxy_data",
+              "_parse_json_proxies",
+              "_parse_text_proxies",
+              "_parse_html_proxies",
+              "_is_valid_proxy",
+              "_is_rate_limited",
+              "get_collection_stats"
+            ],
+            "classes": [
+              "ProxySource",
+              "RawProxy",
+              "ProxyCollector"
+            ],
+            "imports": 10,
+            "pass_count": 5,
+            "ellipsis_count": 0,
+            "todo_count": 0,
+            "meaningful_lines": 26
+          },
+          "production_critical": true
+        },
+        {
+          "file": "monitor.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\proxy_pool\\monitor.py",
+          "status": "stub",
+          "size": 46,
+          "details": {
+            "functions": [],
+            "classes": [],
+            "imports": 0,
+            "pass_count": 1,
+            "ellipsis_count": 0,
+            "todo_count": 1,
+            "meaningful_lines": 0
+          },
+          "production_critical": false
+        },
+        {
+          "file": "api\\server.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\proxy_pool\\api\\server.py",
+          "status": "stub",
+          "size": 53,
+          "details": {
+            "functions": [],
+            "classes": [],
+            "imports": 0,
+            "pass_count": 1,
+            "ellipsis_count": 0,
+            "todo_count": 1,
+            "meaningful_lines": 0
+          },
+          "production_critical": false
+        },
+        {
+          "file": "adapters.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\proxy_pool\\adapters.py",
+          "status": "implemented",
+          "size": 668,
+          "details": {
+            "functions": [
+              "pop_best",
+              "report",
+              "stats"
+            ],
+            "classes": [
+              "PoolAdapter"
+            ],
+            "imports": 2,
+            "pass_count": 3,
+            "ellipsis_count": 0,
+            "todo_count": 0,
+            "meaningful_lines": 6
+          },
+          "production_critical": false
+        },
+        {
+          "file": "rotator.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\proxy_pool\\rotator.py",
+          "status": "implemented",
+          "size": 15208,
+          "details": {
+            "functions": [
+              "success_rate",
+              "average_response_time",
+              "is_banned",
+              "health_score",
+              "__init__",
+              "add_proxy",
+              "remove_proxy",
+              "get_next_proxy",
+              "record_request_result",
+              "_get_available_proxies",
+              "_round_robin_selection",
+              "_random_selection",
+              "_weighted_random_selection",
+              "_least_used_selection",
+              "_best_performance_selection",
+              "_adaptive_selection",
+              "_should_run_health_check",
+              "_run_health_check",
+              "get_rotation_stats",
+              "reset_proxy_stats"
+            ],
+            "classes": [
+              "RotationStrategy",
+              "ProxyStats",
+              "ProxyRotator"
+            ],
+            "imports": 9,
+            "pass_count": 0,
+            "ellipsis_count": 0,
+            "todo_count": 0,
+            "meaningful_lines": 32
+          },
+          "production_critical": false
+        },
+        {
+          "file": "quality_filter.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\proxy_pool\\quality_filter.py",
+          "status": "implemented",
+          "size": 16404,
+          "details": {
+            "functions": [
+              "calculate_quality_score",
+              "__init__",
+              "filter_proxies",
+              "_passes_filters",
+              "get_top_proxies",
+              "add_to_blacklist",
+              "add_to_whitelist",
+              "get_quality_report"
+            ],
+            "classes": [
+              "AnonymityLevel",
+              "GeographicRegion",
+              "QualityMetrics",
+              "FilterCriteria",
+              "ProxyQualityFilter"
+            ],
+            "imports": 13,
+            "pass_count": 3,
+            "ellipsis_count": 0,
+            "todo_count": 0,
+            "meaningful_lines": 26
+          },
+          "production_critical": false
+        }
+      ],
+      "total_files": 8,
+      "implemented": 6,
+      "stubs": 2,
+      "implementation_rate": 75.0,
+      "status": "production_ready"
+    },
+    "webapp": {
+      "description": "Web interface and API",
+      "priority": 2,
+      "production_critical": true,
+      "files": [
+        {
+          "file": "app.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\webapp\\app.py",
+          "status": "implemented",
+          "size": 4478,
+          "details": {
+            "functions": [
+              "health_check"
+            ],
+            "classes": [],
+            "imports": 15,
+            "pass_count": 0,
+            "ellipsis_count": 0,
+            "todo_count": 0,
+            "meaningful_lines": 16
+          },
+          "production_critical": true
+        },
+        {
+          "file": "api.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\webapp\\api.py",
+          "status": "implemented",
+          "size": 18135,
+          "details": {
+            "functions": [],
+            "classes": [],
+            "imports": 11,
+            "pass_count": 0,
+            "ellipsis_count": 1,
+            "todo_count": 19,
+            "meaningful_lines": 11
+          },
+          "production_critical": true
+        },
+        {
+          "file": "views.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\webapp\\views.py",
+          "status": "stub",
+          "size": 69,
+          "details": {
+            "functions": [],
+            "classes": [],
+            "imports": 0,
+            "pass_count": 1,
+            "ellipsis_count": 0,
+            "todo_count": 1,
+            "meaningful_lines": 0
+          },
+          "production_critical": false
+        },
+        {
+          "file": "api\\monitoring.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\webapp\\api\\monitoring.py",
+          "status": "implemented",
+          "size": 4567,
+          "details": {
+            "functions": [],
+            "classes": [],
+            "imports": 10,
+            "pass_count": 1,
+            "ellipsis_count": 0,
+            "todo_count": 0,
+            "meaningful_lines": 10
+          },
+          "production_critical": false
+        },
+        {
+          "file": "api\\webhooks.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\webapp\\api\\webhooks.py",
+          "status": "implemented",
+          "size": 5354,
+          "details": {
+            "functions": [],
+            "classes": [],
+            "imports": 10,
+            "pass_count": 0,
+            "ellipsis_count": 0,
+            "todo_count": 0,
+            "meaningful_lines": 10
+          },
+          "production_critical": false
+        },
+        {
+          "file": "auth.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\webapp\\auth.py",
+          "status": "implemented",
+          "size": 6199,
+          "details": {
+            "functions": [
+              "verify_password",
+              "get_password_hash",
+              "get_user",
+              "authenticate_user",
+              "create_access_token",
+              "require_role",
+              "require_admin"
+            ],
+            "classes": [
+              "User",
+              "UserInDB",
+              "Token",
+              "TokenData"
+            ],
+            "imports": 8,
+            "pass_count": 24,
+            "ellipsis_count": 0,
+            "todo_count": 1,
+            "meaningful_lines": 19
+          },
+          "production_critical": false
+        },
+        {
+          "file": "api\\auth.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\webapp\\api\\auth.py",
+          "status": "implemented",
+          "size": 6273,
+          "details": {
+            "functions": [],
+            "classes": [],
+            "imports": 10,
+            "pass_count": 6,
+            "ellipsis_count": 1,
+            "todo_count": 0,
+            "meaningful_lines": 10
+          },
+          "production_critical": false
+        },
+        {
+          "file": "api\\templates.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\webapp\\api\\templates.py",
+          "status": "implemented",
+          "size": 6399,
+          "details": {
+            "functions": [
+              "_generate_etag"
+            ],
+            "classes": [],
+            "imports": 10,
+            "pass_count": 0,
+            "ellipsis_count": 1,
+            "todo_count": 0,
+            "meaningful_lines": 11
+          },
+          "production_critical": false
+        },
+        {
+          "file": "security.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\webapp\\security.py",
+          "status": "implemented",
+          "size": 6831,
+          "details": {
+            "functions": [
+              "authorize_with_scopes"
+            ],
+            "classes": [],
+            "imports": 10,
+            "pass_count": 3,
+            "ellipsis_count": 0,
+            "todo_count": 0,
+            "meaningful_lines": 11
+          },
+          "production_critical": false
+        },
+        {
+          "file": "api\\jobs.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\webapp\\api\\jobs.py",
+          "status": "implemented",
+          "size": 8203,
+          "details": {
+            "functions": [],
+            "classes": [],
+            "imports": 11,
+            "pass_count": 0,
+            "ellipsis_count": 0,
+            "todo_count": 0,
+            "meaningful_lines": 11
+          },
+          "production_critical": false
+        },
+        {
+          "file": "api\\exports.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\webapp\\api\\exports.py",
+          "status": "implemented",
+          "size": 9558,
+          "details": {
+            "functions": [
+              "gzip_stream"
+            ],
+            "classes": [],
+            "imports": 17,
+            "pass_count": 0,
+            "ellipsis_count": 0,
+            "todo_count": 0,
+            "meaningful_lines": 18
+          },
+          "production_critical": false
+        }
+      ],
+      "total_files": 11,
+      "implemented": 10,
+      "stubs": 1,
+      "implementation_rate": 90.9090909090909,
+      "status": "production_ready"
+    },
+    "database": {
+      "description": "Data persistence layer",
+      "priority": 2,
+      "production_critical": true,
+      "files": [
+        {
+          "file": "manager.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\database\\manager.py",
+          "status": "implemented",
+          "size": 479,
+          "details": {
+            "functions": [
+              "get_db"
+            ],
+            "classes": [],
+            "imports": 4,
+            "pass_count": 0,
+            "ellipsis_count": 0,
+            "todo_count": 0,
+            "meaningful_lines": 5
+          },
+          "production_critical": true
+        },
+        {
+          "file": "models.py",
+          "path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\database\\models.py",
+          "status": "implemented",
+          "size": 42226,
+          "details": {
+            "functions": [
+              "check_exactly_one_source",
+              "check_target_or_sample",
+              "populate_nested_fields_from_orm"
+            ],
+            "classes": [
+              "GenderEnum",
+              "OwnerKindEnum",
+              "JobType",
+              "JobStatus",
+              "Person",
+              "PersonAddress",
+              "PersonContact",
+              "Company",
+              "CompanyRole",
+              "CompanyFinancials",
+              "Vehicle",
+              "VehicleTechnicalSpecs",
+              "VehicleOwnership",
+              "VehicleHistory",
+              "DataQualityMetric",
+              "GCSFile",
+              "SiteSetting",
+              "AboutMe",
+              "Article",
+              "Project",
+              "VehicleRegistry",
+              "PageView",
+              "Profile",
+              "Subscriber",
+              "UserAPIKey",
+              "UserDataset",
+              "UserDashboard",
+              "UserCredit",
+              "CreditTransaction",
+              "Team",
+              "TeamMember",
+              "ExportHistory",
+              "Referral",
+              "Course",
+              "UserCourseProgress",
+              "News",
+              "SubscriptionPlan",
+              "UserSetting",
+              "UserDevice",
+              "BillingInfo",
+              "Transaction",
+              "UserRole",
+              "UserSubscription",
+              "ContactMessage",
+              "Template",
+              "ProvenanceRecord",
+              "ErasureTombstone",
+              "Page",
+              "Link",
+              "Fetch",
+              "ScrapingJob",
+              "Job",
+              "OAuthClient",
+              "RolePermission",
+              "IdempotencyKey",
+              "UserQuota",
+              "WebhookEndpoint",
+              "WebhookDelivery",
+              "TokenRequest",
+              "TokenResponse",
+              "APIKeyCreate",
+              "APIKeyRead",
+              "APIKeySecret",
+              "FeatureFlags",
+              "CrawlPolicy",
+              "CrawlCaps",
+              "CrawlJobCreate",
+              "SitemapQuery",
+              "ScrapeSource",
+              "ScrapePolicy",
+              "ScrapeCaps",
+              "ExportDestination",
+              "ExportConfig",
+              "ScrapeJobCreate",
+              "DiagnosticJobCreate",
+              "ExportCreate",
+              "ExportRead",
+              "JobProgress",
+              "JobMetrics",
+              "JobExportArtifact",
+              "JobExport",
+              "JobLogs",
+              "JobLinks",
+              "JobRead",
+              "TemplateBase",
+              "TemplateCreate",
+              "TemplateUpdate",
+              "TemplateRead",
+              "Config",
+              "Config",
+              "Config",
+              "Config"
+            ],
+            "imports": 8,
+            "pass_count": 1,
+            "ellipsis_count": 1,
+            "todo_count": 0,
+            "meaningful_lines": 103
+          },
+          "production_critical": true
+        }
+      ],
+      "total_files": 2,
+      "implemented": 2,
+      "stubs": 0,
+      "implementation_rate": 100.0,
+      "status": "production_ready"
+    }
+  },
+  "implementation_plan": [],
+  "summary": {
+    "total_modules": 7,
+    "production_ready": 5,
+    "needs_work": 2,
+    "critical_missing": 0,
+    "total_critical_tasks": 0
+  }
+}

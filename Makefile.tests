@@ -1,0 +1,170 @@
+# ECaDP Test Framework Makefile
+#
+# För nybörjare: Detta Makefile innehåller genvägar för vanliga test-operationer.
+# Användning: make <target>
+#
+# Exempel:
+#   make test-all        # Kör alla tester
+#   make test-unit       # Kör endast unit-tester
+#   make start-synthetic # Starta syntetiska tjänster för E2E-tester
+
+.PHONY: help test-all test-unit test-integration test-e2e start-synthetic stop-synthetic clean coverage
+
+# Standard target
+help:
+	@echo "ECaDP Test Framework"
+	@echo "===================="
+	@echo ""
+	@echo "Tillgängliga kommandon:"
+	@echo ""
+	@echo "Tester:"
+	@echo "  test-all           Kör alla tester (unit + integration + e2e)"
+	@echo "  test-unit          Kör endast unit-tester"
+	@echo "  test-integration   Kör endast integration-tester" 
+	@echo "  test-e2e           Kör endast E2E-tester"
+	@echo "  test-quick         Kör snabba tester (unit + integration)"
+	@echo ""
+	@echo "Syntetiska tjänster:"
+	@echo "  start-synthetic    Starta syntetiska test-tjänster"
+	@echo "  stop-synthetic     Stoppa syntetiska test-tjänster"
+	@echo "  restart-synthetic  Starta om syntetiska tjänster"
+	@echo ""
+	@echo "Utveckling:"
+	@echo "  coverage           Kör tester med code coverage"
+	@echo "  install-deps       Installera test-beroenden"
+	@echo "  clean              Rensa test-artifacts"
+	@echo ""
+	@echo "GitHub Copilot:"
+	@echo "  test-copilot       Kör tester optimerade för Copilot-utveckling"
+
+# Huvudtestkommandon
+test-all:
+	@echo "🧪 Kör alla tester..."
+	python scripts/run_tests.py --type all --verbose
+
+test-unit:
+	@echo "⚡ Kör unit-tester..."
+	python scripts/run_tests.py --type unit --verbose
+
+test-integration:
+	@echo "🔗 Kör integration-tester..."
+	python scripts/run_tests.py --type integration --verbose
+
+test-e2e:
+	@echo "🌐 Kör E2E-tester..."
+	python scripts/run_tests.py --type e2e --verbose
+
+test-quick:
+	@echo "⚡ Kör snabba tester (unit + integration)..."
+	pytest tests/unit/ tests/integration/ -v -m "not slow"
+
+# GitHub Copilot-optimerade tester
+test-copilot:
+	@echo "🤖 Kör Copilot-optimerade tester..."
+	pytest tests/unit/ -v --tb=short -x
+
+# Syntetiska tjänster
+start-synthetic:
+	@echo "🐳 Startar syntetiska test-tjänster..."
+	python scripts/start_synthetic_services.py --build
+
+stop-synthetic:
+	@echo "🛑 Stoppar syntetiska test-tjänster..."
+	docker compose -f docker/docker-compose.synthetic.yml down
+
+restart-synthetic: stop-synthetic start-synthetic
+
+# Coverage och kvalitet
+coverage:
+	@echo "📊 Kör tester med code coverage..."
+	python scripts/run_tests.py --coverage
+	@echo "📈 Coverage-rapport: htmlcov/index.html"
+
+# Installation och setup
+install-deps:
+	@echo "📦 Installerar test-beroenden..."
+	pip install -r requirements_dev.txt
+	playwright install chromium
+
+# Rensning
+clean:
+	@echo "🧹 Rensar test-artifacts..."
+	rm -f test_results_*.json
+	rm -rf htmlcov/
+	rm -rf .pytest_cache/
+	rm -rf __pycache__/
+	find . -name "*.pyc" -delete
+	find . -name "__pycache__" -type d -exec rm -rf {} +
+
+# Docker-specifika kommandon (för Windows compatibility)
+docker-status:
+	@echo "🐳 Docker status:"
+	docker compose -f docker/docker-compose.synthetic.yml ps
+
+docker-logs:
+	@echo "📋 Docker logs:"
+	docker compose -f docker/docker-compose.synthetic.yml logs --tail=50
+
+# Utveckling och debug
+debug-unit:
+	@echo "🐛 Debug unit-tester..."
+	pytest tests/unit/ -v --tb=long --log-cli-level=DEBUG -s
+
+debug-e2e:
+	@echo "🐛 Debug E2E-tester..."
+	pytest tests/e2e/ -v --tb=long --log-cli-level=DEBUG -s --headed
+
+# Validator-specifika tester för vanliga användningsfall
+test-validators:
+	@echo "✅ Testar datavalidatorer..."
+	pytest tests/unit/test_validators.py -v
+
+test-transformers:
+	@echo "🔄 Testar datatransformatorer..."
+	pytest tests/unit/test_transformers.py -v
+
+test-scrapers:
+	@echo "🕷️ Testar scraper-funktionalitet..."
+	pytest tests/e2e/ -v -k "scraping"
+
+# Performance-tester
+test-performance:
+	@echo "⚡ Kör performance-tester..."
+	pytest tests/integration/ tests/e2e/ -v -m "slow" --timeout=120
+
+# Säkerhetstester  
+test-security:
+	@echo "🔒 Kör säkerhetstester..."
+	pytest tests/integration/ -v -k "csrf or auth or security"
+
+# Alla tester men stoppa vid första fel (för snabb feedback)
+test-fail-fast:
+	@echo "⚡ Kör tester med fail-fast..."
+	python scripts/run_tests.py --stop-on-fail --verbose
+
+# Continuous Integration simulation
+test-ci:
+	@echo "🔄 Simulerar CI-miljö..."
+	python scripts/run_tests.py --type all --coverage
+	@echo "✅ CI-simulation klar. Kontrollera test_results_*.json"
+
+# Markdown linting för dokumentation
+lint-docs:
+	@echo "📝 Lintar dokumentation..."
+	markdownlint tests/README.md || echo "Markdownlint inte installerat, hoppar över"
+
+# Help för pytest markers
+markers:
+	@echo "🏷️ Tillgängliga pytest markers:"
+	@echo ""
+	@echo "unit        - Unit-tester (snabba, isolerade)"
+	@echo "integration - Integration-tester (databas, Redis, etc)"
+	@echo "e2e         - End-to-end tester (webbläsare)"
+	@echo "db          - Tester som kräver databas"
+	@echo "browser     - Tester som kräver webbläsare"
+	@echo "slow        - Långsamma tester (>5 sekunder)"
+	@echo ""
+	@echo "Exempel:"
+	@echo "  pytest -m unit                 # Endast unit-tester"
+	@echo "  pytest -m 'not slow'           # Inga långsamma tester"
+	@echo "  pytest -m 'e2e and browser'    # E2E webbläsartester"

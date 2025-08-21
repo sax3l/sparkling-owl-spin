@@ -1,0 +1,33 @@
+apiVersion: v2
+name: ecadp-platform
+description: A Helm chart for ECaDP (Ethical Crawler & Data Platform)
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+
+keywords:
+  - web-scraping
+  - data-platform
+  - crawler
+  - ethical
+
+home: https://github.com/sax3l/ecadp-platform
+sources:
+  - https://github.com/sax3l/ecadp-platform
+
+maintainers:
+  - name: ECaDP Team
+    email: team@ecadp.example.com
+
+dependencies:
+  - name: postgresql
+    version: 11.9.13
+    repository: https://charts.bitnami.com/bitnami
+    condition: postgresql.enabled
+  - name: redis
+    version: 17.3.7
+    repository: https://charts.bitnami.com/bitnami
+    condition: redis.enabled
+
+annotations:
+  category: Analytics
