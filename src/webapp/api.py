@@ -14,7 +14,7 @@ import logging
 from ..database.models import Person, Company, Vehicle, ScrapingJob, JobStatus
 from ..analysis.data_quality import DataQualityAnalyzer, DataQualityMetrics
 from ..scheduler.scheduler import ECaDPScheduler
-from ..integrations.exporters import ExportManager, ExportConfig
+from ..exporters import ExportManager, ExportConfig
 from ..proxy_pool.manager import ProxyPoolManager
 from .auth import get_current_user, User
 

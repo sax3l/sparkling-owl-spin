@@ -3,7 +3,7 @@ Exporter package initialization.
 Registers all available exporters and provides a unified interface.
 """
 
-from .base import BaseExporter, ExportConfig, ExportResult, ExporterRegistry
+from .base import BaseExporter, ExportConfig, ExportResult, ExporterRegistry, ExportManager
 
 # Import all exporters to trigger registration
 from .csv_exporter import CSVExporter
@@ -21,6 +21,7 @@ __all__ = [
     'ExportConfig', 
     'ExportResult',
     'ExporterRegistry',
+    'ExportManager',
     'CSVExporter',
     'JSONExporter',
     'ExcelExporter',

@@ -1,0 +1,11 @@
+# Nightly selector regression workflow
+name: Nightly Selector Regression
+on:
+  schedule:
+    - cron: '0 2 * * *'
+jobs:
+  selector_regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Nightly selector regression stub
+        run: echo "Nightly selector regression stub"

@@ -1,0 +1,70 @@
+# ECaDP - Production Dependencies
+# Genererat från pyproject.toml
+
+# Web Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# Database & ORM
+sqlalchemy==2.0.23
+alembic==1.13.1
+asyncpg==0.29.0
+psycopg2-binary==2.9.9
+
+# Cache & Message Queue
+redis[hiredis]==5.0.1
+aioredis==2.0.1
+celery[redis]==5.3.4
+
+# HTTP Clients & Web Scraping
+httpx==0.25.2
+aiohttp==3.9.1
+beautifulsoup4==4.12.2
+lxml==4.9.3
+
+# Browser Automation
+playwright==1.40.0
+selenium==4.16.0
+
+# Task Scheduling
+apscheduler==3.10.4
+
+# Data Processing & Analysis
+pandas==2.1.4
+numpy==1.25.2
+great-expectations==0.18.5
+
+# File Formats
+openpyxl==3.1.2
+xlsxwriter==3.1.9
+pyyaml==6.0.1
+
+# Google APIs
+google-auth==2.25.2
+google-auth-oauthlib==1.2.0
+google-auth-httplib2==0.2.0
+google-api-python-client==2.111.0
+
+# External Services
+snowflake-connector-python==3.6.0
+elasticsearch==8.11.1
+supabase==2.3.0
+
+# Monitoring & Logging
+prometheus-client==0.19.0
+structlog==23.2.0
+
+# CLI Tools
+click==8.1.7
+typer==0.9.0
+
+# Security & Auth
+cryptography==41.0.8
+passlib[bcrypt]==1.7.4
+python-jose[cryptography]==3.3.0
+
+# Templates & Utils
+jinja2==3.1.2
+python-multipart==0.0.6

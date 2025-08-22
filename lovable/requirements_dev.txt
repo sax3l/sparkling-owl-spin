@@ -1,0 +1,3 @@
+# Lovable Dev Requirements
+
+# Stub for lovable module requirements_dev.txt as required by TREE.md.

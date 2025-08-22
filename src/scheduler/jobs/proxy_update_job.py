@@ -17,7 +17,7 @@ import json
 from src.proxy_pool.manager import ProxyPoolManager
 from src.proxy_pool.health_checker import ProxyHealthChecker
 from src.proxy_pool.validator import ProxyValidator
-from src.database.connection import DatabaseManager
+from src.database.manager import DatabaseManager
 from src.webhooks.client import WebhookClient
 
 logger = logging.getLogger(__name__)

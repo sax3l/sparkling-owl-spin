@@ -5,8 +5,8 @@ from typing import Optional, List, Dict, Any, Literal
 
 from pydantic import BaseModel, Field, model_validator
 from sqlalchemy import (BigInteger, Boolean, Column, Date, DateTime, Enum as SAEnum,
-                        ForeignKey, Integer, LargeBinary, Numeric, String, Text, func)
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+                        ForeignKey, Integer, LargeBinary, Numeric, String, Text, func, JSON)
+from sqlalchemy.dialects.mysql import LONGTEXT, CHAR
 from sqlalchemy.orm import declarative_base, relationship
 
 Base = declarative_base()
@@ -53,7 +53,7 @@ class Person(Base):
     has_remarks = Column(Boolean)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
-    source_job_id = Column(UUID(as_uuid=True), ForeignKey('scraping_jobs.id')) # New field
+    source_job_id = Column(CHAR(36), ForeignKey('scraping_jobs.id')) # New field
 
 class PersonAddress(Base):
     __tablename__ = "person_addresses"
@@ -99,7 +99,7 @@ class Company(Base):
     remark_control = Column(Text)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
-    source_job_id = Column(UUID(as_uuid=True), ForeignKey('scraping_jobs.id')) # New field
+    source_job_id = Column(CHAR(36), ForeignKey('scraping_jobs.id')) # New field
 
 class CompanyRole(Base):
     __tablename__ = "company_roles"
@@ -155,7 +155,7 @@ class Vehicle(Base):
     type_approval_number = Column(Text)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
-    source_job_id = Column(UUID(as_uuid=True), ForeignKey('scraping_jobs.id')) # New field
+    source_job_id = Column(CHAR(36), ForeignKey('scraping_jobs.id')) # New field
 
 class VehicleTechnicalSpecs(Base):
     __tablename__ = "vehicle_technical_specs"
@@ -211,7 +211,7 @@ class VehicleHistory(Base):
     event_kind = Column(Text)
     event_desc = Column(Text)
     event_link = Column(Text)
-    raw_json = Column(JSONB)
+    raw_json = Column(JSON)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 class DataQualityMetric(Base):
@@ -227,28 +227,28 @@ class DataQualityMetric(Base):
 
 class GCSFile(Base):
     __tablename__ = "gcs_files"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(CHAR(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     bucket_name = Column(Text, nullable=False)
     object_name = Column(Text, nullable=False)
     size = Column(BigInteger)
     content_type = Column(Text)
     md5_hash = Column(Text)
     gcs_updated_at = Column(DateTime(timezone=True))
-    metadata = Column(JSONB, nullable=False, default={})
+    metadata = Column(JSON, nullable=False, default={})
     project_id = Column(Text)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     synced_at = Column(DateTime(timezone=True), server_default=func.now())
 
 class SiteSetting(Base):
     __tablename__ = "site_settings"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(CHAR(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     cv_file_url = Column(Text)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
 class AboutMe(Base):
     __tablename__ = "about_me"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(CHAR(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     title = Column(Text)
     subtitle = Column(Text)
     intro = Column(Text)

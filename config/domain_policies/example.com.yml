@@ -1,0 +1,5 @@
+# Example domain policy for example.com
+policies:
+  - name: DefaultPolicy
+    description: "Stub for example.com domain policy."
+    rules: []

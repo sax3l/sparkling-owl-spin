@@ -4,12 +4,24 @@ Provides common functionality and interface for data export operations.
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union, Generator
 import logging
 from dataclasses import dataclass
 from datetime import datetime
 import asyncio
 from pathlib import Path
+import uuid
+from sqlalchemy.orm import Session
+
+# Import database utilities
+from src.utils.export_utils import (
+    get_data_from_db, 
+    generate_csv_stream, 
+    generate_ndjson_stream, 
+    generate_json_stream,
+    get_fieldnames_for_export_type,
+    upload_to_supabase_storage
+)
 
 logger = logging.getLogger(__name__)
 
@@ -177,3 +189,112 @@ def generate_filename(base_name: str, extension: str, timestamp: bool = True) ->
         ts = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
         return f"{base_name}_{ts}.{extension}"
     return f"{base_name}.{extension}"
+
+
+class ExportManager:
+    """
+    Enhanced export manager with database integration and cloud storage support.
+    Coordinates all export operations across different formats and destinations.
+    """
+    
+    def __init__(self, registry: ExporterRegistry = None):
+        self.registry = registry or ExporterRegistry()
+        
+    def export_data(self, data: Any, format: str, **kwargs) -> Any:
+        """Export data using registered exporter"""
+        exporter = self.registry.get_exporter(format)
+        if not exporter:
+            raise ValueError(f"No exporter registered for format: {format}")
+        return exporter.export(data, **kwargs)
+    
+    def export_from_database(
+        self,
+        db: Session,
+        export_type: str,
+        format: str,
+        tenant_id: uuid.UUID,
+        filters: Dict[str, Any] = None,
+        sort_by: Optional[str] = None,
+        fields: Optional[List[str]] = None,
+        mask_pii: bool = True,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+        **kwargs
+    ) -> Generator[bytes, None, None]:
+        """
+        Export data directly from database with streaming support.
+        
+        Args:
+            db: Database session
+            export_type: Type of data to export (person, company, vehicle)
+            format: Export format (csv, json, ndjson)
+            tenant_id: Tenant ID for data filtering
+            filters: Additional filters to apply
+            sort_by: Sort field (prefix with '-' for descending)
+            fields: Specific fields to include
+            mask_pii: Whether to mask PII data
+            limit: Maximum number of records
+            offset: Records to skip
+            **kwargs: Additional format-specific options
+            
+        Returns:
+            Generator yielding data chunks as bytes
+        """
+        filters = filters or {}
+        
+        # Get data generator from database
+        data_generator = get_data_from_db(
+            db=db,
+            export_type=export_type,
+            tenant_id=tenant_id,
+            filters=filters,
+            sort_by=sort_by,
+            fields=fields,
+            mask_pii=mask_pii,
+            limit=limit,
+            offset=offset
+        )
+        
+        # Generate appropriate stream based on format
+        if format.lower() == 'csv':
+            return generate_csv_stream(data_generator, get_fieldnames_for_export_type(export_type))
+        elif format.lower() == 'json':
+            return generate_json_stream(data_generator)
+        elif format.lower() == 'ndjson':
+            return generate_ndjson_stream(data_generator)
+        else:
+            # Fall back to standard export for other formats
+            data_list = list(data_generator)
+            result = self.export_data(data_list, format, **kwargs)
+            if isinstance(result, str):
+                yield result.encode('utf-8')
+            elif isinstance(result, bytes):
+                yield result
+            else:
+                yield str(result).encode('utf-8')
+    
+    async def export_to_cloud_storage(
+        self,
+        bucket_name: str,
+        file_path: str,
+        data_stream: Generator[bytes, None, None],
+        content_type: str,
+        compress: bool = False
+    ) -> str:
+        """
+        Export data stream to cloud storage (Supabase).
+        
+        Returns:
+            Public URL of uploaded file
+        """
+        return await upload_to_supabase_storage(
+            bucket_name=bucket_name,
+            file_path=file_path,
+            data_stream=data_stream,
+            content_type=content_type,
+            compress=compress
+        )
+    
+    def get_available_formats(self) -> List[str]:
+        """Get list of available export formats"""
+        return list(self.registry.exporters.keys())

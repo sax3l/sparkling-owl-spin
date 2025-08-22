@@ -1,33 +1,117 @@
-# Ethical Crawler & Data Platform (ECaDP)
+# ECaDP Platform - Ethical Crawler & Data Platform
 
-This project is a modular, ethical, and robust platform for web crawling and scraping. It addresses the challenge of collecting, normalizing, and storing scattered public data from complex sources like vehicle registries (`biluppgifter.se`, `car.info`), business directories (`hitta.se`), and e-commerce sites (`Blocket`, `Wayke`).
+A comprehensive, production-ready platform for ethical web crawling, data extraction, and management. Built with React, TypeScript, Python, FastAPI, and MySQL.
 
-The platform is designed to handle modern web technologies, including dynamic JavaScript-driven interfaces, complex pagination, and anti-bot measures, while strictly adhering to ethical guidelines such as respecting `robots.txt` and Terms of Service.
+## 🎯 Overview
 
-## The Problem
+ECaDP (Ethical Crawler & Data Platform) is a modular, ethical, and robust platform for web crawling and scraping. It addresses the challenge of collecting, normalizing, and storing scattered public data from complex sources while strictly adhering to ethical guidelines.
 
-Vast amounts of valuable public data on people, vehicles, and companies are spread across numerous websites. However, this information is often presented in inconsistent formats and protected by technical hurdles.
+### ✨ Key Features
 
-While commercial no-code tools like **Octoparse**, **ParseHub**, and **WebHarvy** offer user-friendly interfaces for data extraction, they often have limitations in:
-- **Flexibility:** Difficulty in handling highly specialized or complex data workflows.
-- **Cost:** Can become expensive at scale or for advanced features like premium proxies.
-- **Integration:** Limited ability to integrate deeply with internal systems and custom data pipelines.
+- **🔍 Intelligent Crawling** - Systematic discovery and mapping of complex websites
+- **🎯 Advanced Scraping** - Reliable data extraction from dynamic JavaScript-driven sites
+- **🛡️ Anti-Bot Protection** - Sophisticated proxy pool with IP rotation and stealth capabilities
+- **📊 Data Management** - Comprehensive database models for people, companies, and vehicles
+- **🎨 Modern UI** - React-based frontend with 20+ pages and comprehensive functionality
+- **🔐 Security-First** - Authentication, authorization, and privacy compliance built-in
+- **📈 Monitoring** - Built-in observability, metrics, and health checks
+- **🐳 Cloud-Ready** - Docker, Kubernetes, and infrastructure-as-code support
 
-This project aims to build a tailored, in-house solution that combines the power of these tools with the flexibility and control of a custom-coded platform.
+## 🏗️ Architecture
 
-## Our Solution
+### Frontend (React + TypeScript)
+- **20+ Pages** including Dashboard, Projects, Templates, Jobs, Data Management
+- **Modern UI** with Tailwind CSS and responsive design
+- **Real-time Updates** via WebSocket connections
+- **Component Library** with reusable UI components
 
-The purpose of this platform is to provide a comprehensive solution to:
+### Backend (Python + FastAPI)
+- **RESTful API** with auto-generated OpenAPI documentation
+- **GraphQL Endpoint** for flexible data querying
+- **Job Queue System** with background task processing
+- **Proxy Pool Management** with automatic validation
 
-1.  **Crawl Complex Websites:** Systematically discover and map out sites with dynamic interfaces to create detailed sitemaps.
-2.  **Extract Structured Data:** Reliably pull structured data from pages that use JavaScript, AJAX, and other dynamic loading techniques.
-3.  **Manage Advanced Anti-Bot Strategies:** Utilize a sophisticated proxy pool with features like IP rotation, realistic browser headers, cookie management, and stealth capabilities to ensure stable and respectful data collection.
-4.  **Build a Scalable Architecture:** Design a robust database model and system architecture to securely store and process data about people, companies, and vehicles from multiple sources.
+### Database (MySQL)
+- **Comprehensive Schema** for persons, companies, vehicles, and jobs
+- **Data Quality Metrics** with validation and monitoring
+- **Audit Logging** with complete change tracking
+- **Performance Optimized** with proper indexing and views
 
-### Key Research Questions
-- What are the most effective crawling and extraction strategies for dynamic web interfaces?
-- How can a proxy pool and anti-bot system be designed to minimize the risk of detection and blocking?
-- How can templates and auto-detection be used to efficiently extract data from pages with similar structures?
+## 🚀 Quick Start
+
+### Prerequisites
+
+- **Python 3.11+**
+- **Node.js 18+**
+- **MySQL 8.0+**
+- **Redis 6.0+**
+- **Docker** (optional)
+
+### 1. Clone Repository
+
+```bash
+git clone <repository-url>
+cd Main_crawler_project
+```
+
+### 2. Database Setup
+
+Start MySQL and create database:
+
+```sql
+CREATE DATABASE ecadp DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'ecadp_user'@'%' IDENTIFIED BY 'your_password';
+GRANT ALL PRIVILEGES ON ecadp.* TO 'ecadp_user'@'%';
+FLUSH PRIVILEGES;
+```
+
+### 3. Environment Configuration
+
+```bash
+# Copy and configure environment variables
+cp .env.example .env
+
+# Edit .env with your database credentials
+MYSQL_HOST=localhost
+MYSQL_PORT=3306
+MYSQL_DATABASE=ecadp
+MYSQL_USER=ecadp_user
+MYSQL_PASSWORD=your_password
+```
+
+### 4. Backend Setup
+
+```bash
+# Install Python dependencies
+pip install -r requirements.txt
+
+# Initialize database
+python scripts/init_db.py
+
+# Start backend server
+uvicorn src.webapp.app:app --reload --host 0.0.0.0 --port 8000
+```
+
+### 5. Frontend Setup
+
+```bash
+# Navigate to frontend directory
+cd frontend
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+```
+
+### 6. Access Applications
+
+- **Frontend**: http://localhost:3000
+- **API Documentation**: http://localhost:8000/docs
+- **GraphQL Playground**: http://localhost:8000/graphql
+
+## 📁 Project Structure
 - How should a database be structured to integrate data about people, companies, and vehicles from disparate sources?
 
 ## Core Concepts & Architecture

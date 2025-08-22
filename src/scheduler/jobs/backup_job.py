@@ -18,7 +18,7 @@ import subprocess
 import gzip
 import os
 
-from src.database.connection import DatabaseManager
+from src.database.manager import DatabaseManager
 from src.webhooks.client import WebhookClient
 
 logger = logging.getLogger(__name__)

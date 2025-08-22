@@ -1,12 +1,204 @@
-# Main application configuration
-app_name: "Ethical Crawler & Data Platform"
-version: "0.1.0"
-environment: "development" # Overridden by env files
+# ECaDP Platform - Main Application Configuration
+# Core settings for the crawler/scraper platform
 
+app:
+  name: "ECaDP Platform"
+  version: "1.0.0"
+  environment: "${ENVIRONMENT:-development}"
+  debug: ${DEBUG:-true}
+  log_level: "${LOG_LEVEL:-INFO}"
+
+# Database Configuration
 database:
-  provider: "supabase"
-  pool_size: 10
+  # Primary MySQL database for application data
+  mysql:
+    host: "${MYSQL_HOST:-localhost}"
+    port: ${MYSQL_PORT:-3306}
+    database: "${MYSQL_DATABASE:-ecadp}"
+    username: "${MYSQL_USER:-ecadp_user}"
+    password: "${MYSQL_PASSWORD}"
+    pool_size: ${MYSQL_POOL_SIZE:-10}
+    max_overflow: ${MYSQL_MAX_OVERFLOW:-20}
+    pool_timeout: ${MYSQL_POOL_TIMEOUT:-30}
+    pool_recycle: ${MYSQL_POOL_RECYCLE:-3600}
+    ssl_mode: "${MYSQL_SSL_MODE:-PREFERRED}"
+    charset: "utf8mb4"
+    collation: "utf8mb4_unicode_ci"
+    
+  # Redis for caching and session storage
+  redis:
+    host: "${REDIS_HOST:-localhost}"
+    port: ${REDIS_PORT:-6379}
+    database: ${REDIS_DB:-0}
+    password: "${REDIS_PASSWORD:-}"
+    max_connections: ${REDIS_MAX_CONNECTIONS:-50}
+    socket_timeout: ${REDIS_SOCKET_TIMEOUT:-5}
+    connection_timeout: ${REDIS_CONNECTION_TIMEOUT:-5}
 
+# Web Application Settings
+webapp:
+  host: "${WEBAPP_HOST:-0.0.0.0}"
+  port: ${WEBAPP_PORT:-8000}
+  workers: ${WEBAPP_WORKERS:-4}
+  reload: ${WEBAPP_RELOAD:-true}
+  cors_origins:
+    - "http://localhost:3000"
+    - "http://localhost:5173"
+    - "${FRONTEND_URL:-http://localhost:3000}"
+  
+  # Session management
+  session:
+    secret_key: "${SESSION_SECRET_KEY}"
+    cookie_name: "ecadp_session"
+    cookie_secure: ${SESSION_COOKIE_SECURE:-false}
+    cookie_httponly: true
+    cookie_samesite: "lax"
+    max_age: ${SESSION_MAX_AGE:-86400}  # 24 hours
+
+# Authentication & Authorization
+auth:
+  jwt:
+    secret_key: "${JWT_SECRET_KEY}"
+    algorithm: "HS256"
+    access_token_expire_minutes: ${JWT_ACCESS_TOKEN_EXPIRE:-30}
+    refresh_token_expire_days: ${JWT_REFRESH_TOKEN_EXPIRE:-7}
+  
+  oauth:
+    google:
+      client_id: "${GOOGLE_CLIENT_ID:-}"
+      client_secret: "${GOOGLE_CLIENT_SECRET:-}"
+      redirect_uri: "${GOOGLE_REDIRECT_URI:-}"
+    
+    github:
+      client_id: "${GITHUB_CLIENT_ID:-}"
+      client_secret: "${GITHUB_CLIENT_SECRET:-}"
+      redirect_uri: "${GITHUB_REDIRECT_URI:-}"
+
+# API Configuration
 api:
-  host: "0.0.0.0"
-  port: 8000
+  base_url: "${API_BASE_URL:-http://localhost:8000}"
+  rate_limit:
+    enabled: ${API_RATE_LIMIT_ENABLED:-true}
+    requests_per_minute: ${API_RATE_LIMIT_RPM:-100}
+    burst_size: ${API_RATE_LIMIT_BURST:-20}
+  
+  pagination:
+    default_page_size: ${API_DEFAULT_PAGE_SIZE:-20}
+    max_page_size: ${API_MAX_PAGE_SIZE:-100}
+
+# Crawler Configuration
+crawler:
+  max_concurrent_jobs: ${CRAWLER_MAX_CONCURRENT:-5}
+  default_delay: ${CRAWLER_DEFAULT_DELAY:-1.0}
+  max_retries: ${CRAWLER_MAX_RETRIES:-3}
+  timeout: ${CRAWLER_TIMEOUT:-30}
+  
+  # URL queue settings
+  queue:
+    max_size: ${CRAWLER_QUEUE_MAX_SIZE:-10000}
+    batch_size: ${CRAWLER_QUEUE_BATCH_SIZE:-100}
+    
+  # Sitemap settings
+  sitemap:
+    enabled: ${CRAWLER_SITEMAP_ENABLED:-true}
+    max_urls: ${CRAWLER_SITEMAP_MAX_URLS:-50000}
+    respect_robots_txt: ${CRAWLER_RESPECT_ROBOTS:-true}
+
+# Scraper Configuration
+scraper:
+  max_concurrent_jobs: ${SCRAPER_MAX_CONCURRENT:-10}
+  default_timeout: ${SCRAPER_DEFAULT_TIMEOUT:-30}
+  max_retries: ${SCRAPER_MAX_RETRIES:-3}
+  
+  # Browser settings
+  browser:
+    headless: ${SCRAPER_BROWSER_HEADLESS:-true}
+    disable_images: ${SCRAPER_BROWSER_DISABLE_IMAGES:-true}
+    disable_javascript: ${SCRAPER_BROWSER_DISABLE_JS:-false}
+    user_agent_rotation: ${SCRAPER_USER_AGENT_ROTATION:-true}
+    
+  # Data extraction
+  extraction:
+    max_text_length: ${SCRAPER_MAX_TEXT_LENGTH:-10000}
+    image_download: ${SCRAPER_IMAGE_DOWNLOAD:-false}
+    follow_redirects: ${SCRAPER_FOLLOW_REDIRECTS:-true}
+
+# Proxy Pool Configuration
+proxy:
+  enabled: ${PROXY_ENABLED:-true}
+  rotation_enabled: ${PROXY_ROTATION_ENABLED:-true}
+  validation_interval: ${PROXY_VALIDATION_INTERVAL:-300}  # 5 minutes
+  
+  pool:
+    min_size: ${PROXY_POOL_MIN_SIZE:-10}
+    max_size: ${PROXY_POOL_MAX_SIZE:-100}
+    health_check_interval: ${PROXY_HEALTH_CHECK_INTERVAL:-60}
+    
+  quality:
+    min_success_rate: ${PROXY_MIN_SUCCESS_RATE:-0.7}
+    min_speed_mbps: ${PROXY_MIN_SPEED_MBPS:-1.0}
+    max_latency_ms: ${PROXY_MAX_LATENCY_MS:-5000}
+
+# Data Storage Configuration
+storage:
+  # Raw data storage
+  raw_data:
+    backend: "${RAW_DATA_BACKEND:-filesystem}"  # filesystem, s3, gcs
+    base_path: "${RAW_DATA_PATH:-./data/raw}"
+    compression: ${RAW_DATA_COMPRESSION:-gzip}
+    retention_days: ${RAW_DATA_RETENTION_DAYS:-90}
+  
+  # Processed data storage
+  processed_data:
+    backend: "${PROCESSED_DATA_BACKEND:-database}"  # database, s3, bigquery
+    batch_size: ${PROCESSED_DATA_BATCH_SIZE:-1000}
+    
+  # Export configuration
+  exports:
+    base_path: "${EXPORTS_PATH:-./data/exports}"
+    formats:
+      - csv
+      - json
+      - excel
+    max_file_size_mb: ${EXPORTS_MAX_FILE_SIZE_MB:-100}
+
+# Security Configuration
+security:
+  # CSRF protection
+  csrf:
+    enabled: ${CSRF_ENABLED:-true}
+    secret_key: "${CSRF_SECRET_KEY}"
+    
+  # Content Security Policy
+  csp:
+    enabled: ${CSP_ENABLED:-true}
+    report_only: ${CSP_REPORT_ONLY:-false}
+    
+  # Rate limiting
+  rate_limiting:
+    enabled: ${RATE_LIMITING_ENABLED:-true}
+    storage_backend: "redis"  # redis, memory
+    
+  # Input validation
+  validation:
+    max_url_length: ${VALIDATION_MAX_URL_LENGTH:-2048}
+    max_xpath_length: ${VALIDATION_MAX_XPATH_LENGTH:-1024}
+    allowed_domains_regex: "${VALIDATION_ALLOWED_DOMAINS:-.*}"
+
+# Feature Flags
+features:
+  advanced_selectors: ${FEATURE_ADVANCED_SELECTORS:-true}
+  ai_template_generation: ${FEATURE_AI_TEMPLATES:-false}
+  auto_pagination: ${FEATURE_AUTO_PAGINATION:-true}
+  form_automation: ${FEATURE_FORM_AUTOMATION:-true}
+  image_processing: ${FEATURE_IMAGE_PROCESSING:-false}
+  data_quality_checks: ${FEATURE_DATA_QUALITY:-true}
+  export_scheduling: ${FEATURE_EXPORT_SCHEDULING:-true}
+  webhook_integration: ${FEATURE_WEBHOOKS:-true}
+
+# Development Settings (only in development environment)
+development:
+  auto_reload: ${DEV_AUTO_RELOAD:-true}
+  debug_toolbar: ${DEV_DEBUG_TOOLBAR:-true}
+  mock_external_apis: ${DEV_MOCK_APIS:-false}
+  sample_data_generation: ${DEV_SAMPLE_DATA:-true}

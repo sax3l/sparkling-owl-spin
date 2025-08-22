@@ -1,0 +1,23 @@
+# Docker Compose for synthetic sites
+version: '3.8'
+services:
+  static-list:
+    image: nginx:alpine
+    ports:
+      - "8081:80"
+  js-infinite-scroll:
+    image: nginx:alpine
+    ports:
+      - "8082:80"
+  form-flow:
+    image: nginx:alpine
+    ports:
+      - "8083:80"
+  variable-dom:
+    image: nginx:alpine
+    ports:
+      - "8084:80"
+  captcha-lite:
+    image: nginx:alpine
+    ports:
+      - "8085:80"

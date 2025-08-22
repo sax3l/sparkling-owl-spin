@@ -48,7 +48,7 @@ from src.scheduler.jobs.crawl_job import CrawlJob
 from src.scheduler.jobs.scrape_job import ScrapeJob
 from src.scheduler.jobs.proxy_update_job import ProxyUpdateJob
 from src.scheduler.jobs.backup_job import BackupJob
-from src.database.connection import DatabaseManager
+from src.database.manager import DatabaseManager
 from src.proxy_pool.manager import ProxyPoolManager
 from src.utils.logger import setup_logging
 from src.webhooks.client import WebhookClient

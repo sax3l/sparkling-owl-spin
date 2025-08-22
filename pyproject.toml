@@ -1,11 +1,49 @@
 [tool.poetry]
 name = "ecadp"
-version = "0.1.0"
+version = "1.0.0"
 description = "Ethical Crawler & Data Platform"
-authors = ["Your Name <you@example.com>"]
+authors = ["ECaDP Team <team@ecadp.com>"]
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/your-org/ecadp"
+repository = "https://github.com/your-org/ecadp"
+documentation = "https://docs.ecadp.com"
+keywords = ["crawler", "scraper", "data", "platform", "ethical"]
 
 [tool.poetry.dependencies]
 python = "^3.11"
+fastapi = "^0.95.0"
+uvicorn = "^0.22.0"
+sqlalchemy = "^1.4.0"
+pymysql = "^1.1.0"
+mysqlclient = "^2.2.0"
+aiomysql = "^0.2.0"
+python-dotenv = "^1.0.0"
+httpx = "^0.24.0"
+redis = "^4.5.0"
+pydantic = "^1.10.7"
+pyyaml = "^6.0"
+lxml = "^4.9.2"
+cssselect = "^1.2.0"
+python-dateutil = "^2.8.2"
+robotexclusionrulesparser = "^1.0.0"
+structlog = "^23.1.0"
+python-json-logger = "^2.0.7"
+prometheus-client = "^0.17.0"
+passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+python-jose = {extras = ["cryptography"], version = "^3.3.0"}
+tenacity = "^8.2.2"
+backoff = "^2.2.1"
+apscheduler = "^3.10.1"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.0"
+pytest-asyncio = "^0.21.0"
+pytest-cov = "^4.1.0"
+black = "^23.7.0"
+ruff = "^0.0.284"
+mypy = "^1.5.0"
+pre-commit = "^3.3.0"
 
 [tool.black]
 line-length = 88

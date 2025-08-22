@@ -27,8 +27,7 @@ Diagnostics:
 - DiagnoseURL: Website protection analysis
 """
 
-from .policy_manager import PolicyManager
-from .policy import AntiBotPolicy
+from .policy_manager import PolicyManager, DomainPolicy, RiskLevel, PolicyAction, DetectionSignal
 from .header_generator import HeaderGenerator
 from .session_manager import SessionManager
 from .delay_strategy import DelayStrategy
@@ -43,7 +42,7 @@ from .diagnostics import DiagnoseURL
 
 __all__ = [
     "PolicyManager",
-    "AntiBotPolicy",
+    "AntiBot",
     "HeaderGenerator",
     "SessionManager",
     "DelayStrategy", 

@@ -1,274 +1,146 @@
-import React, { useState, useEffect } from 'react';
-import { submitExport, listExports, getExportStatus, getDirectData } from '../api/client';
-import { ExportCreate, ExportRead, JobStatus } from '../api/types';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/components/ui/use-toast'; // Assuming you have a toast component
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { 
+  Download, 
+  FileSpreadsheet, 
+  Database, 
+  Calendar,
+  Filter,
+  Settings
+} from 'lucide-react';
 
-const Exports: React.FC = () => {
-  const { toast } = useToast();
-  const [exportType, setExportType] = useState<string>('person');
-  const [format, setFormat] = useState<ExportCreate['format']>('csv');
-  const [compress, setCompress] = useState<ExportCreate['compress']>('none');
-  const [fileNamePrefix, setFileNamePrefix] = useState<string>('');
-  const [filters, setFilters] = useState<string>('{}'); // JSON string for filters
-  const [exports, setExports] = useState<ExportRead[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-
-  const fetchExports = async () => {
-    setLoading(true);
-    try {
-      const data = await listExports();
-      setExports(data);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to load exports.",
-        variant: "destructive",
-      });
-      console.error("Error fetching exports:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchExports();
-    const interval = setInterval(fetchExports, 5000); // Poll every 5 seconds
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const parsedFilters = JSON.parse(filters);
-      const newExport: ExportCreate = {
-        export_type: exportType,
-        format,
-        compress,
-        destination: { type: 'supabase_storage', retention_hours: 72 },
-        file_name_prefix: fileNamePrefix || undefined,
-        filters: parsedFilters,
-      };
-      const result = await submitExport(newExport);
-      setExports((prev) => [result, ...prev]);
-      toast({
-        title: "Export Initiated",
-        description: `Export job ${result.id} has been queued.`,
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: `Failed to initiate export: ${error.message || 'Unknown error'}`,
-        variant: "destructive",
-      });
-      console.error("Error submitting export:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDownload = async (exportJob: ExportRead) => {
-    if (exportJob.download_url) {
-      window.open(exportJob.download_url, '_blank');
-    } else {
-      toast({
-        title: "Not Ready",
-        description: "The export file is not yet available for download.",
-        variant: "warning",
-      });
-    }
-  };
-
-  const handleDirectDownload = async () => {
-    setLoading(true);
-    try {
-      const parsedFilters = JSON.parse(filters);
-      const response = await getDirectData(exportType, format, parsedFilters, compress === 'gzip');
-      
-      const blob = await response.blob();
-      const contentDisposition = response.headers.get('Content-Disposition');
-      let filename = `${exportType}_data.${format}`;
-      if (compress === 'gzip') filename += '.gz';
-
-      if (contentDisposition) {
-        const filenameMatch = contentDisposition.match(/filename="([^"]+)"/);
-        if (filenameMatch && filenameMatch[1]) {
-          filename = filenameMatch[1];
-        }
-      }
-
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-      toast({
-        title: "Download Started",
-        description: `Direct download of ${filename} initiated.`,
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: `Failed to initiate direct download: ${error.message || 'Unknown error'}`,
-        variant: "destructive",
-      });
-      console.error("Error initiating direct download:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+const Exports = () => {
   return (
     <div className="space-y-8">
-      <Card>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Data Exports</h1>
+          <p className="text-muted-foreground">Export and download your collected data</p>
+        </div>
+        <Button className="bg-gradient-primary">
+          <Download className="w-4 h-4 mr-2" />
+          Create Export
+        </Button>
+      </div>
+
+      {/* Export Options */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="border-sidebar-border">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <FileSpreadsheet className="w-5 h-5 text-success" />
+              <span>CSV Export</span>
+            </CardTitle>
+            <CardDescription>Standard spreadsheet format</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button className="w-full bg-gradient-success">
+              Export as CSV
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="border-sidebar-border">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Database className="w-5 h-5 text-primary" />
+              <span>JSON Export</span>
+            </CardTitle>
+            <CardDescription>Structured data format</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button variant="outline" className="w-full">
+              Export as JSON
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="border-sidebar-border">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Settings className="w-5 h-5 text-accent" />
+              <span>Custom Export</span>
+            </CardTitle>
+            <CardDescription>Configure custom format</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button variant="outline" className="w-full">
+              Configure Export
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Recent Exports */}
+      <Card className="border-sidebar-border">
         <CardHeader>
-          <CardTitle>Initiate New Export</CardTitle>
+          <CardTitle>Recent Exports</CardTitle>
+          <CardDescription>Your latest data export jobs</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="exportType">Export Type</Label>
-              <Select value={exportType} onValueChange={setExportType}>
-                <SelectTrigger id="exportType">
-                  <SelectValue placeholder="Select export type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="person">Person</SelectItem>
-                  <SelectItem value="company">Company</SelectItem>
-                  <SelectItem value="vehicle">Vehicle</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="format">Format</Label>
-              <Select value={format} onValueChange={setFormat}>
-                <SelectTrigger id="format">
-                  <SelectValue placeholder="Select format" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="csv">CSV</SelectItem>
-                  <SelectItem value="json">JSON</SelectItem>
-                  <SelectItem value="ndjson">NDJSON</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="compress">Compression</Label>
-              <Select value={compress} onValueChange={setCompress}>
-                <SelectTrigger id="compress">
-                  <SelectValue placeholder="Select compression" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  <SelectItem value="gzip">Gzip</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="fileNamePrefix">File Name Prefix (Optional)</Label>
-              <Input
-                id="fileNamePrefix"
-                value={fileNamePrefix}
-                onChange={(e) => setFileNamePrefix(e.target.value)}
-                placeholder="e.g., my_data"
-              />
-            </div>
-
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="filters">Filters (JSON)</Label>
-              <Input
-                id="filters"
-                value={filters}
-                onChange={(e) => setFilters(e.target.value)}
-                placeholder='{"status": "active"}'
-              />
-            </div>
-
-            <div className="md:col-span-2 flex gap-4">
-              <Button type="submit" disabled={loading}>
-                {loading ? 'Initiating...' : 'Initiate Async Export'}
-              </Button>
-              <Button type="button" onClick={handleDirectDownload} disabled={loading} variant="outline">
-                {loading ? 'Downloading...' : 'Direct Download (Small Data)'}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Export History</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loading && exports.length === 0 ? (
-            <p>Loading exports...</p>
-          ) : exports.length === 0 ? (
-            <p>No export jobs found.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>ID</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>File Name</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Created At</TableHead>
-                    <TableHead>Expires At</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {exports.map((exp) => (
-                    <TableRow key={exp.id}>
-                      <TableCell className="font-medium">{exp.id.substring(0, 8)}...</TableCell>
-                      <TableCell>{exp.export_type}</TableCell>
-                      <TableCell>{exp.file_name}</TableCell>
-                      <TableCell>
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                            exp.status === JobStatus.COMPLETED
-                              ? 'bg-green-100 text-green-800'
-                              : exp.status === JobStatus.FAILED
-                              ? 'bg-red-100 text-red-800'
-                              : 'bg-yellow-100 text-yellow-800'
-                          }`}
-                        >
-                          {exp.status}
-                        </span>
-                      </TableCell>
-                      <TableCell>{new Date(exp.created_at).toLocaleString()}</TableCell>
-                      <TableCell>{exp.expires_at ? new Date(exp.expires_at).toLocaleString() : 'N/A'}</TableCell>
-                      <TableCell>
-                        {exp.status === JobStatus.COMPLETED && exp.download_url ? (
-                          <Button onClick={() => handleDownload(exp)} size="sm">
-                            Download
-                          </Button>
-                        ) : (
-                          <Button size="sm" disabled>
-                            Download
-                          </Button>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
+          <div className="space-y-4">
+            {[
+              {
+                name: 'vehicles_Q3_2024.csv',
+                type: 'CSV',
+                size: '45.2 MB',
+                records: '89,432',
+                status: 'completed',
+                created: '2 hours ago'
+              },
+              {
+                name: 'business_directory.json',
+                type: 'JSON',
+                size: '23.1 MB',
+                records: '34,567',
+                status: 'processing',
+                created: '1 day ago'
+              },
+              {
+                name: 'car_listings_september.csv',
+                type: 'CSV',
+                size: '67.8 MB',
+                records: '123,890',
+                status: 'completed',
+                created: '3 days ago'
+              }
+            ].map((export_, index) => (
+              <div key={index} className="flex items-center justify-between p-4 rounded-lg bg-sidebar-accent">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-3">
+                    <FileSpreadsheet className="w-5 h-5 text-muted-foreground" />
+                    <div>
+                      <p className="font-medium text-foreground">{export_.name}</p>
+                      <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                        <span>{export_.type}</span>
+                        <span>{export_.size}</span>
+                        <span>{export_.records} records</span>
+                        <span>{export_.created}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Badge 
+                    variant="secondary"
+                    className={
+                      export_.status === 'completed'
+                        ? 'bg-success/10 text-success border-success/20'
+                        : 'bg-warning/10 text-warning border-warning/20'
+                    }
+                  >
+                    {export_.status}
+                  </Badge>
+                  <Button size="sm" variant="outline">
+                    <Download className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -27,6 +27,7 @@ from .routers import (
     privacy_router,
     templates_router
 )
+from .routers.graphql import router as graphql_router
 from .utils.rate_limiting import RateLimitMiddleware
 from .utils.security import SecurityConfig, get_client_ip
 
@@ -206,6 +207,7 @@ def create_app(environment: str = "development") -> FastAPI:
     app.include_router(exports_router, prefix="/api/exports", tags=["Exports"])
     app.include_router(privacy_router, prefix="/api/privacy", tags=["Privacy"])
     app.include_router(templates_router, prefix="/api/templates", tags=["Templates"])
+    app.include_router(graphql_router, tags=["GraphQL"])
     
     # Custom exception handlers
     @app.exception_handler(HTTPException)

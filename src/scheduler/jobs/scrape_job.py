@@ -23,7 +23,7 @@ from src.scraper.template_runtime import TemplateRuntime
 from src.scraper.dsl.schema import ScrapingTemplate
 from src.proxy_pool.manager import ProxyPoolManager
 from src.anti_bot.detector import BotDetector
-from src.database.connection import DatabaseManager
+from src.database.manager import DatabaseManager
 from src.utils.rate_limiter import RateLimiter
 from src.webhooks.client import WebhookClient
 from src.exporters.json_exporter import JsonExporter

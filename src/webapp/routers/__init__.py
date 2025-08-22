@@ -27,6 +27,21 @@ try:
 except ImportError:
     scraper_router = None
 
+try:
+    from .exports import router as exports_router
+except ImportError:
+    exports_router = None
+
+try:
+    from .privacy import router as privacy_router
+except ImportError:
+    privacy_router = None
+
+try:
+    from .templates import router as templates_router
+except ImportError:
+    templates_router = None
+
 __all__ = [
     "health_router",
     "auth_router", 
@@ -35,5 +50,8 @@ __all__ = [
     "webhooks_router",
     "admin_router",
     "crawler_router",
-    "scraper_router"
+    "scraper_router",
+    "exports_router",
+    "privacy_router",
+    "templates_router",
 ]

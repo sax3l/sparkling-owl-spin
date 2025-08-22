@@ -1,7 +1,45 @@
 import redis
 import time
 from pydantic import BaseModel
-from typing import Literal
+from typing import Literal, Dict, List, Optional, Any
+from datetime import datetime, timedelta
+from enum import Enum
+import json
+
+from src.utils.logger import get_logger
+
+logger = get_logger(__name__)
+
+class RiskLevel(Enum):
+    """Risk assessment levels"""
+    VERY_LOW = "very_low"
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    CRITICAL = "critical"
+
+class PolicyAction(Enum):
+    """Available policy actions"""
+    ALLOW = "allow"
+    DELAY = "delay"
+    ROTATE_PROXY = "rotate_proxy"
+    SWITCH_USER_AGENT = "switch_user_agent"
+    INCREASE_DELAY = "increase_delay"
+    FALLBACK_MODE = "fallback_mode"
+    PAUSE_DOMAIN = "pause_domain"
+    BLOCK = "block"
+
+class DetectionSignal(Enum):
+    """Bot detection signals"""
+    CAPTCHA = "captcha"
+    RATE_LIMIT = "rate_limit"
+    IP_BLOCK = "ip_block"
+    UNUSUAL_RESPONSE = "unusual_response"
+    CLOUDFLARE_CHALLENGE = "cloudflare_challenge"
+    HTTP_403 = "http_403"
+    HTTP_429 = "http_429"
+    EMPTY_RESPONSE = "empty_response"
+    REDIRECT_LOOP = "redirect_loop"
 
 class DomainPolicy(BaseModel):
     transport: Literal["http", "browser"] = "http"
@@ -12,14 +50,28 @@ class DomainPolicy(BaseModel):
     current_delay_seconds: float = 2.0
     backoff_until: float = 0.0
     error_rate: float = 0.0
+    risk_level: RiskLevel = RiskLevel.LOW
+    detection_signals: List[str] = []
+    policy_actions: List[str] = []
+    last_detection: Optional[datetime] = None
+    total_requests: int = 0
+    blocked_requests: int = 0
 
 class PolicyManager:
     """
+    Enhanced adaptive policy manager with risk assessment and detection learning.
     Manages and adapts scraping policies per domain using Redis.
     This forms the core of the adaptive regulator.
     """
-    def __init__(self, redis_url: str):
+    def __init__(self, redis_url: str, learning_enabled: bool = True):
         self.redis = redis.from_url(redis_url, decode_responses=True)
+        self.learning_enabled = learning_enabled
+        self.global_stats = {
+            'total_requests': 0,
+            'blocked_requests': 0,
+            'detection_signals': 0,
+            'policy_triggers': 0
+        }
 
     def get_policy(self, domain: str) -> DomainPolicy:
         """Retrieves the current policy for a domain, or returns a default."""
@@ -31,6 +83,81 @@ class PolicyManager:
     def update_policy(self, domain: str, policy: DomainPolicy):
         """Saves the updated policy to Redis."""
         self.redis.set(f"policy:{domain}", policy.model_dump_json(), ex=86400)
+
+    def assess_risk(self, domain: str, detection_signals: List[DetectionSignal] = None) -> RiskLevel:
+        """Assess risk level based on domain history and current signals"""
+        policy = self.get_policy(domain)
+        
+        # Base risk on error rate
+        if policy.error_rate > 0.8:
+            return RiskLevel.CRITICAL
+        elif policy.error_rate > 0.6:
+            return RiskLevel.HIGH
+        elif policy.error_rate > 0.4:
+            return RiskLevel.MEDIUM
+        elif policy.error_rate > 0.2:
+            return RiskLevel.LOW
+        else:
+            return RiskLevel.VERY_LOW
+
+    def add_detection_signal(self, domain: str, signal: DetectionSignal):
+        """Record a bot detection signal for learning"""
+        policy = self.get_policy(domain)
+        
+        # Add signal to history
+        signal_str = signal.value
+        if signal_str not in policy.detection_signals:
+            policy.detection_signals.append(signal_str)
+            # Keep only last 10 signals
+            policy.detection_signals = policy.detection_signals[-10:]
+        
+        policy.last_detection = datetime.now()
+        
+        # Update risk level
+        policy.risk_level = self.assess_risk(domain, [signal])
+        
+        # Apply adaptive response
+        self._apply_adaptive_response(domain, policy, signal)
+        
+        self.update_policy(domain, policy)
+        
+        if self.learning_enabled:
+            self._learn_from_signal(domain, signal)
+
+    def _apply_adaptive_response(self, domain: str, policy: DomainPolicy, signal: DetectionSignal):
+        """Apply adaptive response based on detection signal"""
+        responses = {
+            DetectionSignal.CAPTCHA: [PolicyAction.FALLBACK_MODE, PolicyAction.INCREASE_DELAY],
+            DetectionSignal.RATE_LIMIT: [PolicyAction.INCREASE_DELAY, PolicyAction.ROTATE_PROXY],
+            DetectionSignal.IP_BLOCK: [PolicyAction.ROTATE_PROXY, PolicyAction.PAUSE_DOMAIN],
+            DetectionSignal.HTTP_403: [PolicyAction.SWITCH_USER_AGENT, PolicyAction.DELAY],
+            DetectionSignal.HTTP_429: [PolicyAction.INCREASE_DELAY],
+            DetectionSignal.CLOUDFLARE_CHALLENGE: [PolicyAction.FALLBACK_MODE]
+        }
+        
+        actions = responses.get(signal, [PolicyAction.DELAY])
+        
+        for action in actions:
+            if action == PolicyAction.INCREASE_DELAY:
+                policy.current_delay_seconds = min(policy.current_delay_seconds * 2, 60.0)
+            elif action == PolicyAction.ROTATE_PROXY:
+                policy.proxy_type = "residential" if policy.proxy_type == "datacenter" else "datacenter"
+            elif action == PolicyAction.SWITCH_USER_AGENT:
+                policy.header_family = "firefox" if policy.header_family == "chrome" else "chrome"
+            elif action == PolicyAction.FALLBACK_MODE:
+                policy.transport = "browser"
+            elif action == PolicyAction.PAUSE_DOMAIN:
+                policy.backoff_until = time.time() + 3600  # 1 hour pause
+        
+        # Record applied actions
+        policy.policy_actions.extend([action.value for action in actions])
+        policy.policy_actions = policy.policy_actions[-5:]  # Keep last 5 actions
+
+    def _learn_from_signal(self, domain: str, signal: DetectionSignal):
+        """Update global learning from detection signal"""
+        stats_key = f"global_stats:detection:{signal.value}"
+        self.redis.incr(stats_key)
+        self.redis.expire(stats_key, 86400 * 7)  # Keep for 7 days
 
     def update_on_failure(self, domain: str, status_code: int):
         """

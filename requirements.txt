@@ -2,7 +2,9 @@
 fastapi>=0.95.0
 uvicorn>=0.22.0
 sqlalchemy>=1.4.0
-psycopg2-binary>=2.9.0 # For PostgreSQL
+pymysql>=1.1.0  # For MySQL connection
+mysqlclient>=2.2.0  # MySQL C library (alternative: PyMySQL)
+aiomysql>=0.2.0  # Async MySQL driver
 python-dotenv>=1.0.0
 httpx>=0.24.0
 redis>=4.5.0
@@ -26,8 +28,8 @@ apscheduler>=3.10.1
 passlib[bcrypt]>=1.7.4 # For password hashing
 python-jose[cryptography]>=3.3.0 # For JWT
 
-# Database & async support
-asyncpg>=0.29.0  # Async PostgreSQL driver
+# Database & async support (MySQL focused)
+aiomysql>=0.2.0  # Async MySQL driver
 asyncio-mqtt>=0.13.0  # For async MQTT if needed
 
 # Web scraping & browser automation

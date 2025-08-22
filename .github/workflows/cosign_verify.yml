@@ -1,0 +1,12 @@
+# Cosign verify workflow
+name: Cosign Verify
+on:
+  push:
+    branches:
+      - main
+jobs:
+  cosign_verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cosign verify stub
+        run: echo "Cosign verify stub"

@@ -2,11 +2,12 @@ import datetime
 import json
 import os
 import logging
+from typing import Dict, Any
 from uuid import UUID
 from sqlalchemy.orm import Session
 from src.database.models import ExportHistory, JobStatus, ExportCreate
 from src.database.manager import SessionLocal
-from src.utils.export_utils import get_data_from_db, generate_csv_stream, generate_ndjson_stream, generate_json_stream, get_fieldnames_for_export_type, upload_to_supabase_storage
+from src.exporters.registry import get_export_manager
 from src.webhooks.events import export_ready_event # Assuming this event exists
 from src.webhooks.service import WebhookService # Assuming this service exists
 
@@ -35,30 +36,35 @@ async def execute_export_job(export_id: str, export_params: Dict[str, Any]):
         
         logger.info(f"Starting export job {export_id} for type {export_create.export_type} in format {export_create.format}.", extra={"export_id": export_id, "export_type": export_create.export_type})
 
-        data_generator = get_data_from_db(db, export_create.export_type, export_create.filters)
-        fieldnames = get_fieldnames_for_export_type(export_create.export_type)
+        # Use the new ExportManager system
+        export_manager = get_export_manager()
+        
+        # Generate data stream using integrated database export
+        data_stream = export_manager.export_from_database(
+            db=db,
+            export_type=export_create.export_type,
+            format=export_create.format,
+            tenant_id=export_job.user_id,  # Assuming user_id serves as tenant_id
+            filters=export_create.filters or {},
+            mask_pii=True
+        )
 
-        # Determine stream generator and content type
-        stream_generator = None
-        content_type = ""
-        if export_create.format == "csv":
-            stream_generator = generate_csv_stream(data_generator, fieldnames)
-            content_type = "text/csv"
-        elif export_create.format == "ndjson":
-            stream_generator = generate_ndjson_stream(data_generator)
-            content_type = "application/x-ndjson"
-        elif export_create.format == "json":
-            stream_generator = generate_json_stream(data_generator)
-            content_type = "application/json"
-        else:
-            raise ValueError(f"Unsupported export format: {export_create.format}")
+        # Determine content type
+        content_type_map = {
+            "csv": "text/csv",
+            "json": "application/json", 
+            "ndjson": "application/x-ndjson",
+            "excel": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        }
+        content_type = content_type_map.get(export_create.format, "application/octet-stream")
 
-        # Upload to Supabase Storage
+        # Upload to cloud storage using integrated method
         file_path_in_storage = f"{export_job.user_id}/{export_job.file_name}"
-        download_url = await upload_to_supabase_storage(
+        download_url = await export_manager.export_to_cloud_storage(
             bucket_name=SUPABASE_EXPORTS_BUCKET,
             file_path=file_path_in_storage,
-            data_stream=stream_generator,
+            data_stream=data_stream,
             content_type=content_type,
             compress=(export_create.compress == "gzip")
         )

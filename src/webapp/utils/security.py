@@ -14,6 +14,29 @@ import bcrypt
 from jose import jwt, JWTError
 from passlib.context import CryptContext
 
+# Import comprehensive validators instead of duplicating
+from src.utils.validators import URLValidator, EmailValidator
+
+
+"""
+Security utilities for the webapp.
+"""
+
+import hashlib
+import hmac
+import secrets
+import string
+from datetime import datetime, timedelta
+from typing import Optional, List, Dict, Any
+from urllib.parse import urlparse
+
+import bcrypt
+from jose import jwt, JWTError
+from passlib.context import CryptContext
+
+# Import comprehensive validators instead of duplicating
+from src.utils.validators import URLValidator, EmailValidator
+
 
 class SecurityConfig:
     """Security configuration constants."""
@@ -338,63 +361,35 @@ class WebhookSecurity:
         return hmac.compare_digest(signature, expected_signature)
 
 
-class URLValidator:
-    """URL validation and security utilities."""
+def is_safe_url(url: str, allowed_hosts: Optional[List[str]] = None) -> bool:
+    """
+    Check if URL is safe to access.
     
-    @staticmethod
-    def is_valid_url(url: str) -> bool:
-        """
-        Check if URL is valid.
+    Args:
+        url: URL to validate
+        allowed_hosts: List of allowed hostnames
         
-        Args:
-            url: URL to validate
-            
-        Returns:
-            True if URL is valid
-        """
-        try:
-            result = urlparse(url)
-            return all([result.scheme, result.netloc])
-        except Exception:
+    Returns:
+        True if URL is safe
+    """
+    validator = URLValidator(
+        allowed_schemes=['http', 'https'],
+        allowed_domains=allowed_hosts if allowed_hosts else [],
+        blocked_domains=['localhost', '127.0.0.1', '::1']
+    )
+    
+    if not validator.is_valid(url):
+        return False
+    
+    parsed = urlparse(url)
+    hostname = parsed.hostname
+    
+    if hostname:
+        # Block private IP ranges (basic check)
+        if hostname.startswith(('10.', '172.', '192.168.')):
             return False
     
-    @staticmethod
-    def is_safe_url(url: str, allowed_hosts: Optional[List[str]] = None) -> bool:
-        """
-        Check if URL is safe to access.
-        
-        Args:
-            url: URL to validate
-            allowed_hosts: List of allowed hostnames
-            
-        Returns:
-            True if URL is safe
-        """
-        if not URLValidator.is_valid_url(url):
-            return False
-        
-        parsed = urlparse(url)
-        
-        # Check scheme
-        if parsed.scheme not in ['http', 'https']:
-            return False
-        
-        # Check for localhost/private IP access
-        hostname = parsed.hostname
-        if hostname:
-            # Block localhost
-            if hostname.lower() in ['localhost', '127.0.0.1', '::1']:
-                return False
-            
-            # Block private IP ranges (basic check)
-            if hostname.startswith(('10.', '172.', '192.168.')):
-                return False
-        
-        # Check allowed hosts
-        if allowed_hosts and hostname not in allowed_hosts:
-            return False
-        
-        return True
+    return True
 
 
 class InputSanitizer:
@@ -472,24 +467,18 @@ class InputSanitizer:
         
         return value
     
-    @staticmethod
-    def validate_email(email: str) -> bool:
-        """
-        Basic email validation.
+def validate_email(email: str) -> bool:
+    """
+    Basic email validation.
+    
+    Args:
+        email: Email address to validate
         
-        Args:
-            email: Email address to validate
-            
-        Returns:
-            True if email appears valid
-        """
-        if not isinstance(email, str):
-            return False
-        
-        # Basic regex for email validation
-        import re
-        pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-        return re.match(pattern, email) is not None
+    Returns:
+        True if email appears valid
+    """
+    validator = EmailValidator()
+    return validator.is_valid(email)
 
 
 def generate_csrf_token() -> str:

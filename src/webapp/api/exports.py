@@ -9,10 +9,8 @@ from src.database.models import ExportHistory, ExportCreate, ExportRead, JobType
 from src.database.manager import get_db
 from src.webapp.security import get_current_tenant_id, authorize_with_scopes
 from src.scheduler.scheduler import schedule_job
-from src.utils.export_utils import (
-    get_data_from_db, generate_csv_stream, generate_ndjson_stream, generate_json_stream,
-    get_fieldnames_for_export_type, get_latest_update_timestamp_for_export_type
-)
+from src.exporters.registry import get_export_manager
+from src.utils.export_utils import get_latest_update_timestamp_for_export_type
 import logging
 import hashlib
 import json

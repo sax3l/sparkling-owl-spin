@@ -17,6 +17,7 @@ import yaml
 from src.database.connection import get_db_connection
 from src.observability.metrics import MetricsCollector
 from src.utils.logger import get_logger
+from src.utils.config_loader import ConfigLoader
 
 logger = get_logger(__name__)
 
@@ -26,15 +27,16 @@ class RetentionJob:
     def __init__(self, config_path: str = "config/retention_policy.yml"):
         self.config_path = config_path
         self.metrics = MetricsCollector()
+        self.config_loader = ConfigLoader()
         self.retention_policies = self._load_retention_config()
     
     def _load_retention_config(self) -> Dict:
-        """Load retention policies from configuration."""
+        """Load retention policies using ConfigLoader."""
         try:
-            with open(self.config_path, 'r') as f:
-                return yaml.safe_load(f)
-        except FileNotFoundError:
-            logger.warning(f"Retention config not found: {self.config_path}")
+            config = self.config_loader.load_config_with_env(self.config_path)
+            return config.get('retention', self._default_retention_policies())
+        except Exception as e:
+            logger.warning(f"Failed to load retention config from {self.config_path}: {e}")
             return self._default_retention_policies()
     
     def _default_retention_policies(self) -> Dict:

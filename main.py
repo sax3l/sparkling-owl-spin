@@ -23,6 +23,7 @@ from fastapi.templating import Jinja2Templates
 import yaml
 
 # Import application modules
+from src.utils.config_loader import ConfigLoader
 from src.webapp.api import router as api_router
 from src.webapp.views import router as views_router
 from src.webapp.auth import router as auth_router
@@ -220,10 +221,10 @@ def create_app() -> FastAPI:
     return app
 
 def load_config() -> Dict[str, Any]:
-    """Load application configuration."""
+    """Load application configuration using the comprehensive ConfigLoader."""
     try:
-        with open("config/app_config.yml", "r") as f:
-            return yaml.safe_load(f)
+        config_loader = ConfigLoader()
+        return config_loader.get_config("config/app_config.yml")
     except FileNotFoundError:
         logger.warning("Config file not found, using defaults")
         return {

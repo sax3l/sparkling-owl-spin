@@ -1,0 +1,12 @@
+# Canary deploy workflow
+name: Deploy Canary
+on:
+  push:
+    branches:
+      - main
+jobs:
+  deploy_canary:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy canary stub
+        run: echo "Canary deploy stub"

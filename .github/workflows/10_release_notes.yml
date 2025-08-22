@@ -1,0 +1,12 @@
+# Release notes workflow
+name: Release Notes
+on:
+  push:
+    branches:
+      - main
+jobs:
+  release_notes:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate release notes
+        run: echo "Release notes stub"
