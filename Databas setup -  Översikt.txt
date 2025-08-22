@@ -1,0 +1,1028 @@
+🔎 Översikt
+
+Du arbetade med projektet sparkling-owl-spin, som ska bli en fullständig crawler/scraper-plattform med proxypool och anti-bot-funktionalitet. Tre viktiga dokument användes:
+
+Projektbeskrivning.txt – innehåller en mycket detaljerad plan för arkitektur, mappstruktur, genomförandeplan (faser/sprintar) och designbeskrivningar.
+
+comprehensive_structure_analyzer.py – ett skript som analyserar vilka filer som finns i projektet kontra vilka som borde finnas.
+
+Föregående chat.txt – loggen över era tidigare diskussioner om analysen av sparkling-owl-spin.
+
+📊 Resultat av strukturanalysen
+
+Projektet är ungefär 33 % komplett (152 av 456 filer finns).
+
+Root och Config är nästan färdiga.
+
+Kärnkod (src/) är bara ca 37 % komplett.
+
+Frontend är halvvägs (≈49 %).
+
+Tests täcker bara drygt hälften.
+
+Docker/K8s, Infra, Ops, Extension, SDK är antingen mycket ofullständiga eller helt tomma.
+
+📌 Vad chatten sedan handlade om
+
+Du ville få en funktionsspecifikation för en oblockerbar crawler/scraper med IP-rotation.
+
+Vi gick igenom:
+
+Crawler-funktioner (BFS/DFS, paginering, infinite scroll, honeypot-skydd, robots.txt-stöd).
+
+Scraper-funktioner (statiskt HTML, JavaScript-rendering via headless browser, formulär-interaktion).
+
+Headless browser & stealth (anti-fingerprinting, mänsklig emulering, session-hantering).
+
+Proxypool & IP-rotation (residential/mobile proxies, sticky sessions, geo-maskering, validatorer, quality filter, API).
+
+Headers/User-Agents (korrekta och varierande headers för att undvika heuristisk bot-detektering).
+
+Cookies & sessions (cookie-jars, återanvändning, isolering, inloggningsflöden).
+
+Fingerprinting-motåtgärder (Canvas/WebGL-spoofing, tidsvariationer, policy-profiler).
+
+CAPTCHA-hantering (automatisk lösning via API, human-in-the-loop, adaptiv respons).
+
+Geo-maskering (rätt Accept-Language, tidszon, proxy-location).
+
+Rate limiting & schemaläggning (slumpade pauser, caps per domän, cron-jobb, circuit breakers).
+
+Fallback & felsäkerhet (retries, backoff, poison queues, auto-stegring till browser-läge).
+
+Loggning & observability (metrics, dashboards, larm, spårbarhet, runbooks).
+
+Etik & juridik (robots/ToS, GDPR, ansvarsfullt nyttjande).
+
+🧭 Slutsats
+
+Projektet har en solid plan (Projektbeskrivning.txt) och en analys som pekar ut luckorna (analyzerscriptet), men själva implementationen är bara 1/3 klar. Fokus framåt bör ligga på:
+
+Färdigställa kärnkod (src/) – scraper, crawler, proxypool, anti-bot.
+
+Bygga testtäckning – både unit, integration och e2e mot syntetiska sajter.
+
+Fylla i dokumentation och configs – för att andra ska kunna sätta upp miljön.
+
+Gradvis införa Docker/K8s och infrastruktur – så att systemet går att köra i staging/production.
+
+Vill du att jag nu gör en steg-för-steg-implementeringsplan för Scraper-funktionerna (som du efterfrågade i slutet av chatten), alltså hur du faktiskt bygger modulerna för statisk HTML, dynamiskt JS, formulärflöden och mallbaserad extraktion – komplett med kodexempel och filstrukturer?
+
+Du sade:
+Fortsätt nu skapa en totalt utömmande plan för exakt hur databas setupen ska utformas och i minsta detalj innehålla
+ChatGPT sade:
+
+Du sade:
+Fortsätt nu skapa en totalt utömmande plan för exakt hur databas setupen ska utformas och i minsta detalj innehålla
+ChatGPT sade:
+
+För att skapa en totalt uttömmande plan för databas-setupen i sparkling-owl-spin behöver jag veta några detaljer:
+
+Vill du använda en lokal Supabase-instans eller en molnbaserad produktionsinstans?
+
+Vilken databasmotor vill du ha (PostgreSQL är standard i Supabase)?
+
+Ska datamodellen stödja versionering, åtkomstkontroll (RLS), historik eller liknande funktioner?
+
+Vill du ha detaljerad hjälp med seed-data, index, triggers, constraints, views, stored procedures?
+
+Ska planen omfatta CI/CD för migrations, backupstrategier, och monitoring av databasprestanda?
+
+Med dessa svar kan jag ta fram en komplett och konkret implementeringsplan steg-för-steg med SQL, struktur, roller och automatiseringar.
+
+Du sade:
+PostgreSQL som initialt ska köras lokalt i docker men den ska också kunna implementeras i Subabase senare. Ja den ska omfatta exakt allt detta. 
+ChatGPT sade:
+
+Tack! Jag sätter nu igång med att ta fram en totalt uttömmande databasplan för sparkling-owl-spin. Den kommer omfatta:
+
+Design av fullständig relationsstruktur (alla tabeller, relationer, constraints, index)
+
+Roll- och RLS-upplägg för säkerhet (även per job/session)
+
+Fullständig migrationsstruktur (lokalt och för Supabase)
+
+Seed-data, testdata, anonymisering och exportmöjligheter
+
+Backup-, retention- och raderingsstrategi (inkl. GDPR-tombstones)
+
+CI/CD för migrationer, valideringar och test
+
+Jag återkommer när detta är klart – det kommer struktureras som ett fullständigt dokument med alla SQL, filplaceringar, steg-för-steg-instruktioner och verifieringskommandon.
+
+Research completed in 14m7 källor· 38 sökningar
+
+Fullständig Databasdesign och Setup för Sparkling Owl Spin
+
+Plan för databasutformning och drift (Sparkling Owl Spin)
+
+Översikt: Denna tekniska plan beskriver i detalj hur PostgreSQL-databasen för projektet sparkling-owl-spin ska designas, implementeras och drivas. Databasen körs initialt lokalt via Docker (utvecklingsmiljö) och är fullt kompatibel med Supabase för molndrift. Vi går igenom datamodellen (tabeller, kolumner, relationer, index), struktur och hantering av SQL-migrationer (anpassade för Supabase CLI/Studio), rollbaserad åtkomstkontroll (inklusive RLS-policys), seed- och testdatahantering (inklusive anonymisering), strategier för backup, retention och radering (GDPR-compliance med soft delete/tombstones), CI/CD-integrering av migreringar och tester, samt lösningar för övervakning (observability) och metrik. Slutligen presenteras dokumentation av datamodellen med ER-diagram och exempelqueries.
+
+Databasstruktur och datamodell
+
+Projektets databas är baserad på PostgreSQL 14+ (vilket Supabase använder) och utnyttjar relevanta extensioner (t.ex. uuid-ossp för UUID-generering, pg_trgm för trigram-sökning, btree_gin för index)
+GitHub
+GitHub
+. Datamodellen är normaliserad och indelad i flera kärntabeller som lagrar såväl insamlad rådata (t.ex. crawlat innehåll, extraherade attribut) som metadata (t.ex. mallar, jobb, loggar). Nedan listas de viktigaste tabellerna och deras innehåll:
+
+persons – Personuppgifter (individer) insamlade från olika källor
+GitHub
+.
+
+companies – Företags- och organisationsinformation
+GitHub
+.
+
+vehicles – Fordonsdata (teknisk info och ägarhistorik)
+GitHub
+.
+
+jobs (även scraping_jobs) – Händelse- och jobbhistorik för crawl- och scrape-jobb samt andra bakgrundsjobb
+GitHub
+.
+
+scraping_templates – Mallar för webbskrapning (hur data extraheras från specifika sajter).
+
+proxies – Proxyservrar i poolen, med status och prestandadata.
+
+export_jobs – Jobb för export av data (t.ex. generering av CSV/JSON-filer).
+
+data_quality_metrics – Mätetal om datakvalitet (t.ex. fullständighet, konfidens) per entitet
+GitHub
+.
+
+audit_logs – Revisionslogg av ändringar (inserts/updates/deletes) för spårbarhet.
+
+Tabellstruktur:
+
+ 
+
+persons – innehåller individers profiler och relaterad data. Varje post har ett unikt ID (UUID), namn och kontaktuppgifter m.m. Exempel på kolumner: full_name (fullständigt namn), ev. first_name/last_name, email, phone, födelsedatum (birth_date), yrke (occupation), samt JSON-fält för adress och sociala media. Dessutom finns kolumner för datakvalitet (indikator på hur komplett/kvalitetssäkrad posten är) och metadata såsom källa och tidpunkter. En personpost kan länkas till en organisation via company_id (främmande nyckel till companies-tabellen)
+GitHub
+GitHub
+. Primärnyckeln id är av typ UUID och genereras automatiskt (uuid_generate_v4()). Datum för skapande och uppdatering (created_at, updated_at) sätts per default till aktuellt timestamp.
+
+ 
+
+companies – lagrar info om företag/organisationer. Här finns bl.a. name (företagsnamn), organization_number (organisationsnummer, unikt) samt ev. branschinformation (industry_code och beskrivning) och kontaktuppgifter (webbplats, e-post, telefon). Även här används JSON för adresser. Exempel på kolumner syns i SQL-utdraget nedan
+GitHub
+GitHub
+. Primärnyckel är UUID (id), och organization_number har unikt index. Tidsstämplar och datakvalitetsfält förekommer analogt med persons-tabellen.
+
+CREATE TABLE IF NOT EXISTS companies (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name TEXT NOT NULL,
+    organization_number TEXT UNIQUE,
+    industry_code TEXT,
+    ...,
+    data_quality data_quality_level DEFAULT 'fair',
+    source_url TEXT,
+    scraped_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+
+GitHub
+GitHub
+
+ 
+
+(Exempel: companies-tabellens definition med kolumner och constraints.)
+
+ 
+
+vehicles – innehåller fordon (t.ex. bilar) med tekniska data och ägarrelation. Viktiga kolumner: registration_number (registreringsnummer, unikt), vin (chassinummer, unikt), fabrikat/modell, årsmodell, färg, drivmedel, motorstorlek, växellåda, m.m. Fordonet kan kopplas till en ägare i persons-tabellen via owner_id (FK)
+GitHub
+GitHub
+. Även fordon har data_quality, source_url, scraped_at etc. Primärnyckel är UUID.
+
+Relationer: En person kan vara ägare till flera fordon, men varje fordon har som mest en aktuell ägare (owner_id pekar på persons.id). Om owner_id är satt med FOREIGN KEY constraint mot persons, och om en person tas bort sätts owner_id till NULL (ON DELETE SET NULL)
+GitHub
+. Likaså kan en person associeras till en arbetsgivare via company_id (personen kan ha en företagstillhörighet), vilket pekar mot companies-tabellen
+GitHub
+. Dessa relationer syns i ER-diagrammet nedan.
+
+Figur 1: ER-diagram över datamodellen, med tabeller och nyckelrelationer.
+
+ 
+
+jobs – tabellen hanterar crawljobb, scrapes samt övriga bakgrundsjobb (t.ex. dataanalys, städjobb). Varje job har ett UUID som primärnyckel och fält som beskriver jobtyp, status, progress m.m. Kolumnen type indikerar jobbtyp (t.ex. 'crawl' eller 'scrape' – definierat via en ENUM job_type), status indikerar läget (pending, running, completed, failed, etc. via ENUM job_status), samt fält för namn/beskrivning, eventuella parametrar (JSON), resultat eller felmeddelande, start- och sluttid etc
+GitHub
+GitHub
+. Denna tabell gör det möjligt att spåra varje körning.
+
+Anm: I projektet används ibland namnet scraping_jobs för jobb relaterade till datainsamling. Här betraktar vi jobs som en generell jobbtabell som kan hantera flera typer (crawl, scrape, export, analys, städning etc) via job_type-fältet
+GitHub
+. För att koppla ihop jobb med genererade data innehåller andra tabeller referenser till job-id. T.ex. kan tabellerna persons, companies, vehicles ha en kolumn source_job_id som anger vilket job (i jobs-tabellen) som skapade posten – detta underlättar lineage/provenance-spårning (ursprungsjobbet för datat). I kommande migrationer (t.ex. 0006_lineage_provenance.sql) planeras att lägga till sådana referenser för spårbarhet.
+
+scraping_templates – innehåller mallar för webbskrapning. En mall definierar hur data ska extraheras från en viss domän (sajt) och kan innehålla selektorer, script eller annan metadata i JSON-form. Kolumner: name (namn på mallen, unikt), domain (t.ex. "example.com" som mallen gäller för), template_data (JSONB med selektorer och regler), version (versionsnummer), is_active (bool för om mallen är aktiv) samt created_by (användaridentitet som skapade mallen)
+GitHub
+GitHub
+. Primärnyckel är UUID. Denna tabell möjliggör att användare skapar/uppdaterar mallar i Supabase Studio eller via API, och de versioneras vid ändringar. Relationer: Normalt påverkar en mall hur jobs körs (d.v.s. ett scrape-jobb kan referera till en viss template). I framtida schema kan en relation skapas mellan jobs och templates (t.ex. ett JSON-fält i jobs.parameters som innehåller template-id, eller en separat tabell som mappar job till template). I nuläget är kopplingen implicit via t.ex. job-namn eller parameters.
+
+ 
+
+proxies – tabellen hanterar proxyservrar i systemets proxypool. Varje proxy har värd (host), port, protokoll (http/https), eventuellt användarnamn/lösen, landkod, stad, leverantör, responstid, success-rate m.m. Primärnyckel är UUID, och det finns en unik constraint på kombinationen host+port (en proxy definieras entydigt av sin adress)
+GitHub
+GitHub
+. Kolumnen status (ENUM: t.ex. 'testing', 'active', 'inactive', 'banned') indikerar proxyts nuvarande status. Denna tabell uppdateras av systemets proxymonitor (t.ex. genom bakgrundsjobb som testar proxies). Relationer: Ingen direkt foreign key i proxies (den är fristående), men jobs som utför scraping kan använda proxies – i loggar kan job-id kopplas till vilken proxy som användes (möjligen via en separat loggtabell eller i audit_logs). Proxytabellen är främst administrativ.
+
+ 
+
+export_jobs – hanterar exportering av datautdrag. Varje export-jobb (med eget UUID id) har fält för namn, format (t.ex. CSV, JSON, Excel – definierat via ENUM export_format), entity_type (vilken typ av data som exporteras, t.ex. "persons" eller "vehicles"), filtervillkor (JSON), filväg till genererad fil, filstorlek, antal poster, status (job_status ENUM) och tidsstämplar
+GitHub
+GitHub
+. Även created_by (vem som initierade exporten) finns. Exportjobb är relaterade till jobs-tabellen konceptuellt (de skulle kunna utgöra en typ av jobb), men här ligger de i egen tabell för att separera dem – dock med samma status- och tidsfältsupplägg som jobs. Man kan tänka sig att ett export_job har en motsvarande post i jobs-tabellen med type='export' för enhetlig hantering, men designen här särskiljer dem för tydlighet.
+
+ 
+
+data_quality_metrics – tabellen lagrar mätvärden om datakvalitet per entitet. Varje rad har ett eget UUID id och anger entity_type (t.ex. "persons" eller "vehicles"), entity_id (UUID som refererar till en specifik post i den entitetens tabell) och ett metriknamn + värde. T.ex. kan metric_name vara "completeness_score" eller "valid_email_check" och metric_value ett numeriskt värde eller procentsats. Det finns även kolumner för min/max-tröskelvärden och en bool is_passing som anger om posten uppfyller kvalitetskraven, samt measured_at tidsstämpel
+GitHub
+GitHub
+. Denna tabell är polymorf över entiteter, d.v.s. entity_type bestämmer vilken tabell entity_id hör till – inga formella FOREIGN KEY constraints sätts här eftersom det spänner över flera tabeller. Istället upprätthålls referentiell integritet genom applikationslogik eller triggers (se nedan under Lineage & Provenance). Index sätts dock på kombinationen entity_type+entity_id för att snabba upp uppslag
+GitHub
+. Data Quality Metrics fylls i av bakgrundsprocesser som kör kvalitetskontroller, och kan användas för rapporter. Det finns t.ex. en vy data_quality_summary som aggregerar kvalitetsnivåer per tabell för att spåra övergripande datakvalitet
+GitHub
+GitHub
+.
+
+ 
+
+audit_logs – är en generell ändringslogg som fångar händelser i databasen för spårbarhet och revision. Varje rad har ett UUID id, table_name (textnamn på tabellen där ändringen skedde), record_id (UUID för posten som påverkades), action (typ av ändring: 'INSERT', 'UPDATE' eller 'DELETE'), samt JSON-fält för old_values och new_values som innehåller de gamla och nya kolumnvärdena (vid insert tas bara new_values i bruk, vid delete bara old_values). Dessutom changed_by för att registrera vem som utförde ändringen (t.ex. användar-ID eller systemprocess) och changed_at tidsstämpel
+GitHub
+GitHub
+. Audit-loggen fylls via triggers som reagerar på förändringar i känsliga tabeller (persons, companies, vehicles, etc.). I migrationsplanen inkluderas en generisk triggerfunktion update_updated_at_column() för att uppdatera updated_at vid varje ändring
+GitHub
+ samt (eventuellt i senare migrationer) triggers för att skriva till audit_logs. Exempel: En trigger AFTER UPDATE ON persons kan ta OLD och NEW rad och lagra skillnader i audit_logs, inklusive changed_by hämtat från den aktuella användarens JWT (Supabase tillhandahåller auth.uid()/auth.role() som kan nyttjas inne i en funktion om man vidareför JWT-claims som session-variabel).
+
+ 
+
+Index och prestanda: För att optimera sökningar och joinar i databasen läggs ett flertal index till på relevanta kolumner:
+
+Primärnycklar (PK) medföljande index på ID-kolumner (UUID eller bigserial). Dessa används för direkta uppslag.
+
+Unika index på naturliga nycklar: t.ex. organization_number i companies och registration_number i vehicles har unika index (enligt UNIQUE constraints)
+GitHub
+GitHub
+.
+
+Trigram-index (GIN + pg_trgm) på textfält som söks fritt: t.ex. persons.full_name och companies.name indexeras med GIN/trgm för att möjliggöra sökning på delsträngar/närliggande stavning
+GitHub
+. Detta är värdefullt för att kunna göra effektiva LIKE eller ILIKE-sökningar i namn.
+
+B-tree index på vanliga filtrerings- eller join-fält: t.ex. persons.email (för uppslag på e-post)
+GitHub
+, persons.company_id (snabb hitta personer per företag)
+GitHub
+, vehicles.owner_id (hitta fordon per ägare)
+GitHub
+, jobs.status och jobs.type (möjliggör filtrering av jobbtabellen på status eller typ)
+GitHub
+, proxies.status och proxies.country_code (för att snabbt hitta aktiva proxies eller per land)
+GitHub
+, etc.
+
+Kombinerade index vid behov: t.ex. ett sammansatt index (make, model) på vehicles kan underlätta sökningar som filtrerar på båda attribut samtidigt
+GitHub
+.
+
+Tidsindex: Flera tabeller får index på datumkolumner som created_at eller changed_at för att underlätta sortering och åldersbaserad städning
+GitHub
+GitHub
+. T.ex. ett index på jobs.created_at för att snabbt hämta nyaste jobben, eller på audit_logs.changed_at för att fråga efter senaste ändringar.
+
+GIN-index på JSONB: Vid behov kan JSONB-kolumner (t.ex. template_data i scraping_templates, parameters i jobs, metadata-fält) indexeras med GIN för JSON-sökning. I initiala migreringen aktiveras btree_gin-extension
+GitHub
+ för att möjliggöra GIN-index även på kombinationer av kolumner om så behövs.
+
+Triggers och funktioner: Förutom index används triggers för vissa automatik:
+
+En gemensam triggerfunktion update_updated_at_column() uppdaterar updated_at-fältet på en rad varje gång en UPDATE sker
+GitHub
+. Denna funktion appliceras via CREATE TRIGGER på flertalet tabeller (persons, companies, vehicles, jobs, proxies, scraping_templates, export_jobs)
+GitHub
+GitHub
+ så att updated_at alltid reflekterar senaste ändring utan att applikationslogiken behöver sätta det manuellt.
+
+Triggers för audit_logs införs för att vid INSERT/UPDATE/DELETE på nyckeltabeller skriva en loggrad. Exakt implementation sker i en senare migrationsfil (t.ex. planerad 0007_erasure_cascade.sql eller separat audit migration). Där definieras per tabell triggers som anropar en funktion som jämför OLD och NEW och lägger in en rad i audit_logs. Kolumnen changed_by kan fyllas i genom att nyttja PostgreSQL session-variabler: Supabase ställer in en JWT förfrågan, men för att få tag på t.ex. användarens ID inom en plpgsql-trigger kan man behöva en workaround (t.ex. passera användar-ID in i en SET LOCAL parameter vid varje skrivoperation genom applikationen). Alternativt kan triggers för audit_logs vara begränsade till systeminterna förändringar (t.ex. radering av data vid GDPR-begäran) och då anges changed_by som system.
+
+Sammanfattningsvis utgör ovanstående tabeller och relationer en ER-modell där persons, companies och vehicles är centrala entiteter med inbördes relationer, jobs/export_jobs loggar behandlingshändelser, scraping_templates och proxies stödjer insamlingsprocessen, data_quality_metrics övervakar datans kvalitet, och audit_logs säkrar spårbarhet. Datamodellen är utformad för att vara skalbar (via normalisering och index), spårbar (via relationskolumner och loggar) samt flexibel (via JSON-fält för varierande attribut och config).
+
+SQL-migrationer och filstruktur (Supabase)
+
+För att versionhantera databasschemat används SQL-migrationsfiler anpassade för Supabase CLI. Källkoden innehåller en katalog supabase/migrations/ där varje förändring av schemat läggs in som en numrerad migrationsfil
+GitHub
+. Supabase CLI läser dessa i alfanumerisk ordning och tillämpar dem på databasen vid deployment eller lokal initiering. Vi följer en konvention att döpa filer med ett löpnummer och beskrivande namn, t.ex.:
+
+0001_init.sql – Initial skapelse av schemastruktur: alla grundtabeller, typer och ev. grunddata.
+
+0002_indexes.sql – Sekundära index, constraints som kan läggas till separat (ibland läggs index i samma som init, men de kan brytas ut för tydlighet).
+
+0003_rbac_rls.sql – Inställning av roller, rättigheter och RLS-policys (beskrivs nedan)
+GitHub
+.
+
+0004_templates_extractions.sql – Exempel på senare utbyggnad: i detta steg kan man lägga till extradata-strukturer, t.ex. tabeller för extraherade entiteter eller relationstabeller mellan templates och data, eller seed-data som mallfiler
+GitHub
+.
+
+0005_dq_metrics.sql – Justeringar kring data quality, t.ex. skapa vyer eller speciella index för kvalitetsmätningar (om de ej togs med initialt)
+GitHub
+.
+
+0006_lineage_provenance.sql – Skapa kolumner och constraints för lineage/proveniens: t.ex. lägga till source_job_id i persons/companies/vehicles med FK till jobs, kanske tabeller för att koppla enskilda fält till källor (om nödvändigt)
+GitHub
+.
+
+0007_erasure_cascade.sql – Implementera raderingspolitik: triggers för kaskadradering/anonymisering vid GDPR-begäran, tombstone-hantering etc
+GitHub
+.
+
+Denna uppdelning matchar projektets behov och underlättar granskning av förändringar. Exempel: i den initiala migrationsfilen definieras de flesta tabeller och kolumner (se utdrag ovan), medan fil 0003_rbac_rls.sql innehåller kommando för att skapa roller (t.ex. authenticated, anon, service_role) och policys, utan att blanda dem med tabellskapandet. På så vis kan utvecklare justera RLS-regler separat från datamodellen.
+
+ 
+
+Supabase CLI & Studio: Utvecklare kör supabase db reset eller supabase db push för att applicera migrationerna lokalt mot en Docker-körd Postgres (Supabase CLI startar en lokal Postgres med exekveringsrättigheter). Supabase Studio läser av den resulterande schemat och visar tabeller, vilket gör det enkelt att verifiera att migrationerna slagit igenom. Under utveckling kan man använda supabase db diff för att generera en ny migrationsfil genom att jämföra lokal databas mot definitionsfiler – detta minskar risken att glömma migrationssteg.
+
+ 
+
+Exempel – initial migration: I 001_initial_schema.sql skapas t.ex. de custom enum-typerna och tabellerna som beskrivits ovan
+GitHub
+GitHub
+. Mot slutet av filen läggs initial seed-data in (mer om det nedan) såsom ett par standard scraping_templates poster
+GitHub
+. Slutligen ges grundläggande GRANT-satser för rollerna anon och authenticated
+GitHub
+ samt beskrivande kommentarer per tabell
+GitHub
+.
+
+ 
+
+Varje migrationsfil innehåller ren SQL och kan köras antingen via Supabase CLI eller manuellt med psql om nödvändigt. Alla migrationsfiler checkas in i versionshanteringen (Git) för spårbarhet. I CI/CD (beskrivet senare) kommer migrationsfilerna att testköras mot en testdatabas för att validera att de appliceras utan fel.
+
+ 
+
+Filstruktur: För att ge en överblick kan följande struktur under supabase/ tjäna som exempel:
+
+supabase/
+├─ config.toml                # Supabase-projektkonfiguration (URL, API-nycklar etc)
+├─ .env.example               # Exempel på lokala miljövariabler (t.ex. DB URL)
+├─ migrations/
+│   ├─ 0001_init.sql
+│   ├─ 0002_indexes.sql
+│   ├─ 0003_rbac_rls.sql
+│   ├─ 0004_templates_extractions.sql
+│   ├─ 0005_dq_metrics.sql
+│   ├─ 0006_lineage_provenance.sql
+│   └─ 0007_erasure_cascade.sql
+└─ seed/
+    └─ seed_data.sql          # (om separat seed-fil används för testdata)
+
+
+Supabase CLI använder per standard supabase/migrations för migreringar. Studio-verktyget (webbgränssnittet) hämtar info från den aktiva databasen – där syns tabeller, vyer, funktioner, policys etc. Således ska all relevant DB-logik definieras i SQL-filer (istället för t.ex. i ORMs migrations) så att Supabase-miljön är “källan till sanning” för schema. Eftersom sparkling-owl-spin integrerar med Supabase Auth (användarkonton) och eventuellt Storage etc., är det viktigt att inte åsidosätta Supabases egna systemtabeller. Våra migrations påverkar främst public-schemat. Supabase skapar själv ett schema auth för användarhantering och några extra funktioner – dessa lämnas orörda.
+
+ 
+
+Verifiering av migrationer lokalt: För att köra databasen lokalt används Docker. Exempelsteg:
+
+Sätt upp miljövariabler för databas (t.ex. i en .env-fil) med Postgres-lösenord, databasnamn etc, som Docker-komponeringen kan läsa.
+
+Starta en Postgres-container, t.ex. med Docker Compose:
+
+services:
+  db:
+    image: postgres:14
+    environment:
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_USER: myuser
+      POSTGRES_DB: mydb
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+
+Kör docker-compose up -d db för att starta databasen.
+
+Applicera migrationerna. Antingen genom att exec:a psql i containern:
+
+docker exec -i <container_id> psql -U myuser -d mydb < supabase/migrations/0001_init.sql
+docker exec -i <container_id> psql -U myuser -d mydb < supabase/migrations/0002_indexes.sql
+...
+
+
+(I praktiken kan ett skript loopa igenom alla *.sql i katalogen i ordning och köra dem.)
+
+ 
+
+Alternativt: använd Supabase CLI: supabase start (som startar en Postgres, autentisering och andra tjänster) och CLI:n applicerar migrationerna automatiskt. Därefter kan man ansluta med supabase psql för att inspektera.
+
+Verifiera schemat: Man kan t.ex. köra en enklare kontroll med psql:
+
+docker exec -it <container_id> psql -U myuser -d mydb -c "\dt"
+
+
+Detta listar alla tabeller. Förväntat resultat är att ovan nämnda tabeller (persons, companies, etc) finns. Vidare kan man köra \d persons för att se kolumner och constraints i persons-tabellen, eller göra provfrågor.
+
+Testa exempel-frågor (se avsnitt Exempel-queries nedan) för att säkerställa att relationer och index fungerar (t.ex. göra en JOIN mellan vehicles och persons och se att det går snabbt, etc).
+
+All migreringskod bör ligga under versionskontroll. Innan merge till huvudbranchen bör en code review säkerställa att migrationsfilerna endast innehåller önskade ändringar (ej duplicerar tidigare, etc). Avstämning mot Supabase: Vid deployment till moln använder man antingen supabase db push med projektets konfiguration, eller så laddar man upp migrationsfilerna till Supabase hosting (om man t.ex. har CI som kör det åt en). Planen är att integrera detta i CI/CD, se senare sektion.
+
+Rollbaserad åtkomstkontroll (RBAC) och Row-Level Security (RLS)
+
+Säkerhet och multi-tenant-isolering hanteras genom en kombination av Postgres roller och Row-Level Security-policys. Supabase har en inbyggd autentiseringslösning som introducerar två standardroller i databasen: anon (icke-inloggad) och authenticated (inloggad användare)
+GitHub
+. Därtill används en särskild roll service_role för server-sidan med utökade rättigheter (t.ex. när man använder den hemliga nyckeln, då åsidosätts RLS). Dessa roller kommer vi utnyttja i policys.
+
+ 
+
+Grundläggande RBAC-inställning: Initialt ger vi bas-behörigheter till rollerna på schemat och tabellerna:
+
+GRANT USAGE ON SCHEMA public TO anon, authenticated; – tillåter dessa roller att använda schemat (nödvändigt för att de ens ska kunna se något)
+GitHub
+.
+
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO anon, authenticated; – ger läsrätt på tabeller, men RLS kommer sedan begränsa vad de faktiskt kan se.
+
+GRANT INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated; – tillåter inloggade användare att skriva, med RLS-kontroll.
+
+(Notera: anon-rollen får i princip bara SELECT, vilket kan användas för väldigt begränsade offentliga data eller initiala kontrollfrågor. Det mesta av känslig data kommer ändå blockeras av RLS eftersom vi inte skapar några policys för anon på exempelvis persons, etc. I många fall kanske vi helt stänger av anon-access på de flesta tabeller.)
+
+GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO authenticated; – krävs för att kunna få IDs vid inserts på tabeller med sekvenser (UUID-generation sker dock via funktion, så kanske ej strikt nödvändigt, men bra för eventuella serial kolumner).
+
+Dessa grants sätts i en migration (initial eller RBAC-migration) så att Supabase-klientens fördefinierade roller har grund-rättigheter. Efter detta aktiverar vi RLS per tabell och definierar policys som snävar in åtkomsten.
+
+ 
+
+Koncept för RLS: Med Row-Level Security påslaget för en tabell gäller att ingen rad returneras för en fråga om inte en uttrycklig POLICY medger det (per role). Samma sak vid INSERT/UPDATE/DELETE – operationen nekas om den inte matchar en definierad policy. Detta ger oss finmaskig kontroll att t.ex. en användare bara kan se sina egna rader i en tabell.
+
+ 
+
+Användarmodell: Vi utgår från Supabase Auth för användarhantering. Det innebär att när en användare loggar in får de en JWT som innehåller deras user identifier (UUID) och en roll (oftast "authenticated"). Vi kan använda funktionsanrop som auth.uid() inom RLS-policyer för att hämta aktuell användares UUID, och auth.role() för att hämta deras roll. Vi kommer lagra referenser till användare i våra tabeller för att knyta rader till ägare. Två huvudsakliga sätt finns:
+
+Profiles-tabell (användarprofil): Det är vanligt i Supabase att skapa en tabell profiles i public som har kolumn id UUID PRIMARY KEY REFERENCES auth.users(id) tillsammans med t.ex. namn, etc. Då blir id i profiles identiskt med Supabase user_id. Man kan sedan använda profiles.id som foreign key i andra tabeller. RLS kan då skrivas mot dessa foreign keys.
+
+Direkt användarreferens: Alternativt lägger vi en kolumn t.ex. user_id UUID i relevanta tabeller och sätter den till auth.uid() vid insert. Då refererar user_id direkt Supabase-användarens UUID (utan en separat profiles-tabell). Detta är enklare om man inte behöver extra profilinfo. I vår design ser vi redan kolumner som created_by (TEXT) i templates/export_jobs – dessa kan bytas/definieras som UUID och fyllas med användarens ID.
+
+Vi väljer att införa user-referenser på de tabeller som är ägda per användare. Exempelvis:
+
+I scraping_templates: kolumn created_by UUID NOT NULL som sätts till auth.uid() via default eller applikationslogik (Supabase kan också sätta default genom en funktion som returnerar current user). Policy: endast ägaren (eller admin) får se och ändra sin mall.
+
+I jobs: kolumn user_id UUID för den användare som startade jobbat. (Om vissa jobb skapas av systemet, kan det sättas till NULL eller en system-user.)
+
+I export_jobs: created_by UUID (finns som text i initial, men vi justerar till UUID) som anger vem som begärde exporten.
+
+För persons/companies/vehicles är frågan om dessa ska betraktas som gemensam datakatalog eller per användare. Givet att systemet kan fungera som en gemensam databas över crawlad info (t.ex. en administratör crawlar och alla ser resultaten) eller som isolerade dataset per user. Om multi-tenant SaaS, bör varje user bara se sina insamlade poster. Det enklaste då är att addera owner_id UUID på dessa tabeller också, som pekar på användare. Alternativt kan man härleda ägarskap via source_job -> job.user_id. Vi implementerar en direkt kolumn owner_id på persons/companies/vehicles som default sätts vid insert (i extraktionskoden) utifrån vilken användare som äger jobbat. Detta underlättar RLS avsevärt.
+
+Notera: Om flera användare kan crawla samma entitet (t.ex. samma bil), får de då dubbletter i databasen med olika owner_id? Troligen ja – i en multi-tenant-lösning får varje tenant sin egen kopia. Om projektet däremot centraliserar data (mer som ett datalagret inom en organisation) kan man välja att inte ha owner_id på dessa och istället ge åtkomst till alla internt. Men eftersom RLS specifikt nämns även för sessioner, användare, crawljobb, utgår vi från att multi-tenant-stöd är ett mål.
+
+Skapande av roller: I migrationsfil 0003_rbac_rls.sql definierar vi eventuellt roller om de inte finns:
+
+CREATE ROLE anon NOINHERIT;
+CREATE ROLE authenticated NOINHERIT;
+CREATE ROLE service_role NOINHERIT;
+
+
+Supabase skapar dock authenticated och anon åt oss initialt, så dessa kommandon kan undvaras eller omges av IF NOT EXISTS. service_role får vi skapa manuellt (och spara dess hemliga nyckel i Supabase config för serverbruk). NOINHERIT säkerställer att dessa roller inte automatiskt får högre rättigheter via rollhierarki. Vi ger rollerna privilegier som ovan (GRANT-satser).
+
+ 
+
+Aktivera RLS: För varje tabell som ska skyddas kör vi ALTER TABLE ... ENABLE ROW LEVEL SECURITY;. I vårt fall: persons, companies, vehicles, jobs, export_jobs, scraping_templates, data_quality_metrics (om vi vill begränsa vem som kan se kvalitetsdata, kanske admin bara), proxies (kanske inte per user – proxies kan vara global, men vi kan ändå ha RLS för att förhindra anon access), audit_logs (definitivt bör skyddas – endast admin/service). Som default, utan policy, kan ingen läsa/skriva när RLS är på.
+
+ 
+
+Definiera policys: Vi skriver explicita policies för relevanta kombinationer av operation (SELECT, INSERT, UPDATE, DELETE) och roll. Nedan formuleras några nyckel-policys:
+
+persons/companies/vehicles: Om vi lagt till owner_id UUID:
+
+SELECT: Tillåt ägaren att läsa sina poster.
+CREATE POLICY persons_select_own ON persons FOR SELECT USING (owner_id = auth.uid());
+Denna policy gör att en inloggad användare (authenticated) bara får ut rader där owner_id matchar hens egen user-id. Vi applicerar liknande för companies och vehicles. (Alternativt, om organisation gemensam: kan tillåta alla authenticated att läsa, men det verkar mindre troligt i multi-tenant.)
+
+INSERT: Tillåt authenticated att skapa poster, men se till att den nya radens owner_id = deras uid.
+CREATE POLICY persons_insert_own ON persons FOR INSERT WITH CHECK (owner_id = auth.uid());
+Här används WITH CHECK för att vid insert validera att insatt värde på owner_id är användarens egen id (man kan också göra det enklare genom att inte exponera owner_id för klienten alls, utan ha en DEFAULT som sätter auth.uid() via en funktion). Men policyn är bra som dubbelkoll.
+
+UPDATE: Tillåt ägare att uppdatera sin egen post (om uppdatering är relevant – kanske crawlad data inte ska ändras manuellt av user, då kan vi skippa den policyn). I vissa fall kan man vilja förhindra uppdatering helt av vissa data (read-only). Om uppdatering ska få ske,
+CREATE POLICY persons_update_own ON persons FOR UPDATE USING (owner_id = auth.uid()) WITH CHECK (owner_id = auth.uid());. Detta gör att man både måste vara ägare för att få uppdatera (USING) och att owner_id inte ändras (WITH CHECK ser till att owner_id fortfarande är ens egen efter update).
+
+DELETE: Tillåt ägare att radera sin egen post.
+CREATE POLICY persons_delete_own ON persons FOR DELETE USING (owner_id = auth.uid());
+
+För companies och vehicles liknande set. (Notera: om en person har foreign key till company som inte samma ägare, har vi en modellkonflikt – i multi-tenant scenario borde company kanske också ägas av en user, annars kan user A se företag user B skapat via persons.company_id. Lösning: också äga companies eller isolera dem per user i separata namespaces. I vårt fall sätter vi owner_id även på companies, som fylls i när de skapas via en persons import eller likn.)
+
+Om systemet centraliserar companies (t.ex. alla crawlar samma Bolagsverk-data), kan man istället tillåta alla eller ha delad läsbehörighet där. Den policyn kan isf vara USING (true) för SELECT för authenticated (alla får läsa), men restriktion på INSERT (bara admin kanske får lägga till företag). Detta bör beslutas efter multi-tenant kontra centraliserat datasyn.
+
+jobs: Varje rad i jobs representerar ett job som ofta initieras av en användare. Vi inför user_id i jobs:
+
+SELECT: tillåt endast ägaren eller admin.
+CREATE POLICY jobs_select_own ON jobs FOR SELECT USING (user_id = auth.uid() OR auth.role() = 'service_role');
+Här lade vi till att service_role (dvs server) ska få läsa allt, för admin-behov.
+
+INSERT: en användare ska kunna starta ett job. Vi kan antingen sätta WITH CHECK (user_id = auth.uid()) likt ovan, eller ännu bättre automatisk sättning: definiera user_id DEFAULT auth.uid() via en Supabase-funktion. Om default används, kan vi tillåta insert utan att klienten ens behöver skicka user_id.
+
+UPDATE, DELETE: Kanske inte relevant för users – jobb skapas och uppdateras av system (status ändras av bakgrundsprocess). Vanliga användare behöver inte ändra eller ta bort jobben manuellt. Man kan därför avstå policy för UPDATE/DELETE vilket innebär att ingen authenticated kan det (endast service kan via bypass). Alternativt om man vill låta användare avbryta jobb, kan man ha UPDATE USING (user_id = auth.uid()) för t.ex. ändra status till cancel.
+
+scraping_templates: Mallar är oftast per användare (om de bygger egna templates). Sätt created_by som user-id.
+
+SELECT: USING (created_by = auth.uid()) (så varje ser bara sina mallar).
+
+INSERT: WITH CHECK (created_by = auth.uid()).
+
+UPDATE: USING (created_by = auth.uid()) WITH CHECK (created_by = auth.uid()) (d.v.s. man får bara uppdatera om man äger, och kan inte ändra ägarskap).
+
+DELETE: USING (created_by = auth.uid()) (radera egen mall).
+
+Eventuellt vill man ha en feature att vissa mallar är offentliga eller delade. Då skulle man behöva mer avancerade policies (eller en kolumn is_public och policy som (created_by = auth.uid()) OR is_public = true för SELECT). Men inom scope här antar vi att mallar är privata om inget annat sägs.
+
+export_jobs: Liknande som jobs – de har created_by. En användare ska se sina export-jobb och kunna ladda ner resultatet när klart.
+
+SELECT: USING (created_by = auth.uid()).
+
+INSERT: WITH CHECK (created_by = auth.uid()).
+
+(Update kanske inte aktuellt, delete eventuellt för att ta bort loggen – USING (created_by = auth.uid()).)
+
+proxies: Proxy-poolen är systemvid, inte bunden till specifik användare. I de flesta fall vill man inte exponera proxy-detaljer till slutanvändare alls, eftersom det är intern hantering. Därför:
+
+anon och authenticated bör ej ha SELECT alls på proxies – vi kan lösa det genom att inte skapa någon SELECT-policy för proxies för dessa roller, vilket gör att trots grant så får de inget resultat. Endast service_role ska kunna läsa/uppdatera proxies.
+
+Vi kan uttrycka detta i en policy: CREATE POLICY proxies_all_service ON proxies FOR ALL USING (auth.role() = 'service_role'); – vilket i princip säger att endast service_role (backend) matchar. Eller låta bli att ge policys och istället ge service_role BYPASS RLS attribut i Postgres (eller helt enkelt göra alla proxymanipulationer genom en separat DB-anslutning med superuser).
+
+För säkerhets skull: definiera ENABLE RLS på proxies och en policy som explicit nekar övriga (alternativt ingen policy = implicit nekande). Ingen policy innebär authenticated inte kan se proxies alls. That’s desired.
+
+data_quality_metrics: Dessa kan betraktas som mindre känsliga, men de refererar potentiellt till entiteter som är användarägda. För att undvika att user A kan se existence av user B’s data via metrics måste vi också skydda denna tabell:
+
+SELECT: Vi kan tillåta om användaren äger den entitet som metric gäller. Detta är lite tricky då metrics har (entity_type, entity_id). En policy kan använda en subfråga:
+
+USING (
+  auth.role() = 'service_role'
+  OR (entity_type = 'persons' AND entity_id IN (SELECT id FROM persons WHERE owner_id = auth.uid()))
+  OR (entity_type = 'vehicles' AND entity_id IN (SELECT id FROM vehicles WHERE owner_id = auth.uid()))
+  OR ...
+);
+
+
+Detta är en relativt komplex policy men fullt möjlig. Den kollar per rad om entity_id finns bland användarens persons/vehicles/etc. (Man kan utöka för companies).
+
+Alternativt kan man i designen duplicera metrics per user (t.ex. metrics hänger via join i en vy), men givet nuvarande modell är en policy med subquery lösningen. Service_role får återigen se allt.
+
+INSERT/UPDATE på metrics kommer skötas av systemjobb (service_role), så vanliga användare behöver inte policies för att själva lägga in metrics.
+
+audit_logs: Denna tabell ska sannolikt bara vara åtkomlig av administratörer eller devops. Man vill inte att en vanlig användare ska kunna läsa audit-loggen (där kan finnas info om andra användares data).
+
+Lösning: Aktivera RLS och definiera ingen SELECT-policy för authenticated. Endast service_role eller en admin-roll har access. Om vi definierat en särskild Postgres-roll för administratör (säg admin), kan vi ha USING (auth.role() = 'service_role' OR auth.role() = 'admin').
+
+En annan metod: inte aktivera RLS men inte ge SELECT-grant till authenticated. Men vi hade generellt grantat select to all; så bättre att göra RLS.
+
+Vi skippar all insert/update från användare (systemet hanterar det med SUPERUSER or definer rights triggers).
+
+Sammanfattning: audit_logs RLS policy -> endast service_role (och ev. admin) kan läsa.
+
+Sessions: I prompten nämns "RLS-policys för sessioner". Om vi loggar användarsessioner (t.ex. aktiva inloggningar, IP-adresser, osv i en sessions-tabell), så gäller liknande: varje user ser bara sina sessioner. Även inbyggda Supabase auth.sessions är inte läsbara för klienter i normala fall, men om vi skapade en egen sessions tabell i public (t.ex. web session logs), sätt RLS så user_id = auth.uid(). I vårt fall har vi inte definierat en egen sessions-tabell i schema ovan; troligen är det antingen inte behövt eller så är det integrerat i Supabase auth. Om det behövs, designen är trivial: kolumn user_id + token, timestamps, etc, och RLS likt ovan. Så vi nöjer oss att notera: Eventuella sessionstabeller följer samma mönster – ägaren ser endast sina rader.
+
+Efter att alla policys är definierade, testar vi dem noggrant. I utvecklingsmiljö kan man använda Supabase-klienter eller psql för att simulera olika roller:
+
+Exempel: Efter att RLS är på plats, försök göra en SELECT på persons-tabellen som en authenticated user som inte äger någon rad – det ska returnera 0 rader. Som service_role (via servernyckel i supabase eller genom att inaktivera RLS i superuser-session) ska man se alla.
+
+För insert: försök via Supabase-klient lägga till en ny vehicle utan att sätta owner_id – tack vare default/trigger blir owner_id = din uid, och policyn medger det. Om du försöker sätta en annan owner_id manuellt, ska det nekas (WITH CHECK fail).
+
+Om en icke-inloggad (anon) försöker läsa något som inte är explicit publikt, ska det bli tomt svar / error.
+
+Hantera administratörsbehörighet: Ibland vill man ha administratörer som kan se allt via applikationen (inte bara via service_role). Det kan lösas genom att utöka policys med villkor på profil. T.ex., om vi har en profiles-tabell med kolumn is_admin, kan man skriva: USING (owner_id = auth.uid() OR (EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.is_admin))). Då får admin-flagga bypassa ägarskapskravet. Alternativt skapa en separat JWT-claim/roll. För enkelhet i denna plan, antar vi att administrationsfunktioner (t.ex. att inspektera audit_logs eller andra användares data) sker server-side via service_role.
+
+ 
+
+Säkerhetsrutin: RLS-policys är hjärtat i dataskyddet. Vi ser till att:
+
+Aktivera RLS efter att eventuella initiala seed-inserts är klara (ex: i migration kan man först populera seed-data, sedan slå på RLS, så att seedandet inte blockeras – alternativt gör seed under service_role).
+
+Dokumentera alla policys i databasschemat (Supabase Studio kan visa policys, och vi kompletterar i docs).
+
+Lägg till integrationstester för viktiga RLS-fall (mer i CI/CD-sektionen).
+
+Seed-data, testdata och anonymisering
+
+Seed-data: För att snabbt komma igång och för att visa exempel i Supabase Studio, levereras viss förifylld data i databasen. I initiala migrationen läggs t.ex. tre exempelposter in i scraping_templates-tabellen
+GitHub
+ – dessa kan vara generiska mallar för person, företag, fordon som utvecklaren kan utgå från. På liknande sätt kan vi inkludera några dummy proxies (om nödvändigt för test), eller referensdata som landskoder etc. Seed-data bör vara utformad så att den inte innehåller känslig information; den ska enbart underlätta utveckling och test.
+
+ 
+
+I Supabase-projekt kan man också hantera seed-data separat. T.ex. genom en fil supabase/seed.sql som inte körs i produktion men som utvecklare kan köra lokalt. Vår plan är att inkludera kritisk seed (t.ex. nödvändiga default-värden eller mallar) i migrations, och ha en separat uppsättning testdata för att fylla databasen med realistiska men anonymiserade data under utveckling/demo.
+
+ 
+
+Testdata: Under tests/fixtures/ eller liknande katalog kan vi ha exempel på HTML, mallar och förväntad output. Ett skript (t.ex. scripts/load_test_data.py) kan läsa dessa och stoppa in i DB för att ha något att jobba med. Alternativt kan en migrationsfil (i dev-miljö) generera några slumpmässiga poster:
+
+Ex. skapa 5 dummy persons med namn "Test Person X" etc., koppla dem till 2 dummy companies ("TestCorp" etc), skapa några vehicles med olika regnummer, etc.
+
+Dessa testposter bör märkas tydligt som fake. Man kan använda ett prefix i data_quality t.ex. sätta data_quality = 'poor' för alla test, så de lätt kan identifieras och tas bort i prod.
+
+Supabase CLI har en funktion supabase db seed (i nyare versioner) som låter en definiera JS/TS filer för seeding. Det är också möjligt att skriva seeden i SQL om det är enklare.
+
+ 
+
+Anonymisering av data (GDPR, testmiljö): Ett explicit krav är möjligheten att anonymisera och exportera data. Detta har ett par aspekter:
+
+Exportera data: Systemet bör kunna exportera insamlad data i olika format (därav export_jobs). När man exporterar t.ex. en hel dataset att dela externt (t.ex. forskningssyfte), kan anonymisering behövas för att skydda personuppgifter. Vi planerar därför att bygga in stöd att vid export anonymisera vissa kolumner. Detta kan ske antingen on-the-fly i exportkoden (t.ex. byta ut namn mot pseudonymer i CSV), eller genom att skapa anonymiserade vyer i databasen.
+
+Anonymiserade vyer: Man kan definiera vyer som speglar tabeller men med känsliga fält maskerade. Exempel: en vy persons_anonymized som är SELECT på persons fast full_name ersatt med 'REDACTED', email ersatt med NULL eller en hash. Dessa vyer kan användas för export om man vill släppa data utan PII. RLS kan också appliceras på vyer om de är i samma schema, men oftast hanteras det före export.
+
+Anonymisering för test/dev: Om man tar en dump av produktionsdatabasen för att felsöka eller utveckla i en lägre miljö, bör man anonymisera PII. Här finns verktyg som PostgreSQL Anonymizer extension
+postgresql.org
+ som kan definiera masker för kolumner. Vi kan överväga att installera den i dev-miljö för att maska data dumps. Alternativt ett enklare internt verktyg: t.ex. en script som kör UPDATE statements på känsliga kolumner (namn, personnummer, telefon etc) och ersätter med fejkdata (t.ex. Lorem Ipsum-namn, slumpade nummer).
+
+Kolumnkryptering/hashning: I modellerna ser vi att man planerar hantera personnummer, telefonnummer osv genom kryptering och hashing
+GitHub
+GitHub
+. Detta innebär att i själva databasen ligger inte klartext för de känsligaste identifierarna. Endast en hash (för jämförelse/dublettkoll) eller en krypterad blob lagras. Detta är i sig en form av skydd/anonymisering – om någon fick tillgång till databasen skulle de inte direkt se personnumret, endast krypterad text. Nycklar för dekryptering hanteras i applikationen. Denna design är viktig att nämna i dokumentation: PII-skydd – personidentifierare lagras inte i klartext, utan som hash/krypto, vilket är ytterligare lager utöver RLS.
+
+Tombstone-hantering: När en användare begär att deras data ska raderas (Right to be Forgotten) måste vi kunna ta bort eller anonymisera all personligt identifierbar data om dem. Soft delete/tombstone-strategin (beskriven mer under Raderingsstrategi) innebär att vi inte omedelbart fysiskt raderar all data, utan:
+
+Vi markerar poster som raderade med t.ex. deleted_at timestamp eller en bool is_deleted.
+
+Alternativt tar bort känsliga fält men behåller tomma poster (tombstones) som platsreservare så att t.ex. referenser inte bryts och så att om vi crawlar igen så känner vi igen att den personen varit raderad (undviker att återinföra den).
+
+Exempel: Säg att en person "John Doe" begär radering. Vi kan då antingen:
+
+Sätta full_name = '[deleted]', email = NULL, etc, på hans rad och is_deleted = TRUE. Behålla ID (kanske hashat personnummer) för att undvika återimport. RLS kan ändras så att vanliga användare inte ser is_deleted poster alls (t.ex. lägga AND is_deleted = false i varje policy) – då är datat dolt i applikationen. Men admin kan se att ID:t finns som tombstone.
+
+Alternativt flytta hans data till en separat tombstone-tabell eller logga i audit_logs, och ta bort raden.
+
+Vår plan är att implementera soft delete via deleted_at i känsliga tabeller (persons, companies, etc). I migration kan vi lägga till kolumn deleted_at TIMESTAMPTZ default NULL. RLS-policys för SELECT/UPDATE måste då inkludera AND deleted_at IS NULL för att utesluta rader som är markerade raderade. (I policys ovan nämnda kan vi lätt lägga till det villkoret.)
+
+Ett dedikerat tombstone-register: För att förhindra åter-crawl av raderade personer kan man spara t.ex. personnummer-hash i en lista över "blockerade objekt". Varje crawl kollar mot den listan och hoppar över de personerna. Detta kanske implementeras i applikationslagret snarare än DB, men DB kan ha en tabell erased_identities med typer och hashvärden. erasure_worker.py (som omnämns i repo) kan populera den.
+
+Export av databasinnehåll: Utöver specifika exportjobb i applikationen kan man behöva exportera hela eller delar av databasen (t.ex. migrera data, backup restore etc). Vi nämner här att pg_dump kan användas för att ta en full dump. För att generera anonymiserad export kan man:
+
+antingen restaurera dumpen i en karantänmiljö och köra anonymiseringsscript där innan vidare distribution,
+
+eller använda ett verktyg/extension direkt vid dump som filtrerar/omskriver (det finns patchade versioner av pg_dump för datamaskning men inget mainstream; troligare är att man gör det som separata steg).
+
+Sammanfattningsvis ser vår approach ut såhär:
+
+Vi levererar viss ofarlig standarddata i migrationerna (t.ex. mallar).
+
+Utvecklare kan ladda mer testdata via scripts för att simulera scenarion.
+
+Känslig produkdata hanteras försiktigt: kryptering där möjligt, dumps anonymiseras innan de delas, och vid raderingskrav scrubbas data enligt definierade rutiner.
+
+Backup-, retention- och raderingsstrategi
+
+Backup-strategi: Att ha regelbundna säkerhetskopior av databasen är kritiskt. I molndrift via Supabase tillhandahålls automatiska backups – Supabase skapar dagliga snapshots av databasen (på förenklad nivå, det baseras på deras infrastruktur). För att vara förvissade om backuphanteringen planerar vi dessutom en egen backup-rutin i självförvaltat läge, vilket också är nödvändigt för utvecklings- och stagingmiljöer.
+
+I produktion (Supabase Cloud): Kolla Supabase backup-politik; troligen behålls N dagar automatiskt. Vi kompletterar med möjligheten att trigga en on-demand backup före större release. Supabase erbjuder export via API/CLI (supabase db dump). Den kan integreras i CI (t.ex. en GitHub Action som kör supabase db dump och laddar ner .sql-fil som artefakt).
+
+I self-hosted scenario (t.ex. Docker på egen server eller Kubernetes): Vi använder verktyg som WAL-G eller pgBackRest för kontinuerlig backup. Enligt projektplanen finns intention att konfigurera wal-g och/eller pgbackrest
+GitHub
+.
+
+WAL-G: tar kontinuerliga binärbackup (base backup + WAL log shipping) vilket ger möjlighet till Point-In-Time Recovery. Vi skulle skapa en Docker container eller CronJob som periodiskt kör WAL-G push till en objektlagring (t.ex. S3). ops/backup/wal-g.yaml och konfig-filen refererad i strukturen indikerar detta upplägg.
+
+pgBackRest: liknande syfte, robust backupverktyg populärt i enterprise. Konfigureras via pgbackrest.conf
+GitHub
+. Kan köras som sidecar till PG eller separate job.
+
+Valet mellan WAL-G och pgBackRest görs utifrån prestanda och preferens; båda stöder retention policys.
+
+Dump/backups frekvens: Vi siktar på:
+
+Daglig full backup (t.ex. en nightly pg_dump).
+
+Kontinuerlig WAL backup (via WAL-G) för minimal dataförlust (RPO i minuter).
+
+Retention: Spara dagliga backups t.ex. 7 dagar, veckovisa i 4 veckor, månatliga i 6 månader – enligt företagets policy. Detaljer specificeras i ops/retention/retention_policy.yml
+GitHub
+.
+
+Testa återläsning regelbundet: En del av rutinen är att göra restore-tester. T.ex. varannan vecka automatisk skapa en testdatabas från backup och köra integritetstest (kontrollera att checksums stämmer, att db kan starta, etc). Detta kan scriptas (t.ex. verify_backup.sh i ops)
+GitHub
+.
+
+Retention (lagringstid): I enlighet med GDPR och lagringspolicy ska data inte sparas längre än nödvändigt. Här är två aspekter:
+
+Backup retention: som nämnt, definiera hur länge backups behålls innan de rullas bort (så att man inte sparar persondata i backups i all evighet). Vi implementerar retention-regler i backupverktyget eller via cron: äldre än X dagar raderas.
+
+Data retention i databasen: T.ex. radera eller arkivera gammal rådata. Om systemet kontinuerligt crawlar, kan man få enorma datamängder över tid. Vi kan införa policy att t.ex. om personposter inte uppdaterats på, säg, 5 år kanske de arkiveras eller tas bort. Detta är dock affärs-/forskningsberoende. I designen finns möjligheten att:
+
+Markera poster som inaktuella efter viss tid (t.ex. stale = TRUE).
+
+Flytta historiska data till ett data-lager (t.ex. BigQuery eller datalake) för långsiktig analys och rensa dem ur den operativa PG.
+
+För nu fokuserar vi på deletions on user request, men plan kan nämna att datalagringspolicy utarbetas (t.ex. loggar behålls 1 år, sedan tas bort eller aggregeras).
+
+Raderingsstrategi (GDPR, soft delete): Som berört tidigare, följer vi principen att vid radering av data:
+
+Soft delete först: Sätt deleted_at på posten (och ev. scrubba känsliga kolumner) istället för att omedelbart DELETE i databasen. Detta gör att:
+
+Data försvinner för slutanvändare (vi uppdaterar RLS att ignorerar poster med deleted_at).
+
+Vi bevarar kontext ifall det behövs för debugging kortsiktigt.
+
+Vi undviker "spökinföring" av samma data igen via crawl.
+
+Hard delete senare: Vi kan ha en tidsfördröjning (t.ex. 30 dagar) innan fysisk borttagning, ifall raderingen var felaktig eller för att matcha att backups med datan i kanske hinner roteras ut. Efter fördröjningen körs en bakgrundsprocess (kan kallas erasure_worker) som permanent tar bort posten och associerade data:
+
+T.ex. tar bort person + dennes alla adresser, kontakter, ev. referenser i company_roles etc. Här behövs kaskadradering – vi kan utnyttja ON DELETE CASCADE på vissa FK för att underlätta, men försiktighet krävs så vi inte oavsiktligt tar bort delad data. Alternativ: erasure_worker expliciterat rensar tabeller i rätt ordning via queries.
+
+Skapa triggers som om en person markeras som deleted, så triggas anonymisering av länkade data. (Ex: i 0007_erasure_cascade.sql definierar vi triggers: ON DELETE på persons -> sätt owner_id NULL på vehicles han ägde, eller markera dem också deleted. Beroende på om vehicles bara hade den ägaren.)
+
+Tombstone list: Som nämnt, bevara unika nycklar i en separat tabell, t.ex. erased_entities med kolumner (entity_type, original_id_hash, erased_at). Då kan crawlers kolla innan insert att "finns denna entitys ID i erased_entities? isf hoppa över". Detta är en medveten design för att uppfylla "do not process again" önskemål vid GDPR deletion. Enklare variant: behåll raden med id men töm fälten (vilket i praktiken är tombstone i samma tabell). Båda har trade-offs.
+
+Automatisering: Raderingsstrategin blir en del av drift: Vi konfigurerar t.ex. en scheduler (se projektets scheduler-modul) som har återkommande jobb:
+
+Daglig koll på om deleted_at passerat X dagar sedan -> ta bort rad.
+
+Eller trigga radering direkt men i en bakgrundstråd så att det inte låser UI.
+
+Backup av raderade data: Notera att om vi tar backup innan fysisk radering, data finns i backup tills backup roteras ut. GDPR tekniskt kräver även att sådana backups hanteras. Vår retention-policy att inte behålla backups för evigt hjälper här. Eventuellt kan vi implementera kryptering av känsliga kolumner i backups eller separat hantering men oftast accepteras att backups är undantag så länge de inte lättåtkomliga.
+
+ 
+
+Verifikation av backup & radering: Vi definierar rutiner att:
+
+Teståterläs backups (som sagt).
+
+Testa raderingsflödet: skapa dummy user + data, begär radering -> kolla att all deras data försvann eller anonymiserades, inkl logs, och att det inte dyker upp i UI eller i direkt DB-frågor (med RLS off, kolla physically gone).
+
+Sammanfattat ger detta en robust hantering av data livscykel:
+
+Ständig backup (minimerar dataförlust vid haveri).
+
+Styrd retention (begränsar lagring).
+
+Möjlighet att uppfylla raderingskrav på ett spårbart sätt.
+
+CI/CD-integrering (migrationer, test och validering)
+
+För att upprätthålla kvaliteten på databasändringar integrerar vi databasmigrationer och tester i CI/CD-pipelinen (t.ex. GitHub Actions). Målen är:
+
+Automatisk tillämpning och test av migrationer vid varje kodändring för att fånga fel tidigt.
+
+Schemakonsistens mellan kod (t.ex. ORM-modeller) och faktisk DB-schema.
+
+Körning av enhetstester/integrationstester som verifierar databasens funktionalitet (inklusive RLS).
+
+CI-pipeline exempel (GitHub Actions):
+
+Steg 1: Starta databas: Använd official Postgres Docker image i pipeline. GitHub Actions erbjuder services: syntax – vi kan deklarera en postgres:14 service med samma env som i lokal Docker. Detta ger en tom DB.
+
+Steg 2: Applicera migrationer: Kör antingen våra SQL-filer via psql eller med Supabase CLI. Ex:
+
+- name: Apply DB migrations
+  run: |
+    docker run -i --network=host -v ${{ github.workspace }}/supabase/migrations:/migrations \
+       postgres:14 psql -h localhost -U postgres -d postgres -f /migrations/0001_init.sql
+    # repeat for others or use a loop
+
+
+(Här antas default user i PG container är postgres, adjust if needed.)
+Eller:
+
+- name: Supabase DB reset
+  run: supabase db reset
+  env:
+    SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+
+om man vill använda supabase CLI (kräver supabase instans).
+
+Steg 3: Kör tester: Det kan vara Python-tests (pytest) som startar applikationens testsvit. I testsviten bör ingå att:
+
+Köra DB-specifika tester, t.ex.:
+
+Kontrollera att alla tabeller finns.
+
+Infoga och hämta data (testa att constraints fungerar).
+
+Testa RLS: vi kan skriva små SQL-satser inloggad som olika roller. T.ex. använd SET role authenticated; SET local jwt.claims.email = 'test@example.com'; etc – men Supabase roles är tricky i plain psql. Bättre är att använda Supabase Client JS/py med en test-user token för att simulera.
+
+Alternativt, implementera enklare: i testkoden logga in en dummy user via Supabase API, få en access token, och sedan använda det token mot vår API (som i sin tur gör DB-frågor). Detta testar hela integrationen.
+
+Om vi har rena SQL-funktioner, testa dem (kalla med psql).
+
+Kanske köra en migrations-linter (verktyg som migra eller Supabase schemacompare) för att säkerställa att inga driftförändringar glömts. Ex: ha en golden schema definierad i code (t.ex. SQLAlchemy models) och jämför med DB schema.
+
+Steg 4: Validate coding guidelines: T.ex. checka att ingen query tar för lång tid, men det är mer runtime/perf så kanske ej i CI. Men vi kan köra EXPLAIN på några kritiska frågor mot testdatan för att se att index används (svårt automatisera, men manual step i dev).
+
+Steg 5: Tear down: Stoppa/rensa databascontainer.
+
+Utöver pipeline vid PR, sätter vi upp särskilda flöden:
+
+Migration drift check: Om någon utvecklare glömt att skapa en migrationsfil för en ändring i models, kan det upptäckas med ett verktyg som diffar DB vs ORM. Eftersom vi använder rena SQL migrations och manus, är det mer ett mänskligt misstag – men vi kan skriva en test som:
+
+Initiera DB från migrations.
+
+Låta SQLAlchemy reflecta schemat och jämföra med definitionsfiler (om vi har dem).
+
+Detta kan bli komplext att underhålla. I praktiken litar vi på code review.
+
+supabase test environment: Supabase erbjuder ev. ett sätt att spinna upp en shadow db för testning. Deras CLI gör det lokalt. Vi kan i Actions använda Supabase CLI with a remote project for ephemeral tests, men det är överkurs. Lokalt PG räcker.
+
+GitHub Actions secrets: Om vi deployar migrations till Supabase prod via CI, behöver vi ett service_role key eller personal access token. Vi förvarar dem krypterat i repo secrets. Sedan kör vi supabase db push --env prod vid merge till main, t.ex., för att auto-deploy DB schema. Detta steg måste göras försiktigt eftersom migrations kan innehålla destruktiva ändringar som bör synkas med appdeploy. Därför kanske man inte automatiserar push till prod fullt ut utan gör det manuellt eller med approvals.
+
+Tests under migration changes: Om en migrationsfil ändras i PR, köra pipeline ovan. Även om endast applikationslogik ändras, köra test som en säkerhetsnät. (Dock kanske inte alltid köra migration apply från scratch om inte nödvändigt – men för enkelhet i CI kör vi alltid apply-from-scratch per test-run, det är snabb nog för våra tabellstorlekar i test).
+
+Integration med app CI: Eftersom applikationen (crawler, scraper, etc) har egna tester som förutsätter en databas, vi kombinerar dem. D.v.s. samma Postgres används för appens integrationstest, populera med fixtures, kör crawlern etc. I projektstrukturen nämns isolering via separata schemas per testkörning – eventuellt skippar vi det i CI för enkelhet, men bra i parallella testfall. Som noterat:
+
+Man kan skapa ett nytt schema för varje test-run (t.ex. schema namn baserat på commit SHA), apply migration in that schema (Postgres stödjer CREATE SCHEMA and prefix queries). Men enklare spinna upp en hel PG för varje run.
+
+Sammanfattning CI/CD: Varje commit genomgår DB migrerings- och funktionstest. På deploy-sidan, migrations appliceras i staging automatiskt, testas med real integration (en testcrawl?), och sedan i prod antingen via manual or automated release. Inkludera gärna också migrations-version i appens helsostatustavla, så man vet att app och DB är i synk.
+
+Övervakning och metrik för databasen
+
+För att säkerställa databasens hälsa över tid implementeras observability-lösningar – dvs. loggning, monitorering och larm baserat på databasens beteende.
+
+ 
+
+Systemmetrik: På driftplattform-nivå (t.ex. Kubernetes eller VM) övervakar vi vanliga resurser:
+
+CPU- och minnesutnyttjande för databaskontainern.
+
+Lagertillväxt (diskanvändning).
+
+Databasens egna statistik: antal anslutningar, transaktionshastighet, I/O väntetid, cache-hit rate, deadlocks etc.
+
+Planen är att sätta upp en Prometheus-instans med PostgreSQL-exporter samt Grafana dashboards för databasmetrik
+GitHub
+. I repo finns placeholders för monitoring/grafana/dashboards/database_dashboard.json
+GitHub
+, vilket tyder på att en färdig instrumentpanel designas med viktiga nyckeltal:
+
+Active connections vs max connections.
+
+Queries per second (läs, skriv).
+
+Long running queries (eventuellt via pg_stat_activity).
+
+Index usage % (bland reads).
+
+Locks och väntetider.
+
+Checkpointer frekvens, skrivcache fylld etc (för tuning).
+
+Bloat eller fragmentering över tid.
+
+pg_stat_statements: Vi aktiverar extensionen pg_stat_statements för att samla statistik på frågenivå (den kan aktiveras i initial migration via CREATE EXTENSION pg_stat_statements;). Med denna kan vi spåra vilka queries som tar längst tid eller körs ofta. Grafana-dashboard kan visa topp-5 tyngsta queries som underlag för optimering.
+
+ 
+
+Loggning: PostgreSQL loggar (log_statement etc) bör konfigureras på lämplig nivå. I dev kanske allt loggas, i prod kanske bara varningar och långsamma queries:
+
+Sätt log_min_duration_statement = 500 ms t.ex. för att logga allt över en halv sekund.
+
+Dessa loggar kan skickas till en centralloggtjänst (t.ex. CloudWatch, ELK/Graylog). Supabase själv har loggvisning i sitt interface där man kan söka på senaste queries.
+
+Loggarna är viktiga för att snabbt upptäcka problemfrågor eller misslyckade transaktioner.
+
+Mätetal i applikationen: Utöver databasens egna metrics, kan vi exponera applikationsspecifika nyckeltal som hämtas från databasen:
+
+Antal jobs i olika status (pending, running, failed). Detta kan visas i en dashboard eller UI. Eftersom jobs-tabellen uppdateras fortlöpande kan man periodiskt querya SELECT status, count(*) FROM jobs GROUP BY status;.
+
+Data quality trend – den definierade vyn data_quality_summary summerar hur många poster som har excellent/good/fair/poor kvalitet
+GitHub
+GitHub
+. Vi kan grafana-plotta t.ex. andelen "excellent" över tid för att se om datakvaliteten förbättras med nya mallversioner.
+
+Tillväxt av data: t.ex. count(*) på persons per vecka, etc – kan larma om volymen sticker iväg oväntat (kan indikera en runaway crawler).
+
+Observabilitet av RLS policy events: svårare, men man kan ha en counter på hur ofta någon försökte otillåten access (Postgres loggar RLS violations? Ej default, men man kan logga denied).
+
+Custom alerts: Ex definiera triggers för att larma. T.ex. om jobs.error_message får ett värde (job fail), kan en NOTIFY signal skickas som plockas upp eller bara att vårt monitoring ser att count of failed jobs > 0 i senaste timmen genererar larm.
+
+Backups monitoring: En del av monitoring är också att säkerställa att backup-jobb körts. Vår backup-process bör logga en rad i databasen eller i fil. Vi kan övervaka t.ex. "när togs senast en lyckad backup?" och larma om > X tid gått.
+
+ 
+
+High availability och replicering: (Om relevant för drift) – Supabase i högre tier erbjuder replik. I egen drift kanske vi sätter upp en varm standby. Observability bör täcka replikeringsstatus (lag, sync state). Tools: check pg_stat_replication metrics, larma om replication lag > threshold.
+
+ 
+
+Kapacitetsplanering: Genom att samla historik av datavolym (sum(table_size)) och load, kan vi prognostisera när vi behöver skala upp. Vi planerar att utvinna storlek per table (t.ex. med pg_total_relation_size) och tracka i Grafana.
+
+ 
+
+Test av övervakning: Vi skriver dokumentation om hur man kan simulera en scenario för att se att larm fungerar:
+
+T.ex. köra en dummy heavy query för att se den dyker upp i stat_statements.
+
+Stänga av DB i dev för att se att uptime-larm trigger.
+
+Skript för att slå i lite testdata och se grafer uppdateras.
+
+Supabase-specifikt: Om körd på Supabase Cloud, får vi förlita oss på deras inbyggda metrics panel (de har något i projekt dashboard för CPU/ram). Vi kan dock ändå polla med vårt egna system via read-only connections. Supabase tillåter att man ansluter via psql så man kan köra alla ovan queries. Vi kan integrera i en separate monitoring service som kör mot supabase endpoint för PG och scrapar stats.
+
+ 
+
+Kort sagt, databasen kommer att bevakas som en del av den totala plattformen:
+
+Vi integrerar med övervakningsverktyg för infrastruktur.
+
+Vi tar fram Grafana dashboards (som i filstruktur planerat) för databasen.
+
+Sätter upp larm: exempelvis via Prometheus Alertmanager, "om CPU > 80% 5 min", "om connections > 90% av max", "om query timeouts händer".
+
+Dokumenterar rutin: när larm går – t.ex. utvecklare on-call kör EXPLAIN på slow query, checka indexes etc.
+
+Dokumentation av datamodell och användning
+
+För att underlätta förståelse och underhåll har vi dokumenterat datamodellen både i kod (via COMMENT ON TABLE/COLUMN i SQL) och i projektdokumentation. Filen docs/database_schema.md innehåller en översikt av entiteterna
+GitHub
+ och i denna plan har vi detaljfokuserat på utformningen. ER-diagrammet ovan illustrerar tabellerna och deras relationer visuellt, vilket kompletterar textbeskrivningen.
+
+ 
+
+Utvecklare kan använda verktyg som Supabase Studio eller DBeaver för att bläddra bland tabellerna och se relationer. Vi inkluderar även exempel på vanliga queries nedan, som fungerar som både dokumentation och test av att schemat är riktigt uppsatt.
+
+ 
+
+Exempelqueries:
+
+Hämta alla fordon och dess ägares namn: Denna query demonstrerar en JOIN mellan vehicles och persons via owner_id-förhållandet.
+
+SELECT v.registration_number, v.make, v.model, p.full_name AS owner_name
+FROM vehicles v
+JOIN persons p ON p.id = v.owner_id
+WHERE v.deleted_at IS NULL AND p.deleted_at IS NULL
+LIMIT 10;
+
+
+Förväntat: upp till 10 fordon med respektive ägare. (RLS: som vanlig användare får du bara se rader där både vehicle och person matchar ditt owner_id, vilket sker implicit om du äger dem. Som admin eller i en intern session kan alla visas.)
+
+Hitta personer som arbetar på ett visst företag: Hur persons.company_id kan användas.
+
+SELECT c.name AS company, p.full_name AS person_name, p.email
+FROM persons p
+JOIN companies c ON c.id = p.company_id
+WHERE c.name ILIKE '%Supabase%'
+ORDER BY p.last_name;
+
+
+Detta listar personer associerade med företag vars namn innehåller "Supabase". (Notera: Om company ägs per user i multi-tenant, skulle endast företag och personer ägda av samma user matcha i RLS-kontroller.)
+
+Antal aktiva jobb per status:
+
+SELECT status, COUNT(*) 
+FROM jobs 
+WHERE status IN ('pending','running') 
+GROUP BY status;
+
+
+Visar hur många jobb som för närvarande väntar eller körs. (RLS: en användare får bara se sina jobb räknas med; en admin/service kan se totalen).
+
+Data quality rapport: Utnyttja vyn data_quality_summary:
+
+SELECT * FROM data_quality_summary;
+
+
+Utfallet summerar kvalitetsnivåer för persons, companies, vehicles med snittscore
+GitHub
+GitHub
+. Detta ger en snabb översikt i en tabellform, t.ex.:
+
+entity_type | total_records | excellent_count | good_count | ... | avg_quality_score
+------------+---------------+-----------------+------------+-----+-------------------
+persons     |           120 |              20 |         50 | ... |             3.10
+companies   |            45 |               5 |         30 | ... |             2.80
+vehicles    |           200 |              10 |         70 | ... |             2.95
+
+
+(Där score 4=excellent...1=poor)
+
+Sök personer via namnfragment: Tack vare trigram-index på full_name kan vi göra:
+
+SELECT id, full_name 
+FROM persons 
+WHERE full_name ILIKE '%Sm%c%'  -- matchar t.ex. "Smirnov Alice"
+LIMIT 5;
+
+
+Denna query nyttjar idx_persons_full_name (GIN + pg_trgm)
+GitHub
+ för snabb subträngssökning.
+
+Kontrollera RLS – försök läsa andras data: (Detta är ett tankeexperiment hur man skulle testa det; i praktiken simulerar vi det i applikationslagret). Antag user A och user B har data. Om user A kör:
+
+SELECT * FROM persons WHERE owner_id = '<UserB-UUID>';
+
+
+...så ska resultatet vara tomt, trots att det finns poster, eftersom RLS-filtren bort dem. Om service_role kör samma query får den träffar. Detta bekräftar isoleringen.
+
+För utvecklare är det också dokumenterat hur man genom Supabase Studio kan köra dessa queries i en webbläsare och se resultaten, eller använda psql i terminal.
+
+ 
+
+Dokumentationsprocess: Varje gång schemat ändras (nya kolumner, tabeller etc), ska docs uppdateras – t.ex. docs/database_schema.md och ER-diagram vid behov. Vi kan automatisera viss del: t.ex. generera ER-diagram från schema via verktyg (pyGraphviz, schemadiagram) i CI och spara bild i dokumentation. Men tills vidare hålls det manuellt i synk.
+
+ 
+
+Kodkommentarer: I migrationsfilen lades COMMENT ON TABLE ... för att beskriva syftet med varje tabell
+GitHub
+. Dessa kommentarer syns i t.ex. psql \d+ persons eller i vissa DB-guis. Det är bra för snabb referens.
+
+ 
+
+Slutligen har vi en frågesamling (docs/queries.md ev.) där vi lägger vanliga analytiska frågor eller felsökningsfrågor med förklaring. Detta hjälper nya teammedlemmar att förstå hur datan är länkad och hur man skriver korrekta SQL mot modellen.

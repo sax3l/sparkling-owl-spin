@@ -1,277 +1,285 @@
-import os
-import asyncio
+"""
+ECaDP Database Manager
+
+Session factory, transaction helpers, and repository methods for all database operations.
+Supports MySQL/PostgreSQL with read/write routing and bulk operations.
+"""
+
 import logging
-from contextlib import asynccontextmanager
-from typing import Optional, Dict, Any, List, AsyncGenerator
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker, Session
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from dotenv import load_dotenv
-import aiomysql
-import pymysql
+from contextlib import contextmanager
+from typing import List, Optional, Dict, Any, Union, Tuple, Iterator, Type
+from sqlalchemy import create_engine, Engine, MetaData, text, inspect
+from sqlalchemy.orm import sessionmaker, Session, scoped_session
+from sqlalchemy.exc import SQLAlchemyError, DisconnectionError, IntegrityError
+from sqlalchemy.pool import QueuePool
+from sqlalchemy.dialects import mysql, postgresql
+import time
+import random
+from datetime import datetime, timedelta
 
-from src.utils.simple_logger import get_logger
-
-load_dotenv()
-
-logger = get_logger(__name__)
-
-# MySQL Database URL construction from environment variables
-def get_mysql_url(async_driver: bool = False) -> str:
-    """Construct MySQL database URL from environment variables"""
-    host = os.getenv("MYSQL_HOST", "localhost")
-    port = os.getenv("MYSQL_PORT", "3306")
-    database = os.getenv("MYSQL_DATABASE", "ecadp")
-    username = os.getenv("MYSQL_USER", "ecadp_user")
-    password = os.getenv("MYSQL_PASSWORD")
-    
-    if not password:
-        raise ValueError("MYSQL_PASSWORD environment variable must be set")
-    
-    if async_driver:
-        return f"mysql+aiomysql://{username}:{password}@{host}:{port}/{database}?charset=utf8mb4"
-    else:
-        return f"mysql+pymysql://{username}:{password}@{host}:{port}/{database}?charset=utf8mb4"
-
-# Get database URLs
-DATABASE_URL = get_mysql_url(async_driver=False)
-ASYNC_DATABASE_URL = get_mysql_url(async_driver=True)
-
-# Sync SQLAlchemy setup
-engine = create_engine(
-    DATABASE_URL,
-    pool_size=int(os.getenv("MYSQL_POOL_SIZE", "10")),
-    max_overflow=int(os.getenv("MYSQL_MAX_OVERFLOW", "20")),
-    pool_timeout=int(os.getenv("MYSQL_POOL_TIMEOUT", "30")),
-    pool_recycle=int(os.getenv("MYSQL_POOL_RECYCLE", "3600")),
-    echo=os.getenv("ENVIRONMENT", "development") == "development"
+from .models import (
+    Base, Project, CrawlPlan, Template, Job, JobLog, QueueUrl, ExtractedItem,
+    DQViolation, Export, Proxy, AuditEvent, User, APIKey, Policy, 
+    Notification, PrivacyRequest, PIIScanResult, RetentionPolicy,
+    generate_item_key, generate_url_fingerprint
 )
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+from ..settings import get_settings
 
-# Async engine for async operations
-async_engine = create_async_engine(
-    ASYNC_DATABASE_URL,
-    pool_size=int(os.getenv("MYSQL_POOL_SIZE", "10")),
-    max_overflow=int(os.getenv("MYSQL_MAX_OVERFLOW", "20")),
-    pool_timeout=int(os.getenv("MYSQL_POOL_TIMEOUT", "30")),
-    pool_recycle=int(os.getenv("MYSQL_POOL_RECYCLE", "3600")),
-    echo=os.getenv("ENVIRONMENT", "development") == "development"
-)
 
-def get_db():
-    """Dependency for FastAPI - provides sync database session"""
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+logger = logging.getLogger(__name__)
+
+
+class DatabaseError(Exception):
+    """Base exception for database errors."""
+    pass
+
+
+class RetryableError(DatabaseError):
+    """Error that indicates operation should be retried."""
+    pass
+
+
+class PermanentError(DatabaseError):
+    """Error that should not be retried."""
+    pass
+
+
+def get_retry_delay(attempt: int, base_delay: float = 1.0, max_delay: float = 60.0) -> float:
+    """Calculate exponential backoff delay with jitter."""
+    delay = base_delay * (2 ** attempt)
+    delay = min(delay, max_delay)
+    # Add jitter (±20%)
+    jitter = delay * 0.2 * (random.random() * 2 - 1)
+    return max(0, delay + jitter)
+
+
+def is_retryable_error(error: Exception) -> bool:
+    """Determine if an error should be retried."""
+    if isinstance(error, (DisconnectionError,)):
+        return True
+    
+    error_msg = str(error).lower()
+    
+    # MySQL retryable errors
+    mysql_retryable = [
+        "deadlock", "lock wait timeout", "connection lost", 
+        "server has gone away", "can't connect", "timeout"
+    ]
+    
+    # PostgreSQL retryable errors  
+    postgres_retryable = [
+        "deadlock_detected", "connection_failure", "admin_shutdown",
+        "crash_shutdown", "cannot_connect_now", "too_many_connections"
+    ]
+    
+    retryable_errors = mysql_retryable + postgres_retryable
+    
+    return any(keyword in error_msg for keyword in retryable_errors)
+
+
+def retry_on_database_error(max_attempts: int = 5):
+    """Decorator to retry database operations on retryable errors."""
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            last_error = None
+            
+            for attempt in range(max_attempts):
+                try:
+                    return func(*args, **kwargs)
+                    
+                except Exception as error:
+                    last_error = error
+                    
+                    if not is_retryable_error(error) or attempt == max_attempts - 1:
+                        logger.error(f"Database operation failed permanently: {error}")
+                        if isinstance(error, IntegrityError):
+                            raise PermanentError(str(error)) from error
+                        raise DatabaseError(str(error)) from error
+                    
+                    delay = get_retry_delay(attempt)
+                    logger.warning(
+                        f"Database operation failed (attempt {attempt + 1}/{max_attempts}), "
+                        f"retrying in {delay:.2f}s: {error}"
+                    )
+                    time.sleep(delay)
+            
+            raise DatabaseError(f"Max attempts exceeded: {last_error}") from last_error
+        return wrapper
+    return decorator
 
 
 class DatabaseManager:
-    """
-    Comprehensive MySQL database manager that provides both sync and async operations.
+    """Central database manager with session handling and connection pooling."""
     
-    Features:
-    - MySQL connection management and pooling
-    - Query execution and transaction management  
-    - Data validation and error handling
-    - Health monitoring and metrics
-    - Support for both sync and async operations
-    """
-    
-    def __init__(self, database_url: Optional[str] = None):
-        self.database_url = database_url or DATABASE_URL
-        self.sync_engine = create_engine(self.database_url)
-        self.async_engine = create_async_engine(
-            self.database_url.replace("postgresql://", "postgresql+asyncpg://")
-        )
-        self._session_factory = sessionmaker(
-            autocommit=False, 
-            autoflush=False, 
-            bind=self.sync_engine
-        )
-        self._connection_pool: Optional[asyncpg.Pool] = None
+    def __init__(self):
+        self.settings = get_settings()
+        self._primary_engine: Optional[Engine] = None
+        self._replica_engine: Optional[Engine] = None
+        self._session_factory = None
+        self._scoped_session = None
+        self.vendor = self.settings.database.DB_VENDOR
         
-    async def initialize(self):
-        """Initialize async connection pool"""
-        try:
-            # Extract connection parameters from URL
-            url_parts = self.database_url.replace("postgresql://", "").split("@")
-            if len(url_parts) == 2:
-                credentials, host_db = url_parts
-                user_pass = credentials.split(":")
-                host_port_db = host_db.split("/")
-                
-                if len(user_pass) == 2 and len(host_port_db) >= 2:
-                    user, password = user_pass
-                    host_port = host_port_db[0].split(":")
-                    host = host_port[0]
-                    port = int(host_port[1]) if len(host_port) > 1 else 5432
-                    database = host_port_db[1].split("?")[0]  # Remove query params
-                    
-                    self._connection_pool = await asyncpg.create_pool(
-                        host=host,
-                        port=port,
-                        user=user,
-                        password=password,
-                        database=database,
-                        min_size=2,
-                        max_size=10
-                    )
-                    logger.info("Database connection pool initialized")
-                else:
-                    raise ValueError("Invalid database URL format")
-            else:
-                raise ValueError("Invalid database URL format")
-        except Exception as e:
-            logger.error(f"Failed to initialize database connection pool: {e}")
-            raise
-    
-    async def close(self):
-        """Close all connections"""
-        if self._connection_pool:
-            await self._connection_pool.close()
-            logger.info("Database connection pool closed")
-    
-    @asynccontextmanager
-    async def get_connection(self):
-        """Get async database connection from pool"""
-        if not self._connection_pool:
-            await self.initialize()
+    def _create_engine(self, dsn: str, **kwargs) -> Engine:
+        """Create database engine with appropriate configuration."""
+        engine_kwargs = {
+            "echo": self.settings.database.DB_ECHO,
+            "pool_size": self.settings.database.DB_POOL_SIZE,
+            "max_overflow": self.settings.database.DB_MAX_OVERFLOW,
+            "pool_timeout": self.settings.database.DB_POOL_TIMEOUT,
+            "pool_recycle": self.settings.database.DB_POOL_RECYCLE,
+            "poolclass": QueuePool,
+            **kwargs
+        }
         
-        async with self._connection_pool.acquire() as connection:
-            yield connection
-    
-    @asynccontextmanager 
-    async def get_transaction(self):
-        """Get database transaction context"""
-        async with self.get_connection() as conn:
-            async with conn.transaction():
-                yield conn
-    
-    def get_session(self) -> Session:
-        """Get sync SQLAlchemy session"""
-        return self._session_factory()
-    
-    @asynccontextmanager
-    async def get_async_session(self) -> AsyncGenerator[AsyncSession, None]:
-        """Get async SQLAlchemy session"""
-        from sqlalchemy.ext.asyncio import AsyncSession as SQLAsyncSession
-        
-        async with SQLAsyncSession(self.async_engine) as session:
-            yield session
-    
-    # Async query methods
-    async def fetch_one(self, query: str, *args) -> Optional[Dict[str, Any]]:
-        """Execute query and fetch one result"""
-        async with self.get_connection() as conn:
-            result = await conn.fetchrow(query, *args)
-            return dict(result) if result else None
-    
-    async def fetch_all(self, query: str, *args) -> List[Dict[str, Any]]:
-        """Execute query and fetch all results"""
-        async with self.get_connection() as conn:
-            results = await conn.fetch(query, *args)
-            return [dict(row) for row in results]
-    
-    async def execute(self, query: str, *args) -> str:
-        """Execute query (INSERT, UPDATE, DELETE)"""
-        async with self.get_connection() as conn:
-            return await conn.execute(query, *args)
-    
-    async def execute_many(self, query: str, args_list: List[tuple]) -> None:
-        """Execute query multiple times with different parameters"""
-        async with self.get_connection() as conn:
-            await conn.executemany(query, args_list)
-    
-    # Sync query methods for backward compatibility
-    def sync_fetch_one(self, query: str, params: Dict[str, Any] = None) -> Optional[Dict[str, Any]]:
-        """Sync version of fetch_one"""
-        with self.get_session() as session:
-            result = session.execute(text(query), params or {})
-            row = result.fetchone()
-            return dict(row._mapping) if row else None
-    
-    def sync_fetch_all(self, query: str, params: Dict[str, Any] = None) -> List[Dict[str, Any]]:
-        """Sync version of fetch_all"""
-        with self.get_session() as session:
-            result = session.execute(text(query), params or {})
-            return [dict(row._mapping) for row in result.fetchall()]
-    
-    def sync_execute(self, query: str, params: Dict[str, Any] = None) -> None:
-        """Sync version of execute"""
-        with self.get_session() as session:
-            session.execute(text(query), params or {})
-            session.commit()
-    
-    # Health and monitoring
-    async def health_check(self) -> Dict[str, Any]:
-        """Check database health"""
-        try:
-            async with self.get_connection() as conn:
-                result = await conn.fetchval("SELECT 1")
-                return {
-                    "status": "healthy",
-                    "database": "connected",
-                    "pool_size": self._connection_pool.get_size() if self._connection_pool else 0,
-                    "test_query": result == 1
+        # Vendor-specific optimizations
+        if self.vendor == "mysql":
+            engine_kwargs.update({
+                "pool_pre_ping": True,
+                "connect_args": {
+                    "charset": "utf8mb4",
+                    "autocommit": False,
+                    "sql_mode": "TRADITIONAL",
                 }
-        except Exception as e:
-            return {
-                "status": "unhealthy", 
-                "error": str(e),
-                "database": "disconnected"
-            }
-    
-    async def get_stats(self) -> Dict[str, Any]:
-        """Get database statistics"""
-        try:
-            stats = {}
-            if self._connection_pool:
-                stats.update({
-                    "pool_size": self._connection_pool.get_size(),
-                    "pool_min_size": self._connection_pool.get_min_size(),
-                    "pool_max_size": self._connection_pool.get_max_size(),
-                })
+            })
+        elif self.vendor == "postgres":
+            engine_kwargs.update({
+                "pool_pre_ping": True,
+                "connect_args": {
+                    "application_name": "ecadp_backend",
+                    "connect_timeout": 10,
+                }
+            })
             
-            # Get database-specific stats
-            async with self.get_connection() as conn:
-                # Table counts
-                table_stats = await conn.fetch("""
-                    SELECT schemaname, tablename, n_tup_ins, n_tup_upd, n_tup_del
-                    FROM pg_stat_user_tables 
-                    WHERE schemaname = 'public'
-                """)
-                
-                stats["tables"] = [dict(row) for row in table_stats]
-                
-                # Database size
-                db_size = await conn.fetchval("""
-                    SELECT pg_size_pretty(pg_database_size(current_database()))
-                """)
-                stats["database_size"] = db_size
-                
-            return stats
+        return create_engine(dsn, **engine_kwargs)
+    
+    def initialize(self):
+        """Initialize database connections and session factory."""
+        logger.info("Initializing database manager")
+        
+        # Create primary engine
+        self._primary_engine = self._create_engine(
+            self.settings.database.DB_DSN_PRIMARY
+        )
+        
+        # Create replica engine if configured
+        if self.settings.database.DB_DSN_READREPLICA:
+            self._replica_engine = self._create_engine(
+                self.settings.database.DB_DSN_READREPLICA
+            )
+            logger.info("Read replica configured")
+        else:
+            logger.info("No read replica configured, using primary for all reads")
+            
+        # Create session factory
+        self._session_factory = sessionmaker(bind=self._primary_engine)
+        self._scoped_session = scoped_session(self._session_factory)
+        
+        logger.info(f"Database manager initialized for {self.vendor}")
+    
+    def get_engine(self, read_only: bool = False) -> Engine:
+        """Get appropriate engine based on read/write preference."""
+        if read_only and self._replica_engine:
+            return self._replica_engine
+        return self._primary_engine
+    
+    @contextmanager
+    def get_session(self, read_only: bool = False) -> Iterator[Session]:
+        """Get database session with automatic transaction handling."""
+        engine = self.get_engine(read_only=read_only)
+        session = sessionmaker(bind=engine)()
+        
+        try:
+            yield session
+            if not read_only:
+                session.commit()
         except Exception as e:
-            logger.error(f"Failed to get database stats: {e}")
-            return {"error": str(e)}
+            session.rollback()
+            logger.error(f"Database session error: {e}")
+            raise
+        finally:
+            session.close()
+    
+    @contextmanager
+    def get_scoped_session(self) -> Iterator[Session]:
+        """Get thread-safe scoped session."""
+        session = self._scoped_session()
+        try:
+            yield session
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Scoped session error: {e}")
+            raise
+        finally:
+            self._scoped_session.remove()
+    
+    @retry_on_database_error(max_attempts=3)
+    def test_connection(self, read_only: bool = False) -> Dict[str, Any]:
+        """Test database connection and return server info."""
+        engine = self.get_engine(read_only=read_only)
+        
+        with engine.connect() as conn:
+            if self.vendor == "mysql":
+                result = conn.execute(text("SELECT VERSION() as version")).fetchone()
+                return {
+                    "vendor": "mysql",
+                    "version": result.version,
+                    "read_only": read_only,
+                    "dsn": self.settings.database.DB_DSN_READREPLICA if read_only else self.settings.database.DB_DSN_PRIMARY
+                }
+            else:  # postgresql
+                result = conn.execute(text("SELECT version()")).fetchone()
+                return {
+                    "vendor": "postgresql", 
+                    "version": result[0],
+                    "read_only": read_only,
+                    "dsn": self.settings.database.DB_DSN_READREPLICA if read_only else self.settings.database.DB_DSN_PRIMARY
+                }
+    
+    def create_tables(self):
+        """Create all database tables."""
+        logger.info("Creating database tables")
+        Base.metadata.create_all(bind=self._primary_engine)
+        logger.info("Database tables created successfully")
+    
+    def drop_tables(self):
+        """Drop all database tables (development only)."""
+        if not self.settings.is_development:
+            raise RuntimeError("Cannot drop tables in non-development environment")
+        
+        logger.warning("Dropping all database tables")
+        Base.metadata.drop_all(bind=self._primary_engine)
+        logger.warning("All database tables dropped")
 
 
-# Global instance for backward compatibility
-_db_manager: Optional[DatabaseManager] = None
+# Legacy compatibility functions
+def get_db() -> Iterator[Session]:
+    """Legacy function for database session (compatibility)."""
+    manager = get_database_manager()
+    with manager.get_session() as session:
+        yield session
+
+
+def create_tables():
+    """Create all database tables."""
+    manager = get_database_manager()
+    manager.create_tables()
+
+
+def drop_tables():
+    """Drop all database tables."""
+    manager = get_database_manager()
+    manager.drop_tables()
+
+
+# Global database manager instance
+_db_manager = None
+
 
 def get_database_manager() -> DatabaseManager:
-    """Get global database manager instance"""
+    """Get global database manager instance."""
     global _db_manager
     if _db_manager is None:
         _db_manager = DatabaseManager()
+        _db_manager.initialize()
     return _db_manager
-
-
-# Async context manager for sessions
-@asynccontextmanager
-async def get_async_session():
-    """Get async database session - compatibility function"""
-    manager = get_database_manager()
-    async with manager.get_async_session() as session:
-        yield session

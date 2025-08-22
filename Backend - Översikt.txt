@@ -1,0 +1,871 @@
+Backend
+
+Översikt & arkitektur
+
+Mål: Modulär monolit (Python) med separata processer för API och workers.
+
+API (FastAPI) i src/webapp/ exponeras internt/extern.
+
+Scheduler + workers i src/scheduler/ kör jobbtyper: crawl, scrape, export, DQ, retention, erasure, proxy-validate m.fl.
+
+Kö/stream: Redis (prio-kö för URL:er + kontrollmeddelanden). (Kan bytas mot RabbitMQ/Kafka via adapter.)
+
+DB‑lager (SQLAlchemy 2.0) i src/database/ med stöd för PostgreSQL & MySQL (plattformsswitch via DSN + feature guards).
+
+Lagring: data/ lokalt + S3‑kompatibel lagring via settings.
+
+Proxy‑pool: eget delsystem i src/proxy_pool/ + HTTP API i src/proxy_pool/api/server.py.
+
+Anti‑bot: src/anti_bot/ (headers, delays, fingerprint/stealth, fallback HTTP→Browser).
+
+Scraper: src/scraper/ (HTTP-klient, browser-driver, DSL‑runtime, transform/validate, bilder/PDF).
+
+Crawler: src/crawler/ (sitemap, link extractors, pagination, infinite scroll, URL‑kö).
+
+Exporters: src/exporters/ (CSV, JSON, Excel, Sheets, BigQuery, Snowflake, Elastic/OpenSearch).
+
+DQ & analys: src/analysis/ (GE/Soda integration, selector drift, rapporter).
+
+Notifier/Webhooks: src/webapp/services/webhook_dispatcher.py + src/scheduler/notifier.py.
+
+RBAC/Autentisering: OAuth2 (password/refresh), API‑nycklar, scopes; rule‑checks på endpoints.
+
+Observability: strukturerad logg (JSON), Prometheus‑metrics, OpenTelemetry‑traces, korrelation med run_id, job_id, url_id.
+
+2) Konfiguration & Settings
+2.1 Settings (Pydantic)
+
+Fil: src/settings.py
+
+Läser .env + config/*.yml.
+
+Fält: DB_DSN_PRIMARY, DB_DSN_READREPLICA(optional), DB_VENDOR (postgres|mysql), REDIS_URL, STORAGE_ROOT/S3, FEATURE_FLAGS, SECURITY (CORS, rate limits), API_HMAC_SECRET, OAUTH2_ISSUER, SMTP/Slack/webhooks, PROXY_PROVIDER_KEYS, PLAYWRIGHT_OPTS.
+
+DoD: Typade fält, validering, miljövisa overrides (config/env/*.yml), runtime‑reload via signal (för icke‑kritiska toggles).
+
+2.2 Konfigfiler
+
+config/app_config.yml: kapsar standarder för crawl/scrape workers, timeouts, concurrency caps.
+
+config/performance-defaults.yml: TTL, p95‑budget, backoff‑parametrar.
+
+config/proxies.yml: pooler, leverantörer, geo, min‑krav.
+
+config/anti_bot.yml: headerprofiler, delays, fallback‑policy.
+
+config/export_targets.yml: fördefinierade destinationsprofiler.
+
+config/api.yml: pagination defaults, rate limits, webhook destinations (med HMAC).
+
+config/auth.yml: OAuth2‑klienter, API‑nycklar (ref till secret store).
+
+config/roles.yml: RBAC‑matris.
+
+DoD: Laddas vid start, schema‑valideras; fel ⇒ tydlig startup‑fail med fil/nyckelrad.
+
+3) Databaslager & datamodell
+3.1 ORM‑modeller (SQLAlchemy)
+
+Fil: src/database/models.py
+
+Kärntabeller:
+
+projects(id, name, description, config_json, created_at)
+
+crawl_plans(id, project_id, rules_json, created_at)
+
+templates(id, name, version, spec_yaml, status, published_at)
+
+jobs(id, type, project_id, template_id, plan_id, status, cfg_json, priority, started_at, finished_at, proxy_profile, render_profile)
+
+job_logs(id, job_id, ts, level, code, message, meta_json)
+
+queue_urls(id, job_id, url, status, attempts, last_error, fingerprint_hash)
+
+extracted_items(id, job_id, template_id, item_key, payload_json, dq_status, created_at, lineage_json)
+
+dq_violations(id, item_id, rule, details_json, created_at)
+
+exports(id, query_json, target, status, file_path, checksum, created_at, finished_at)
+
+proxies(id, pool, endpoint, geo, health_state, last_checked, stats_json)
+
+audit_events(id, who, what, ts, before_json, after_json, scope, correlation_id)
+
+users(id, email, password_hash, name, role, active, created_at)
+
+api_keys(id, user_id, key_hash, scope, expires_at, created_at)
+
+policies(id, domain, config_json, created_at, updated_at)
+
+notifications(id, channel, payload_json, status, created_at)
+
+privacy_requests(id, kind, subject_reference, status, created_at, finished_at, meta_json)
+
+pii_scan_results(id, item_id, pii_type, snippet, created_at)
+
+retention_policies(id, target, ttl_days, config_json, created_at)
+
+Vendor‑kompatibilitet (MySQL/Postgres):
+
+JSON: använd JSON (MySQL 5.7+/8) och JSONB (PG) via SQLAlchemy‑typ abstraktion.
+
+Index: undvik PG‑unika features (t.ex. GIN‑specifika uttryck) i baslinje. Särskilt index på extracted_items(item_key) och queue_urls(fingerprint_hash).
+
+Collation/charset dokumenteras (utf8mb4).
+
+DoD: Mappning klar, constraints/PK/FK, unika index på (templates.name, templates.version) och jobs(id); seeds för demo.
+
+3.2 DB‑manager & repos
+
+Fil: src/database/manager.py
+
+Session factory, transaktionshjälpare (context manager).
+
+Bulk upserts för queue_urls och extracted_items.
+
+Skriv‑/läsrutning: om MySQL markerad som primär, alla writes→MySQL; annars replicaläsningar till MySQL om read replica satt.
+
+Idempotens: “once”‑skrivning via (item_key, template_id) uniknyckel.
+
+DoD: Trådsäkra sessions i workers, retry på deadlocks (exponentiell backoff, max 5); metrics per operation.
+
+3.3 Migrationer
+
+Mapp: src/database/migrations/ (Alembic)
+
+env.py, versions/*.py, 0001_init.sql, 0002_indexes.sql.
+
+Kompatibel SQL för MySQL & Postgres (branch per vendor om behövs, styrs av env var DB_VENDOR).
+
+DoD: alembic upgrade head kör grönt mot båda DB:erna; settings‑endpoint “Kör migrationer nu” anropar detta.
+
+4) Säkerhet, auth & RBAC
+4.1 Autentisering
+
+Fil: src/webapp/auth.py
+
+OAuth2 password + refresh (JWT), rotation, blacklisting av revoked tokens.
+
+API‑nycklar med HMAC signering (hash lagrat i DB).
+
+DoD: /auth/login, /auth/refresh, /auth/logout; /auth/api-keys CRUD (admin); ratelimits; brute‑force skydd.
+
+4.2 RBAC
+
+Roller enligt config/roles.yml: Admin, Operator, Analyst, Reader, Integration.
+
+Dekorator/Depends per endpoint kontrollerar scope.
+
+DoD: Enhetstester som verifierar att disallowed endpoints returnerar 403.
+
+4.3 CORS & rate limit
+
+src/webapp/middlewares/rate_limit.py: token bucket per API‑nyckel/IP.
+
+CORS whitelist via settings.
+
+DoD: Konfigdrivet; 429 på övertramp; logg med konto & quota.
+
+5) API‑ytan (FastAPI)
+
+Rot: src/webapp/app.py, api.py, deps.py
+Schemas: src/webapp/schemas/*.py (Pydantic)
+
+5.1 Endpoints (översikt)
+
+Jobs
+
+POST /jobs/crawl – skapa crawl‑jobb
+
+POST /jobs/scrape – skapa scrape/Crawl+Scrape
+
+POST /jobs/export – skapa exportjobb
+
+POST /jobs/analysis/dq – kicka DQ‑körning
+
+GET /jobs/{id} – jobbdetaljer + live‑status (websocket för loggar)
+
+POST /jobs/{id}/pause, /resume, /terminate, /scale, /proxy-profile
+
+Projects & Plans
+
+POST /projects / GET /projects / GET /projects/{id}
+
+POST /plans / GET /plans / GET /plans/{id}
+
+POST /plans/simulate – torrkör sitemap‑regler
+
+Templates
+
+POST /templates – skapa/uppdatera draft
+
+POST /templates/preview – render + extrahera från prov‑URL (browser/http)
+
+POST /templates/publish – lås version
+
+GET /templates / {id} / GET /templates/{name}/versions
+
+Data
+
+GET /data/items – sök/filter/paginera
+
+GET /data/items/{id} – detalj + lineage
+
+POST /data/items/{id}/flag – sätt karantän/flagga
+
+Exports
+
+POST /exports – starta export
+
+GET /exports / {id} – status + fil‑URL
+
+GET /exports/{id}/download
+
+Policies
+
+POST /policies / GET /policies / {id}
+
+POST /policies/simulate – mot URL
+
+POST /policies/apply – rulla ut till workers (pub/sub)
+
+Proxy & Network
+
+GET /proxy/stats
+
+POST /proxy/sources – lägg till källa (API‑nycklar)
+
+POST /proxy/validate-now
+
+POST /proxy/rotate / POST /proxy/blacklist / POST /proxy/whitelist
+
+Privacy
+
+POST /privacy/pii-scan – initiera PII‑skanning
+
+POST /privacy/erasure – starta radering för subject
+
+GET /privacy/requests / {id} – status
+
+Scheduler & Alerts
+
+POST /scheduler/schedule – cron/interval
+
+POST /scheduler/pause-window
+
+POST /alerts/test – testnotis (email/slack/webhook)
+
+Users & API keys
+
+GET/POST/DELETE /users
+
+POST /users/{id}/disable
+
+POST /api-keys / DELETE /api-keys/{id}
+
+Settings
+
+GET/POST /settings/db – växla primär/replica, testa anslutning, kör migration
+
+GET/POST /settings/connectors – config för BQ/Snowflake/Elastic/Sheets
+
+Audit
+
+GET /audit – filter (who/what/job_id/template_id)
+
+Help
+
+GET /help/runbooks – lista
+
+GET /help/runbooks/{slug} – render markdown
+
+POST /help/runbooks/{slug}/email – maila länk
+
+DoD för API:
+
+OpenAPI komplett (docs/openapi.yaml syncat).
+
+100% schema‑validering, 4xx/5xx‑koder.
+
+RBAC/ratelimits på kritiska endpoints.
+
+Idempotens för jobbskapande (idempotency‑key header).
+
+6) Crawler
+6.1 Sitemap & länkextraktorer
+
+Filer:
+src/crawler/sitemap_generator.py, link_extractors.py, pagination.py, infinite_scroll.py, policy.py, reporters.py, url_queue.py
+
+Regler: inkl/exkl‑regex, djup, interna/externa, paginering (nästa‑knapp, query param), infinite scroll (DOM‑trigger + stopp).
+
+URL‑fingerprint: hash(normaliserad URL) för dedupe.
+
+Policy‑enforcement: robots/ToS‑flagga, RPS per host, circuit breaker.
+
+Queue management: Redis sorted sets för prio + DB‑backing (queue_urls) för persistens.
+
+Reporter: sammanfattning (unika URL:er, uppsk runtime).
+
+DoD: Simuleringsendpoint returnerar antal hittade URL:er + sample; metrics: discovered/s, dedupe‑kvot.
+
+6.2 Diagnostik
+
+src/anti_bot/diagnostics/diagnose_url.py
+
+Testar UA‑profiler, 403/429, JS‑krav.
+
+DoD: API POST /projects/test-access levererar kod, latency, blockindikatorer.
+
+7) Scraper & Browser
+7.1 HTTP‑scraper
+
+src/scraper/http_scraper.py + adapters adapters/http/*
+
+httpx/aiohttp, connection pooling, retry (429/5xx), backoff, HSTS, gzip/brotli.
+
+Headers via anti_bot/header_generator.py; cookie‑sessioner per (proxy+domän).
+
+DoD: Stabil på 10k req/min i dev‑syntetik; p95 latency möter performance-defaults.yml.
+
+7.2 Browser‑scraper (Playwright/Selenium)
+
+src/scraper/selenium_scraper.py + adapters/browser/*
+
+Headless + stealth (fingerprint, navigator‑patch, WebGL/WASM fonts), blockera resurser (bilder/video/ads) när policy kräver.
+
+Interaktionsflöden (form_flows: VIN/regnr, login) i scraper/form_flows.py.
+
+DoD: Kör i pool via docker/Dockerfile.browser; kan spara screenshot & HAR till data/raw.
+
+7.3 Selector DSL runtime
+
+src/scraper/dsl/*, template_extractor.py, template_runtime.py
+
+DSL: YAML (schema.py): fält (selector CSS/XPath), typ, transformers (trim/regex/date), validering (regex/enum/luhn), obligatorisk?, cross‑field‑regler.
+
+Runtime: kör selektorer, apply transforms, validate, bygga payload_json; generera item_key (hash av nyckelfält).
+
+Preview: POST /templates/preview renderar prov‑URL (http/browser), visar tabell + markeringar.
+
+DoD: Obligatoriska fält måste mappas; fel rapporteras med exakta selector‑paths; drift‑score loggas.
+
+7.4 Bild/PDF‑hämtare
+
+src/scraper/image_downloader.py
+
+Content‑type kontroll, storleksgräns, virus/triage (om aktiverat), filnamn via hashing.py.
+
+DoD: Säkra nedladdningar utan att förstöra throughput; referenser lagras i payload_json.
+
+8) Proxy‑pool
+8.1 Insamling, validering, rotation
+
+src/proxy_pool/*.py
+
+collector.py: import från leverantörer (API‑keys), normalisera format.
+
+validator.py: parallella latens/fail‑tester, anonymitet, geo‑stöd.
+
+quality_filter.py: scoring, black/whitelist.
+
+rotator.py: “lån” per domän/job, sticky‑fönster N minuter, prioritera friska noder.
+
+manager.py: livscykel, leasing API.
+
+monitor.py: MTBF, blockmönster, degrade detection.
+
+api/server.py: /get, /pop, /delete, /stats.
+
+DoD: Dåliga noder sjunker i ranking; byten under körning i Jobbdetaljer funkar on‑the‑fly.
+
+9) Anti‑bot
+
+src/anti_bot/*
+
+header_generator.py: rika headerprofiler (UA, sec‑ch‑ua, accept, sec‑fetch, etc).
+
+session_manager.py: cookie jars per domän+proxy, TTL.
+
+delay_strategy.py: adaptiv delay (felkvot, jitter).
+
+fallback_strategy.py: eskalering HTTP→Browser enligt policy/regler.
+
+browser_stealth/: mänskligt beteende (scroll/klick/paus/viewport), Cloudflare‑flöden, captcha_solver (pluggbar).
+
+DoD: Minskar 403/429‑kvot vs baseline; konfigbar, säker (inga otillåtna bypasser).
+
+10) Jobblivscykel, scheduler & workers
+10.1 State machine
+
+Tillstånd: PENDING → RUNNING → (PAUSED) → COMPLETED | FAILED | TERMINATED
+Felklass: transient / policy / permanent.
+
+10.2 Scheduler
+
+src/scheduler/scheduler.py, job_definitions.py, jobs/*.py
+
+Triggers: cron/interval; prio‑regler; pausfönster (off‑peak).
+
+Jobs:
+
+crawl_job.py: plockar URL:er enligt plan, fyller queue_urls.
+
+scrape_job.py: hämta innehåll, kör mall, validera, skriv extracted_items.
+
+proxy_validate_job.py: kvalitet & rotation.
+
+retention_job.py: TTL‑rensa raw_html, events och “expired” artefakter.
+
+erasure_job.py: on‑demand radering + kaskad.
+
+sql_backup_job.py, redis_snapshot_job.py, restore_drill_job.py.
+
+selector_regression_job.py: golden sets regression (blockera release om tapp).
+
+backup_job.py: extra wrapper för arkiv.
+
+DoD: Live‑loggar via WebSocket; scale workers ±; pauser/resume tar effekt < 2s.
+
+10.3 Kontroller & feedback
+
+Circuit breaker: >X% fel (policy/tr. errors) ⇒ PAUSE, avisera, skriv audit.
+
+Throughput‑mål och p95 observeras; job_monitor.py skickar notiser.
+
+11) Datalager & sök
+11.1 Query API
+
+src/webapp/routers/data.py
+
+Parametrar: text‑sök, filter (källa, mall, taggar, tidsintervall, status).
+
+Paginering server‑side.
+
+Sidofält: lineage (job_id, källa, URL, mallversion, policyprofil), DQ (regelfel).
+
+DoD: Snabb (index utnyttjas); Export startar batchjobb.
+
+12) Exporter
+
+src/exporters/*, src/webapp/routers/exports.py, src/webapp/services/export_service.py
+
+Basinterface: prepare() → iterate_rows() → write_to_target().
+
+Typer: CSV, JSON, Excel, Google Sheets, BigQuery, Snowflake, Elastic/OpenSearch, “DB‑tabell” (MySQL/PG).
+
+Partitionering: filuppdelning på N rader; checksumma (SHA‑256) loggas.
+
+Webhook “klar” med HMAC‑signatur.
+
+DoD: Historikrad Completed, fil finns, radantal = query, “Ladda ner senaste fil” fungerar; stora datamängder ⇒ streamande skrivning.
+
+13) Privacy Center
+
+src/webapp/routers/privacy.py, utils/pii_scanner.py, scheduler/jobs/erasure_job.py
+
+PII‑skanning: regex/patterns per mallfält; flagga → dq_status=karantän.
+
+Retention: policies per tabell/mall; retention_job.py kör DELETE/soft delete; S3 Lifecycle policies.
+
+Erasure on demand: privacy_requests driver radering av subject i extracted_items (+ relationer), loggar proveniens.
+
+Audit: alla åtgärder loggas med who/what/ts.
+
+DoD: UI visar status; Datalager uppdateras; auditspår komplett.
+
+14) Policies (Policystudion)
+
+src/crawler/policy.py, src/webapp/routers/templates.py (simulering), src/webapp/routers/policy.py
+
+Parametrar per domän: RPS, jitter, renderingsstrategi, headers‑profil, referer, consent‑kaka, robots/ToS‑läge, circuit breaker‑trösklar.
+
+Utrullning: pub/sub till workers (Redis channel).
+
+Simulering: HEAD/GET mot URL med policy injicerad; rapport.
+
+DoD: Nya jobb visar aktiv policyprofil i Jobbdetaljer; simulering ger konsekvent resultat.
+
+15) Data Quality & Analys
+
+src/analysis/data_quality.py, similarity_analysis.py, reports/*
+
+Fyllnadsgrad per fält (aggregation över tid).
+
+Valideringsfel per regel, top offenders.
+
+Selector drift‑score (DOM‑diff; features från ml/).
+
+Varningar: skapa threshold‑regler → notifieringar.
+
+DoD: DQ‑dash uppdateras; tröskelpassage skickar avisering inom 1 min.
+
+16) Notifieringar & webhooks
+
+src/scheduler/notifier.py, src/webapp/services/webhook_dispatcher.py
+
+Kanaler: e‑post (SMTP), Slack webhook, generiska webhooks (HMAC).
+
+Backoff/retry med DLQ på permanent fel.
+
+DoD: Testnotis fungerar; signatur verifierbar i klient; audit‑event skrivs.
+
+17) Observability
+17.1 Loggning
+
+src/utils/logger.py
+
+JSON‑logg, fält: ts, level, msg, job_id, run_id, url, template, domain, proxy_id.
+
+Standard error‑koder (taxonomi).
+
+DoD: Alla moduler loggar med korrelationsfält.
+
+17.2 Metrics
+
+Prometheus endpoints: api, workers, proxy_pool.
+
+Viktiga serier: sidor/min, lyckade%, fel%, p95, ban rate, pool size, queue depth, exporter throughput, DQ‑scores.
+
+DoD: Grafana dashboards laddas in; alerts i Prometheus rules.
+
+17.3 Tracing
+
+OpenTelemetry exporter: spans för “fetch → parse → transform → validate → write”.
+
+DoD: Traces synliga i lokalt Tempo/Jaeger.
+
+18) Audit & händelseloggar
+
+src/webapp/routers/audit.py
+
+Append‑only logik, before_json/after_json.
+
+UI‑filter på typ (jobb/policy/mall/data).
+
+Diff‑vy (mallar/policys).
+
+DoD: Händelser tvärs systemet återfinns här.
+
+19) Inställningar (System) & MySQL‑koppling (garanterad)
+
+src/webapp/routers/settings.py
+
+“Testa anslutning”: öppna pool, SELECT 1, rapportera serverversion.
+
+“Kör migrationer nu”: Alembic→head (vendor‑guard).
+
+Read/Write‑routing: toggla “skriv som primär” = MySQL; alternativt MySQL som läsreplika.
+
+Verifiering (automatisk):
+
+“Ansluten: MySQL 8.x, migration head=YYYYMMDDhhmm” i UI.
+
+Kör Scrape‑jobb → poster i extracted_items.
+
+SQL‑check (exponeras i UI som “snabbtest”):
+SELECT COUNT(*) FROM extracted_items WHERE created_at >= NOW() - INTERVAL 1 HOUR;
+(MySQL‑variant) > 0 efter körning.
+
+Exports till MySQL (“DB‑tabell”): skapar/utökar schema eller skriver JSON‑payload.
+
+Felsök UI:
+
+Felaktiga kredentialer → röd banner, råd.
+
+Inkompatibel migration → diff‑länk, förslag (t.ex. JSON‑typ).
+
+Låsning/timeout → “föreslå index” (prediktion utifrån queries).
+
+DoD: Full toggling fungerar live; exporter till MySQL landar korrekt.
+
+20) Browserpanel & Selector Tool (backend‑del)
+
+src/webapp/websocket.py, src/webapp/routers/templates.py
+
+Backend driver realtidskanal till headless‑pool (Playwright) för DOM‑inspekt/overlay.
+
+Script‑sandbox (begränsad, signerade snippets).
+
+Spara cookies i session store (krypterade secrets).
+
+DoD: “Öppna prov‑URL” från Jobbdetaljer öppnar i panel; “Kör script” loggas och auditeras.
+
+21) Externa connectorer
+
+src/connectors/*
+
+BigQuery/Snowflake (service‑account/KeyPair), OpenSearch (auth + index templates), Google Sheets (OAuth).
+
+DoD: Smoke test i Inställningar; exporter fungerar med throttling och retry.
+
+22) Plugins
+
+src/plugins/registry.yaml, plugins/sample_*
+
+Dynamiskt laddade extraktorer/export‑targets; capability‑check.
+
+Sandboxing (begränsad API‑yta + timeouts).
+
+DoD: Plugin kan läggas till utan att röra kärnan; registry reloader.
+
+23) Kost, rate‑limit & idempotens
+
+utils/cost_tracker.py – kostnad per 1k sidor (proxy, compute, lagring).
+
+utils/rate_limiter.py – token‑bucket per domän/konto.
+
+utils/idempotency.py – idempotency‑nycklar via Redis + DB‑constraints.
+
+DoD: Cost dashboard visar trend; idempotency testad (dubbel POST skapar inte dubbletter).
+
+24) Felhantering & återhämtning
+
+Error‑taxonomi: E_HTTP_xxx, E_PARSE, E_SELECTOR_MISS, E_POLICY_BLOCK, E_PROXY_FAIL, E_DB_DEADLOCK, …
+
+Retry‑budget per klass, DLQ för permanenta.
+
+Checkpointing: jobb återupptas efter crash; URL‑counter fortsätter.
+
+DoD: Kaos‑tester (kill worker) visar automatisk återhämtning.
+
+25) CLI & scripts
+
+scripts/*.py, *.sh
+
+init_db.py, seed_data.py, run_crawler.py, run_scraper.py, start_scheduler.py, run_analysis.py, diagnostic_tool.py.
+
+Backups (sql_backup_job), restore drill, S3 sync, SBOM/cosign/attestation.
+
+DoD: make up, make seed, make test, make lint fungerar; CI kör allt.
+
+26) CI/CD & säkerhet
+
+.github/workflows/*
+
+Lint/type (ruff/mypy), unit, integration, e2e (syntetiska sajter), SAST, SBOM + cosign, deploy staging, canary, nightly selector regression.
+
+Secret scanning; dep‑review; policy‑gates (DQ regression blocker).
+
+DoD: Alla pipelines gröna; canary/rollback testade.
+
+27) Testpyramid
+
+tests/
+
+Unit: selectors/transformers/validators/headergen/db‑manager/rate limiter/idempotency/pii.
+
+Integration: proxy API, crawler queue, scraper http/browser (mockar), scheduler jobs, exporters, database migrations, privacy center.
+
+E2E: syntetiska sajter (static pagination, infinite scroll, form flow, variable DOM), privacy erasure.
+
+Property/fuzz: robusthet för selektorer och transformers.
+
+Chaos: worker kill & proxy‑degradation.
+
+Perf (k6): crawl throughput, scrape latency.
+
+DoD: >85% branch‑coverage i kärnmoduler; e2e alltid grönt före release.
+
+28) Backend‑implementation: fil‑för‑fil “arbetslista” (kondenserad)
+
+Nedan är konkreta implementeringar per huvudmapp (du kan bocka av som tickets):
+
+28.1 src/webapp/
+
+app.py: init app, CORS, auth, rate‑limit, error‑handlers, metrics, routers.
+
+api.py: route‑registrering, versionering (/v1), OpenAPI‑metadata.
+
+auth.py: OAuth2/refresh, API keys, RBAC checks.
+
+deps.py: DB‑session, Redis‑client, current_user, settings.
+
+websocket.py: live loggar kanal, job events.
+
+Routers: jobs.py, data.py, templates.py, proxy.py, exports.py, privacy.py, policy.py, scheduler.py, settings.py, audit.py, help.py, users.py, apikeys.py.
+
+Schemas: pydantic‑modeller för alla request/response (listor med pagination).
+
+Services: webhook_dispatcher.py (HMAC), export_service.py, auth_service.py.
+
+DoD: Samtliga endpoints har enhetstester, RBAC, rate‑limit, dokumentation.
+
+28.2 src/database/
+
+models.py: allt listat + index/fk.
+
+manager.py: repos/metoder: create_job, append_job_log, enqueue_urls, reserve_url_batch, write_items_batch, upsert_policy, write_audit, query_items.
+
+migrations/*: init + index + DQ tabeller.
+
+DoD: Deadlock/retry, vendor‑kompat.
+
+28.3 src/crawler/
+
+sitemap_generator.py: BFS/DFS, canonical, nofollow, dedupe, robots.
+
+link_extractors.py: regler/regex, a[href], script‑render fallback.
+
+pagination.py + infinite_scroll.py: heuristik & testbara regler.
+
+url_queue.py: Redis + DB sync; poison handling.
+
+policy.py: domänpolicy objekt.
+
+DoD: Simulerings‑API levererar korrekt.
+
+28.4 src/scraper/
+
+base_scraper.py: interface, timeout, retry hooks.
+
+http_scraper.py: async klient, header/cookie, proxy, backoff.
+
+selenium_scraper.py: playwright/selenium driver, stealth.
+
+template_extractor.py/template_runtime.py: kör DSL, transform, validate.
+
+dsl/*: schema/validators/transformers/cross_field + examples.
+
+xpath_suggester.py: DOM‑diff heuristik.
+
+regex_transformer.py, login_handler.py, image_downloader.py.
+
+DoD: Preview & live run producerar samma resultat.
+
+28.5 src/proxy_pool/
+
+Collector/validator/quality_filter/rotator/manager/monitor.
+
+API server (/get, /pop, /stats, /delete, /count).
+
+DoD: Hälsomätare och svartlistning funkar.
+
+28.6 src/anti_bot/
+
+header_generator/session_manager/delay_strategy/fallback_strategy.
+
+browser_stealth/* (human behavior, cf flows, captcha solver pluggbar).
+
+diagnostics/diagnose_url.py
+
+DoD: Mätbar 403/429‑minskning.
+
+28.7 src/scheduler/
+
+scheduler.py: init APScheduler/Celery‑lik loop, registrera job defs.
+
+job_definitions.py: typregister; parse konfig.
+
+job_monitor.py: mät och larma.
+
+notifier.py: Slack/email/webhook.
+
+jobs/*.py: se lista i §10.2.
+
+DoD: Pause/Resume/Scale via kontrollkanal.
+
+28.8 src/exporters/
+
+base + csv/json/excel/sheets/bigquery/snowflake/elastic/opensearch + db table writer.
+
+DoD: Checksummor + historik.
+
+28.9 src/analysis/
+
+GE/Soda integration, drift score, rapporter.
+
+DoD: Trösklar triggar notiser.
+
+28.10 src/utils/
+
+logger, user_agent_rotator, validators, export_utils, pattern_detector, hashing, cost_tracker, idempotency, hmac_utils, rate_limiter, pii_scanner, lineage, otel.
+
+DoD: Täckning med unit tests.
+
+28.11 src/connectors/
+
+bigquery/snowflake/opensearch/google_sheets/slack_webhook.
+
+DoD: Smoke‑tester via Inställningar & exporter.
+
+29) Sidoeffekter & interaktioner (centrala flöden)
+A) “Börja crawla”
+
+Skapa Project + policy → crawl_plan simulera+ spara.
+
+Job Launcher Crawl: skapar job, lägger ut URL:er till queue_urls.
+
+Workers hämtar → Jobbdetaljer live KPI.
+
+DoD: Throughput > 0, fel% < gräns, kö minskar.
+
+B) “Starta extraktion”
+
+Template Wizard: skapa & publicera mall (preview OK).
+
+Job Launcher Crawl+Scrape eller Scrape från lista: välj mall + output.
+
+Items skrivs till extracted_items (+ DQ).
+
+Exporter (vid behov) → fil/DB/Sheets/BQ/Snowflake.
+
+DoD: Poster syns i Datalager; exportens radantal stämmer.
+
+30) MySQL: tekniska guardrails (garanti)
+
+SQLAlchemy dialect används utan PG‑specifika uttryck i kärnan.
+
+JSON‑fält: använd SA JSON typ; migrations skapar rätt typ för MySQL/PG.
+
+Index: undvik GIN/GIST i bas; använd BTREE‑vänliga index/virtual kolumner vid behov.
+
+AUTO_INCREMENT / SERIAL hanteras via SA.
+
+Datetime: TIMESTAMP/DATETIME(6) + UTC.
+
+Migrationstest: scripts/init_db.py kör alembic upgrade head mot MySQL lokalt.
+
+End‑to‑end‑bevis: kör scrape, kontrollera SELECT COUNT(*) ... INTERVAL 1 HOUR.
+
+Failovers: toggla read/write i Inställningar; heartbeat övervakar replika‑lag.
+
+31) Definition of Done (global)
+
+Funktionellt: Alla sidor/flöden vi definierat fungerar end‑to‑end via API + workers.
+
+Icke‑funktionellt: p95 latens & throughput enligt performance-defaults.yml; ban rate under tröskel med aktiva policies.
+
+Säkerhet: AuthN/Z, raterestriktion, secrets‑hygien, SAST grön.
+
+Data: migrations gröna på PG+MySQL; audit & lineage komplett; PII/retention/erasure fungerar och loggas.
+
+Kvalitet: >85% coverage på kärna, e2e syntetik grön; CI pipelines gröna; release/tag med changelog.
+
+Observability: dashboards visar KPI; alert‑regler aktiva; traces synliga.
+
+32) Acceptanskriterier (sammanfattning)
+
+Starta “testsajter” (Docker) och kör onboarding: MySQL primär OK; migration head; “hälsa: uppe”.
+
+Skapa projekt, diagnostik OK (HTTP 200±, inga block‑flaggor).
+
+Generera crawl plan, simulera, se antal URL:er.
+
+Publicera mall; preview ✓ (obligatoriska fält gröna).
+
+Starta Crawl+Scrape; Jobbdetaljer visar sidor/min, p95, fel%.
+
+Datalager listar poster; öppna post → ser lineage/DQ.
+
+Kör export (CSV) → fil laddas ner; checksum matchar; radantal = query.
+
+Privacy: kör PII‑skanning → flaggar; starta radering → items borta; audit visar händelser.
+
+Proxy: importera källa; validera; byt profil under körning → KPI förbättras.
+
+Alerts: skapa DQ‑tröskel → uppfylls → Slack/webhook/email levereras (HMAC signerad).
+
+Audit: alla nyss nämnda steg återfinns i logg.
+
