@@ -16,6 +16,7 @@ from .routers.api_routers import (
     health_router
 )
 from .auth import auth_router
+from .api.system import get_system_router
 
 # Main API router
 api_router = APIRouter(prefix="/api/v1")
@@ -27,6 +28,7 @@ api_router.include_router(project_router)
 api_router.include_router(template_router)
 api_router.include_router(job_router)
 api_router.include_router(health_router)
+api_router.include_router(get_system_router(), prefix="/system", tags=["system"])
 
 
 @api_router.get("/")
@@ -42,6 +44,7 @@ async def root():
             "projects": "/api/v1/projects",
             "templates": "/api/v1/templates",
             "jobs": "/api/v1/jobs",
-            "health": "/api/v1/health"
+            "health": "/api/v1/health",
+            "system": "/api/v1/system"
         }
     }

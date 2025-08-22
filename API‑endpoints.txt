@@ -1,0 +1,1427 @@
+0) Förutsättningar & verktyg
+
+1) Förklaring
+Du behöver rätt versioner av Python, Git, Node (för frontend), Docker (för lokalkörning) och Make (för enkel start). Vi verifierar att allt är installerat.
+
+2) Kommandon
+
+Windows (PowerShell):
+
+python --version
+git --version
+node --version
+npm --version
+docker --version
+docker compose version
+make --version
+
+
+macOS/Linux (bash/zsh):
+
+python3 --version
+git --version
+node --version
+npm --version
+docker --version
+docker compose version
+make --version
+
+
+3) Förväntat & verifiering
+
+Python ≥ 3.11 (om python3 på macOS/Linux – ska visa 3.11+).
+
+Docker och Docker Compose visar versionsnummer (Compose V2).
+
+Make visar version (om saknas på Windows, installera via [GnuWin] eller använd pipx run doit/direkta kommandon).
+
+Om något saknas: installera via respektive officiell guide (Windows: winget/choco; macOS: Homebrew).
+
+1) Mål & designprinciper för endpoints
+
+1) Förklaring
+Vi bygger säkra, snabba och förutsägbara API‑endpoints. REST för CRUD/listning/filter, GraphQL för flexibla frågor/mutationer. Vi följer standarder: pagination, sortering, filtrering, idempotens, felkoder, rate‑limit, OpenAPI‑dokumentation och webhook/SSE för händelser (job-status i realtid).
+
+2) Kommandon
+Inga kommandon – detta är designregler.
+
+3) Verifiering
+När vi testkör senare kommer vi se:
+
+/docs (OpenAPI) grupperat i taggar, med exempel.
+
+/graphql (playground) fungerar.
+
+SSE strömmar job‑events.
+
+2) Mappstruktur (backend) & nya filer
+
+1) Förklaring
+Vi organiserar koden i moduler för konfiguration, databas, säkerhet, endpoints och GraphQL. Då blir underhåll och test enklare.
+
+2) Kommandon (Windows/macOS/Linux)
+Kör i projektroten (där Makefile finns):
+
+mkdir -p src/app/{routers,deps,security,graphql}
+
+
+3) Förväntat & verifiering
+Mappar skapade:
+
+src/app/
+├─ config.py
+├─ db.py
+├─ main.py
+├─ schemas.py
+├─ deps/
+│  └─ auth.py
+├─ security/
+│  └─ rate_limit.py
+├─ routers/
+│  ├─ jobs.py
+│  ├─ templates.py
+│  ├─ entities.py
+│  ├─ exports.py
+│  └─ admin_proxies.py
+└─ graphql/
+   └─ schema.py
+
+3) Miljövariabler (.env)
+
+1) Förklaring
+API:et behöver veta var DB finns, CORS‑ursprung, och hur Supabase‑JWT ska verifieras. Vi läser allt från .env.
+
+2) Kommandon
+Skapa/uppdatera .env i projektroten:
+
+# Windows PowerShell
+ni .env -Force
+
+# macOS/Linux
+: > .env
+
+
+3) HELA filinnehållet – .env
+
+# === Server ===
+APP_ENV=local
+APP_HOST=0.0.0.0
+APP_PORT=8001
+CORS_ALLOW_ORIGINS=http://localhost:3000,https://lovable-sparkle-owl.lovable.app
+
+# === Database (Supabase-kompatibel Postgres) ===
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=sparklingowl
+DB_USER=postgres
+DB_PASSWORD=postgres
+
+# === Auth (Supabase JWT) ===
+# SUPABASE_JWT_SECRET behövs om du vill verifiera tokens lokalt utan att ropa på Supabase.
+SUPABASE_JWT_SECRET=CHANGE_ME_SUPABASE_JWT_SECRET
+# Alternativt JWKS endpoint (om du vill hämta nycklar dynamiskt i produktion):
+SUPABASE_JWKS_URL=https://<project-ref>.supabase.co/auth/v1/.well-known/jwks.json
+
+# === Redis (valfritt för SSE/webhooks/köer) ===
+REDIS_URL=redis://localhost:6379/0
+
+# === Rate limit ===
+RATE_LIMIT_DEFAULT=60/minute
+
+# === Observability ===
+LOG_LEVEL=INFO
+
+# === Public URLs ===
+PUBLIC_API_BASE=http://localhost:8001
+PUBLIC_GRAPHQL_URL=http://localhost:8001/graphql
+
+
+4) Verifiering
+Öppna .env och kontrollera att värdena stämmer för din lokala setup (ändra DB_* om din Postgres kör på andra portar, eller pekar mot Supabase lokalt via Docker).
+
+4) Installera Python‑beroenden
+
+1) Förklaring
+Vi installerar FastAPI, Uvicorn, SQLAlchemy (async), Strawberry GraphQL, rate‑limit, JWT, Redis‑klient, och httpx för webhook‑utrop.
+
+2) Kommandon
+
+Windows (PowerShell):
+
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install --upgrade pip
+pip install fastapi uvicorn[standard] pydantic-settings pydantic sqlalchemy[asyncio] asyncpg alembic \
+            strawberry-graphql slowapi redis httpx python-jose[cryptography] python-multipart \
+            orjson prometheus-client
+
+
+macOS/Linux:
+
+python3 -m venv .venv
+source .venv/bin/activate
+pip install --upgrade pip
+pip install fastapi uvicorn[standard] pydantic-settings pydantic sqlalchemy[asyncio] asyncpg alembic \
+            strawberry-graphql slowapi redis httpx python-jose[cryptography] python-multipart \
+            orjson prometheus-client
+
+
+3) Verifiering
+pip list visar paketen. Inga fel under installation.
+
+5) Basapp & konfigurering (main, config, db, rate‑limit, auth)
+
+1) Förklaring
+Vi skapar grundservern, laddar konfig från .env, kopplar DB, sätter CORS, rate‑limit och autentisering.
+
+2) Kommandon
+Skapa/uppdatera filerna nedan.
+
+3) HELA filinnehåll
+
+src/app/config.py
+from pydantic_settings import BaseSettings
+from pydantic import AnyUrl, Field
+from typing import List, Optional
+
+class Settings(BaseSettings):
+    APP_ENV: str = "local"
+    APP_HOST: str = "0.0.0.0"
+    APP_PORT: int = 8001
+    LOG_LEVEL: str = "INFO"
+
+    CORS_ALLOW_ORIGINS: str = "http://localhost:3000"
+    def cors_origins(self) -> List[str]:
+        return [o.strip() for o in self.CORS_ALLOW_ORIGINS.split(",") if o.strip()]
+
+    DB_HOST: str = "localhost"
+    DB_PORT: int = 5432
+    DB_NAME: str = "sparklingowl"
+    DB_USER: str = "postgres"
+    DB_PASSWORD: str = "postgres"
+
+    SUPABASE_JWT_SECRET: Optional[str] = None
+    SUPABASE_JWKS_URL: Optional[AnyUrl] = None
+
+    REDIS_URL: Optional[str] = None
+
+    RATE_LIMIT_DEFAULT: str = "60/minute"
+
+    PUBLIC_API_BASE: AnyUrl = Field(default="http://localhost:8001")
+    PUBLIC_GRAPHQL_URL: AnyUrl = Field(default="http://localhost:8001/graphql")
+
+    class Config:
+        env_file = ".env"
+        env_file_encoding = "utf-8"
+
+settings = Settings()
+
+src/app/db.py
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+from sqlalchemy.orm import declarative_base
+from app.config import settings
+
+DATABASE_URL = (
+    f"postgresql+asyncpg://{settings.DB_USER}:{settings.DB_PASSWORD}"
+    f"@{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}"
+)
+
+engine = create_async_engine(DATABASE_URL, pool_pre_ping=True, pool_size=5, max_overflow=10)
+AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)
+Base = declarative_base()
+
+async def get_db() -> AsyncSession:
+    async with AsyncSessionLocal() as session:
+        yield session
+
+
+Obs: Vi använder SQLAlchemy ORM-basen (Base) om/när vi lägger modeller. Du kan även köra rena SQL/queries.
+
+src/app/security/rate_limit.py
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+from app.config import settings
+
+limiter = Limiter(key_func=get_remote_address, default_limits=[settings.RATE_LIMIT_DEFAULT])
+
+src/app/deps/auth.py
+from fastapi import Depends, HTTPException, status, Header
+from jose import jwt, JWTError
+from typing import Optional, Dict
+import httpx
+from app.config import settings
+
+class AuthUser:
+    def __init__(self, sub: str, role: Optional[str], email: Optional[str], raw: Dict):
+        self.sub = sub
+        self.role = role
+        self.email = email
+        self.raw = raw
+
+async def get_current_user(authorization: Optional[str] = Header(None)) -> AuthUser:
+    """
+    Verifierar Supabase JWT i 'Authorization: Bearer <token>'.
+    Returnerar ett AuthUser-objekt eller kastar 401.
+    """
+    if not authorization or not authorization.lower().startswith("bearer "):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing bearer token")
+
+    token = authorization.split()[1]
+
+    # 1) Försök verifiera via lokalt SUPABASE_JWT_SECRET
+    if settings.SUPABASE_JWT_SECRET:
+        try:
+            payload = jwt.decode(token, settings.SUPABASE_JWT_SECRET, algorithms=["HS256"])
+            return AuthUser(
+                sub=payload.get("sub"),
+                role=payload.get("role"),
+                email=payload.get("email"),
+                raw=payload
+            )
+        except JWTError:
+            pass
+
+    # 2) Alternativt via JWKS
+    if settings.SUPABASE_JWKS_URL:
+        try:
+            async with httpx.AsyncClient(timeout=5) as client:
+                jwks = (await client.get(str(settings.SUPABASE_JWKS_URL))).json()
+            payload = jwt.decode(token, jwks, algorithms=["RS256"])
+            return AuthUser(
+                sub=payload.get("sub"),
+                role=payload.get("role"),
+                email=payload.get("email"),
+                raw=payload
+            )
+        except Exception:
+            pass
+
+    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+
+def require_role(*allowed_roles: str):
+    async def checker(user: AuthUser = Depends(get_current_user)) -> AuthUser:
+        if allowed_roles and (user.role not in allowed_roles):
+            # 403 – förbjuden för denna roll
+            raise HTTPException(status_code=403, detail="Forbidden")
+        return user
+    return checker
+
+src/app/schemas.py
+from pydantic import BaseModel, Field
+from typing import Optional, List, Any, Dict
+from datetime import datetime
+
+# Gemensamma svar & pagination
+class PageMeta(BaseModel):
+    total: int
+    limit: int
+    offset: int
+
+class ListResponse(BaseModel):
+    data: List[Any]
+    meta: PageMeta
+
+# Jobs
+class JobCreate(BaseModel):
+    type: str = Field(..., examples=["crawl","scrape","export"])
+    name: Optional[str] = Field(None, examples=["My crawl job"])
+    parameters: Optional[Dict[str, Any]] = None
+
+class JobDTO(BaseModel):
+    id: str
+    type: str
+    status: str
+    name: Optional[str]
+    parameters: Optional[Dict[str, Any]]
+    created_at: datetime
+    started_at: Optional[datetime]
+    finished_at: Optional[datetime]
+    error_message: Optional[str]
+
+# Templates
+class TemplateCreate(BaseModel):
+    name: str
+    domain: str
+    version: int = 1
+    template_data: Dict[str, Any]
+    is_active: bool = True
+
+class TemplateDTO(BaseModel):
+    id: str
+    name: str
+    domain: str
+    version: int
+    is_active: bool
+    created_by: Optional[str]
+    created_at: datetime
+    updated_at: datetime
+
+# Entities: persons/companies/vehicles (förenklade vyer)
+class PersonDTO(BaseModel):
+    id: str
+    full_name: Optional[str]
+    email: Optional[str]
+    owner_id: Optional[str]
+    created_at: datetime
+
+class CompanyDTO(BaseModel):
+    id: str
+    name: str
+    organization_number: Optional[str]
+    owner_id: Optional[str]
+    created_at: datetime
+
+class VehicleDTO(BaseModel):
+    id: str
+    registration_number: Optional[str]
+    make: Optional[str]
+    model: Optional[str]
+    owner_id: Optional[str]
+    created_at: datetime
+
+# Export
+class ExportCreate(BaseModel):
+    entity_type: str = Field(..., examples=["persons","companies","vehicles"])
+    format: str = Field(..., examples=["csv","json"])
+    filter: Optional[Dict[str, Any]] = None
+
+class ExportDTO(BaseModel):
+    id: str
+    entity_type: str
+    format: str
+    status: str
+    file_url: Optional[str]
+    created_by: Optional[str]
+    created_at: datetime
+
+src/app/main.py
+import uvicorn
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, PlainTextResponse
+from slowapi.middleware import SlowAPIMiddleware
+from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
+from app.config import settings
+from app.security.rate_limit import limiter
+
+from app.routers import jobs, templates, entities, exports, admin_proxies
+from app.graphql.schema import graphql_router
+
+app = FastAPI(
+    title="Sparkling Owl Spin API",
+    version="1.0.0",
+    contact={"name":"Sparkling Owl Team"},
+    docs_url="/docs",
+    redoc_url="/redoc"
+)
+
+# CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins(),
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Rate limit
+app.state.limiter = limiter
+app.add_middleware(SlowAPIMiddleware)
+
+# Routers
+app.include_router(jobs.router, prefix="/v1/jobs", tags=["Jobs"])
+app.include_router(templates.router, prefix="/v1/templates", tags=["Templates"])
+app.include_router(entities.router, prefix="/v1/entities", tags=["Entities"])
+app.include_router(exports.router, prefix="/v1/exports", tags=["Exports"])
+app.include_router(admin_proxies.router, prefix="/v1/admin/proxies", tags=["Admin Proxies"])
+app.include_router(graphql_router, prefix="")
+
+# Health & metrics
+@app.get("/healthz", tags=["System"])
+async def healthz():
+    return {"status":"ok","env":settings.APP_ENV}
+
+@app.get("/metrics", response_class=PlainTextResponse, tags=["System"])
+async def metrics():
+    return generate_latest(), 200, {"Content-Type": CONTENT_TYPE_LATEST}
+
+# Global error-handler (exempel)
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    return JSONResponse(status_code=500, content={"detail":"Internal Server Error"})
+
+if __name__ == "__main__":
+    uvicorn.run("app.main:app", host=settings.APP_HOST, port=settings.APP_PORT, reload=True)
+
+
+4) Verifiering
+Inga fel vid import. Vi kör allt i nästa steg.
+
+6) Jobs‑endpoints (starta/lista/hämta/avbryt/SSE)
+
+1) Förklaring
+Jobs driver crawl/scrape/export. Vi lägger REST‑endpoints för att skapa/starta, lista, hämta, avbryta och strömma status (SSE). Vi visar pagination, filter och idempotens.
+
+2) Kommandon
+Skapa fil src/app/routers/jobs.py.
+
+3) HELA filinnehåll – src/app/routers/jobs.py
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Request
+from typing import Optional, List, Dict, Any
+from datetime import datetime
+import asyncio
+import json
+from app.schemas import JobCreate, JobDTO, ListResponse, PageMeta
+from app.deps.auth import get_current_user, AuthUser
+from app.db import get_db
+from sqlalchemy.ext.asyncio import AsyncSession
+
+router = APIRouter()
+
+# === Mock/placeholder datalager via SQL eller proc-anrop ===
+# Här visar vi exempel med råa SQL-queries för brevity.
+# I verkligheten: använd modeller eller repos. Kolumnnamn matchar tidigare DB-plan.
+
+async def fetch_jobs(db: AsyncSession, user: AuthUser, limit: int, offset: int, status_filter: Optional[str]) -> (List[JobDTO], int):
+    params: Dict[str, Any] = {"uid": user.sub, "limit": limit, "offset": offset}
+    where = "user_id = :uid"
+    if status_filter:
+        where += " AND status = :status"
+        params["status"] = status_filter
+    total = (await db.execute(f"SELECT COUNT(*) FROM jobs WHERE {where}")).scalar_one()
+    rows = (await db.execute(
+        f"""SELECT id,type,status,name,parameters,created_at,started_at,finished_at,error_message
+            FROM jobs WHERE {where} ORDER BY created_at DESC LIMIT :limit OFFSET :offset"""
+        , params)).all()
+    data = [
+        JobDTO(
+            id=str(r[0]), type=r[1], status=r[2], name=r[3],
+            parameters=r[4], created_at=r[5], started_at=r[6], finished_at=r[7], error_message=r[8]
+        )
+        for r in rows
+    ]
+    return data, total
+
+@router.get("", response_model=ListResponse)
+async def list_jobs(
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    status: Optional[str] = Query(None, description="Filter by status (pending,running,completed,failed)"),
+    user: AuthUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    data, total = await fetch_jobs(db, user, limit, offset, status)
+    return ListResponse(data=data, meta=PageMeta(total=total, limit=limit, offset=offset))
+
+@router.get("/{job_id}", response_model=JobDTO)
+async def get_job(job_id: str, user: AuthUser = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    row = (await db.execute(
+        "SELECT id,type,status,name,parameters,created_at,started_at,finished_at,error_message FROM jobs WHERE id = :id AND user_id = :uid",
+        {"id": job_id, "uid": user.sub}
+    )).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return JobDTO(
+        id=str(row[0]), type=row[1], status=row[2], name=row[3],
+        parameters=row[4], created_at=row[5], started_at=row[6], finished_at=row[7], error_message=row[8]
+    )
+
+@router.post("", response_model=JobDTO, status_code=201)
+async def create_job(
+    payload: JobCreate,
+    request: Request,
+    user: AuthUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    # Idempotens – om client skickar 'Idempotency-Key' så försöker vi återge tidigare skapad rad
+    idem_key = request.headers.get("Idempotency-Key")
+    if idem_key:
+        row = (await db.execute(
+            "SELECT job_id FROM idempotency_keys WHERE key=:k AND user_id=:uid", {"k": idem_key, "uid": user.sub}
+        )).first()
+        if row:
+            job_id = row[0]
+            return await get_job(job_id, user, db)
+
+    # Skapa jobb
+    row = (await db.execute(
+        """INSERT INTO jobs (type,status,name,parameters,user_id,created_at)
+           VALUES (:type,'pending',:name,CAST(:params AS jsonb),:uid,now())
+           RETURNING id,type,status,name,parameters,created_at,started_at,finished_at,error_message""",
+        {"type": payload.type, "name": payload.name, "params": json.dumps(payload.parameters or {}), "uid": user.sub}
+    )).first()
+    await db.commit()
+
+    # Spara idempotency-key
+    if idem_key:
+        await db.execute(
+            "INSERT INTO idempotency_keys (key,user_id,job_id,created_at) VALUES (:k,:uid,:jid,now()) ON CONFLICT DO NOTHING",
+            {"k": idem_key, "uid": user.sub, "jid": str(row[0])}
+        )
+        await db.commit()
+
+    return JobDTO(
+        id=str(row[0]), type=row[1], status=row[2], name=row[3],
+        parameters=row[4], created_at=row[5], started_at=row[6], finished_at=row[7], error_message=row[8]
+    )
+
+@router.post("/{job_id}/cancel", response_model=JobDTO)
+async def cancel_job(job_id: str, user: AuthUser = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    # Endast pending/running kan avbrytas
+    await db.execute(
+        """UPDATE jobs SET status='failed', error_message='Cancelled by user', finished_at=now()
+           WHERE id=:id AND user_id=:uid AND status IN ('pending','running')""",
+        {"id": job_id, "uid": user.sub}
+    )
+    await db.commit()
+    return await get_job(job_id, user, db)
+
+# SSE – Server-Sent Events för job status
+from fastapi import Response
+from fastapi.responses import StreamingResponse
+
+async def job_event_stream(user_id: str, job_id: Optional[str] = None):
+    # Minimal demo: poll DB var 1s och yield status
+    # Produktion: använd Redis pub/sub eller NOTIFY/LISTEN.
+    import asyncpg
+    from app.config import settings
+    conn = await asyncpg.connect(
+        user=settings.DB_USER, password=settings.DB_PASSWORD, database=settings.DB_NAME, host=settings.DB_HOST, port=settings.DB_PORT
+    )
+    try:
+        last_status = None
+        while True:
+            if job_id:
+                row = await conn.fetchrow(
+                    "SELECT status FROM jobs WHERE id=$1 AND user_id=$2", job_id, user_id
+                )
+                status_val = row["status"] if row else "unknown"
+                if status_val != last_status:
+                    yield f"data: {json.dumps({'job_id': job_id, 'status': status_val})}\n\n"
+                    last_status = status_val
+            else:
+                # Skicka ping
+                yield f"data: {json.dumps({'ping': int(datetime.utcnow().timestamp())})}\n\n"
+            await asyncio.sleep(1)
+    finally:
+        await conn.close()
+
+@router.get("/events")
+async def sse_events(job_id: Optional[str] = None, user: AuthUser = Depends(get_current_user)):
+    return StreamingResponse(job_event_stream(user_id=user.sub, job_id=job_id), media_type="text/event-stream")
+
+
+4) Verifiering (kör & testa)
+
+Starta API:
+
+Windows PowerShell
+
+$env:PYTHONPATH="src"
+python src/app/main.py
+
+
+macOS/Linux
+
+export PYTHONPATH=src
+python src/app/main.py
+
+
+Öppna http://localhost:8001/docs – ska visa Jobs endpoints.
+Testa med curl (OBS: inkludera Authorization: Bearer YOUR_ACCESS_TOKEN):
+
+# Skapa jobb (idempotens med header)
+curl -X POST http://localhost:8001/v1/jobs ^
+  -H "Content-Type: application/json" ^
+  -H "Idempotency-Key: demo-123" ^
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" ^
+  -d "{\"type\":\"crawl\",\"name\":\"Testcrawl\"}"
+
+# Lista jobb (pagination)
+curl "http://localhost:8001/v1/jobs?limit=5&offset=0" ^
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+
+# Hämta ett jobb
+curl http://localhost:8001/v1/jobs/<JOB_ID> ^
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+
+# Avbryt job
+curl -X POST http://localhost:8001/v1/jobs/<JOB_ID>/cancel ^
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+
+# SSE i webbläsare: öppna
+# http://localhost:8001/v1/jobs/events?job_id=<JOB_ID> (måste vara inloggad via klient; för curl, SSE fortsätter skriva)
+
+
+Förväntat: 201 vid skapande, 200 på list/get, SSE strömmar JSON‑rader med status.
+
+7) Templates‑endpoints (CRUD)
+
+1) Förklaring
+Mallar styr hur vi extraherar data från en domän. Vi behöver skapa, lista, hämta, uppdatera och inaktivera/ta bort mallar. RLS ser till att användare bara ser sina mallar.
+
+2) Kommandon
+Skapa src/app/routers/templates.py.
+
+3) HELA filinnehåll – src/app/routers/templates.py
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from typing import Optional
+from app.schemas import TemplateCreate, TemplateDTO, ListResponse, PageMeta
+from app.deps.auth import get_current_user, AuthUser
+from app.db import get_db
+from sqlalchemy.ext.asyncio import AsyncSession
+
+router = APIRouter()
+
+@router.get("", response_model=ListResponse)
+async def list_templates(
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    domain: Optional[str] = Query(None),
+    user: AuthUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    params = {"uid": user.sub, "limit": limit, "offset": offset}
+    where = "created_by = :uid"
+    if domain:
+        where += " AND domain ILIKE :domain"
+        params["domain"] = f"%{domain}%"
+    total = (await db.execute(f"SELECT COUNT(*) FROM scraping_templates WHERE {where}")).scalar_one()
+    rows = (await db.execute(
+        f"""SELECT id,name,domain,version,is_active,created_by,created_at,updated_at
+            FROM scraping_templates WHERE {where}
+            ORDER BY updated_at DESC LIMIT :limit OFFSET :offset""", params
+    )).all()
+    data = [
+        TemplateDTO(
+            id=str(r[0]), name=r[1], domain=r[2], version=r[3],
+            is_active=r[4], created_by=r[5], created_at=r[6], updated_at=r[7]
+        ) for r in rows
+    ]
+    return ListResponse(data=data, meta=PageMeta(total=total, limit=limit, offset=offset))
+
+@router.get("/{template_id}", response_model=TemplateDTO)
+async def get_template(template_id: str, user: AuthUser = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    r = (await db.execute(
+        "SELECT id,name,domain,version,is_active,created_by,created_at,updated_at FROM scraping_templates WHERE id=:id AND created_by=:uid",
+        {"id": template_id, "uid": user.sub}
+    )).first()
+    if not r:
+        raise HTTPException(status_code=404, detail="Template not found")
+    return TemplateDTO(
+        id=str(r[0]), name=r[1], domain=r[2], version=r[3], is_active=r[4],
+        created_by=r[5], created_at=r[6], updated_at=r[7]
+    )
+
+@router.post("", response_model=TemplateDTO, status_code=201)
+async def create_template(payload: TemplateCreate, user: AuthUser = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    r = (await db.execute(
+        """INSERT INTO scraping_templates (name,domain,version,template_data,is_active,created_by,created_at,updated_at)
+           VALUES (:name,:domain,:version,CAST(:data AS jsonb),:active,:uid,now(),now())
+           RETURNING id,name,domain,version,is_active,created_by,created_at,updated_at""",
+        {"name": payload.name, "domain": payload.domain, "version": payload.version,
+         "data": payload.template_data, "active": payload.is_active, "uid": user.sub}
+    )).first()
+    await db.commit()
+    return TemplateDTO(
+        id=str(r[0]), name=r[1], domain=r[2], version=r[3], is_active=r[4],
+        created_by=r[5], created_at=r[6], updated_at=r[7]
+    )
+
+@router.put("/{template_id}", response_model=TemplateDTO)
+async def update_template(template_id: str, payload: TemplateCreate, user: AuthUser = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    r = (await db.execute(
+        """UPDATE scraping_templates
+           SET name=:name, domain=:domain, version=:version, template_data=CAST(:data AS jsonb),
+               is_active=:active, updated_at=now()
+           WHERE id=:id AND created_by=:uid
+           RETURNING id,name,domain,version,is_active,created_by,created_at,updated_at""",
+        {"name": payload.name, "domain": payload.domain, "version": payload.version,
+         "data": payload.template_data, "active": payload.is_active, "id": template_id, "uid": user.sub}
+    )).first()
+    if not r:
+        raise HTTPException(status_code=404, detail="Template not found or not owned")
+    await db.commit()
+    return TemplateDTO(
+        id=str(r[0]), name=r[1], domain=r[2], version=r[3], is_active=r[4],
+        created_by=r[5], created_at=r[6], updated_at=r[7]
+    )
+
+@router.delete("/{template_id}", status_code=204)
+async def delete_template(template_id: str, user: AuthUser = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    await db.execute(
+        "DELETE FROM scraping_templates WHERE id=:id AND created_by=:uid",
+        {"id": template_id, "uid": user.sub}
+    )
+    await db.commit()
+    return
+
+
+4) Verifiering
+/docs visar Templates. Prova:
+
+# Skapa mall
+curl -X POST http://localhost:8001/v1/templates \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -d "{\"name\":\"ProdList\",\"domain\":\"example.com\",\"version\":1,\"template_data\":{\"title\":\"h1\"}}"
+
+# Lista
+curl "http://localhost:8001/v1/templates?limit=10" -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+
+8) Entities‑endpoints (persons/companies/vehicles sökning & listning)
+
+1) Förklaring
+Vi exponerar läsvyer av entiteter. Sökbarhet (namn/regnr), pagination & sort.
+
+2) Kommandon
+Skapa src/app/routers/entities.py.
+
+3) HELA filinnehåll – src/app/routers/entities.py
+
+from fastapi import APIRouter, Depends, Query, HTTPException
+from typing import Optional, List
+from app.deps.auth import get_current_user, AuthUser
+from app.db import get_db
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.schemas import ListResponse, PageMeta, PersonDTO, CompanyDTO, VehicleDTO
+
+router = APIRouter()
+
+@router.get("/persons", response_model=ListResponse)
+async def list_persons(
+    q: Optional[str] = Query(None, description="Sök i namn/email"),
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    user: AuthUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    where = "owner_id = :uid"
+    params = {"uid": user.sub, "limit": limit, "offset": offset}
+    if q:
+        where += " AND (full_name ILIKE :q OR email ILIKE :q)"
+        params["q"] = f"%{q}%"
+    total = (await db.execute(f"SELECT COUNT(*) FROM persons WHERE {where} AND deleted_at IS NULL")).scalar_one()
+    rows = (await db.execute(
+        f"""SELECT id,full_name,email,owner_id,created_at
+            FROM persons WHERE {where} AND deleted_at IS NULL
+            ORDER BY created_at DESC LIMIT :limit OFFSET :offset""", params
+    )).all()
+    data = [PersonDTO(id=str(r[0]), full_name=r[1], email=r[2], owner_id=r[3], created_at=r[4]) for r in rows]
+    return ListResponse(data=data, meta=PageMeta(total=total, limit=limit, offset=offset))
+
+@router.get("/companies", response_model=ListResponse)
+async def list_companies(
+    q: Optional[str] = Query(None, description="Sök i namn/orgnr"),
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    user: AuthUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    where = "owner_id = :uid"
+    params = {"uid": user.sub, "limit": limit, "offset": offset}
+    if q:
+        where += " AND (name ILIKE :q OR organization_number ILIKE :q)"
+        params["q"] = f"%{q}%"
+    total = (await db.execute(f"SELECT COUNT(*) FROM companies WHERE {where} AND deleted_at IS NULL")).scalar_one()
+    rows = (await db.execute(
+        f"""SELECT id,name,organization_number,owner_id,created_at
+            FROM companies WHERE {where} AND deleted_at IS NULL
+            ORDER BY created_at DESC LIMIT :limit OFFSET :offset""", params
+    )).all()
+    data = [CompanyDTO(id=str(r[0]), name=r[1], organization_number=r[2], owner_id=r[3], created_at=r[4]) for r in rows]
+    return ListResponse(data=data, meta=PageMeta(total=total, limit=limit, offset=offset))
+
+@router.get("/vehicles", response_model=ListResponse)
+async def list_vehicles(
+    q: Optional[str] = Query(None, description="Sök i regnr/märke/modell"),
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    user: AuthUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    where = "owner_id = :uid"
+    params = {"uid": user.sub, "limit": limit, "offset": offset}
+    if q:
+        where += " AND (registration_number ILIKE :q OR make ILIKE :q OR model ILIKE :q)"
+        params["q"] = f"%{q}%"
+    total = (await db.execute(f"SELECT COUNT(*) FROM vehicles WHERE {where} AND deleted_at IS NULL")).scalar_one()
+    rows = (await db.execute(
+        f"""SELECT id,registration_number,make,model,owner_id,created_at
+            FROM vehicles WHERE {where} AND deleted_at IS NULL
+            ORDER BY created_at DESC LIMIT :limit OFFSET :offset""", params
+    )).all()
+    data = [VehicleDTO(id=str(r[0]), registration_number=r[1], make=r[2], model=r[3], owner_id=r[4], created_at=r[5]) for r in rows]
+    return ListResponse(data=data, meta=PageMeta(total=total, limit=limit, offset=offset))
+
+
+4) Verifiering
+
+curl "http://localhost:8001/v1/entities/persons?q=anna&limit=5" -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+curl "http://localhost:8001/v1/entities/companies?q=ab" -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+curl "http://localhost:8001/v1/entities/vehicles?q=abc123" -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+
+9) Exports‑endpoints (skapa exportjobb & hämta URL)
+
+1) Förklaring
+Exportjobb genererar CSV/JSON och en fil‑URL. Vi skapar endpoints för att initiera och läsa status.
+
+2) Kommandon
+Skapa src/app/routers/exports.py.
+
+3) HELA filinnehåll – src/app/routers/exports.py
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from typing import Optional
+from app.deps.auth import get_current_user, AuthUser
+from app.db import get_db
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.schemas import ExportCreate, ExportDTO, ListResponse, PageMeta
+
+router = APIRouter()
+
+@router.post("", response_model=ExportDTO, status_code=201)
+async def create_export(payload: ExportCreate, user: AuthUser = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    r = (await db.execute(
+        """INSERT INTO export_jobs (entity_type,format,status,filter,created_by,created_at)
+           VALUES (:t,:f,'pending',CAST(:flt AS jsonb),:uid,now())
+           RETURNING id,entity_type,format,status,file_url,created_by,created_at""",
+        {"t": payload.entity_type, "f": payload.format, "flt": payload.filter or {}, "uid": user.sub}
+    )).first()
+    await db.commit()
+    return ExportDTO(
+        id=str(r[0]), entity_type=r[1], format=r[2], status=r[3],
+        file_url=r[4], created_by=r[5], created_at=r[6]
+    )
+
+@router.get("", response_model=ListResponse)
+async def list_exports(
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    user: AuthUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    total = (await db.execute("SELECT COUNT(*) FROM export_jobs WHERE created_by=:uid", {"uid": user.sub})).scalar_one()
+    rows = (await db.execute(
+        """SELECT id,entity_type,format,status,file_url,created_by,created_at
+           FROM export_jobs WHERE created_by=:uid ORDER BY created_at DESC
+           LIMIT :limit OFFSET :offset""",
+        {"uid": user.sub, "limit": limit, "offset": offset}
+    )).all()
+    data = [
+        ExportDTO(id=str(r[0]), entity_type=r[1], format=r[2], status=r[3], file_url=r[4], created_by=r[5], created_at=r[6])
+        for r in rows
+    ]
+    return ListResponse(data=data, meta=PageMeta(total=total, limit=limit, offset=offset))
+
+@router.get("/{export_id}", response_model=ExportDTO)
+async def get_export(export_id: str, user: AuthUser = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    r = (await db.execute(
+        "SELECT id,entity_type,format,status,file_url,created_by,created_at FROM export_jobs WHERE id=:id AND created_by=:uid",
+        {"id": export_id, "uid": user.sub}
+    )).first()
+    if not r:
+        raise HTTPException(status_code=404, detail="Export not found")
+    return ExportDTO(id=str(r[0]), entity_type=r[1], format=r[2], status=r[3], file_url=r[4], created_by=r[5], created_at=r[6])
+
+
+4) Verifiering
+
+curl -X POST http://localhost:8001/v1/exports \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -d "{\"entity_type\":\"persons\",\"format\":\"csv\"}"
+
+curl "http://localhost:8001/v1/exports?limit=5" -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+
+10) Admin‑Proxies (endast admin‑roll)
+
+1) Förklaring
+Proxies är känsliga. Endast admin/service ska kunna lista/uppdatera.
+
+2) Kommandon
+Skapa src/app/routers/admin_proxies.py.
+
+3) HELA filinnehåll – src/app/routers/admin_proxies.py
+
+from fastapi import APIRouter, Depends, Query, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Optional
+from app.db import get_db
+from app.deps.auth import require_role, AuthUser
+
+router = APIRouter()
+
+@router.get("", dependencies=[Depends(require_role("service_role","admin"))])
+async def list_proxies(
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    status: Optional[str] = Query(None),
+    db: AsyncSession = Depends(get_db)
+):
+    where = "1=1"
+    params = {"limit": limit, "offset": offset}
+    if status:
+        where += " AND status = :s"
+        params["s"] = status
+    total = (await db.execute(f"SELECT COUNT(*) FROM proxies WHERE {where}")).scalar_one()
+    rows = (await db.execute(
+        f"""SELECT id,host,port,protocol,country_code,status,success_rate,avg_latency_ms,updated_at
+            FROM proxies WHERE {where} ORDER BY updated_at DESC
+            LIMIT :limit OFFSET :offset""", params
+    )).all()
+    data = [
+        {
+            "id": str(r[0]), "host": r[1], "port": r[2], "protocol": r[3],
+            "country_code": r[4], "status": r[5], "success_rate": r[6], "avg_latency_ms": r[7],
+            "updated_at": r[8]
+        } for r in rows
+    ]
+    return {"data": data, "meta": {"total": total, "limit": limit, "offset": offset}}
+
+
+4) Verifiering
+Prova med en admin/service‑token:
+
+curl "http://localhost:8001/v1/admin/proxies?status=active" -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+
+
+Ska ge 200 om token har roll admin eller service_role, annars 403.
+
+11) GraphQL (Strawberry) – queries & mutationer
+
+1) Förklaring
+GraphQL låter frontend hämta precis de fält den behöver. Vi exponerar queries: jobs, job, templates och mutationer: createJob, cancelJob, createTemplate.
+
+2) Kommandon
+Skapa src/app/graphql/schema.py.
+
+3) HELA filinnehåll – src/app/graphql/schema.py
+
+import strawberry
+from strawberry.fastapi import GraphQLRouter
+from typing import List, Optional
+from datetime import datetime
+from fastapi import Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.db import get_db
+from app.deps.auth import get_current_user, AuthUser
+
+@strawberry.type
+class Job:
+    id: strawberry.ID
+    type: str
+    status: str
+    name: Optional[str]
+    created_at: datetime
+    started_at: Optional[datetime]
+    finished_at: Optional[datetime]
+
+@strawberry.type
+class Template:
+    id: strawberry.ID
+    name: str
+    domain: str
+    version: int
+    is_active: bool
+
+async def sql_fetch(db: AsyncSession, query: str, params=None):
+    rows = (await db.execute(query, params or {})).all()
+    return rows
+
+@strawberry.type
+class Query:
+    @strawberry.field
+    async def jobs(self, info, status: Optional[str] = None, limit: int = 20, offset: int = 0) -> List[Job]:
+        user: AuthUser = await get_current_user()
+        db: AsyncSession = await get_db().__anext__()
+        where = "user_id = :uid"
+        params = {"uid": user.sub, "limit": limit, "offset": offset}
+        if status:
+            where += " AND status = :s"
+            params["s"] = status
+        rows = await sql_fetch(db, f"SELECT id,type,status,name,created_at,started_at,finished_at FROM jobs WHERE {where} ORDER BY created_at DESC LIMIT :limit OFFSET :offset", params)
+        return [Job(id=str(r[0]), type=r[1], status=r[2], name=r[3], created_at=r[4], started_at=r[5], finished_at=r[6]) for r in rows]
+
+    @strawberry.field
+    async def job(self, info, id: strawberry.ID) -> Optional[Job]:
+        user: AuthUser = await get_current_user()
+        db: AsyncSession = await get_db().__anext__()
+        r = (await db.execute("SELECT id,type,status,name,created_at,started_at,finished_at FROM jobs WHERE id=:id AND user_id=:uid", {"id": str(id), "uid": user.sub})).first()
+        if not r:
+            return None
+        return Job(id=str(r[0]), type=r[1], status=r[2], name=r[3], created_at=r[4], started_at=r[5], finished_at=r[6])
+
+    @strawberry.field
+    async def templates(self, info, domain: Optional[str] = None, limit: int = 20, offset: int = 0) -> List[Template]:
+        user: AuthUser = await get_current_user()
+        db: AsyncSession = await get_db().__anext__()
+        where = "created_by = :uid"
+        params = {"uid": user.sub, "limit": limit, "offset": offset}
+        if domain:
+            where += " AND domain ILIKE :d"
+            params["d"] = f"%{domain}%"
+        rows = await sql_fetch(db, f"SELECT id,name,domain,version,is_active FROM scraping_templates WHERE {where} ORDER BY updated_at DESC LIMIT :limit OFFSET :offset", params)
+        return [Template(id=str(r[0]), name=r[1], domain=r[2], version=r[3], is_active=r[4]) for r in rows]
+
+@strawberry.type
+class Mutation:
+    @strawberry.mutation
+    async def create_job(self, info, type: str, name: Optional[str] = None) -> Job:
+        user: AuthUser = await get_current_user()
+        db: AsyncSession = await get_db().__anext__()
+        r = (await db.execute(
+            "INSERT INTO jobs (type,status,name,user_id,created_at) VALUES (:t,'pending',:n,:uid,now()) RETURNING id,type,status,name,created_at,started_at,finished_at",
+            {"t": type, "n": name, "uid": user.sub}
+        )).first()
+        await db.commit()
+        return Job(id=str(r[0]), type=r[1], status=r[2], name=r[3], created_at=r[4], started_at=r[5], finished_at=r[6])
+
+    @strawberry.mutation
+    async def cancel_job(self, info, id: strawberry.ID) -> Optional[Job]:
+        user: AuthUser = await get_current_user()
+        db: AsyncSession = await get_db().__anext__()
+        await db.execute("UPDATE jobs SET status='failed', error_message='Cancelled via GQL', finished_at=now() WHERE id=:id AND user_id=:uid AND status IN ('pending','running')", {"id": str(id), "uid": user.sub})
+        await db.commit()
+        r = (await db.execute("SELECT id,type,status,name,created_at,started_at,finished_at FROM jobs WHERE id=:id AND user_id=:uid", {"id": str(id), "uid": user.sub})).first()
+        if not r:
+            return None
+        return Job(id=str(r[0]), type=r[1], status=r[2], name=r[3], created_at=r[4], started_at=r[5], finished_at=r[6])
+
+    @strawberry.mutation
+    async def create_template(self, info, name: str, domain: str, version: int = 1) -> Template:
+        user: AuthUser = await get_current_user()
+        db: AsyncSession = await get_db().__anext__()
+        r = (await db.execute(
+            """INSERT INTO scraping_templates (name,domain,version,template_data,is_active,created_by,created_at,updated_at)
+               VALUES (:n,:d,:v,'{}',true,:uid,now(),now())
+               RETURNING id,name,domain,version,is_active""",
+            {"n": name, "d": domain, "v": version, "uid": user.sub}
+        )).first()
+        await db.commit()
+        return Template(id=str(r[0]), name=r[1], domain=r[2], version=r[3], is_active=r[4])
+
+schema = strawberry.Schema(query=Query, mutation=Mutation)
+graphql_router = GraphQLRouter(schema, path="/graphql")
+
+
+4) Verifiering
+Öppna http://localhost:8001/graphql och kör t.ex.:
+
+mutation {
+  createJob(type:"crawl", name:"GQL Job") { id type status name }
+}
+
+query {
+  jobs(limit:5) { id type status name created_at }
+}
+
+
+Lägg Authorization: Bearer YOUR_ACCESS_TOKEN i headers i playground (om inte injicerat automatiskt).
+
+12) OpenAPI‑dokumentation & säkerhetsschema
+
+1) Förklaring
+Vi har redan /docs. Lägg till SecuritySchemes så det syns att man ska skicka Bearer Token.
+
+2) Kommandon
+(Valfritt) – Om du vill globalt kräva SecurityScheme, kan du lägga det via fastapi.openapi.utils. För enkelhet använder vi nu endpoints som kräver get_current_user.
+
+3) Verifiering
+I /docs syns header‑fältet att fylla i (Authorize‑knapp) om Security definieras. Annars skickar du header manuellt i curl/klient.
+
+13) CORS & frontend‑origin
+
+1) Förklaring
+Frontend måste få prata med API från localhost:3000 och din loveable‑appdomän.
+
+2) Kommandon
+Redan gjort via .env (CORS_ALLOW_ORIGINS). Lägg till fler ursprung kommaseparerat.
+
+3) Verifiering
+Öppna frontend (Next dev). Nätverksanrop ska inte få CORS‑fel.
+
+14) Rate limiting (DoS‑skydd)
+
+1) Förklaring
+Vi begränsar anrop per IP (t.ex. 60/minut) för att skydda API.
+
+2) Kommandon
+Redan integrerat (SlowAPIMiddleware). Ändra .env RATE_LIMIT_DEFAULT=120/minute vid behov.
+
+3) Verifiering
+Bombardera en endpoint > gräns → 429 Too Many Requests.
+
+15) Webhooks (utgående) – jobbevent
+
+1) Förklaring
+När ett job byter status kan vi ropa en extern URL (t.ex. frontend/hook) med HMAC‑signatur.
+
+2) Kommandon
+Skapa enklare hjälpare (valfritt – pseudokod i samma modul som job‑worker).
+
+3) Exempel (pseudo i job‑worker)
+
+import httpx, hmac, hashlib, base64, json, os
+
+WEBHOOK_URL = os.getenv("JOB_WEBHOOK_URL")
+WEBHOOK_SECRET = os.getenv("JOB_WEBHOOK_SECRET", "change_me")
+
+async def notify_job_event(payload: dict):
+    if not WEBHOOK_URL:
+        return
+    body = json.dumps(payload, separators=(",",":")).encode()
+    sig = hmac.new(WEBHOOK_SECRET.encode(), body, hashlib.sha256).hexdigest()
+    headers = {"X-Signature": f"sha256={sig}", "Content-Type": "application/json"}
+    async with httpx.AsyncClient(timeout=5) as client:
+        await client.post(WEBHOOK_URL, content=body, headers=headers)
+
+
+4) Verifiering
+Ställ JOB_WEBHOOK_URL till en testendpoint (t.ex. RequestBin). Starta jobb – se POST‑payloaden kommer fram med X-Signature.
+
+16) Versionering & avveckling
+
+1) Förklaring
+Vi har versionerad prefix /v1. Nya brytande ändringar går till /v2. Vi behåller /v1 minst 90 dagar och markerar Deprecation: true i headers vid äldre endpoints.
+
+2) Kommandon
+Inga – policy.
+
+3) Verifiering
+Se att alla REST‑routes börjar med /v1/....
+
+17) Felhantering & svarskontrakt
+
+1) Förklaring
+Vi returnerar JSON med detail vid fel (standard i FastAPI). För listor: { data: [...], meta: { total, limit, offset } }.
+
+2) Kommandon
+Redan implementerat i routers.
+
+3) Verifiering
+Provocera 404 (fel id) → {"detail":"..."}; 422 vid valideringsfel.
+
+18) Prestanda: pagination, filter, sortering, index
+
+1) Förklaring
+Vi använder limit/offset, q för sök, och ORDER BY på indexerade kolumner (se DB‑planen). För stora listor: överväg keyset‑pagination senare.
+
+2) Kommandon
+Inga (implementerat).
+
+3) Verifiering
+limit och offset ger förväntat antal; sortering följer ORDER BY created_at DESC.
+
+19) Metrics & health
+
+1) Förklaring
+/healthz ger enkel status. /metrics exponerar Prometheus‑metrik.
+
+2) Kommandon
+Redan i main.py.
+
+3) Verifiering
+Öppna http://localhost:8001/metrics – ser text med metrik. healthz ger {status:"ok"}.
+
+20) Docker‑Compose uppdatering
+
+1) Förklaring
+Vi lägger till front, back, db, redis i Compose så du kan köra allt lokalt.
+
+2) Kommandon
+Skapa/uppdatera docker-compose.yml i projektroten.
+
+3) HELA filinnehåll – docker-compose.yml (minimal dev)
+
+version: "3.9"
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    ports:
+      - "8001:8001"
+    env_file:
+      - .env
+    environment:
+      PYTHONPATH: "src"
+    depends_on:
+      - db
+      - redis
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: ${DB_NAME:-sparklingowl}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+volumes:
+  pgdata:
+
+
+Dockerfile för API – Dockerfile.api
+
+FROM python:3.12-slim
+WORKDIR /app
+COPY pyproject.toml* requirements.txt* ./
+RUN pip install --no-cache-dir --upgrade pip \
+ && if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+COPY src ./src
+ENV PYTHONPATH=src
+EXPOSE 8001
+CMD ["python", "src/app/main.py"]
+
+
+Om du använder Poetry/PDM – anpassa byggsteg.
+
+4) Verifiering
+
+docker compose up --build -d
+curl http://localhost:8001/healthz
+
+
+Ska svara {"status":"ok","env":"local"}.
+
+21) Tester (pytest) – exempel för Jobs
+
+1) Förklaring
+Automatiska tester säkrar att endpoints funkar. Vi visar ett enkelt test (utan riktig DB‑isolation här; i riktig CI använd testdatabas).
+
+2) Kommandon
+
+mkdir -p tests
+
+
+3) HELA filinnehåll – tests/test_jobs.py
+
+import pytest
+from httpx import AsyncClient
+from app.main import app
+
+@pytest.mark.asyncio
+async def test_health():
+    async with AsyncClient(app=app, base_url="http://test") as ac:
+        r = await ac.get("/healthz")
+        assert r.status_code == 200
+        assert r.json().get("status") == "ok"
+
+
+4) Verifiering
+
+pytest -q
+
+
+Ska bli 1 passed.
+
+För fulla integrationstester: mocka get_current_user eller skapa en test‑token, samt kör mot en test‑DB.
+
+22) Exempel‑anrop (curl) – med Authorization: Bearer
+
+1) Förklaring
+Här är färdiga kommandon du kan klistra in för snabbtest. Kom ihåg att byta YOUR_ACCESS_TOKEN.
+
+2) Kommandon
+
+# Lista jobb
+curl "http://localhost:8001/v1/jobs?limit=5" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+
+# Skapa jobb
+curl -X POST http://localhost:8001/v1/jobs \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d "{\"type\":\"scrape\",\"name\":\"Demo\"}"
+
+# SSE i terminal (visa 5 events sen ctrl+c)
+curl -N "http://localhost:8001/v1/jobs/events?job_id=<JOB_ID>" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+
+
+3) Verifiering
+HTTP 200/201, JSON‑svar med förväntade fält.
+
+23) Säkerhet & best practices
+
+1) Förklaring
+
+Alltid Bearer‑token (Supabase) i requests.
+
+RLS i DB redan skyddar.
+
+Rate‑limit aktiv.
+
+Admin‑endpoints kräver roll.
+
+Idempotens via Idempotency-Key.
+
+Sätt SECURE‑headers bakom proxy (Caddy/Nginx) i prod.
+
+2) Kommandon
+Inga.
+
+3) Verifiering
+403 vid fel roll; 401 utan token; 429 vid flood.
+
+24) Loggning & spårbarhet
+
+1) Förklaring
+Loggnivå via .env LOG_LEVEL. Lägg korrelations‑ID (valfritt) via middleware senare.
+
+2) Kommandon
+Inga (grund räcker).
+
+3) Verifiering
+Se serverloggar i terminal/Docker.
+
+25) Checklista (daglig drift)
+
+Starta allt: docker compose up -d
+
+Kolla hälsa: GET /healthz
+
+Se docs: GET /docs, GraphQL: /graphql
+
+Verifiera DB: kör en SELECT 1 via Studio/psql
+
+Loggar: docker compose logs -f api
+
+Vanliga fel: 401 (token), 403 (roll), 429 (rate), 500 (server); se loggar.
+
+Bonus: Hur detta kopplas till din frontend (kort)
+
+Frontend (Next) anropar REST på http://localhost:8001/v1/... och GraphQL på http://localhost:8001/graphql.
+
+Lägg Authorization: Bearer <supabase-token> i varje request (Axios/Apollo‑interceptor).
+
+SSE för jobstatus: EventSource('/v1/jobs/events?job_id=...') med skickade cookies/headers via en liten proxy i frontend om behövs.
+
+CORS är redan tillåtet för http://localhost:3000 och https://lovable-sparkle-owl.lovable.app.
+
+Sammanfattning
+
+Du har nu:
+
+Nya REST‑endpoints för jobb, templates, entiteter, exports, samt admin‑proxies.
+
+GraphQL‑schema med queries & mutationer.
+
+SSE för realtidsstatus.
+
+Idempotens, rate‑limiting, CORS, metrics, health.
+
+Docker för lokalkörning och en test som exempel.
+
+Allt är klarlagt steg‑för‑steg, med kommandon, hela filer, och verifiering. När du är redo kan vi lägga till webhooks‑verifiering, keyset‑pagination, ETag/If‑Match och Redis pub/sub för skalad SSE – men du är redan produktionsnära med detta upplägg.
