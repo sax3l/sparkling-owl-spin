@@ -18,7 +18,14 @@ from opentelemetry.trace import SpanKind
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+
+try:
+    from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+    OTLP_AVAILABLE = True
+except ImportError:
+    # If OTLP exporter is not available, use a dummy exporter
+    from opentelemetry.sdk.trace.export import ConsoleSpanExporter as OTLPSpanExporter
+    OTLP_AVAILABLE = False
 
 # Retry
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type

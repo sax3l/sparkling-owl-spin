@@ -9,8 +9,22 @@ import enum # Import enum for Enum type handling
 from typing import List, Dict, Any, Generator, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import inspect, text, asc, desc, func
-from src.database.models import Person, Company, Vehicle # Import relevant models
-from src.integrations.supabase.client import supabase # Assuming supabase client is available
+try:
+    from src.database.models import Person, Company, Vehicle # Import relevant models
+    MODELS_AVAILABLE = True
+except ImportError:
+    # Create dummy classes if models are not available
+    class Person: pass
+    class Company: pass 
+    class Vehicle: pass
+    MODELS_AVAILABLE = False
+
+try:
+    from src.integrations.supabase.client import supabase # Assuming supabase client is available
+    SUPABASE_AVAILABLE = True
+except ImportError:
+    supabase = None
+    SUPABASE_AVAILABLE = False
 import logging
 
 logger = logging.getLogger(__name__)
@@ -283,3 +297,54 @@ def get_latest_update_timestamp_for_export_type(
 
     latest_timestamp = query.scalar()
     return latest_timestamp
+
+
+class ExportHelper:
+    """Helper class for data export operations."""
+    
+    def __init__(self, session: Session = None):
+        self.session = session
+    
+    def get_export_data(self, export_type: str, tenant_id=None, filters=None, **kwargs):
+        """Get data for export based on export type."""
+        if not MODELS_AVAILABLE:
+            return []
+        
+        try:
+            return list(get_data_from_db(
+                db=self.session,
+                export_type=export_type,
+                tenant_id=tenant_id,
+                filters=filters or {},
+                **kwargs
+            ))
+        except Exception as e:
+            logger.error(f"Export data retrieval failed: {e}")
+            return []
+    
+    def get_export_fieldnames(self, export_type: str):
+        """Get field names for export type."""
+        if not MODELS_AVAILABLE:
+            return []
+        
+        try:
+            return get_fieldnames_for_export_type(export_type)
+        except Exception as e:
+            logger.error(f"Field names retrieval failed: {e}")
+            return []
+    
+    def get_export_timestamp(self, export_type: str, tenant_id=None, filters=None):
+        """Get latest timestamp for export type."""
+        if not MODELS_AVAILABLE or not self.session:
+            return None
+        
+        try:
+            return get_latest_update_timestamp_for_export_type(
+                db=self.session,
+                export_type=export_type,
+                tenant_id=tenant_id,
+                filters=filters or {}
+            )
+        except Exception as e:
+            logger.error(f"Timestamp retrieval failed: {e}")
+            return None

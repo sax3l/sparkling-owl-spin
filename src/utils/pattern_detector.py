@@ -221,7 +221,7 @@ class PatternDetector:
                 metadata['domain_extension'] = parts[1].split('.')[-1] if '.' in parts[1] else ''
         
         elif pattern_type in ['phone_se', 'phone_international']:
-            clean_number = re.sub(r'[\s-+]', '', value)
+            clean_number = re.sub(r'[\s\-+]', '', value)
             metadata['clean_number'] = clean_number
             metadata['length'] = len(clean_number)
             if pattern_type == 'phone_se':
@@ -384,7 +384,20 @@ def detect_all(text: str) -> List[PatternMatch]:
     """Convenience function to detect all patterns."""
     return get_pattern_detector().detect_all_patterns(text)
 
+def find_repeating(html: str, container: str, item: str):
+    """Find repeating patterns in HTML - for backward compatibility."""
+    from bs4 import BeautifulSoup
+    
+    soup = BeautifulSoup(html, 'html.parser')
+    container_el = soup.select_one(container)
+    
+    if not container_el:
+        return type('RepeatingResult', (object,), {'count': 0})()
+    
+    items = container_el.select(item)
+    return type('RepeatingResult', (object,), {'count': len(items)})()
+
 __all__ = [
     "PatternMatch", "PatternDetector", "get_pattern_detector",
-    "detect_emails", "detect_phone_numbers", "detect_all"
+    "detect_emails", "detect_phone_numbers", "detect_all", "find_repeating"
 ]

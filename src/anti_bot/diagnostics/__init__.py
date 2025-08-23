@@ -15,8 +15,12 @@ Main Components:
 
 from .diagnose_url import URLDiagnostic, DiagnosticResult, BotDetectionSignal
 
+# Backward compatibility alias
+DiagnoseURL = URLDiagnostic
+
 __all__ = [
     "URLDiagnostic",
+    "DiagnoseURL",
     "DiagnosticResult",
     "BotDetectionSignal"
 ]

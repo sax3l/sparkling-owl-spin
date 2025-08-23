@@ -295,4 +295,7 @@ class HttpScraper(BaseScraper):
             self._client = None
         await super().cleanup()
 
-__all__ = ["HttpScraper"]
+# Alias for backwards compatibility
+HTTPScraper = HttpScraper
+
+__all__ = ["HttpScraper", "HTTPScraper"]

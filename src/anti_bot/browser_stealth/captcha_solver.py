@@ -453,3 +453,7 @@ async def manual_intervention_prompt(detection: CaptchaDetection, driver=None) -
         "message": "CAPTCHA requires manual review",
         "captcha_type": detection.captcha_type.value
     }
+
+
+# Backward compatibility alias
+CaptchaSolver = CaptchaHandler

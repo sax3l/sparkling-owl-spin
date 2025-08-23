@@ -9,7 +9,8 @@ import os
 import yaml
 from typing import List, Optional, Dict, Any, Union
 from pathlib import Path
-from pydantic import BaseSettings, Field, validator
+from pydantic import Field, field_validator
+from pydantic_settings import BaseSettings
 from functools import lru_cache
 
 
@@ -51,7 +52,7 @@ class DatabaseSettings(BaseSettings):
     DB_POOL_RECYCLE: int = Field(default=3600, env="DB_POOL_RECYCLE")
     DB_ECHO: bool = Field(default=False, env="DB_ECHO")
     
-    @validator('DB_VENDOR')
+    @field_validator('DB_VENDOR')
     def validate_vendor(cls, v):
         if v not in ['postgres', 'mysql']:
             raise ValueError('DB_VENDOR must be either "postgres" or "mysql"')
@@ -256,7 +257,7 @@ class Settings(BaseSettings):
             if hasattr(self, key.upper()):
                 setattr(self, key.upper(), value)
     
-    @validator('LOG_LEVEL')
+    @field_validator('LOG_LEVEL')
     def validate_log_level(cls, v):
         valid_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
         if v.upper() not in valid_levels:

@@ -152,3 +152,10 @@ class ScrapingTemplate(BaseModel):
     def json_schema(self) -> Dict[str, Any]:
         # Bekvämlighetsmetod ifall du vill exponera JSON Schema
         return self.model_json_schema()
+
+
+# Alias for backward compatibility
+FieldTemplate = FieldDef
+TemplateDSL = ScrapingTemplate
+TemplateSchema = ScrapingTemplate
+FieldDefinition = FieldDef

@@ -1,5 +1,6 @@
 from pydantic import BaseModel, HttpUrl
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Union
+from datetime import datetime
 
 class ProxyDescriptor(BaseModel):
     host: str
@@ -38,3 +39,37 @@ class TemplateSpec(BaseModel):
     fields: List[ExtractField]
     render_mode: str         # "http" | "browser" | "auto"
     postprocessors: Dict[str, Any] = {}
+
+
+class APIContract(BaseModel):
+    """Contract for API endpoints and their requirements."""
+    
+    endpoint: str
+    method: str = "GET"
+    headers: Dict[str, str] = {}
+    parameters: Dict[str, Any] = {}
+    required_fields: List[str] = []
+    response_schema: Optional[Dict[str, Any]] = None
+    rate_limit: Optional[int] = None
+    timeout: int = 30
+    retries: int = 3
+    authentication_required: bool = False
+
+
+class DataContract(BaseModel):
+    """Contract for data validation and transformation."""
+    
+    name: str
+    version: str = "1.0"
+    schema: Dict[str, Any]
+    required_fields: List[str] = []
+    optional_fields: List[str] = []
+    transformations: List[Dict[str, Any]] = []
+    validations: List[Dict[str, Any]] = []
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    
+    class Config:
+        json_encoders = {
+            datetime: lambda v: v.isoformat()
+        }

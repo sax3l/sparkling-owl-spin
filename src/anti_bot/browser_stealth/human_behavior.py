@@ -541,3 +541,7 @@ async def simulate_realistic_page_visit(simulator: HumanBehaviorSimulator,
         "distractions": distractions,
         "session_stats": simulator.get_session_stats()
     }
+
+
+# Backward compatibility alias
+HumanBehavior = HumanBehaviorSimulator

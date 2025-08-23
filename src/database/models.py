@@ -470,6 +470,72 @@ def generate_item_key(template_id: int, key_fields: Dict[str, Any]) -> str:
     return hashlib.sha256(content.encode()).hexdigest()[:32]
 
 
+class UserQuota(Base):
+    """User quota and usage tracking."""
+    __tablename__ = 'user_quotas'
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    quota_type: Mapped[str] = mapped_column(String(50), nullable=False)  # pages, requests, data_gb, etc.
+    quota_limit: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    quota_used: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    reset_period: Mapped[str] = mapped_column(String(20), nullable=False, default='monthly')  # daily, weekly, monthly
+    reset_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=func.now(), onupdate=func.now())
+    
+    # Indexes for performance
+    __table_args__ = (
+        Index('ix_user_quotas_user_type', 'user_id', 'quota_type'),
+        Index('ix_user_quotas_reset', 'reset_at'),
+    )
+    
+    @property
+    def quota_remaining(self) -> int:
+        """Get remaining quota."""
+        return max(0, self.quota_limit - self.quota_used)
+    
+    @property
+    def usage_percentage(self) -> float:
+        """Get usage as percentage."""
+        if self.quota_limit == 0:
+            return 0.0
+        return min(100.0, (self.quota_used / self.quota_limit) * 100.0)
+    
+    def is_quota_exceeded(self) -> bool:
+        """Check if quota is exceeded."""
+        return self.quota_used >= self.quota_limit
+
+
+class IdempotencyKey(Base):
+    """Idempotency key model for preventing duplicate operations."""
+    
+    __tablename__ = "idempotency_keys"
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    key: Mapped[str] = mapped_column(String(255), nullable=False)
+    tenant_id: Mapped[str] = mapped_column(String(255), nullable=False)  
+    path: Mapped[str] = mapped_column(String(500), nullable=False)
+    method: Mapped[str] = mapped_column(String(10), nullable=False)
+    response_code: Mapped[Optional[int]] = mapped_column(Integer)
+    response_body: Mapped[Optional[str]] = mapped_column(Text)
+    response_headers: Mapped[Optional[str]] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now(), nullable=False)
+    expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
+    
+    # Composite index for efficient lookups
+    __table_args__ = (
+        Index('idx_idempotency_lookup', 'key', 'tenant_id', 'path', 'method'),
+        Index('idx_idempotency_expires', 'expires_at'),
+    )
+    
+    def is_expired(self) -> bool:
+        """Check if the idempotency key has expired."""
+        if not self.expires_at:
+            return False
+        return datetime.utcnow() > self.expires_at
+
+
 def generate_url_fingerprint(url: str) -> str:
     """Generate URL fingerprint for deduplication."""
     import hashlib

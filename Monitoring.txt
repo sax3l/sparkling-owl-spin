@@ -1,0 +1,778 @@
+Monitoring
+
+Här kommer en komplett, pedagogisk och körbar plan för hur du lägger till Monitoring med Prometheus + Grafana för sparkling-owl-spin – från kod‑instrumentering till docker‑compose, exporterare, larm och dashboards. Jag följer din önskade stil: först en enkel förklaring, sedan exakta kommandon, vad som ska hända, och hur du verifierar. När filer skapas/ändras visar jag hela innehållet.
+
+Målbild (kort):
+
+All backend/worker/queue/DB/OS‑metrik samlas av Prometheus.
+
+Grafana provisioneras automatiskt (datasource + dashboards).
+
+Larm via Alertmanager (e‑post/slack – mall med placeholders).
+
+Funkar 100% lokalt i Docker, och kan flyttas till Supabase/postgres i moln utan omskrivningar.
+
+0) Förutsättningar
+
+Enkelt förklarat: Vi behöver Docker Compose (för Prometheus, Alertmanager, Grafana, exporters), samt lägga till ett par Python‑paket i backend/worker för att exponera metrik på /metrics.
+
+Kommandon (Windows PowerShell):
+
+docker --version
+docker compose version
+python --version
+git --version
+
+
+Vad ska hända & verifiering:
+
+Du ska se versionsnummer för Docker/Docker Compose, Python, Git.
+
+Om något saknas: installera Docker Desktop för Windows, Python 3.11+, Git. (På macOS/Linux: motsvarande paket via Homebrew/apt.)
+
+1) Mappstruktur för monitoring
+
+Enkelt förklarat: Vi skapar en dedikerad struktur under monitoring/ och en separat docker/monitoring/docker-compose.monitoring.yml. Vi undviker att röra appens befintliga compose-filer.
+
+Kommandon (PowerShell):
+
+# Kör från projektroten: sparkling-owl-spin
+mkdir monitoring
+mkdir monitoring\prometheus
+mkdir monitoring\prometheus\rules
+mkdir monitoring\alertmanager
+mkdir monitoring\grafana
+mkdir monitoring\grafana\provisioning
+mkdir monitoring\grafana\provisioning\datasources
+mkdir monitoring\grafana\provisioning\dashboards
+mkdir monitoring\grafana\dashboards
+mkdir docker\monitoring
+
+
+Verifiering:
+
+Mapparna finns nu. ls monitoring ska visa prometheus, alertmanager, grafana; ls docker\monitoring ska visa tom katalog.
+
+2) Lägg till Python‑instrumentering i API:t (FastAPI) och workers
+2.1 Installera paket
+
+Enkelt förklarat: Vi använder prometheus-fastapi-instrumentator för API:t och prometheus_client för egna metrik i API + workers.
+
+Kommandon:
+
+# Om projektet använder requirements*.txt
+echo "prometheus-fastapi-instrumentator==6.1.0" >> requirements.txt
+echo "prometheus-client==0.20.0" >> requirements.txt
+
+# Om projektet använder pyproject.toml, öppna filen och lägg till dependencies i [project] eller [tool.poetry.dependencies]
+# (Jag visar full fil om du vill; här antar vi requirements.txt för enkelhet.)
+
+
+Verifiering:
+
+Kör make install-dev (eller pip install -r requirements.txt) och se att paketen installeras utan error.
+
+Vanliga fel: saknade build tools → installera build-essential (Linux) eller Xcode CLT (macOS). På Windows räcker det oftast utan extra.
+
+2.2 Instrumentera FastAPI
+
+Enkelt förklarat: Vi exponerar en /metrics‑endpoint och lägger till standard HTTP‑metrik + egna affärsmetrik (jobbstart, fel, ködjup, proxy‑pool etc).
+
+Åtgärd: Skapa/ändra fil src/api/main.py (om din app heter annorlunda, justera sökväg). Klistra in allt nedan.
+
+Hela filens innehåll (exempel som fungerar fristående):
+
+# src/api/main.py
+from fastapi import FastAPI, Request
+from prometheus_fastapi_instrumentator import Instrumentator
+from prometheus_client import Counter, Gauge, Histogram
+import time
+
+app = FastAPI(title="sparkling-owl-spin API")
+
+# --- Egen metrik ---
+JOBS_STARTED = Counter("jobs_started_total", "Antal startade crawljobb", ["source"])
+JOBS_FAILED = Counter("jobs_failed_total", "Antal misslyckade crawljobb", ["reason"])
+JOBS_IN_QUEUE = Gauge("jobs_in_queue", "Antal jobb i kö")
+PROXY_POOL_SIZE = Gauge("proxy_pool_size", "Tillgängliga proxies")
+CAPTCHA_ENCOUNTERED = Counter("captcha_encountered_total", "Antal captcha-detekteringar", ["site"])
+REQUEST_LATENCY = Histogram("api_request_latency_seconds", "API-latens per endpoint", ["method", "route", "status_code"])
+
+# --- Instrumentera HTTP/metrik-endpoint ---
+Instrumentator().instrument(app).expose(app, endpoint="/metrics", include_in_schema=False)
+
+# Exempel-endpoints (anpassa till din riktiga API)
+@app.get("/healthz")
+def healthz():
+    return {"status": "ok"}
+
+@app.post("/jobs/start")
+def start_job(source: str = "manual"):
+    JOBS_STARTED.labels(source=source).inc()
+    JOBS_IN_QUEUE.inc()  # ex: läggs i kö
+    return {"ok": True}
+
+@app.post("/jobs/fail")
+def fail_job(reason: str = "unknown"):
+    JOBS_FAILED.labels(reason=reason).inc()
+    return {"ok": False}
+
+# Enkel middleware för att mäta latens (ger ett komplement till standardmetrik)
+@app.middleware("http")
+async def add_timing(request: Request, call_next):
+    start = time.perf_counter()
+    response = await call_next(request)
+    elapsed = time.perf_counter() - start
+    route = request.scope.get("path", "unknown")
+    REQUEST_LATENCY.labels(method=request.method, route=route, status_code=response.status_code).observe(elapsed)
+    return response
+
+# Exempel på att uppdatera gauges från t.ex. bakgrundsjobb
+@app.on_event("startup")
+async def on_startup():
+    PROXY_POOL_SIZE.set(42)  # ersätt med riktigt värde från proxypoolen
+    JOBS_IN_QUEUE.set(0)
+
+
+Vad ska hända & verifiering:
+
+Starta API:t (make run-api). Öppna http://localhost:<api-port>/metrics → du ska se Prometheus-metrik i textformat.
+
+Öppna http://localhost:<api-port>/healthz → {"status":"ok"}.
+
+2.3 Instrumentera workers (Playwright/HTTP-scraper etc.)
+
+Enkelt förklarat: Varje workerprocess exponerar egen /metrics (t.ex. på port 9000) med counters för fetchade sidor, 403/429, retrier, etc.
+
+Åtgärd: Skapa fil src/workers/metrics.py:
+
+# src/workers/metrics.py
+from prometheus_client import Counter, Gauge, Histogram, start_http_server
+
+PAGES_FETCHED = Counter("pages_fetched_total", "Antal hämtade sidor", ["site"])
+HTTP_403 = Counter("http_403_total", "Antal 403-blockeringar", ["site"])
+HTTP_429 = Counter("http_429_total", "Antal 429-rate-limit", ["site"])
+RETRIES = Counter("retries_total", "Antal retrier", ["reason"])
+SCRAPE_LATENCY = Histogram("scrape_latency_seconds", "Latens för sid-hämtning", ["site"])
+BROWSER_POOL_ACTIVE = Gauge("browser_pool_active", "Aktiva browser-instancer")
+QUEUE_DEPTH = Gauge("queue_depth", "Antal URL:er i kö")
+
+def start_metrics_server(port: int = 9000):
+    start_http_server(port)
+
+
+Exempel i en worker:
+
+# src/workers/runner.py
+from .metrics import PAGES_FETCHED, HTTP_403, HTTP_429, SCRAPE_LATENCY, BROWSER_POOL_ACTIVE, QUEUE_DEPTH, start_metrics_server
+import time
+
+def run_worker():
+    start_metrics_server(9000)
+    BROWSER_POOL_ACTIVE.set(0)
+    QUEUE_DEPTH.set(0)
+    # ... din worker-loop ...
+    # Mät värden vid varje fetch:
+    # with SCRAPE_LATENCY.labels(site="example.com").time():
+    #     ... hämta sida ...
+    # PAGES_FETCHED.labels(site="example.com").inc()
+    pass
+
+
+Verifiering:
+
+Starta en worker-container lokalt (se compose längre ned) och öppna http://localhost:9000/metrics → metrik syns.
+
+3) Exporters (DB/OS/containers)
+
+Enkelt förklarat: Utöver applikationsmetrik vill vi ha DB-, host- och container-metrik.
+
+Vi använder:
+
+node_exporter (OS‑metrik)
+
+cAdvisor (container‑metrik)
+
+postgres_exporter (PostgreSQL/Supabase‑metrik)
+
+redis_exporter (om Redis används)
+
+blackbox_exporter (valfritt: HTTP‑probe av externa endpoints)
+
+Postgres‑behörighet (rekommenderat): skapa en read‑only användare för exporter:
+
+Kommando (körs i psql mot din lokala Postgres):
+
+CREATE USER metrics_user WITH PASSWORD 'metrics_password';
+GRANT CONNECT ON DATABASE your_db TO metrics_user;
+GRANT USAGE ON SCHEMA public TO metrics_user;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO metrics_user;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO metrics_user;
+
+
+Verifiering:
+
+postgres_exporter ska kunna ansluta med den DSN vi ger den (se compose).
+
+Testa lokalt först; vid Supabase‑flytt byter du bara DSN (host/port/user/pass sslmode=require).
+
+4) Prometheus konfiguration
+
+Enkelt förklarat: Prometheus skrapar endpoints (API /metrics, workers /metrics, exporters). Vi lägger även in alerting‑regler.
+
+Skapa fil: monitoring/prometheus/prometheus.yml (HELA innehållet):
+
+global:
+  scrape_interval: 10s
+  evaluation_interval: 10s
+  scrape_timeout: 9s
+  external_labels:
+    env: "local"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ["alertmanager:9093"]
+
+rule_files:
+  - /etc/prometheus/rules/rules.yml
+
+scrape_configs:
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["prometheus:9090"]
+
+  - job_name: "api"
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["api:8000"]  # justera till din tjänsts namn/port i compose
+
+  - job_name: "workers"
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - "worker1:9000"
+          - "worker2:9000"   # lägg till/ta bort efter hur många workers du kör
+
+  - job_name: "node"
+    static_configs:
+      - targets: ["node-exporter:9100"]
+
+  - job_name: "cadvisor"
+    static_configs:
+      - targets: ["cadvisor:8080"]
+
+  - job_name: "postgres"
+    static_configs:
+      - targets: ["postgres-exporter:9187"]
+
+  - job_name: "redis"
+    static_configs:
+      - targets: ["redis-exporter:9121"]
+
+  - job_name: "blackbox-http"
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets:
+          - http://api:8000/healthz
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+
+Verifiering:
+
+Senare, i Prometheus UI → Status > Targets ska alla jobb bli UP.
+
+5) Alertmanager + regler
+5.1 Alert-regler
+
+Skapa fil: monitoring/prometheus/rules/rules.yml:
+
+groups:
+  - name: app.rules
+    rules:
+      - record: job:error_rate
+        expr: sum(increase(http_server_requests_seconds_count{status=~"5.."}[5m])) / sum(increase(http_server_requests_seconds_count[5m]))
+        labels:
+          component: "api"
+
+      - alert: APIHighErrorRate
+        expr: sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m])) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Hög 5xx-felfrekvens i API:t"
+          description: "Mer än 10% 5xx under 5 min."
+
+      - alert: APIHighLatency
+        expr: histogram_quantile(0.95, sum(rate(api_request_latency_seconds_bucket[5m])) by (le)) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "P95-latens > 1s"
+          description: "API P95-latens över 1s i 5 min."
+
+      - alert: Worker429Spike
+        expr: increase(http_429_total[5m]) > 10
+        labels:
+          severity: warning
+        annotations:
+          summary: "Många 429 från mål-sajter"
+          description: ">10 st 429 i senaste 5 min."
+
+      - alert: Worker403Spike
+        expr: increase(http_403_total[5m]) > 10
+        labels:
+          severity: warning
+        annotations:
+          summary: "403-blockeringar"
+          description: ">10 st 403 i senaste 5 min."
+
+      - alert: ProxyPoolLow
+        expr: proxy_pool_size < 5
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Låg proxy-pool"
+          description: "proxy_pool_size < 5 i 2 min."
+
+      - alert: PostgresDown
+        expr: up{job="postgres"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Postgres exporter nere"
+          description: "postgres-exporter svarar inte."
+
+      - alert: NodeHighCPU
+        expr: avg(rate(node_cpu_seconds_total{mode!="idle"}[5m])) by (instance) > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Hög CPU"
+          description: "CPU > 90% i 5 min."
+
+5.2 Alertmanager‑konfig
+
+Skapa fil: monitoring/alertmanager/alertmanager.yml:
+
+global:
+  resolve_timeout: 2m
+
+route:
+  receiver: default
+  group_by: ["alertname", "job"]
+  group_wait: 10s
+  group_interval: 1m
+  repeat_interval: 2h
+receivers:
+  - name: default
+    email_configs:
+      - to: "your_email@example.com"
+        from: "alerts@example.com"
+        smarthost: "smtp.example.com:587"
+        auth_username: "user"
+        auth_password: "pass"
+        require_tls: true
+# För Slack:
+#  - name: slack
+#    slack_configs:
+#      - send_resolved: true
+#        api_url: "https://hooks.slack.com/services/XXX/YYY/ZZZ"
+#        channel: "#alerts"
+
+
+Verifiering:
+
+Starta Alertmanager och öppna UI på http://localhost:9093 → inga fel i konfig.
+
+Testa ett syntetiskt larm (senare via Prometheus/Alertmanager “silences/test”).
+
+6) Grafana provisioning
+
+Enkelt förklarat: Grafana ska automatiskt få rätt datasource (Prometheus) och dashboards utan manuell klickning.
+
+6.1 Datasource
+
+Skapa fil: monitoring/grafana/provisioning/datasources/prometheus.yaml
+
+apiVersion: 1
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    isDefault: true
+    url: http://prometheus:9090
+    jsonData:
+      timeInterval: "10s"
+
+6.2 Dashboard‑provisioning
+
+Skapa fil: monitoring/grafana/provisioning/dashboards/dashboards.yaml
+
+apiVersion: 1
+providers:
+  - name: "Local Dashboards"
+    orgId: 1
+    folder: "sparkling-owl-spin"
+    type: file
+    disableDeletion: false
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards
+
+6.3 Exempel‑dashboard (Crawler/Scraper)
+
+Skapa fil: monitoring/grafana/dashboards/crawler_scraper_dashboard.json (minimal men komplett):
+
+{
+  "id": null,
+  "uid": "crawler-scraper",
+  "title": "Crawler & Scraper",
+  "schemaVersion": 39,
+  "version": 1,
+  "tags": ["crawler", "scraper"],
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Proxy Pool Size",
+      "gridPos": {"x": 0, "y": 0, "w": 6, "h": 4},
+      "targets": [{"expr": "proxy_pool_size"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "Pages Fetched (rate)",
+      "gridPos": {"x": 6, "y": 0, "w": 18, "h": 8},
+      "targets": [{"expr": "sum(rate(pages_fetched_total[5m]))"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "403/429 (rate)",
+      "gridPos": {"x": 0, "y": 8, "w": 12, "h": 8},
+      "targets": [{"expr": "sum(rate(http_403_total[5m]))"}, {"expr": "sum(rate(http_429_total[5m]))"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "API P95 Latency",
+      "gridPos": {"x": 12, "y": 8, "w": 12, "h": 8},
+      "targets": [{"expr": "histogram_quantile(0.95, sum(rate(api_request_latency_seconds_bucket[5m])) by (le))"}]
+    }
+  ]
+}
+
+
+(Du kan lägga till fler dashboards senare, t.ex. proxypool_dashboard.json, database_dashboard.json.)
+
+Verifiering:
+
+När Grafana startar ska du i UI → Dashboards → "sparkling-owl-spin" se Crawler & Scraper.
+
+7) Docker Compose för monitoring
+
+Enkelt förklarat: En separat compose-fil startar Prometheus, Alertmanager, Grafana, node_exporter, cAdvisor, postgres_exporter, redis_exporter, blackbox_exporter.
+
+Skapa fil: docker/monitoring/docker-compose.monitoring.yml (HELA innehållet):
+
+version: "3.8"
+
+networks:
+  monitoring:
+  appnet:
+    external: false
+
+volumes:
+  prometheus-data:
+  grafana-data:
+
+services:
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.enable-lifecycle"
+    volumes:
+      - ../../monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ../../monitoring/prometheus/rules:/etc/prometheus/rules:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - monitoring
+      - appnet
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    container_name: alertmanager
+    volumes:
+      - ../../monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    ports:
+      - "9093:9093"
+    networks:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:11.1.3
+    container_name: grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SERVER_DOMAIN=localhost
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ../../monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ../../monitoring/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ../../monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+    ports:
+      - "3000:3000"
+    networks:
+      - monitoring
+
+  node-exporter:
+    image: prom/node-exporter:v1.8.2
+    container_name: node-exporter
+    pid: host
+    network_mode: host
+    command:
+      - "--path.rootfs=/host"
+    volumes:
+      - "/:/host:ro,rslave"
+    restart: unless-stopped
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.2
+    container_name: cadvisor
+    ports:
+      - "8080:8080"
+    volumes:
+      - "/:/rootfs:ro"
+      - "/var/run:/var/run:ro"
+      - "/sys:/sys:ro"
+      - "/var/lib/docker/:/var/lib/docker:ro"
+    networks:
+      - monitoring
+
+  postgres-exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter:v0.15.0
+    container_name: postgres-exporter
+    environment:
+      - DATA_SOURCE_NAME=postgresql://metrics_user:metrics_password@postgres:5432/your_db?sslmode=disable
+    ports:
+      - "9187:9187"
+    networks:
+      - monitoring
+      - appnet
+    depends_on:
+      - prometheus
+
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.61.0
+    container_name: redis-exporter
+    environment:
+      - REDIS_ADDR=redis:6379
+    ports:
+      - "9121:9121"
+    networks:
+      - monitoring
+      - appnet
+
+  blackbox-exporter:
+    image: prom/blackbox-exporter:v0.25.0
+    container_name: blackbox-exporter
+    ports:
+      - "9115:9115"
+    networks:
+      - monitoring
+    command:
+      - "--config.file=/etc/blackbox_exporter/config.yml"
+    volumes:
+      - ../../monitoring/blackbox/config.yml:/etc/blackbox_exporter/config.yml:ro
+
+
+OBS: Om du inte har Redis – ta bort redis-exporter. Om din Postgres‑tjänst heter något annat än postgres i ditt app‑compose, justera DSN.
+
+Verifiering:
+
+Starta monitoring (se Makefile nedan).
+
+Öppna:
+
+Prometheus: http://localhost:9090/targets → alla targets UP
+
+Alertmanager: http://localhost:9093/
+
+Grafana: http://localhost:3000/ (login admin/admin om du inte ändrat)
+
+cAdvisor: http://localhost:8080/
+
+node-exporter (host): http://localhost:9100/metrics
+
+8) Blackbox exporter (valfritt men bra)
+
+Enkelt förklarat: Probar endpoints som en användare skulle göra (GET 200?). Bra för healthchecks.
+
+Skapa fil: monitoring/blackbox/config.yml
+
+modules:
+  http_2xx:
+    prober: http
+    http:
+      method: GET
+      valid_http_versions: ["HTTP/1.1", "HTTP/2.0"]
+      fail_if_not_ssl: false
+      preferred_ip_protocol: "ip4"
+
+
+Verifiering:
+
+Prometheus target blackbox-http blir UP och visar metrik för proben.
+
+9) Makefile‑mål
+
+Enkelt förklarat: Bekväma kommandon för att starta/stoppa monitoring.
+
+Lägg till i Makefile (HELA blocket nedan):
+
+monitor-up:
+\tdocker compose -f docker/monitoring/docker-compose.monitoring.yml up -d
+
+monitor-down:
+\tdocker compose -f docker/monitoring/docker-compose.monitoring.yml down
+
+monitor-reload:
+\t@echo "Reloading Prometheus config..."
+\tcurl -X POST http://localhost:9090/-/reload
+
+
+Verifiering:
+
+make monitor-up startar allt.
+
+make monitor-down stoppar.
+
+make monitor-reload ger 200 OK.
+
+10) Snabbtest & PromQL‑exempel
+
+Enkelt förklarat: Vi kör API:t och monitoring, triggar några requests och tittar i Grafana/Prometheus.
+
+Kommandon:
+
+# 1) Starta API/Workers (din vanliga metod)
+make run-api
+# ev. starta worker-container(s)
+
+# 2) Starta monitoring:
+make monitor-up
+
+# 3) Trigga lite trafik:
+curl http://localhost:<api-port>/healthz
+curl -X POST "http://localhost:<api-port>/jobs/start?source=manual"
+curl -X POST "http://localhost:<api-port>/jobs/fail?reason=test"
+
+
+Verifiering:
+
+Prometheus → Graph: fråga sum(rate(pages_fetched_total[5m])) (om workers kör).
+
+Grafana → dashboard visar värden uppdateras.
+
+Prova en PromQL: histogram_quantile(0.95, sum(rate(api_request_latency_seconds_bucket[5m])) by (le)).
+
+11) Supabase/Postgres i moln – hur byta
+
+Enkelt förklarat: När DB flyttar till Supabase, byt endast DSN i postgres-exporter till Supabase‑anslutningen (SSL).
+
+Ändra DSN (exempel):
+
+DATA_SOURCE_NAME=postgresql://metrics_user:metrics_password@aws-xxx.supabase.co:6543/postgres?sslmode=require
+
+
+Verifiering:
+
+postgres-exporter target blir UP; du ser pg_‑metrik i Prometheus.
+
+Säkerhet: lägg inte hemligheter i git. Använd .env + ${VAR} i compose, eller Docker secrets.
+
+12) Larm‑routing (e‑post/Slack)
+
+Enkelt förklarat: Fyll i SMTP eller Slack‑webhook i alertmanager.yml.
+Verifiering: Skapa ett testlarm (sänk tröskel i rules.yml, reloada Prometheus make monitor-reload) och confirm att du får notis.
+
+13) Vanliga problem & felsökning
+
+Targets DOWN:
+
+Port fel? Stämmer api:8000, worker1:9000 … med dina tjänstnamn i app‑compose?
+
+docker network ls och docker network inspect – är Prometheus i samma nät som app‑tjänsterna?
+
+Grafana tomt:
+
+Kolla Datasources – finns Prometheus och pekar den mot http://prometheus:9090?
+
+Läs grafana‑containerloggar: docker logs grafana.
+
+Alertmanager skickar inte e‑post/Slack:
+
+SMTP/Slack settings korrekta? Testa med falskt larm.
+
+Kolla alertmanager‑logg.
+
+Node‑exporter på Windows:
+
+Vi kör den i network_mode: host. På Windows Desktop kan host‑mode agera annorlunda. Om problem – kör node_exporter inne i en Linux VM/WSL, eller exponera via portmapping (kräver extra flaggor). Alternativ: använd windows_exporter på värden (om du har ren Windows Server).
+
+14) (Valfritt) Logg‑observability
+
+Kort: Vill du även ha loggar i Grafana, lägg till Loki + Promtail som egna tjänster och skicka containerlogs dit. Det är inte nödvändigt för Prometheus/Grafana‑metrik men ger helhetsbild.
+
+15) Säkerhet & drift
+
+Åtkomst: Skydda Grafana (byt admin‑lösen), exponera inte 9090/9093/3000 offentligt.
+
+Lagring: Namngivna volymer (prometheus-data, grafana-data) säkrar persistens.
+
+Backup: Exportera Grafana dashboards om du editerar i UI.
+
+Resurser: cAdvisor kan vara CPU‑tung – skruva ned scrape‑interval om din maskin är svag.
+
+16) Checklista – daglig drift
+
+Starta: make run-api → make monitor-up.
+
+Kolla: Prometheus Targets UP, Grafana dashboards visar data.
+
+Incidenter: Alertmanager larmar; följ upp 403/429‑spikar (sänk RPS, byt proxy).
+
+Stäng ned: make monitor-down.
+
+Summering
+
+Du har nu:
+
+Kod‑instrumentering (API/worker) med prometheus-client/prometheus-fastapi-instrumentator.
+
+Full Prometheus‑konfig + Alertmanager + regler.
+
+Grafana provisioning (datasource + exempel‑dashboard).
+
+Exporters för OS/containers/Postgres (och Redis/Blackbox vid behov).
+
+Compose + Makefile för smidig lokal drift.
+
+Tydlig väg till Supabase‑instans (byt DSN).
+
+Vill du att jag även genererar två extra dashboards (proxypool_dashboard.json, database_dashboard.json) med färdiga paneler (pg_stat_activity, connection count, cache hit ratio, osv.) – säg till, så lägger jag in dem i samma stil.

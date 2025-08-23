@@ -1,0 +1,65 @@
+{
+  "functions": {
+    "api/proxy.py": {
+      "runtime": "python3.11",
+      "maxDuration": 30
+    },
+    "api/crawler.py": {
+      "runtime": "python3.11", 
+      "maxDuration": 60
+    },
+    "api/monitoring.py": {
+      "runtime": "python3.11",
+      "maxDuration": 10
+    },
+    "api/health.py": {
+      "runtime": "python3.11",
+      "maxDuration": 5
+    }
+  },
+  "env": {
+    "OPENAI_API_KEY": "",
+    "REDIS_URL": "",
+    "DATABASE_URL": ""
+  },
+  "regions": ["iad1", "fra1", "hnd1"],
+  "memory": 1024,
+  "rewrites": [
+    {
+      "source": "/health",
+      "destination": "/api/health"
+    },
+    {
+      "source": "/status",
+      "destination": "/api/monitoring"
+    }
+  ],
+  "builds": [
+    {
+      "src": "api/**/*.py",
+      "use": "@vercel/python"
+    },
+    {
+      "src": "package.json",
+      "use": "@vercel/next"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/proxy/(.*)",
+      "dest": "/api/proxy.py"
+    },
+    {
+      "src": "/api/crawler/(.*)",
+      "dest": "/api/crawler.py"
+    },
+    {
+      "src": "/api/monitoring/(.*)",
+      "dest": "/api/monitoring.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ]
+}

@@ -2,7 +2,15 @@ import datetime
 from typing import Callable, Optional
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
-from starlette.routing import APIRoute
+
+try:
+    from starlette.routing import APIRoute
+    STARLETTE_AVAILABLE = True
+except ImportError:
+    # Create dummy APIRoute if not available
+    class APIRoute: pass
+    STARLETTE_AVAILABLE = False
+    
 from starlette.types import ASGIApp
 
 class DeprecationMiddleware(BaseHTTPMiddleware):
@@ -13,16 +21,21 @@ class DeprecationMiddleware(BaseHTTPMiddleware):
         response = await call_next(request)
 
         # Check if the current route is an APIRoute and has a 'sunset_date' attribute
-        if isinstance(request.scope["route"], APIRoute):
-            sunset_date: Optional[datetime.date] = getattr(request.scope["route"], "sunset_date", None)
-            if sunset_date:
-                # Format the date according to RFC 7231 (HTTP-date format)
-                # Example: "Sun, 06 Nov 1994 08:49:37 GMT"
-                # For simplicity, we'll use ISO format for now, but RFC 7231 is preferred for strict compliance.
-                # A more robust solution would use a library like 'email.utils.formatdate'
-                response.headers["Sunset"] = sunset_date.isoformat()
-                response.headers["Warning"] = '299 - "Deprecated API endpoint. Please migrate to newer versions."'
+        if STARLETTE_AVAILABLE and hasattr(request, 'scope') and request.scope.get("route"):
+            route = request.scope["route"]
+            if isinstance(route, APIRoute):
+                sunset_date: Optional[datetime.date] = getattr(route, "sunset_date", None)
+                if sunset_date:
+                    # Format the date according to RFC 7231 (HTTP-date format)
+                    # Example: "Sun, 06 Nov 1994 08:49:37 GMT"
+                    # For simplicity, we'll use ISO format for now, but RFC 7231 is preferred for strict compliance.
+                    # A more robust solution would use a library like 'email.utils.formatdate'
+                    response.headers["Sunset"] = sunset_date.isoformat()
+                    response.headers["Warning"] = '299 - "Deprecated API endpoint. Please migrate to newer versions."'
         return response
+
+# Backward compatibility alias  
+DeprecationWarning = DeprecationMiddleware
 
 def deprecated_endpoint(sunset_date: datetime.date):
     """

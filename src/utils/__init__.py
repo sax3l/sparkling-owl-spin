@@ -41,9 +41,9 @@ from .validators import (
 )
 from .rate_limiter import TokenBucket, RateLimitMiddleware
 from .quota_manager import QuotaManager
-from .idempotency import IdempotencyHandler
+from .idempotency import IdempotencyMiddleware
 from .pattern_detector import PatternDetector
-from .url_utils import URLUtils, URLNormalizer
+from .url_utils import normalize_and_canonicalize_url
 from .telemetry import TelemetryCollector
 from .metrics import MetricsHelper
 from .error_models import ErrorHandler, CustomException
@@ -63,10 +63,9 @@ __all__ = [
     "RateLimiter", 
     "RateLimitMiddleware",
     "QuotaManager",
-    "IdempotencyHandler",
+    "IdempotencyMiddleware",
     "PatternDetector",
-    "URLUtils",
-    "URLNormalizer",
+    "normalize_and_canonicalize_url",
     "TelemetryCollector",
     "MetricsHelper", 
     "ErrorHandler",

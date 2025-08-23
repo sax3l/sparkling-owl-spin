@@ -1,0 +1,814 @@
+CI/CD‑pipeline
+
+
+
+
+
+
+
+
+här kommer en komplett, hands‑on plan för din CI/CD‑pipeline (GitHub Actions) med Docker, GHCR, staging/prod‑deploy, canary‑preview, nattliga regressionstester och säkerhetsartefakter (SBOM + cosign).
+Upplägget följer din stil: först enkel förklaring, sedan exakta kommandon, vad som händer och hur du verifierar — och vi visar hela filinnehållet för alla nya filer.
+
+🎯 Mål
+
+Kör allt lokalt i Docker.
+
+Bygg/testrunner i CI.
+
+Push av images till GHCR.
+
+Automatisk deploy till staging på push till main.
+
+Canary/preview per PR.
+
+Nightly selector‑regression mot syntetiska testsajter.
+
+SBOM och cosign signering/validering.
+
+Responsivt och säkert flöde med spärr mot parallella deployer.
+
+0) Förutsättningar
+
+Enkel förklaring
+Vi behöver ett GitHub‑repo med GitHub Actions aktiverat, Docker installerat där vi kör lokalt, och ett containerregister (GHCR). På din staging/production‑server kör Docker + Docker Compose. Vi lägger in hemligheter som GitHub Secrets.
+
+Kommandon
+
+Windows (PowerShell) – lokalt:
+
+# kontrollera docker lokalt
+docker --version
+docker compose version
+
+
+macOS/Linux:
+
+docker --version
+docker compose version
+
+
+Vad händer & verifiering
+Du ser versionsnummer. Om inte: installera Docker Desktop (Win/macOS) eller Docker Engine + Compose (Linux).
+
+1) Register & Secrets
+
+Enkel förklaring
+Vi trycker images till GHCR. Actions loggar in med GITHUB_TOKEN. För deploy via SSH till servern använder vi nyckel.
+
+Kommandon
+Inga lokala kommandon här — vi lägger secrets i GitHub UI:
+
+GitHub → Settings → Secrets and variables → Actions → New repository secret och skapa:
+
+SSH_HOST_STAGING – t.ex. staging.example.com
+
+SSH_USER_STAGING – t.ex. ubuntu
+
+SSH_PRIVATE_KEY_STAGING – din privata nyckel (PEM) endast för denna server
+
+(valfritt prod) SSH_HOST_PROD, SSH_USER_PROD, SSH_PRIVATE_KEY_PROD
+
+COMPOSE_DIR_STAGING – t.ex. /srv/sparkling-owl-spin (serverns katalog där docker-compose.yml ligger)
+
+COMPOSE_DIR_CANARY – t.ex. /srv/sparkling-owl-spin-canary (root för PR‑preview)
+
+NODE_VERSION – t.ex. 20
+
+PYTHON_VERSION – t.ex. 3.11
+
+Vad händer & verifiering
+Secrets är på plats. Verifiera genom att öppna Settings → Secrets och att inga stavas fel.
+
+💡 Tips: Skydda miljöer via Environments (staging, production) med “required reviewers” för extra säkerhet.
+
+2) Katalog för workflows
+
+Enkel förklaring
+Vi skapar GitHub Actions‑katalogen i repo och lägger in alla pipelines som separata YAML‑filer.
+
+Kommandon
+
+mkdir .github
+mkdir .github\workflows
+
+
+macOS/Linux:
+
+mkdir -p .github/workflows
+
+
+Verifiering
+
+dir .github\workflows
+
+
+Du ska se en tom katalog.
+
+3) CI – Bygg, lint, test & (på main) bygg/pusha images
+
+Enkel förklaring
+Denna körs på PR och push. Den lintar, bygger frontend, kör Python‑tester och (på main) bygger/pushar Docker‑images till GHCR.
+
+Skapa filen: .github/workflows/ci.yml
+
+Hela filen:
+
+name: CI
+
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_API: ${{ github.repository }}-api
+  IMAGE_WORKER: ${{ github.repository }}-worker
+  PY_VERSION: ${{ vars.PYTHON_VERSION || '3.11' }}
+  NODE_VERSION: ${{ vars.NODE_VERSION || '20' }}
+  CACHE_KEY_PREFIX: ci-${{ github.ref_name }}-
+
+jobs:
+  lint-and-test-backend:
+    name: Backend lint & test (Python)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PY_VERSION }}
+          cache: 'pip'
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements_dev.txt ]; then pip install -r requirements_dev.txt; fi
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f pyproject.toml ]; then pip install .; fi
+
+      - name: Lint (ruff/mypy if present)
+        run: |
+          if [ -f ruff.toml ]; then pip install ruff && ruff check .; else echo "No ruff"; fi
+          if [ -f mypy.ini ]; then pip install mypy && mypy . || true; else echo "No mypy"; fi
+
+      - name: Run tests
+        run: |
+          if [ -f Makefile ] && make -q test 2>/dev/null; then
+            make test
+          else
+            pytest -q || pytest
+          fi
+
+  build-frontend:
+    name: Frontend build (Node)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install; fi
+
+      - name: Typecheck & build
+        run: |
+          if [ -f tsconfig.json ]; then npm run typecheck || true; fi
+          npm run build
+
+      - name: Upload frontend build artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: |
+            frontend/dist
+            !**/node_modules/**
+
+  docker-build-push:
+    name: Docker build & push (only main)
+    needs: [lint-and-test-backend, build-frontend]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels)
+        id: meta_api
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_API }}
+          tags: |
+            type=sha,prefix=
+            type=raw,value=staging,enable={{is_default_branch}}
+
+      - name: Build & push API
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile.app
+          push: true
+          tags: ${{ steps.meta_api.outputs.tags }}
+          labels: ${{ steps.meta_api.outputs.labels }}
+          build-args: |
+            GIT_SHA=${{ github.sha }}
+
+      - name: Extract metadata (worker)
+        id: meta_worker
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_WORKER }}
+          tags: |
+            type=sha,prefix=
+            type=raw,value=staging,enable={{is_default_branch}}
+
+      - name: Build & push Worker
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile.worker
+          push: true
+          tags: ${{ steps.meta_worker.outputs.tags }}
+          labels: ${{ steps.meta_worker.outputs.labels }}
+          build-args: |
+            GIT_SHA=${{ github.sha }}
+
+      - name: Save image digests
+        run: |
+          echo "API_DIGEST=${{ steps.meta_api.outputs.digest }}" >> $GITHUB_ENV
+          echo "WORKER_DIGEST=${{ steps.meta_worker.outputs.digest }}" >> $GITHUB_ENV
+
+
+Vad händer & verifiering
+
+PR: kör lint, test, frontend build.
+
+Push på main: bygger & pushar ghcr.io/<owner>/<repo>-api och -worker med taggar staging + sha.
+Verifiera: GitHub → Actions → CI run ska bli grön. Under Packages i repo/owner ska du se images.
+
+4) Deploy till staging via SSH + Docker Compose
+
+Enkel förklaring
+När main uppdateras drar staging‑servern nya images från GHCR och kör docker compose up -d.
+
+Krav på servern
+
+Docker + Docker Compose.
+
+Katalog ${{ secrets.COMPOSE_DIR_STAGING }} med docker-compose.yml som refererar images ghcr.io/<owner>/<repo>-api:staging osv.
+
+Din publika nyckel i ~/.ssh/authorized_keys.
+
+Skapa filen: .github/workflows/deploy_staging.yml
+
+Hela filen:
+
+name: Deploy Staging
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
+  id-token: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_API: ${{ github.repository }}-api
+  IMAGE_WORKER: ${{ github.repository }}-worker
+
+jobs:
+  deploy:
+    name: SSH deploy to staging
+    runs-on: ubuntu-latest
+    environment: staging
+    concurrency:
+      group: staging-deploy
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ensure images exist (optional)
+        run: echo "Will deploy images: $REGISTRY/$IMAGE_API:staging and $REGISTRY/$IMAGE_WORKER:staging"
+
+      - name: Add SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY_STAGING }}
+
+      - name: Known hosts
+        run: |
+          ssh-keyscan -H ${{ secrets.SSH_HOST_STAGING }} >> ~/.ssh/known_hosts
+
+      - name: Pull & compose up
+        run: |
+          ssh ${{ secrets.SSH_USER_STAGING }}@${{ secrets.SSH_HOST_STAGING }} <<'EOF'
+          set -euo pipefail
+          cd ${{ secrets.COMPOSE_DIR_STAGING }}
+          docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
+          docker compose pull
+          docker compose up -d
+          docker image prune -f
+          EOF
+
+
+Vad händer & verifiering
+Jobbet loggar in via SSH, drar images och startar containrar.
+Verifiera på servern:
+
+docker ps
+docker compose ls
+docker compose logs -n 100 api
+
+
+Och testa hälso‑URL (om finns): curl http://<staging-host>/healthz
+
+5) Canary/Preview per Pull Request
+
+Enkel förklaring
+För varje PR spinna upp en tillfällig miljö (“canary”) på en särskild server/katalog. Projektet körs med images taggade på commit‑SHA och ett Compose‑projekt med namn pr-<nummer>.
+
+Serverkrav
+Reverse proxy (t.ex. Traefik/Nginx) som routar pr-<num>.<din-domän> → canary‑compose. (Konfig sker på server; pipeline sätter bara upp containern.)
+
+Skapa filen: .github/workflows/deploy_canary.yml
+
+Hela filen:
+
+name: Canary Preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  pull_request_target:
+    types: [closed]
+
+permissions:
+  contents: read
+  packages: read
+  id-token: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_API: ${{ github.repository }}-api
+  IMAGE_WORKER: ${{ github.repository }}-worker
+
+jobs:
+  up:
+    if: github.event_name == 'pull_request'
+    name: Up PR canary
+    runs-on: ubuntu-latest
+    concurrency:
+      group: canary-pr-${{ github.event.number }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Add SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY_STAGING }}
+
+      - name: Known hosts
+        run: ssh-keyscan -H ${{ secrets.SSH_HOST_STAGING }} >> ~/.ssh/known_hosts
+
+      - name: Deploy PR stack
+        env:
+          PR_NUM: ${{ github.event.number }}
+          SHA_TAG: ${{ github.sha }}
+        run: |
+          ssh ${{ secrets.SSH_USER_STAGING }}@${{ secrets.SSH_HOST_STAGING }} <<'EOF'
+          set -euo pipefail
+          export PR_NUM=${PR_NUM}
+          export SHA_TAG=${SHA_TAG}
+          export STACK_DIR=${{ secrets.COMPOSE_DIR_CANARY }}/pr-${PR_NUM}
+          mkdir -p "$STACK_DIR"
+          cat > "$STACK_DIR/docker-compose.yml" <<YML
+          services:
+            api:
+              image: $REGISTRY/$IMAGE_API:${SHA_TAG}
+              restart: unless-stopped
+              env_file: .env
+              ports:
+                - "0"
+              labels:
+                # Exempel för Traefik (justera efter din proxy)
+                - "traefik.enable=true"
+                - "traefik.http.routers.api-pr${PR_NUM}.rule=Host(\`pr-${PR_NUM}.YOURDOMAIN\`)"
+            worker:
+              image: $REGISTRY/$IMAGE_WORKER:${SHA_TAG}
+              restart: unless-stopped
+              env_file: .env
+          YML
+          cd "$STACK_DIR"
+          docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
+          docker compose pull
+          COMPOSE_PROJECT_NAME=pr-${PR_NUM} docker compose up -d
+          EOF
+
+  down:
+    if: github.event_name == 'pull_request_target' && github.event.action == 'closed'
+    name: Down PR canary
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY_STAGING }}
+      - name: Known hosts
+        run: ssh-keyscan -H ${{ secrets.SSH_HOST_STAGING }} >> ~/.ssh/known_hosts
+      - name: Remove PR stack
+        env:
+          PR_NUM: ${{ github.event.pull_request.number }}
+        run: |
+          ssh ${{ secrets.SSH_USER_STAGING }}@${{ secrets.SSH_HOST_STAGING }} <<'EOF'
+          set -euo pipefail
+          export PR_NUM=${PR_NUM}
+          export STACK_DIR=${{ secrets.COMPOSE_DIR_CANARY }}/pr-${PR_NUM}
+          COMPOSE_PROJECT_NAME=pr-${PR_NUM} docker compose -f "$STACK_DIR/docker-compose.yml" down -v || true
+          rm -rf "$STACK_DIR"
+          EOF
+
+
+Vad händer & verifiering
+
+När du öppnar/uppdaterar PR byggs images i CI (ci.yml) och canary skapas med commit‑SHA.
+
+Verifiera: nå pr-<num>.<din-domän> (justera proxyetiketter i filen).
+
+Vid “Close PR” rivs miljön.
+
+6) Nightly selector regression mot syntetiska testsajter
+
+Enkel förklaring
+Nattetid kör vi E2E/regression mot de lokala syntetiska sajterna (containeriserade) för att upptäcka selektor‑drift och brutna flöden.
+
+Skapa filen: .github/workflows/nightly_selector_regression.yml
+
+Hela filen:
+
+name: Nightly Selector Regression
+
+on:
+  schedule:
+    - cron: "0 2 * * *"   # 02:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start synthetic sites
+        run: |
+          docker compose -f docker/synthetic-sites/docker-compose.yml up -d
+          sleep 10
+          docker ps
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install test deps
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements_dev.txt ]; then pip install -r requirements_dev.txt; fi
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Run E2E tests
+        env:
+          SYN_BASE_STATIC: http://localhost:8081
+          SYN_BASE_SCROLL: http://localhost:8082
+          SYN_BASE_FORM:   http://localhost:8083
+        run: |
+          if [ -d tests/e2e ]; then pytest -q tests/e2e; else echo "No e2e dir"; fi
+
+      - name: Collect logs
+        if: always()
+        run: |
+          docker compose -f docker/synthetic-sites/docker-compose.yml logs > synthetic-logs.txt || true
+          docker compose -f docker/synthetic-sites/docker-compose.yml down -v || true
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-artifacts
+          path: |
+            synthetic-logs.txt
+            .pytest_cache
+            tests/**/report*.html
+
+
+Vad händer & verifiering
+
+GH runner startar dina syntetiska sajter, kör E2E, laddar upp loggar.
+
+Verifiera i Actions att jobben är gröna och öppna artefakter.
+
+7) SBOM (Software Bill of Materials)
+
+Enkel förklaring
+Vi genererar SBOM för backend‑image och frontend‑build för insyn i beroenden.
+
+Skapa filen: .github/workflows/sbom.yml
+
+Hela filen:
+
+name: SBOM
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_API: ${{ github.repository }}-api
+
+jobs:
+  sbom:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate SBOM for API image
+        uses: anchore/sbom-action@v0
+        with:
+          image: ${{ env.REGISTRY }}/${{ env.IMAGE_API }}:staging
+          artifact-name: sbom-api-spdx.json
+          format: spdx-json
+
+      - name: Generate SBOM for source tree
+        uses: anchore/sbom-action@v0
+        with:
+          path: .
+          artifact-name: sbom-source-spdx.json
+          format: spdx-json
+
+
+Vad händer & verifiering
+Artefakterna sbom-*.json laddas upp. Verifiera under Artifacts i jobbrun.
+
+8) cosign verifiering av images
+
+Enkel förklaring
+När image är signerad (t.ex. med keyless i ett separat steg) kan vi verifiera signaturen under build eller innan deploy. Här lägger vi en separat validerings‑workflow.
+
+Skapa filen: .github/workflows/cosign_verify.yml
+
+Hela filen:
+
+name: Cosign Verify
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+  packages: read
+  id-token: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_API: ${{ github.repository }}-api
+  IMAGE_WORKER: ${{ github.repository }}-worker
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Verify API (keyless)
+        continue-on-error: true
+        run: |
+          cosign verify $REGISTRY/$IMAGE_API:staging \
+            --certificate-identity-regexp 'https://github.com/.+' \
+            --certificate-oidc-issuer 'https://token.actions.githubusercontent.com'
+
+      - name: Verify Worker (keyless)
+        continue-on-error: true
+        run: |
+          cosign verify $REGISTRY/$IMAGE_WORKER:staging \
+            --certificate-identity-regexp 'https://github.com/.+' \
+            --certificate-oidc-issuer 'https://token.actions.githubusercontent.com'
+
+
+Vad händer & verifiering
+Cosign försöker verifiera att images signerats via GitHub OIDC (keyless). Om du ännu inte signerar blir stegen “skipped/failed”; koppla på signering i din build (se “Extra” längre ned) och kör igen.
+
+9) Serverns docker-compose.yml (staging) – exempel
+
+Enkel förklaring
+Servern behöver en Compose‑fil som pekar på images från GHCR med tag staging.
+
+Kommandon – på staging‑servern
+
+mkdir -p /srv/sparkling-owl-spin
+nano /srv/sparkling-owl-spin/docker-compose.yml
+
+
+Exempel‑innehåll (justera portar/domän/volymer):
+
+services:
+  api:
+    image: ghcr.io/OWNER/REPO-api:staging
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "8080:8080"   # eller via proxy
+  worker:
+    image: ghcr.io/OWNER/REPO-worker:staging
+    restart: unless-stopped
+    env_file: .env
+
+
+Verifiering
+
+docker compose pull
+docker compose up -d
+curl http://localhost:8080/healthz
+
+
+📝 Byt OWNER/REPO till ditt faktiska repo. Lägg .env med nödvändiga variabler (Supabase URL/nycklar, DB‑URL osv.) — inte incheckat i Git.
+
+10) Lokalt körflöde (Docker)
+
+Enkel förklaring
+Lokalt jobbar du mot Docker utan att gå via Actions. Bra för snabb test av Compose.
+
+Kommandon
+
+# i repo-roten
+docker compose -f docker/docker-compose.yml up -d
+docker compose ps
+
+
+Verifiering
+Öppna din lokala API‑URL, t.ex. http://localhost:8080/docs.
+Stoppa:
+
+docker compose down -v
+
+11) Versions‑taggar för production (valfritt)
+
+Enkel förklaring
+Skapa en release med vX.Y.Z tagg. Vi kan ha separat prod‑deploy workflow som triggas på taggar. (Samma som staging men :prod eller :vX.Y.Z tags.)
+
+Kort mall (om du vill lägga till senare)
+
+on: push: tags: ["v*.*.*"]
+
+Bygg & pusha :latest och :vX.Y.Z
+
+SSH‑deploy till prod med COMPOSE_DIR_PROD.
+
+12) Extra: Lägg in signering av images i CI (frivilligt men rekommenderas)
+
+Enkel förklaring
+Med cosign keyless signerar du direkt i Actions (Fulcio/rekor) utan att hantera nycklar.
+
+Hur
+I ci.yml efter build‑push lägg:
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Sign API (keyless)
+        env:
+          COSIGN_EXPERIMENTAL: "true"
+        run: |
+          cosign sign $REGISTRY/$IMAGE_API:staging
+
+      - name: Sign Worker (keyless)
+        env:
+          COSIGN_EXPERIMENTAL: "true"
+        run: |
+          cosign sign $REGISTRY/$IMAGE_WORKER:staging
+
+
+Verifiering
+Kör Cosign Verify workflow eller lokalt:
+cosign verify ghcr.io/owner/repo-api:staging
+
+13) Caching & hastighet
+
+Enkel förklaring
+Pip och npm cacheas automatiskt via setup-python/setup-node. Du kan även cacha Docker‑lager.
+
+Tips (valfritt) — cacha Docker-lager
+Lägg till i build‑stegen:
+
+cache-from: type=gha
+cache-to: type=gha,mode=max
+
+14) Concurrency & skydd
+
+Enkel förklaring
+Vi förhindrar “tågkrasch” i deployer genom concurrency‑grupper.
+Sätt protected environments i GitHub → Environments → staging/production.
+
+15) Felsökning vanliga problem
+
+Actions kan inte pusha till GHCR → Repo settings → Packages permissions → ge GITHUB_TOKEN write‑packages (standard i org oftast OK).
+
+SSH misslyckas → kontrollera SSH_* secrets, att nyckeln gäller rätt användare, och known_hosts steg.
+
+Compose hittar inte images → kontrollera fulla namnet: ghcr.io/<owner>/<repo>-api:staging.
+
+E2E nightly startar ej synthetic sites → testa lokalt docker compose -f docker/synthetic-sites/docker-compose.yml up -d.
+
+Cosign verify fail → du signerar inte än. Lägg steg i CI (punkt 12).
+
+16) Så testar du allt utan att vänta på “riktig” server
+
+Enkel förklaring
+Kör endast CI‑delen (bygg/test) på en branch/PR. För staging‑deploy behöver servern vara klar.
+Lokalt kan du simulera flöden genom att köra Compose.
+
+Kommandon
+
+# Skapa en test‑branch
+git checkout -b ci-smoke
+git commit --allow-empty -m "ci: smoke"
+git push -u origin ci-smoke
+
+
+Verifiering
+Actions kör “CI”. Grönt = bra.
+
+Snabb checklista (daglig drift)
+
+ PR → CI (lint, test, build) → grön?
+
+ Merge till main → images pushas → staging‑deploy körs.
+
+ Kolla staging hälso‑URL/loggar.
+
+ Nightly E2E → grön? läs artefakter om rött.
+
+ (Vid release) skapa vX.Y.Z → prod‑deploy (om påslaget).
+
+ SBOM genereras på main.
+
+ (Om signering) cosign verify OK.
+
+Sammanfattning av nya filer
+
+.github/workflows/ci.yml – CI (lint, test, frontend build, docker build/push)
+
+.github/workflows/deploy_staging.yml – automatisk staging‑deploy via SSH + Compose
+
+.github/workflows/deploy_canary.yml – canary per PR (up & down)
+
+.github/workflows/nightly_selector_regression.yml – kl 02:00 UTC nattliga E2E mot syntetiska sajter
+
+.github/workflows/sbom.yml – genererar SBOM‑artefakter
+
+.github/workflows/cosign_verify.yml – verifierar signaturer
+
+Allt ovan är plug‑and‑play med dina befintliga Dockerfiler (docker/Dockerfile.app/worker) och dina syntetiska sajter. Justera bara domän/portar och serverkataloger i secrets & compose.
+
+Vill du att jag även lägger till prod‑deploy (tag‑triggad), reusable workflows (DRY), eller Kubernetes‑deploy (nästa steg), så skriver jag dem i samma stil.

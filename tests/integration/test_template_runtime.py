@@ -1,4 +1,6 @@
-extractor -> writer pipeline.">
+"""
+Test template runtime functionality - extractor -> writer pipeline.
+"""
 import json
 from pathlib import Path
 import pytest
