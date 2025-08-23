@@ -1,0 +1,732 @@
+ metoder för storskalig datainhämtning och web scraping
+
+
+
+
+Web scraping på stor skala innebär att automatiserade program (crawler-robotar) hämtar stora mängder data från webbplatser på sätt som ofta bryter mot användarvillkor eller etiska riktlinjer. Denna rapport kartlägger tekniskt avancerade och otillåtna metoder som används för att kringgå skydd och begränsningar på webbplatser. Fokus ligger på de underliggande teknikerna – inte specifika verktyg – och hur dessa tekniker implementeras i kod. Rapporten diskuterar också vilka svagheter på serversidan som utnyttjas av dessa metoder. Vi går igenom vanliga crawling-strategier, metoder för att bypassa anti-bot-skydd (IP-blockeringar, fingeravtrycksdetektering m.m.), tekniker för att undvika eller lösa CAPTCHA, hantering av dynamiskt innehåll med headless-browsers, sessions- och cookiehantering, samt vanliga säkerhetsbrister på webbsidor som möjliggör scraping.
+Vanliga crawling-strategier
+När man ska samla in data från många sidor automatiskt behövs en algoritm för att crawla genom webbplatsens alla länkar. De vanligaste strategierna är BFS (Bredden-först-sökning), DFS (Djupet-först-sökning) samt varianter med prioriterade köer. I praktiken modelleras webben som en graf med sidor som noder och hyperlänkar som kantermedium.com. Valet av traversal-algoritm påverkar ordningen och omfattningen av sidor som crawlas, och kan implementeras i olika programmeringsspråk. Nedan beskrivs strategierna och hur de kodas, med exempel i Python (principen är liknande i t.ex. Node.js med paket som Apify/Crawlee eller egna kö-implementationer).
+BFS (Bredden först) för web crawling
+BFS innebär att crawlern utforskar alla länkar på en sida (bredden) innan den går djupare ner i länkstrukturenmedium.com. Detta ger en jämn spridning över sajten och minskar risken att fastna djupt på en enstaka sektionmedium.commedium.com. BFS implementeras oftast med en FIFO-kö (först in, först ut). Man börjar med en start-URL, lägger den i kön, och plockar sedan URL:er från kön i turordning. Nya länkar som upptäcks läggs i slutet av kön. På så vis besöks sidor nivå för nivå i sajtens struktur.
+I kod är BFS enkelt att implementera med en kö-datastruktur. Exempel i Python:
+from collections import deque
+start_url = "http://exempel.se"
+queue = deque([start_url])
+visited = {start_url}
+
+while queue:
+    url = queue.popleft()       # Hämta nästa URL (FIFO-kö)
+    html = fetch_page(url)      # (Pseudo) hämta sidans HTML
+    for link in extract_links(html):
+        if link not in visited:
+            visited.add(link)
+            queue.append(link)  # Lägg ny länk sist i kön
+I ovan kod simulerar fetch_page och extract_links hämtning av en sida och extrahering av dess <a href>-länkar. BFS-kön ser till att vi besöker alla sidor på ett djup innan vi går vidare längre ner. Enligt denna princip bredd-avsöker man webbplatsen. BFS har fördelen att den är "artig" mot webbservrar – man sprider trafiken jämnare över olika delar av sajten i stället för att hamra på en sektionmedium.com. Den undviker också att gå för djupt i en potentiellt oändlig länkkedja utan att först se bredden av innehåll.
+Utmaningar: BFS kräver hantering av väldigt många URL:er i kö (minneshantering) och riskerar att fastna på ett enda domän om den inte är host-medveten. I storskaliga crawlers förbättras BFS genom att införa host-baserad throttling (inte för många förfrågningar i rad mot samma domän) och URL-filter/avdublettering så man inte crawlar samma länk flera gångermedium.commedium.com. Ofta används också en prioriterad BFS med en Request Queue som sorterar länkar efter vikt, t.ex. PageRank eller uppdateringsfrekvensmedium.commedium.com. Det innebär att man konceptuellt kör BFS men plockar viktigare URL:er först (en prioritized queue istället för strikt FIFO).
+DFS (Djupet först) för web crawling
+DFS utforskar en länk så djupt som möjligt innan den backar tillbaka och tar nästa grenmedium.com. I webb-crawling kontext betyder det att från start-URL:en klickar en DFS-crawler på första länken, sedan en länk på nästa sida, osv, och kan därmed gå mycket djupt i en enskild kedja. DFS implementeras vanligtvis rekursivt eller med en stack. Nedan visas ett Python-exempel med rekursion:
+visited = set()
+def crawl_dfs(url, depth=0, max_depth=5):
+    if depth > max_depth or url in visited:
+        return
+    visited.add(url)
+    html = fetch_page(url)
+    for link in extract_links(html):
+        crawl_dfs(link, depth+1, max_depth)
+        
+crawl_dfs("http://exempel.se")
+Här besöks första länken på första sidan och fortsätter neråt tills max_depth nås, sedan backar funktionen tillbaka (stack-unwind) och tar nästa ospindlade länk på vägen upp. Nackdelen med DFS är att den kan fastna på djupt irrelevanta sidogrenar och missa mycket innehåll på breddenmedium.com. T.ex. kan en DFS-crawler hamna långt ned i en sajtens arkivsektion och ignorera många andra toppnivå-sidor tills den backar, vilket är ineffektivt för bred datainsamlingmedium.com. Dessutom riskerar DFS att överbelasta en enskild server genom att skicka många förfrågningar på rad till samma sajt (om flera djuplänkar finns där), vilket är oartigt ur crawlingsynpunktmedium.com.
+I praktiken används DFS sällan ensam för storskalig crawling, men kombineras ibland med BFS. Vissa scraping frameworks låter utvecklaren specificera djup först eller bredd först, eller blanda: t.ex. Apify/Crawlee har en RequestQueue som i grunden är BFS men kan prioritera (så man kan simulera DFS om man vill).
+Prioriterade köer och heuristiker
+Utöver ren BFS/DFS används ofta prioriterade köer eller heuristiska strategier i avancerade crawlers. En prioriterad kö (Priority Queue) innebär att varje URL får en vikt eller prioritet, och crawlern plockar nästa URL baserat på högst prioritet istället för strikt inkomstordning. Prioriteten kan baseras på exempelvis sidans PageRank, antal inlänkar, uppdateringstid, eller en bedömning av var "mest relevant" data kan finnasmedium.commedium.com. Detta kallas ibland Best-First Search – man besöker bästa kandidaten först. En variant är att först crawla alla länkar upp till en viss djupnivå (BFS) och därefter gå tillbaka och crawla mellansidor, för att snabbt täcka in mycket innehåll och sedan fylla luckor.
+Heuristiker kan också användas för att begränsa crawlen: t.ex. ignorera repetitiva kalenderlänkar som kan generera oändliga sidor, eller blockera URL:er med kända fällor (t.ex. utloggningslänkar, skräppost). Professionella crawlers har moduler för URL-filtrering och känner igen traps som dubbletter och skriptgenererade looparmedium.commedium.com. Vissa plattformar låter även integrera politeness: t.ex. inte crawla mer än X URL:er per minut på samma domän, eller sova en viss tid mellan förfrågningar för att undvika upptäckt.
+Kodexempel – prioriterad kö: I Node.js/JavaScript kan man använda en priority queue bibliotek eller egen logik. T.ex. med Axios för HTTP och en enkel prioriteringsfunktion:
+const axios = require('axios');
+const PriorityQueue = require('priorityqueuejs');
+let pq = new PriorityQueue((a,b) => b.priority - a.priority);  // högst prio först
+
+pq.enq({url: start_url, priority: 100});
+let visited = new Set([start_url]);
+
+while(!pq.isEmpty()) {
+    let {url, priority} = pq.deq();
+    let html = await axios.get(url);
+    let links = extractLinks(html.data);
+    for(let link of links) {
+        if(!visited.has(link)) {
+            visited.add(link);
+            pq.enq({url: link, priority: score(link)}); // score() beräknar prio
+        }
+    }
+}
+I detta pseudo-exempel antas score(link) ge en vikt (t.ex. baserat på linkens innehåll eller typ). Högre vikt crawl:as tidigare. En sådan mekanism gör att crawlern kan fokusera på viktiga sidor först istället för att slumpmässigt avsöka nätet.
+Metoder för att kringgå anti-bot-skydd
+Storskalig webscraping försvåras av att webbplatser implementerar anti-bot-skydd. Webbplatser försöker identifiera och blockera automatiserad trafik genom olika metoder: IP-blockering, header-inspektion (User-Agent, m.m.), fingerprinting (analysera webbläsarens unika avtryck), CAPTCHA-utmaningar, med mera. Här beskriver vi hur scrapers kringgår dessa skydd genom att efterlikna mänsklig trafik. Vanliga metoder inkluderar IP-rotation via proxypooler, användning av realistiska User-Agent-strängar och HTTP-headers, fingerprint-spoofing (förfalska webbläsarens identitet) och stealth-lägen i headless-verktyg.
+IP-rotation och proxypooler
+Många sajter spårar klienters IP-adresser och begränsar hur många förfrågningar som får komma från samma IP (rate-limiting) eller blockerar IP:n helt efter misstänkt beteende. IP-rotation är en teknik där skripten byter utgående IP-adress kontinuerligt för att undvika blockeringzenrows.comzenrows.com. Genom att skicka varje batch av requests via olika proxies ser det ut som trafiken kommer från olika användare på olika platserzenrows.comzenrows.com. Detta utnyttjar webbplatsers antagande att en IP ungefär motsvarar en unik användare.
+Proxypooler är samlingar av proxyservrar (datacenter-proxies, residential proxies som är IP hos vanliga internetabonnenter, eller mobilproxies). En scraper kan antingen själv underhålla en lista med proxies och rotera dem, eller köpa en tjänst som automatiskt roterar IP för varje förfrågan. Professionella tjänster erbjuder tusentals IP i olika regioner, vilket gör att varje request kan se ut att komma från en ny personzenrows.comzenrows.com.
+Ett enkelt sätt att implementera IP-rotation själv är att ha en lista med proxy-adresser och byta ut proxies i varje HTTP-anrop. Exempel i Python (med requests-biblioteket)zenrows.comzenrows.com:
+import requests, itertools
+
+proxy_list = [
+    {"http": "http://161.35.70.249:3128", "https": "http://161.35.70.249:3128"},
+    {"http": "http://27.64.18.8:10004",  "https": "http://27.64.18.8:10004"}
+    # ... fler proxies
+]
+proxy_cycle = itertools.cycle(proxy_list)  # generator som cyklar genom listan
+
+for i in range(10):
+    proxy = next(proxy_cycle)
+    resp = requests.get("https://httpbin.io/ip", proxies=proxy)
+    print(resp.text)   # visar vilken IP-adress servern såg
+Här kommer varje request gå genom nästa proxy i listan. I ett verkligt scraping-scenario kan man kombinera detta med felhantering: om en proxy är långsam eller bannlyst byter man till en ny. Vissa bibliotek hanterar detta automatiskt, och molnplattformar som Apify, Zyte m.fl. har inbyggd proxyrotation. T.ex. Apify’s tjänst kan automatiskt rotera proxies globalt; om en förfrågan blockeras sänds den om med ny IP utan att utvecklaren behöver göra något.
+Sajtens svaghet som exploateras: Att blockera per IP är verkningsfullt mot enskilda användare, men scrapers utnyttjar att de kan agera som tusentals användare. Om webbplatsen inte har tuffare globala skydd (t.ex. botdetektering baserat på mönster) räcker det ofta att byta IP för att kringgå restriktioner. Notera dock att avancerade sajter kan upptäcka rotation om den sker för förutsägbart, eller om alla proxies kommer från datacenter. Därför föredras residential proxies som ser ut som “vanliga hemanslutningar”, vilket är svårare att filtrera bortzenrows.com.
+Realistiska User-Agent och HTTP-headers
+Varje HTTP-förfrågan innehåller headers som User-Agent, Accept-Language, Referer m.fl. Anti-bot-system inspekterar ofta dessa för att identifiera botszenrows.comzenrows.com. Många skriptbibliotek (t.ex. Python requests) skickar en default User-Agent som tydligt avslöjar sig (t.ex. "python-requests/2.x"), vilket triggar blockeringsregler direktzenrows.comzenrows.com. Även headless-webbläsare anger som standard "HeadlessChrome" i User-Agent, vilket är en röd flaggazenrows.com.
+Lösningen för scrapers är att alltid använda verkliga header-värden från riktiga webbläsarezenrows.com. Det innebär att ställa in User-Agent till något som en vanlig Chrome/Firefox på Windows, Mac eller mobil skulle ha, samt inkludera alla standardfält. Exempel på en fake men realistisk User-Agent-sträng:
+"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+(jämfört med en headless-sträng som innehåller HeadlessChromezenrows.comzenrows.com). Förutom User-Agent ser man till att skicka Accept-Language, Upgrade-Insecure-Requests, Connection, DNT etc. precis som riktiga webbläsare gör. Ett knep är att öppna målwebbplatsen i sin webbläsare och kopiera alla request-headers och sedan använda samma i skriptet. Då minskar avvikelserna som kan avslöja boten.
+Header-rotation: Utöver att se legitima ut, bör man också rotera sina headers periodiskt. En människa använder oftast en viss webbläsare, men om en klient gör tusentals anrop med exakt samma headers kan det sticka ut statistiskt. Genom att slumpa User-Agent från en lista (Chrome/Firefox olika versioner, olika OS) och variera t.ex. tidszon, språk, skärmstorlek, kan en scraper framstå som många olika besökarezenrows.comzenrows.com. Det är dock viktigt att hålla headers konsistenta med varandra – t.ex. om man byter User-Agent från Windows till Android, måste även relaterade fält justeras (såsom Sec-CH-UA-Platform) för att inte mismatcha, eftersom mismatch kan avslöja botzenrows.com.
+Kodexempel: I Python requests kan man specificera egna headers:
+import requests
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)...Chrome/126.0.0.0...",
+    "Accept-Language": "sv-SE,sv;q=0.9,en;q=0.8",
+    # ... övriga headers ...
+}
+resp = requests.get(url, headers=headers)
+I Node.js (Axios):
+const axios = require('axios');
+const headers = { "User-Agent": randomUserAgent(), /* ... */ };
+let response = await axios.get(url, { headers });
+där randomUserAgent() kan plocka en slumpad sträng från en lista. För stora projekt finns bibliotek och API:er som levererar realistik header-sammansättningar.
+Sajtens svaghet: Många webbplatser spjärnar bara mot triviala bots, t.ex. genom att blockera kända dåliga User-Agents eller kräva att vissa headers finns. En svaghet är att lita för mycket på denna enkla kontroll – skräddarsydda scrapers kan lätt efterlikna riktiga headers och då går dessa filter omintet. Exempel: en site kanske blockerar alla förfrågningar vars User-Agent innehåller "Python" eller "Scrapy"medium.com. En illvillig scraper sätter då bara User-Agent till "Mozilla/5.0 ...", varpå den glider förbi. Om sajten inte har andra detektionsmekanismer blir header-efterlikning en enkel men effektiv bypass.
+Fingerprint-spoofing och mänsklig emulering
+Modern botdetektion går längre än bara IP och headers. Browser fingerprinting innebär att webbplatsen via JavaScript och andra signaler försöker skapa en unik profil av besökaren: egenskaper som skärmstorlek, tidszon, installerade typsnitt och plugins, WebGL-renderare, canvas-identitet, musrörelsemönster med mera samlas in. En headless-automatiserad miljö lämnar ofta fingeravtryck som avviker från vanliga användare – t.ex. navigator.webdriver = true i Chrome headless, avsaknad av vanliga plugin-listor, ett WebGL som rapporterar generisk GPU etc. Bypass av dessa kräver fingerprint spoofing, dvs. att koden manipulerar eller förfalskar dessa värden för att se ut som en riktig webbläsare.
+Verktyg som Puppeteer Extra Stealth Plugin erbjuder färdiga patchar för att dölja många av de typiska spåren. T.ex. kan stealth-pluginet:
+•	Sätta navigator.webdriver = false (så att skript på sidan inte ser att WebDriver är aktiv)scrapingdog.comscrapingdog.com.
+•	Lägga till en normal window.chrome-objekt med väntade sub-objektscrapingdog.comscrapingdog.com.
+•	Fylla navigator.plugins och navigator.languages med plausibla värden (istället för tomma listor)scrapingdog.comscrapingdog.com.
+•	Justera tidszon och locale så att de matchar proxy-location (ex. Intl.DateTimeFormat().resolvedOptions().timeZone)scrapingdog.com.
+•	Spoofa WebGL Vendor/Renderer så att t.ex. en specifik GPU-modell rapporteras istället för en “software renderer”scrapingdog.com.
+Alla dessa åtgärder minskar risken att fingeravtrycksscanners identifierar din session som botscrapingdog.comscrapingdog.com. Det finns liknande bibliotek för andra miljöer, t.ex. playwright-stealth för Playwright och community-lösningar för Seleniumzenrows.comzenrows.com. I Python kan man använda pyppeteer_stealth (ZenRows plugin) som lappar Pyppeteer på liknande sättzenrows.com. I Node-exemplet nedan aktiveras puppeteer-extra-plugin-stealth:
+const puppeteer = require('puppeteer-extra');
+const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+puppeteer.use(StealthPlugin());  // Aktivera stealth-läget
+
+(async () => {
+  const browser = await puppeteer.launch({ headless: true });
+  const page = await browser.newPage();
+  await page.goto('https://bot.sannysoft.com');  // testsida för fingerprint
+  // ... 
+})();
+Den populära testsidan bot.sannysoft.com visar hur många avtryck som avslöjar en headless-browser; med stealth-plugin blir de flesta indikatorer gröna (godkända) istället för röda. Det betyder att boten nu passerar vanliga kontroller för navigator-objekt, webgl etcscrapingdog.comscrapingdog.com.
+Utöver tekniska fingerprint-förfalskningar handlar ”människolik emulering” också om att bete sig som en människa: röra musen, scrolla slumpmässigt, inte klicka supersnabbt på element, osv. Vissa scrapers injicerar JavaScript för att generera fake mouse events eller använda verktygens inbyggda funktioner för att röra musen i små kurvor, simulera tangenttryck med tidsintervall likt mänsklig skrivhastighet, etc. Allt för att efterlikna mänskligt beteende så att eventuella beteendebaserade analyser (t.ex. onormalt snabba navigationer) inte triggaszenrows.comzenrows.com.
+Sajtens svaghet: Fingerprinting är sofistikerat, men scrapers drar nytta av kända luckor i implementationen. Om en sajt t.ex. bara kollar navigator.webdriver och HeadlessChrome i User-Agent, räcker det med att justera dessa två saker för att passerascrapingdog.comscrapingdog.com. Många anti-bot-system ligger alltid ett steg efter – så fort en ny detektionsmetod sprids (t.ex. att mäta WebGL unska), kommer motverkande patchar i stealth-verktygen. Det blir en katt-och-råtta-lek. Webbplatser som inte uppdaterar sina fingeravtrycks-koller regelbundet kan bli sårbara när scrapers implementerar de senaste spoofing-teknikerna.
+Stealth-lägen i headless-ramverk
+Som nämnts ovan finns speciella stealth modes för verktyg som Puppeteer och Playwright. Puppeteer Stealth Plugin är den mest kända – den integreras enkelt med Puppeteer och täcker många grundläggande spårscrapingdog.com. Playwright, som från början designats med antifingerprinting i åtanke, har ingen officiell stealth-plugin men community-versioner och möjligheten att manuellt ställa alla parametrar (User-Agent, WebGL, timezone osv) vid launch. Selenium kan använda stealth-tillägg som Selenium-Stealth eller köra mot en manipulerad ChromeDriver (t.ex. undetected-chromedriver) som tar bort kända flaggorzenrows.comzenrows.com.
+Gemensamt för stealth-lägen är att de försöker göra automatiserings-verktygets webbläsarinstans identisk med en vanlig användares. Detta exploaterar det faktum att många sajter inte kan eller orkar utforma egna Turingtest; istället förlitar de sig på att hitta välkända “bot-signaturer”. När dessa signaturer maskeras blir det väldigt svårt att skilja trafik från en headless Chrome med stealth från trafik från en vanlig Chromescrapingdog.comscrapingdog.com. Apify-platformen noterar t.ex. att de kör stealth Chrome i normalt (icke-headless) läge i Docker för att inte lämna headless-flaggor, och att varje ny browser-instans kan få en unik proxy och fingerprint för maximal äkthet. Ett extremfall är scrapers som använder verkliga fullständiga webbläsare via automation (t.ex. styr en riktig Chrome eller använder Playwright i full-browser mode). Då är det i princip bara trafikmönstret som kan förråda dem, inte tekniska fingerprint.
+Metoder för att undvika eller lösa CAPTCHA
+CAPTCHAs (Completely Automated Public Turing test to tell Computers and Humans Apart) är webbplatsers sista försvarslinje för att skilja bot från människa. De finns i många varianter – från enkla textinmatningar, bildpussel, till Googles reCAPTCHA som övervakar användarens beteende – och de kan vara svåra hinder för scrapers. Här behandlas både sätt att undvika att trigga CAPTCHAs och att bryta dem när de uppstår.
+Undvika att trigga CAPTCHA
+Det bästa sättet att hantera CAPTCHAs är ofta att inte trigga dem alls. Många webbplatser visar bara en CAPTCHA efter att bot-liknande beteende har detekteratszenrows.com. Genom att följa råden ovan – IP-rotation, rimligt requesttempo, realistiska headers, stealth-fingerprinting och mänsklig emulering – kan man i många fall crawla utan att någonsin se en CAPTCHA. Exempelvis rekommenderar vissa verktyg som Octoparse att helt enkelt försöka undvika CAPTCHA via IP-byte och mänsklig emulering, då de inte har automatisk lösning.
+”Avoid hidden traps”: Vissa sajter placerar ut honeypots – dolda fält eller länkar som inte syns för vanliga användare men som en enkel bot kan råka klicka/fylla i. Om man interagerar med dessa triggas direkt en bot-verifiering eller blockzenrows.com. En avancerad scraper kontrollerar därför att den inte följer misstänkta utloggningslänkar, inte fyller i osynliga formulärfält etc. Detta ingår i heuristiken att uppträda som en normal användare.
+Trots alla försiktighetsåtgärder kan vissa sajter (t.ex. Cloudflare-protected) ändå till slut presentera en CAPTCHA om de anar ugglor i mossen. Då behöver man gå vidare till att lösa CAPTCHA programmässigt.
+Automatisk lösning via tredjepartstjänster (t.ex. 2Captcha)
+Det vanligaste sättet för scrapers att hantera en CAPTCHA är att skicka utmaningen till en captcha-solving service. Tjänster som 2Captcha, Anti-Captcha m.fl. har nätverk av mänskliga lösare (ibland i kombination med maskininlärning) som löser din CAPTCHA mot betalning (typiskt ca $1 per 1000 CAPTCHA). Arbetsflödet är: när skriptet stöter på en CAPTCHA-sida extraherar det relevant data (t.ex. bild eller Googles sitekey för reCAPTCHA) och skickar det via tjänstens API. Efter några sekunder returneras en lösning (t.ex. det avlästa textordet, eller ett giltigt CAPTCHA-token för reCAPTCHA) som skriptet sedan postar tillbaka till webbplatsen för att passera skyddet.
+Moderna scraping-ramverk har ofta hooks för detta. T.ex. Apify/Crawlee har inget inbyggt magiskt CAPTCHA-lösande, men man kan integrera 2Captcha i en request-hook: när en respons ser ut som en CAPTCHA-sida, pausar scriptet och skickar bilden till 2Captcha, väntar på svar, injicerar svaret och fortsätter. På liknande sätt visar Selenium-exemplet nedan (Python) hur man kan kalla en egendefinierad funktion solve_captcha_via_2captcha för att lösa en CAPTCHA och sedan skicka in resultatet:
+# ... Selenium WebDriver har laddat sidan med CAPTCHA ...
+captcha_solution = solve_captcha_via_2captcha(driver)  # skickar bild/sitekey till API
+driver.find_element(By.ID, "captcha_input").send_keys(captcha_solution)
+driver.find_element(By.ID, "submit_button").click()
+octoparse.com
+Detta demonstrerar principen: scrapen stannar upp, använder extern hjälp, och fortsätter när utmaningen är löst. Tjänster som 2Captcha har klientbibliotek för Python, Node, etc., vilket gör integrationen smidig (man skickar t.ex. en POST med api_key och bild i Base64, får tillbaka ett ID, hämtar sedan resultat via ID efter några sekunder).
+Prestanda och kostnad: Lösningstjänster tar oftast 5-20 sekunder per CAPTCHA (för att en människa ska hinna lösa) och man betalar per styck. Vid storskalig scraping är detta en kostsam bromskloss. Men det kan vara enda sättet för de svåraste utmaningarna (t.ex. reCAPTCHA v2 checkbox + bildgåtor, Cloudflare turnstile/hCaptcha). Vissa proxy-/scraping API-tjänster inkluderar automatiskt CAPTCHA-lösning i sitt erbjudande – t.ex. ScraperAPI utlovar att de känner igen Cloudflare-sidor och löser dem bakom kulisserna, troligen via inbäddad 2Captcha eller en egen ML-lösning.
+AI-baserade lösare och OCR
+Ett mer avancerat och forskningsintensivt tillvägagångssätt är att försöka automatisera lösningen med AI. Detta kan innebära att träna upp maskininlärningsmodeller för bild- eller textigenkänning av CAPTCHA. Exempelvis kan man träna en konvolutionell neuronnätsmodell (CNN) att känna igen tecken i en klassisk förvrängd text-CAPTCHA eller identifiera objekt i reCAPTCHA-bilderoctoparse.comoctoparse.com. Det finns också OCR-verktyg som Tesseract eller EasyOCR som kan användas för enklare CAPTCHAs (t.ex. sådana med text i bild)octoparse.comoctoparse.com. En enkel integration är att ta skärmdump på CAPTCHA-bilden och köra pytesseract.image_to_string() för att få fram textenoctoparse.com.
+Octoparse beskriver i en artikel hur man med TensorFlow kan ladda en förtränad modell för CAPTCHA-lösning och använda den direkt i kodenoctoparse.comoctoparse.com. Till exempel:
+model = tf.keras.models.load_model('captcha_model.h5')
+solution = model.predict(captcha_image)
+print("Captcha Solved: ", solution)
+Denna metod kräver dock att man har en model tränad på just den typ av CAPTCHA man möter – vilket i praktiken är svårt eftersom många CAPTCHA-leverantörer (särskilt reCAPTCHA) ändrar sina utmaningar dynamiskt och använder klickpussel som är svåra för AI. Ändå har det hänt att ML-modeller knäckt vissa vanligare CAPTCHA-typer. Optical Character Recognition (OCR) är ofta tillräckligt för äldre CAPTCHAs med ren text.
+Begränsningar: AI-baserad lösning är en katt-och-råtta-lek. När AI blir bättre på att känna igen t.ex. trafikljus i bilder, höjer Google svårighetsgraden eller byter metod (t.ex. kollar beteende runt musrörelser). Därför används AI mest som komplement. I praktiken är det oftast mer tidsekonomiskt att betala en tjänst som 2Captcha som använder en kombination av människor och AI för att alltid ligga steget före2captcha.com2captcha.com.
+Heuristik: förhindra CAPTCHA-trigg
+En annan vinkel är att designa sin scraping så att sajtens risk scoring aldrig når CAPTCHA-tröskeln. Google reCAPTCHA v3 ger besökare en poäng baserat på beteende; om poängen är för låg visas en utmaning. För att hålla en hög ”human score” kan scrapers göra saker som: besöka sidan mer långsamt, ibland vänta på sidan en stund utan att göra något (simulerar läsning), klicka runt på slumpmässiga länkar istället för att bara fet-hämta data, eller undvika accessmönster som människor aldrig gör (som att gå alfabetiskt genom användarlistor eller öppna tusentals sidor systematiskt). Vissa botverktyg har inbyggda delays och slumpmoment – t.ex. Puppeteer kan instrueras att randomisera tiden mellan tangentnedslag när den fyller i formulär, och scrolla gradvis istället för teleportera till botten av sidan. Allt detta minskar risken att sajten ens aktiverar en CAPTCHA.
+För sajter med enklare CAPTCHAs (t.ex. en matematisk fråga eller en enkel text) kan man ibland hitta genvägar: t.ex. kanske svaren skickas till ett internt API där utmaningen genereras statiskt – då kan man analysera det API:et istället. Sådana luckor är dock sällsynta idag.
+Hantering av dynamiskt innehåll (SPA, AJAX) med headless browsers
+Många moderna webbplatser är Single Page Applications (SPA) eller laddar innehåll asynkront via AJAX-anrop. För en scraper innebär det att datan kanske inte finns i den initiala HTML-koden utan dyker upp först efter att sidan kör JavaScript (t.ex. via fetch/XHR). För att hämta sådan dynamiskt innehåll använder man antingen headless-browsers (automatiserar en riktig webbläsare som exekverar JS), eller direktanropar samma bakgrunds-API:er som sajten använder. Här fokuserar vi på headless-browsers och hur de kan styra sidan – klicka, scrolla, vänta – för att få fram all data.
+Headless-browsers: Puppeteer, Playwright, Selenium
+Headless betyder att webbläsaren körs utan grafiskt gränssnitt. Verktyg som Puppeteer (Node.js), Playwright (Node/Python m.fl.) och Selenium WebDriver (flerspråkigt, kan styra Chrome/Firefox) låter skriptet styra en webbläsare som om en användare satt vid skärmen. Det innebär att scrapen kan:
+•	Ladda sidan och köra JavaScript fullt ut, så att innehållet renderas precis som för en vanlig besökare.
+•	Interagera med sidan: klicka på knappar, fylla i formulär, navigera pagineringslänkar, scrolla för att ladda mer innehåll, etczenrows.comzenrows.com.
+•	Vänta på triggers: t.ex. vänta tills ett visst element finns i DOM:en eller tills nätverksaktivitet lugnat ner sig, innan man skördar datan.
+Ett exempelscenario: Vi vill skrapa en sida som bara laddar 10 poster åt gången och sedan måste man klicka "Load more" för att få nästa 10. En enkel HTTP-crawler skulle bara få de första 10. Med en headless-browser kan vi automatisera:
+1.	Öppna sidan.
+2.	Vänta tills initiala innehållet laddats (t.ex. vänta på ett element ".post-item").
+3.	Anropa klick på "Load more"-knappen.
+4.	Vänta t.ex. 2 sekunder eller tills nya poster syns.
+5.	Upprepa klickandet tills knappen försvinner eller inget mer innehåll kommer.
+6.	Extrahera all post-data från den utökade sidan.
+I Puppeteer (Node.js) kan det se ut så här:
+const browser = await puppeteer.launch({ headless: true });
+const page = await browser.newPage();
+await page.goto('https://exempel.com/feed');
+await page.waitForSelector('.post-item');       // vänta tills första poster finns
+
+let loadMoreVisible = true;
+while (loadMoreVisible) {
+    loadMoreVisible = await page.evaluate(() => {
+        let btn = document.querySelector('#loadMore');
+        if (!btn) return false;
+        btn.click();
+        return true;
+    });
+    if(loadMoreVisible) {
+       await page.waitForTimeout(1000);         // vänta 1s (eller bättre: waitForNetworkIdle)
+    }
+}
+
+// Nu är all data laddad, hämta HTML eller extrahera från DOM:
+const content = await page.content();  // hela sidan HTML efter dynamisk laddning
+await browser.close();
+I koden ovan användes page.evaluate för att köra en funktion i sidans kontext som klickar på knappen. Man kan också använda Puppeteers högre nivå-API: await page.click('#loadMore') upprepat, men genom att returnera false/true från evaluate vet vi när knappen inte längre finns (dvs allt är laddat). Notera att vi också kunde använt page.waitForNetworkIdle({idleTime: ...}) för att vänta tills inga AJAX-anrop pågår. Playwright har liknande funktioner och kan i Python se ut som:
+from playwright.sync_api import sync_playwright
+
+with sync_playwright() as p:
+    browser = p.chromium.launch(headless=True)
+    page = browser.new_page()
+    page.goto("https://exempel.com/feed")
+    page.wait_for_selector(".post-item")
+    while True:
+        try:
+            page.click("#loadMore")
+        except:
+            break  # knappen finns inte -> bryt loopen
+        page.wait_for_timeout(1000)
+    html = page.content()
+    browser.close()
+Detta skript klickar tills #loadMore inte längre hittas, med enkel timeout. Ett mer robust upplägg kan vara att hämta innehåll stegvis via sidans egna API:er (ibland kan man läsa av nätverkspanelen att varje klick gör ett XHR t.ex. /api/posts?page=2 – då kan man istället direkt anropa dessa API-endpoints med en vanlig HTTP-klient, vilket är effektivare än att driva en hel browser). Men om API:et är svårt att replikera (kräver komplexa autentiseringar, tokens, etc.) så är headless-automation lösningen.
+SPA-routing: Single Page Applications använder ofta interna routings (t.ex. React Router) vilket innebär att länkar inte laddar om sidan. En headless-lösning kan navigera inom SPA:n antingen genom att klicka på länkarna som en användare skulle, eller genom att använda ramverkets API om det finns globala variabler. Ofta är det enklast att faktiskt klicka, eftersom det triggar allt nödvändigt.
+Scrolling: Infinite scroll-sajter (t.ex. Twitter-feed) laddar nytt innehåll när man närmar sig botten. För att skrapa hela listan kan man automatiskt scrolla ned steg för steg. Exempel med puppeteer:
+await page.evaluate(async () => {
+    await new Promise(resolve => {
+        let totalHeight = 0;
+        let distance = 500;
+        let timer = setInterval(() => {
+            window.scrollBy(0, distance);
+            totalHeight += distance;
+            if(totalHeight >= document.body.scrollHeight) {
+                clearInterval(timer);
+                resolve();
+            }
+        }, 100);
+    });
+});
+Detta kodstycke (från ScrapingBee tutorial) scrollar ned 500px var 100ms tills botten är nådd. Man kan också scrolla i omgångar och waitForTimeout för att ge chans att ladda nytt innehåll. Efter scroll kan man extrahera det nuvarande DOM-innehållet eller vissa element via page.$$eval() (för att direkt få ut t.ex. en lista av text).
+Interagera med sidan: Headless-ramverken ger API för de flesta mänskliga interaktioner: page.type(selector, text) för att skriva text i fält (och man kan specificera delay mellan key events för att simulera skrivhastighet), page.hover(selector) för hovring, file upload etc. Detta är nödvändigt om man t.ex. ska logga in automatiskt innan scraping (då fyller man in användarnamn, lösenord och trycker login-knappen). Efter inlogg kan cookies/session användas för följande requests.
+Samla data från DOM
+När sidan är i det läge man vill (allt innehåll har laddats) gäller det att extrahera datan. Två sätt:
+•	Hämta HTML: t.ex. med page.content() får man sidans HTML-källtext efter att JS körts klart. Den kan sedan parsas med samma tekniker som statiska sidor (t.ex. med BeautifulSoup i Python eller Cheerio i Node).
+•	Direkt DOM-scrape: Man kan i browserkontext köra document.querySelectorAll och plocka ut text. Puppeteer/Playwright erbjuder t.ex. page.$$eval(selector, el => el.innerText) för att få ut alla matchande elementers textinnehåll. Detta kan vara smidigt – man låter webbläsaren göra jobbet att hitta elementen och returnerar bara datan.
+Exempel: säg att varje post ligger i <div class="post-item"><h2 class="title">Titel</h2><span class="date">...</span></div>. Vi kan då köra:
+let posts = await page.$$eval('.post-item', items => {
+    return items.map(item => {
+        return {
+            title: item.querySelector('.title').innerText,
+            date:  item.querySelector('.date').innerText
+        };
+    });
+});
+console.log(posts);
+Denna one-liner i Node/Puppeteer ger oss en array av objekt med titel och datum för varje post. I Python/Playwright skulle motsvarande vara:
+posts = page.eval_on_selector_all(".post-item", "(items) => items.map(i => ({ title: i.querySelector('.title').innerText, date: i.querySelector('.date').innerText }))")
+(Playwrights eval_on_selector_all fungerar liknande). Att låta browsern ge ifrån sig strukturerad data direkt är oftast effektivt.
+Observera: Headless-browsers är tunga – att starta en Chrome-instans tar hundratals MB minne och signifikant CPU. För storskalig scraping behöver man oftast begränsa när man tar till denna metod, p.g.a. prestandakostnaden. Ibland kombineras metoderna: man kanske har en primär HTML-crawler som samlar in alla URL:er och bara för de som kräver JS-innehåll så använder man en headless-browser. Då kan man parallellt köra kanske 5–10 browser-instanser för att hålla genomflödet.
+Anti-bot i headless-läge: Som vi diskuterade tidigare kan även headless-automation upptäckas. Men i utbyte mot kostnaden får man en nästan garanterad rendering – det vill säga, allt användaren kan se kan i teorin skrapas. För sajter som extremt försöker motverka botar (t.ex. kräver att man löser en interaktiv CAPTCHA), finns det få utvägar utom headless + extern solver.
+Sessionhantering, cookies och rate limiting
+Sessioner på webben identifieras oftast med cookies. Om en scraper vill efterlikna en användare över flera steg (t.ex. logga in och sedan vara inloggad under crawlen), behöver den hantera cookies och sessions-ID:n korrekt. I praktiken:
+•	I Python requests kan man använda en Session-objekt:
+•	s = requests.Session()
+•	s.post("https://exempel.com/login", data={"user": "...", "pass": "..."})
+•	resp = s.get("https://exempel.com/protected-page")
+Här sköter Session automatiskt cookies (sätter dem från set-cookie header vid login, skickar dem vid nästa begäran). På så vis hålls en kontinuerlig session.
+•	I headless-browsers hanteras cookies som i en riktig webbläsare; om du navigerar in på en sida som sätter cookies kommer nästa request på samma sida att skicka dem. Man kan också programmatisk sätta cookies med page.context.addCookies([...]) i Playwright eller page.setCookie(...) i Puppeteer, om man t.ex. vill överföra en session från någonstans.
+Fingerprint + session-kombination: Vissa sajter spårar användares beteende över en hel session. Då kan scrapers vinna på att återanvända samma session och fingerprint under en följd av requests för att framstå som en konsekvent användare. Exempel: Apify’s Crawlee har en inbyggd SessionPool som låter flera parallella requests dela på ett antal sessioner – var och en med egna cookies, kanske unikt User-Agent – som hålls persistenta över tid. Då kan man simulera t.ex. 5 användare som var och en surfar runt, i stället för 1000 helt oberoende enskott-anrop.
+Cookie-manipulation: Ibland kan man skrapa data genom att manipulera cookies. Om en sida till exempel bara visar en viss mängd data utan inloggning men mer data när en viss cookie är satt (t.ex. ett experiment eller en regionsinställning), kan scrapers sätta den cookien för att få mer info. Det har även förekommit att man genom att stjäla en session-cookie (t.ex. från sin egen webbläsare där man loggat in manuellt) och stoppa in den i skriptets headers kan agera inloggad. Det kräver dock att man hanterar utloggning/expiry – ofta är sessioner kortlivade eller bundna till IP, men inte alltid.
+Rate limiting och throttling: En välskriven scraper måste respektera hastighet – både för att inte överbelasta servern (som kan vara olagligt i vissa fall om det orsakar störningar) och för att undvika att bli blockad. Rate limiting på serversidan innebär att om en klient gör för många requests per tid så börjar servern säga stopp (HTTP 429 Too Many Requests, eller liknande)medium.commedium.com. Men om scrapen distribuerar sina anrop över många IPs (via proxy) och/eller pausar mellan anrop så kan den undgå detta skydd.
+Många scrapers implementerar en slumpmässig delay mellan requests, t.ex. sova 1-3 sekunder (random) mellan varje request för att efterlikna en människa som klickar runt i normal takt. De kan också batcha om nattetid om sajten är mindre bevakad då. Vissa scrapingtjänster som Zyte (Scrapinghub) har inbyggd auto-throttling: de mäter svarstider och felkoder och anpassar parallellismen för att ligga precis under blockeringsgränsen.
+En annan aspekt är parallellism: en multithreaded eller asynkron scraper kan lätt skjuta iväg 100 samtidiga requests. Även om de kommer från olika IP, kan sajten bli misstänksam om de kommer exakt samtidigt med millisekundprecision. Scrapers kan därför introducera jitter och begränsa max antal samtidiga anrop per domän.
+Undvika trigg av rate-limit: Om man vet en sajt t.ex. max tillåter 5 requests per minut per IP, kan man anpassa sig under den nivån per IP. Eller använda 10 IPs och skicka 5 per minut på var och en (vilket ger 50/min totalt). Denna distribution lurar servern att tro att det är 10 olika användare som alla ligger inom tillåten takt.
+Sessionsövervakning som skydd: En del sajter spårar hur många objekt en viss användarsession hämtar och om t.ex. en inloggad användare masshämtar 1000 profil-sidor kan det flaggas. Scrapers med flera inloggade konton (s.k. sock puppet accounts) kan dela upp arbetet mellan kontona. Detta är dock riskfyllt då det kan bryta mot tjänstevillkor rejält och dessutom kräva att man hanterar inloggning (vilket i sig kan trigga CAPTCHA eller 2FA).
+Sammanfattningsvis handlar session- och rate-limit-hantering om balans: skicka tillräckligt få förfrågningar per identifierare (IP, konto, cookie) att man flyger under radarn, men använda så många parallella identifierare att man ändå får ut hög volym data.
+Vanliga misstag på sajter som möjliggör scraping
+Trots alla dessa skyddsåtgärder finns det svagheter som webbsidor ofta lämnar, vilka scrapers utnyttjar. Här är några vanliga misstag eller brister på serversidan som underlättar för angripare att hämta data i stor skala:
+•	Svag eller enkel botdetektion: Om sajten endast använder triviala kontroller (t.ex. kollar User-Agent substrings mot en blocklistamedium.com, eller endast verifierar CAPTCHA vid misstanke men har låg känslighet) kan en välbyggd scraper lätt kringgå det. Exempel: en sajt kanske antar att bot = inga CSS/JS-resurser laddas, och flaggar på det – men en scraper kan helt enkelt ladda resurserna också (även om den inte behöver dem) för att se mer legit ut. Andra kör bara enkla JavaScript-checkar (navigator.webdriver etc.), vilka lätt spoofas.
+•	Statiska API-endpoints exponerade: Ibland har webbplatser ett underliggande API som mobilappar eller frontend använder, och detta API kan ge kompletta dataobjekt i JSON form, ofta utan att alla anti-bot-skydd som webbsidan har implementeras där. Ett klassiskt misstag är att API:et inte har samma rate limiting eller kräver samma auth, så att en scraper kan direkt fråga t.ex. api.exempel.com/items?page=all och få ut hela databasen i ett svep. Oautentiserade GraphQL-endpoints eller datadumpar inbakade i sidkällan (t.ex. en <script>-tag som innehåller en stor JSON med all data för sidan) är guldgruvor för scrapers.
+•	Avsaknad av eller bristfällig rate limiting: Många mindre sajter implementerar helt enkelt ingen throttle på servern. Det gör att en attackerare kan bombardera sajten med requests (även från samma IP) utan att bli automatiskt blockad – möjligtvis tills servern går på knäna. Scrapers märker ofta om de inte får 429-koder eller liknande och kan då öka tempot dramatiskt. Om rate limiting finns men är för generöst satt (t.ex. 1000 requests per minut per IP), kan en enkel proxyrotation kringgå den (som diskuterat ovan)medium.commedium.com.
+•	För stor tillit till robots.txt: Vissa sajter antar att “det står ju i vår robots.txt att man inte får crawla X, så det följer nog alla”. Robots.txt är bara en rekommendation för snälla bots (som sökmotorer). Illasinnade scrapers struntar fullständigt i den. Att ha hemliga URL:er som bara skyddas genom robots.txt (security through obscurity) är alltså ett misstag – scrapers kollar ofta ändå alla vanliga endpoints. Exempel: /admin disallowad i robots, men ingen inloggningsspärr? Då kommer en scraper att försöka hämta den sidan ändå.
+•	Svaga CAPTCHA-inställningar: CAPTCHA kan vara felkonfigurerade så att de i praktiken inte stoppar scraping. T.ex. om CAPTCHA bara visas på inloggningssidan men man kan hämta mängder av data utan att logga in (”skugg-scrape” via publika listor), då skyddar den fel sak. Eller om CAPTCHA-utmaningen går att kringgå genom att direkt använda ett backend-anrop som inte kräver lösning. Vissa sajter implementerar egen enklare CAPTCHA (typ "Vad blir 2+2?") – dessa är triviala att lösa i kod eller via regex. En del glömmer att rate-limit:a CAPTCHA-försök, vilket gör att en bot kan brute-force:a den (om det finns begränsad frågebank).
+•	Inkonsekvent skydd på olika delar av sajten: Ofta är bara vissa vägar skyddade. T.ex. webbplatsens HTML-sidor kanske har Cloudflare-skydd, men den underliggande API-domanen har inget sådant. Eller webb-vyer är skyddade men mobilappen använder en enklare auth som en scraper kan utnyttja. Om scrapers upptäcker en ”lucka” – en del av tjänsten som är publik men glömd utanför skyddet – kommer de att utnyttja den.
+•	Predictabla identifierare och URL:er: Om känsliga resurser är sekvensiellt numrerade (t.ex. record/1001, record/1002, ...) blir det enkelt för en scraper att iterera över alla ID:n och dra ut data, om inte annat skydd finns. Det är inte direkt anti-bot-skydd, men en designmiss som underlättar bulk-hämtning. Några kända dataläckor har skett på detta vis (”enumeration attack”). Rate limiting och botdetektion borde iofs stoppa tusentals requests, men som sagt, om de är svaga eller obefintliga exploateras det.
+Tabell: Exempel på sajtsvagheter vs. scraping-exploits
+Svaghet/brist	Hur scraper utnyttjar det
+Ingen/lam botdetektion	Efterliknar enkelt vanlig trafik – går under radarn.
+Svag IP-blockering	Öser på från samma IP eller byter IP för att slippa block.
+Öppet API / ingen auth	Hämtar data direkt från API endpoints i bulk.
+Ingen rate limit	Masshämtar snabbt (ev. parallellt) utan konsekvenser.
+Robots.txt-dependens	Ignorerar robots.txt, crawlar även "förbjudna" URL:er.
+CAPTCHA bara kosmetisk	Undviker eller automatiserar lösning, fortsätter skrapa.
+Förutsägbara ID:n	Enumererar alla möjliga ID och hämtar varje (data dump).
+Kort sagt kan en otillåten storskalig skrapning ses som en intrångstest av webbplatsens försvar: scrapern kommer hitta och exploatera alla genvägar som lämnas öppna. Om ett skyddsmekanism fallerar (eller saknas) på något ställe, blir det oftast angreppsvektorn.
+Slutsats
+Att skrapa data i stor skala trots motåtgärder kräver en verktygslåda av tekniker: smart crawling-algoritmik för att täcka mycket mark, och en arsenal av anti-anti-bot-metoder för att maskera sig. Vi har gått igenom hur man kodar BFS/DFS-crawlare och köprioritering för effektiv insamling, hur man byter IP adresser och proxynät för att kringgå IP-blockering, hur headers och fingerprints manipuleras för att likna riktiga användare, samt hur headless-browsers möjliggör navigering av dynamiska sidor. CAPTCHA, den kanske svåraste utmaningen, kan oftast hanteras via tredjepartslösning (på bekostnad av tid och pengar) eller undvikas genom listiga heuristiker. Slutligen belyste vi att webbsidors egna misstag – från bristande rate limiting till exponerade API:er – ofta är det som slutligen gör scraping möjligt i praktiken.
+På en teknisk nivå handlar otillåten webscraping om att hitta varje sätt en server skiljer bot från människa, och sedan eliminera den skillnaden. Genom exempel och kodsnuttar har vi visat hur utvecklare implementerar dessa metoder i Python, Node.js m.fl. Resultatet är en katt-och-råtta-lek mellan sajtägare och scraper-utvecklare, där den ena sidan höjer ribban och den andra sidan hittar nya knep. För den som försvarar en webbplats är lärdomen att titta på svagheterna ovan och förstärka dem; för den som bygger en scraper är det att ingen kedja är starkare än sin svagaste länk – hittar man länken, kan man hämta datan.
+
+
+I detta avsnitt presenteras en samling avancerade webscraping-tekniker som ofta används för att undvika att bli blockerad. Varje del innehåller körbar kod (i Python eller Node.js) följt av en pedagogisk förklaring på svenska. För varje teknik listas också typiska misstag som webbplatser gör och som möjliggör att dessa metoder fungerar. Syftet är akademiskt – att förstå hur scraping-system kringgår skydd – vilket kan hjälpa i utvecklingen av motåtgärder mot sådana tekniker.
+1. BFS- och DFS-crawler (bredden först och djupet först)
+En webbcrawler hämtar sidor och följer länkar för att upptäcka fler URL:er. Två grundläggande strategier är BFS (Breadth-First Search) och DFS (Depth-First Search). BFS besöker sidor nivå för nivå (bredden först), vilket ger en bred översikt av en domän. DFS följer länkar på djupet (djupet först), vilket är bra för att snabbt nå längst in i hierarkier. Valet beror på målet: BFS hittar många olika sidor tidigt (bra för att kartlägga sidtyper), medan DFS snabbt når detaljsidor i djupt nästlade strukturer. Nedan visas kodexempel för en enkel BFS- respektive DFS-crawler i Python.
+BFS-crawler – Python-exempel
+BFS-crawlern använder en kö (FIFO) för att hantera frontiern (URL-kö). Koden nedan börjar på en starthuvudsida, hämtar dess HTML och lägger till alla hittade länkar i kön. Den arbetar sedan nivåvis tills kön är tom eller ett maxdjup är nått. Vi använder biblioteket requests för HTTP-förfrågningar och BeautifulSoup för att parsa HTML och extrahera länkar.
+import requests
+from collections import deque
+from bs4 import BeautifulSoup
+
+start_url = "http://exempel.se"
+max_depth = 2
+
+# Initiera BFS-kön med start-URL på djup 0
+queue = deque([(start_url, 0)])
+visited = {start_url}  # mängd för att undvika dubbletter
+
+while queue:
+    url, depth = queue.popleft()
+    print(f"Besöker: {url} (djup {depth})")
+    try:
+        resp = requests.get(url, timeout=5)
+        html = resp.text
+    except requests.RequestException as e:
+        print(f"Kunde inte hämta {url}: {e}")
+        continue
+
+    # Parsa HTML-innehållet och extrahera alla länkar (<a href="...">)
+    soup = BeautifulSoup(html, 'html.parser')
+    for tag in soup.find_all('a', href=True):
+        link = tag['href']
+        # Om länken är relativ, gör om till absolut URL
+        if link.startswith('/'):
+            link = requests.compat.urljoin(url, link)
+        # Lägg till nya länkar i kön om inte redan besökta och inte för djupt
+        if link not in visited and depth < max_depth:
+            visited.add(link)
+            queue.append((link, depth+1))
+Förklaring: Denna BFS-crawler börjar med start_url och besöker sedan sidor nivå för nivå. Variabeln queue är en FIFO-kö (deque) där vi stoppar in tuples av (url, depth). Vi använder en visited-mängd för att undvika att besöka samma URL fler gånger. Inuti loopen hämtas varje URL (med requests.get). Sedan extraheras alla länkar med BeautifulSoup; relativa URL:er konverteras till absoluta. Nya unika länkar läggs på slutet av kön med ett djup +1. Körningen fortsätter tills kön är tom eller vi nått max_depth. I utskriften ser man att BFS besöker alla sidor på djup 0, sedan djup 1, osv – alltså bredden först.
+DFS-crawler – Python-exempel
+DFS-crawlern kan implementeras rekursivt eller med en stack (LIFO). Nedan visas en rekursiv variant. Den går djupare in på varje upptäckt länk innan den backar, vilket återspeglar en djup-först-strategi.
+import requests
+from bs4 import BeautifulSoup
+
+start_url = "http://exempel.se"
+max_depth = 2
+visited = set()
+
+def crawl_dfs(url, depth):
+    if depth > max_depth or url in visited:
+        return
+    visited.add(url)
+    print(f"Besöker: {url} (djup {depth})")
+    try:
+        resp = requests.get(url, timeout=5)
+        html = resp.text
+    except requests.RequestException:
+        return
+    soup = BeautifulSoup(html, 'html.parser')
+    for tag in soup.find_all('a', href=True):
+        link = tag['href']
+        if link.startswith('/'):
+            link = requests.compat.urljoin(url, link)
+        crawl_dfs(link, depth+1)
+
+crawl_dfs(start_url, 0)
+Förklaring: Här definieras en rekursiv funktion crawl_dfs som besöker en URL och sedan direkt rekursivt crawlar alla länkar på sidan innan den återgår. Vi håller koll på besökta URL:er i visited för att undvika oändliga loopar. Funktionen stoppar när max_depth överskrids. Om requests.get misslyckas (t.ex. nätverksfel) avbryts just den grenens crawl. Denna DFS-strategi kommer att “tunnla” djupt in i första länken den hittar, och fortsätter så tills den inte kan gå djupare, innan den återupptar på ytligare nivåer. Den är användbar för att snabbt hitta innehåll långt ner i strukturen (t.ex. en produktsida flera klick in). BFS och DFS kan också kombineras – t.ex. BFS på övre nivåer och DFS i utvalda grenar – för att få fördelarna av båda.
+Typiska misstag sajter gör (crawling):
+•	Inga crawler-fällor: Många sajter implementerar inte honeypots eller dolda länkar för att avslöja bots. En enkel BFS/DFS-crawler som ignorerar robots.txt kan därmed kartlägga sajten obehindrat om inga aktiva motåtgärder finns.
+•	Förutsägbara länkar: Om URL-strukturer är sekventiella eller listar alla sidor via pagination, kan en crawler lätt gissa eller följa alla länkar. Sajter som förlitar sig på att länkar inte hittas lätt underskattar BFS/DFS.
+•	Ingen eller svag rate limiting: Utan ordentlig hastighetsbegränsning kan en crawler göra många förfrågningar snabbt. En BFS-crawler kan därmed svepa igenom en sajt brett innan eventuella skydd reagerar, och en DFS-crawler kan snabbt gräva djupt om inte antalet requests per minut begränsas.
+•	Statisk HTML utan autentisering: Om stora delar av sajten är fritt tillgängliga via statiska länkar (ingen inloggning eller dynamisk laddning krävs), kan en crawler navigera hela strukturen. Sajter som inte kräver någon form av token, session eller JavaScript för att nå underliggande sidor gör det enkelt för en standardcrawler att fungera.
+2. IP-rotation med proxypooler (roterande IP-adresser)
+Problem: Webbplatser spårar ofta IP-adresser för att upptäcka bots. Om samma IP hämtar hundratals sidor snabbt flaggas det som ovanligt och kan blockeras. Lösning: En proxypool är en samling proxyservrar som ger nya IP-adresser för dina förfrågningar. Genom att rotera IP för varje request sprids trafiken ut så att ingen enskild IP överbelastas med många requests. Vissa tjänster erbjuder också geografisk styrning, dvs att välja IP från specifika länder, samt sticky sessions där samma IP kan behållas över flera requests vid behov (t.ex. under en inloggad session).
+Nedan är ett Python-exempel som demonstrerar IP-rotation med hjälp av en proxypool. Koden går igenom en lista av proxyadresser och gör en enkel förfrågan (till en IP-återvänder-tjänst) via varje proxy för att visa att IP:na skiljer sig. Dessutom visas hur man kan använda sticky IP genom att återanvända samma proxy för flera anrop.
+import requests
+
+proxies_list = [
+    "http://användare:lösenord@us-proxy1.example.com:8000",  # USA-proxy
+    "http://användare:lösenord@de-proxy2.example.com:8000",  # Tyskland-proxy
+    "http://användare:lösenord@jp-proxy3.example.com:8000",  # Japan-proxy
+]
+
+for proxy_url in proxies_list:
+    try:
+        resp = requests.get("https://api.ipify.org?format=json", 
+                             proxies={"http": proxy_url, "https": proxy_url}, timeout=5)
+        ip = resp.json().get("ip")
+        print(f"Proxy {proxy_url} gav IP: {ip}")
+    except requests.RequestException as e:
+        print(f"Proxy {proxy_url} misslyckades: {e}")
+
+# Exempel på sticky session - använd samma proxy för flera följande requests
+session = requests.Session()
+session.proxies = {"http": proxies_list[0], "https": proxies_list[0]}  # använd första proxyn
+try:
+    r1 = session.get("https://example.com/sida1")
+    r2 = session.get("https://example.com/sida2")
+    print("Sticky session svarskoder:", r1.status_code, r2.status_code)
+finally:
+    session.close()
+Förklaring: Här definierar vi en lista proxies_list med proxy-URL:er (med inbäddade inloggningsuppgifter). För varje proxy skickar vi en GET-förfrågan till tjänsten api.ipify.org som svarar med vår utgående IP i JSON-format. Som väntat visar utskriften olika IP-adresser för olika proxyn. Om en proxy är nere eller långsam hanteras undantaget. Därefter demonstreras en sticky session: vi skapar en requests.Session och sätter dess proxies-inställning till en av proxy-URL:erna. Alla förfrågningar genom denna session använder samma proxy och därmed samma IP-adress. I exemplet hämtar vi två sidor (sida1 och sida2) från example.com med samma IP. Denna teknik är användbar om målsajten använder sessioner eller inloggning där IP-byte mitt i en session skulle kunna leda till utloggning eller misstanke.
+I praktiken erbjuder proxy-leverantörer parametrar för att specificera geolokalisering och sessioner. Till exempel kan Bright Data eller Oxylabs ge en pool av IP där man kan välja land via proxy-användarnamn eller särskilda portnummer. En proxy-URL för Bright Data kan inkludera land- och sessionstaggar, t.ex.:
+http://brd-customer-USER-zone-RESIDENTIAL-country-se-session-123:PW@zproxy.lum-superproxy.io:22225
+Ovan skulle begäran gå ut via en svensk IP (country=se) och “session-123” ser till att samma IP hålls under den sessionen (Bright Data brukar hålla sticky IP i ~10 minuter). Tjänster som ScraperAPI eller ZenRows fungerar snarlikt där man i API-anrop kan ange parametern country_code=SE för land och session_number=123 för sticky sessiondocs.scraperapi.comdocs.zenrows.com. Allt detta sker transparent för koden – utvecklaren anger bara inställningar så tar tjänsten hand om IP-bytet i bakgrunden.
+Typiska misstag sajter gör (IP-blockering):
+•	Enbart IP-baserad blockering: Många sajter förlitar sig på enkla IP-rate-limits. En scraper kan relativt enkelt kringgå detta genom att byta IP för varje eller några av förfrågningarna. Om inte webbplatsen kopplar samman mönster över IP-adresser (t.ex. många nya användaragenter från olika IP men med liknande beteende) kommer rotationen att lura systemet.
+•	Blockerar bara kända proxy-IP: Vissa sajter svartlistar kända datacenter eller gratisproxyer men missar residential proxies (IP-adresser från vanliga internetleverantörer). Scrapers som använder betalda premiumproxyer med legitima hushålls-IP går under radarn om sajten endast filtrerar uppenbara proxy-IP.
+•	Ingen geokontroll: Om en tjänst förväntar sig trafik från ett visst land (t.ex. en svensk webbplats med mest svenska användare) men inte kontrollerar geolokalisering kan scrapers utnyttja det. Utan geografisk detektering kan en bot välja IP-adresser som matchar målgruppens land och därmed se ut som legitim trafik.
+•	Ignorerar session-koppling: Om en webbplats inte noterar att samma användarsession plötsligt byter IP kan en scraper rotera IP även under en inloggning. Välkonfigurerade sajter loggar ut användare vid IP-byte för att förhindra sessionsstölder, men om detta inte görs kan en botnet av proxy-IP användas sömlöst i samma session.
+3. Fingerprint-spoofing (Stealth-lägen i headless-botar)
+Många moderna anti-bot-system använder fingerprinting, dvs. de samlar data om webbläsarens egenskaper för att avgöra om det är en riktig användare. En headless webbläsare som Puppeteer eller Playwright lämnar subtila spår: exempelvis är navigator.webdriver = true i headless-läge, vissa API:er (Canvas, WebGL) kan bete sig annorlunda, tillgängliga plugins/typsnitt är annorlunda, osv. Fingerprint-spoofing innebär att koden manipulerar eller döljer dessa egenskaper för att efterlikna en vanlig webbläsare.
+Ett populärt verktyg är Puppeteer Extra Stealth-plugin (för Node.js) som ansluter till Puppeteer. Detta plugin patchar Puppeteers standardbeteende för att dölja kända automationsegenskaper. Bland annat maskerar det egenskaper som att Chrome körs headless (t.ex. navigator.webdriver), justerar userAgent och accepterade codecs, fyller i default-värden för navigator.plugins och navigator.languages, ställer in rimligt antal CPU-kärnor, med merazenrows.comzenrows.com. Även Playwright har liknande strategier – det finns community-bibliotek som playwright-stealth eller så kan man själv injicera JavaScript i en Playwright-sida för att fixa dessa värden. Idén är att anti-bot-skript på sidan som kollar fingerprint ska “luras” att tro att detta är en vanlig, icke-automatiserad webbläsare.
+Nedan visas kod i Node.js som sätter upp Puppeteer med Stealth-pluginet:
+// Installation (en gång): npm install puppeteer-extra puppeteer-extra-plugin-stealth
+const puppeteer = require('puppeteer-extra');
+const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+
+// Aktivera stealth-plugin för Puppeteer
+puppeteer.use(StealthPlugin());
+
+(async () => {
+    // Starta headless-Chrome med stealth-inställningar
+    const browser = await puppeteer.launch({ headless: true });
+    const page = await browser.newPage();
+
+    // Gå till målsidan
+    await page.goto('https://www.example.com', { waitUntil: 'networkidle0' });
+
+    // Exempel: hämta User-Agent och webdriver-flagga från inom headless-webbläsaren
+    const ua = await page.evaluate(() => navigator.userAgent);
+    const webdriverFlag = await page.evaluate(() => navigator.webdriver);
+    console.log("User-Agent enligt sidan:", ua);
+    console.log("navigator.webdriver finns?:", webdriverFlag);
+
+    await browser.close();
+})();
+Förklaring: Här importerar vi puppeteer-extra och stealth-pluginet, sedan använder vi pluginet genom puppeteer.use(...). När vi sedan kör puppeteer.launch kommer Puppeteer under huven att applicera alla stealth-förbättringar. I koden navigerar vi till exempel.com och använder page.evaluate för att köra kod i browsers kontext. Vi hämtar User-Agent-strängen och navigator.webdriver. Med stealth-plugin aktiv kommer User-Agent att vara en normal Chrome-sträng (inte något som avslöjar Puppeteer) och navigator.webdriver bör vara undefined eller false istället för true. Vi loggar ut dessa värden som en kontroll. (Andra stealth-patchar, som ej visas här, inkluderar att emulera vanliga plugins, justera window.outerWidth/Height, dölja specifika källkodskommentarer etc. – allt för att minska mismatch mot en vanlig webbläsares fingerprintzenrows.com.)
+För Playwright (Python eller Node) finns liknande möjligheter. Man kan t.ex. starta Chromium med flaggor som --disable-blink-features=AutomationControlled för att dölja enklare spår. Det finns även paket som undetected-playwright som implementerar stealth-tekniker. I Python-Playwright kan man manuellt sätta egenskaper via page.evaluateOnNewDocument för att override:a navigator.webdriver med false, ange custom userAgent via kontextalternativ, etc. Principen är densamma: reducera de avvikelser som sajten kan kontrollera.
+Typiska misstag sajter gör (fingerprinting):
+•	Förlitar sig på kända attribut: Många anti-bot-skript kollar bara specifika flaggor som navigator.webdriver eller standard-Headless Chrome-versionens user-agent. Stealth-pluginet och liknande verktyg nollställer just dessa enkla saker. Om sajten inte gör mer avancerad analys (t.ex. tidsmätnings-baserad detektering eller korsjämförelse av många fingerprint-element) kan en bot glida förbi.
+•	Statiska fingerprint-checker: Vissa sajter kanske endast kollar fingerprint vid sidladdningens start. En bot kan då sätta rätt värden innan sidan laddas. Om sajten inte fortsätter att slumpmässigt testa egenskaper under sessionens gång, kan automationen förbli oupptäckt.
+•	Brist på uppdatering: Stealth-pluginet är visserligen open-source (så anti-bot-utvecklare kan studera det), men många webbplatser uppdaterar inte sina botfilter tillräckligt ofta. Det innebär att kända stealth-tekniker från förra året fortfarande kan fungera om inte sajten proaktivt testar mot dem.
+•	Ingen djupare interaktionsanalys: Fingerprinting handlar inte bara om statiska värden – riktiga användare har ofta unika kombinationer av installade fonts, plugins, kanske vissa uppdateringar och rör sig med mänskliga rörelser. Om en sajt enbart gör tekniska checker på några navigator-värden och inget mer, kan en bot med spoofat fingerprint men fortfarande icke-mänskligt beteende ändå få passera initialt. (Visserligen kan avancerade sajter spåra musrörelser, scrollmönster etc, men många implementerar inte det fullt ut.) Detta glapp utnyttjas av bots.
+4. CAPTCHA-bypass (automatisk CAPTCHA-lösning)
+CAPTCHA är utmaningar utformade för att skilja människa från bot, t.ex. bildigenkänning ("välj alla bussar"), reCAPTCHA v2 ("jag är inte en robot"-kryssrutan), reCAPTCHA v3 (osynlig poängbaserad), hCaptcha, matematiska uppgifter, etc. För en scraper är CAPTCHAs hinder eftersom de kräver tolkning av något som datorer är dåliga på utan specialbehandling. Avancerade scrapingsystem har därför integreringar för att antingen undvika CAPTCHA helt eller lösa dem automatiskt.
+Bypass-strategier:
+•	Undvikande: Det bästa är om boten kan kringgå att utlösa CAPTCHA överhuvudtagetzenrows.com. Det kan innebära att sakta ned förfrågningarna, byta IP oftare, eller undvika mönster som triggar skyddet. Ofta visas CAPTCHAs först efter ovanligt beteende – om boten beter sig mer “mänskligt” kanske utmaningen aldrig dyker upp.
+•	Automatisk lösning: Om en CAPTCHA ändå krävs (vissa sajter visar t.ex. alltid reCAPTCHA vid första besöket oavsett vad), kan scrapers ta hjälp av tjänster som 2Captcha, AntiCaptcha, DeathByCaptcha m.fl. Dessa tjänster använder antingen människor eller maskininlärning för att lösa CAPTCHAs åt dig mot en avgift. Boten skickar bild- eller sitekey-data till API:et och får tillbaka svaret (t.ex. en textsträng eller en token) att skicka in i formuläret.
+•	OCR/AI-lösningar: För enklare CAPTCHAs (t.ex. enbart text med brus) kan man använda OCR-bibliotek som Tesseract eller tränade ML-modeller direkt i koden för att försöka lösa dem. Detta kräver bildbehandling (t.ex. filtrera bort brus, öka kontrast) och är långt ifrån perfekt, men i forskningssyfte förekommer det för att demonstrera sårbarheter i enkla CAPTCHAs.
+Nedan visas först ett exempel på integration med 2Captcha-API i Python för att lösa en reCAPTCHA (den typiska Google "I’m not a robot" som oftast kräver att man klickar i en ruta och ev. bilder). Efter det följer ett exempel på hur man med OCR kan försöka lösa en enkel text-CAPTCHA.
+import requests
+import time
+
+API_KEY = "DIN_2CAPTCHA_APIKEY"  # ersätt med din API-nyckel
+site_url = "https://exempel.se/registrera"  # sidan där reCAPTCHAn finns
+site_key = "6Lc_aX...8UH"  # reCAPTCHA site-key från målsidan (hittas i HTML)
+
+# 1. Skicka in lösningsförfrågan till 2Captcha
+captcha_id = None
+params = {
+    'key': API_KEY,
+    'method': 'userrecaptcha',
+    'googlekey': site_key,
+    'pageurl': site_url
+}
+resp = requests.get("http://2captcha.com/in.php", params=params)
+if resp.text.startswith("OK|"):
+    captcha_id = resp.text.split('|')[1]
+    print(f"CAPTCHA skickad för lösning, ID={captcha_id}")
+else:
+    raise Exception(f"Misslyckades skicka CAPTCHA: {resp.text}")
+
+# 2. Poll: vänta tills 2Captcha har lösningen
+captcha_solution = None
+poll_url = f"http://2captcha.com/res.php?key={API_KEY}&action=get&id={captcha_id}"
+for i in range(20):  # polla under en begränsad tid
+    time.sleep(5)  # vänta 5 sek mellan försök (tar oftast ~10-30s för 2Captcha)
+    res = requests.get(poll_url)
+    if res.text == "CAPCHA_NOT_READY":
+        continue  # inte klar än, fortsätt vänta
+    if res.text.startswith("OK|"):
+        captcha_solution = res.text.split('|')[1]
+        break
+
+if captcha_solution:
+    print("Fick CAPTCHA-lösning:", captcha_solution)
+    # Här skulle boten skicka in captcha_solution i formuläret, t.ex.:
+    # requests.post(site_url, data={"g-recaptcha-response": captcha_solution, ...})
+else:
+    print("Ingen lösning kunde hämtas (timeout eller fel).")
+Förklaring: I koden ovan talar vi först om för 2Captcha vilken CAPTCHA vi vill lösa. För reCAPTCHA V2 krävs dels vår API-nyckel, dels googlekey (sitekey för reCAPTCHAn på sidan) samt pageurl där den finns. Vi skickar en GET till in.php-endpoint: om svaret börjar med "OK|" har 2Captcha tagit emot uppdraget, och vi får tillbaka ett unikt captcha_id. Sedan loopar vi och gör en ny request var 5:e sekund till res.php-endpointen med vårt ID för att kolla om en lösning finns. Innan den är löst svarar API:et "CAPCHA_NOT_READY" (notera stavfelet i responsen, det är så i API:t). När vi får ett svar som börjar på "OK|" innebär det att CAPTCHA:n är löst; resten av strängen efter OK| är själva lösningen (för reCAPTCHA är det en lång token som ska skickas tillbaka i formuläret under fältet g-recaptcha-response). I en riktig scraper skulle man ta captcha_solution och antingen simulera formulärposten med den, eller om man automaterar en browser, fylla in värdet i DOM och trigga formulärsubmitt. Efter det förväntar sig sajten att utmaningen är passerad och låter oss fortsätta.
+Obs: 2Captcha och liknande tjänster kostar pengar per löst CAPTCHA, och det tar tid (10-30 sekunder typiskt). Därför försöker man undvika dem om möjligt. Ibland är dock sajter designade så att det inte går att nå innehåll utan att lösa minst en CAPTCHA. Då kan det löna sig att lösa den en gång och sedan spara sessionens cookies. Nedanstående rad kod visar hur man med requests kan behålla cookies och återanvända dem efter att ha löst en CAPTCHA första gången:
+session = requests.Session()
+# ... (anta att vi postade lösningen och nu är inloggade/passerade)
+# Spara cookies till fil för återanvändning i framtida körningar
+import pickle
+pickle.dump(session.cookies, open("cookies.pkl", "wb"))
+Genom att återanvända cookies slipper man lösa CAPTCHA:n igen nästa gång (såvida inte webbplatsen har kortlivade sessioner). Detta illustrerar samverkan mellan CAPTCHA-bypass och cookie-hantering, som vi tar upp mer i en senare sektion.
+För att visa ett alternativ presenteras även hur man med OCR kan försöka lösa en enklare text-baserad CAPTCHA. Tänk er en CAPTCHA-bild som bara består av några bokstäver/siffror med lite brus. Vi kan använda Python-biblioteket Pillow för bildhantering och Pytesseract (Tesseracts OCR-bindning) för att läsa av text:
+from PIL import Image, ImageFilter
+import pytesseract
+
+image = Image.open("captcha.png")
+gray = image.convert("L")            # konvertera till gråskala
+bw = gray.point(lambda x: 0 if x < 128 else 255, '1')  # binär (svartvit) tröskling
+bw = bw.filter(ImageFilter.MedianFilter(3))  # filtrera för att ta bort brus
+text = pytesseract.image_to_string(bw)
+print("OCR tolkar CAPTCHA som:", text.strip())
+Förklaring: Här öppnar vi bilden captcha.png. Förbehandling är viktigt: vi konverterar till gråskala och sedan till en binär svartvit bild (med en tröskel vid 128 av 255 – pixelvärden under blir 0/svart och över blir 1/vitt). Vi kör en medianfilter för att reducera brusiga pixlar. Sedan skickas bilden till pytesseract.image_to_string som försöker läsa text. Resultatet skrivs ut. I bästa fall får vi rätt text, men OCR kan lätt misslyckas om CAPTCHA-bilden är komplex (vriden text, linjer genom texten, rörig bakgrund etc). Detta exempel är mest för att visa principen – i praktiken är tredjepartstjänster oftast mer pålitliga för svårare CAPTCHAs.
+Typiska misstag sajter gör (CAPTCHA-skydd):
+•	För enkel CAPTCHA: Vissa sajter använder egna enkla text-CAPTCHAs (kanske pga legacy-system) som har få variationer. Bots kan träna en modell eller använda OCR med hög träffsäkerhet för just den CAPTCHA-typen. Om inte CAPTCHAn är tillräckligt komplex (eller om samma text visas länge utan att bytas ut) kan den knäckas relativt lätt.
+•	Visas för sällan/ojämnt: Om CAPTCHA bara triggas efter ett tröskelvärde (t.ex. >100 requests/min) kan en bot ställa in hastigheten precis under tröskeln och slippa utmaningen helt. Sajter som inte dynamiskt anpassar när CAPTCHA ska visas ger utrymme för bots att finna en ”safe rate”.
+•	Återanvändbar session: När en bot väl har löst en CAPTCHA och fått en anti-bot-cookie eller session, kan den återkomma hur mycket som helst med den tills sessionen går ut. Om sajten inte följer upp en löst CAPTCHA med andra kontroller kan en angripare exploatera det genom att lösa en gång manuellt och sedan köra automatiskt länge på samma cookies.
+•	Ingen sekundär kontroll: CAPTCHA skyddar bara det ställe där den införs (t.ex. inloggning eller första sidladdningen). Om en bot väl är förbi den punkten och sajten inte har fler kontrollmekanismer (som beteendeanalys eller ytterligare utmaningar vid misstänkt aktivitet), kan den här typen av skydd helt kringgås efter initial ansträngning.
+•	Standardlösningar utan extra säkerhet: Många sajter använder Google reCAPTCHA eller liknande standardlösning som visserligen är svår att knäcka utan betaltjänster, men dessa tjänster är allmänt tillgängliga för bots. Om inte implementationen kompletteras med exempelvis att begränsa antal försök per IP eller analysera inmatningstider, kan en bot bruteforca eller köpa sig förbi reCAPTCHA relativt obemärkt.
+5. Dynamisk JavaScript-rendering och DOM-interaktion (headless-browser)
+Moderna webbplatser, särskilt SPA (Single Page Applications), laddar mycket innehåll via JavaScript efter sidladdning. En enkel HTTP-request med requests får då bara ett tomt skal av HTML, och själva datan dyker upp först efter att skripten körts i en riktig webbläsare. För att scrapa sådant innehåll använder man en headless browser – ett osynligt webbläsarfönster drivet via kod – som renderar sidan precis som hos en riktig användare. Populära verktyg är Puppeteer (Headless Chrome via Node), Playwright (multiplatform via Node/Python/etc) eller Selenium. Dessa kan inte bara ladda sida med JS, utan även utföra DOM-interaktioner: klicka på knappar, fylla i formulär, scrolla för att trigga lazy loading, hantera modaler, etc.
+När behövs headless? Om en sida returnerar lite eller ingen användbar HTML utan att JS körts, eller om sajten kräver interaktion (t.ex. klick på en flik för att visa data), då krävs en headless-lösning. I en avancerad scraper kan man ha båda lägen: först prova med en billig snabb requests-get, och om viktiga data saknas i svaret, falla tillbaka på en headless-webbläsare för att få den dynamiska delen (mer om sådan automatisk analys i nästa avsnitt).
+Nedan är ett exempel med Playwright i Python som demonstrerar dynamisk rendering och interaktion. (Liknande går att göra i Puppeteer; syntaxen är snarlik.) Exemplet öppnar en sida, väntar in ett element, interagerar med sidan genom att fylla i ett fält och klicka på en knapp, scrollar för att ladda mer innehåll, och extraherar sedan data från DOM:
+# Installation: pip install playwright && playwright install
+from playwright.sync_api import sync_playwright
+
+with sync_playwright() as p:
+    browser = p.chromium.launch(headless=True)
+    page = browser.new_page()
+
+    # Gå till en fiktiv sida som kräver inmatning och klick
+    page.goto("https://www.example.com/sok", wait_until="networkidle") 
+    # Fyll i ett sökformulär (exempel: sök efter "OpenAI")
+    page.fill("input[name=q]", "OpenAI")
+    page.click("button#search")
+    page.wait_for_selector("#resultatlista")  # vänta tills resultatlistan laddat
+
+    # Scrolla ned för att ladda fler resultat (t.ex. lazy loading av bilder eller fler items)
+    page.evaluate("window.scrollBy(0, document.body.scrollHeight)") 
+    page.wait_for_timeout(1000)  # vänta 1 sekund för att simulera lästid och låta ev. ny data ladda
+
+    # Extrahera data från DOM – hämta t.ex. alla titlar i resultatlistan
+    titles = page.query_selector_all("#resultatlista .item .title")
+    title_texts = [await el.text_content() for el in titles]
+    print("Hittade titlar:", title_texts[:5])
+    
+    browser.close()
+Förklaring: Vi använder playwright.sync_api för enkelhet (synkront API). Vi startar en Chromium-browser i headless-läge. Sedan navigerar vi till URL:en https://www.example.com/sok (tänk på denna som en sida med ett sökfält). Parametern wait_until="networkidle" gör att Playwright väntar tills nätverkstrafiken avtagit, vilket brukar indikera att initiala XHR-anrop och rendering är klara. Därefter använder vi page.fill för att skriva in sökordet "OpenAI" i sökfältet, och page.click för att trycka på sökknappen. Vi väntar på att ett element med id resultatlista ska dyka upp – ett tecken på att sökresultaten är inladdade i DOM. Sedan scrollar vi ned hela sidan genom att köra window.scrollBy i sidans kontext; detta kan trigga att fler resultat laddas (många sajter laddar fler items när användaren scrollar). Vi pausar kort med wait_for_timeout(1000) för att efterlikna en mänsklig användare som läser lite och för att ge eventuella nya element tid att laddas. Slutligen extraherar vi data: här hämtar vi alla element som matchar CSS-selektorn #resultatlista .item .title (t.ex. titeltexter på varje sökresultat). Vi använder text_content() på varje element för att få ut texten. De första 5 titlarna skrivs ut som exempel.
+Det viktiga att notera är att med en headless-browser får vi det slutliga DOM-innehållet efter att sidan kört sitt JavaScript. Detta inkluderar data som inte fanns i ursprungs-HTML:en. Utan denna metod hade en vanlig HTTP GET bara returnerat en tom söksida utan resultat.
+Typiska misstag sajter gör (dynamiskt innehåll):
+•	Antar att bots inte kör JS: Många sajter litar på att en bot inte orkar rendera JavaScript. Historiskt var detta delvis sant – det är resurskrävande att driva en hel browser för varje sida. Men med headless-teknik och molnresurser kan scrapers visst göra detta i stor skala. Om en sajt enbart förlitar sig på att innehållet är “gömt” bakom JS utan att lägga till extra bot-detektering, är det fritt fram för den som automatiserar en browser.
+•	Ingen eller enkel headless-detektering: Vissa webbplatser implementerar någon enklare kontroll, t.ex. om navigator.webdriver är true eller om tiden mellan sidladdning och första interaktion är orimligt låg. Men om dessa kontroller är triviala och kända, kan de kringgås (se föregående avsnitt om stealth). Många sajter har inte alls sådana kontroller, vilket gör att en headless-browser beter sig tillräckligt likt en vanlig för att passera.
+•	Allt client-side utan fallback: Ibland erbjuds inget alternativ för att få data server-side (t.ex. inget öppet API och ingen server-side rendering). Det innebär att även legitima användare måste köra JS för att se innehåll. En bot kan då göra samma sak. Om sajten inte kompletterar med bot-skydd som CAPTCHA eller anomalidetektion vid själva interaktionerna (t.ex. om klick sker supersnabbt eller i perfekt mönster) kommer bottar med headless att kunna dra nytta av detta.
+•	Förutsägbara interaktionsmönster: Om sajtens dynamiska innehåll alltid laddas på samma sätt (t.ex. alltid via ett specifikt XHR-anrop när man scrollat 1000px, eller alltid via en knapp med id "loadMore"), kan en bot enkelt skripta just det. Sajter som inte varierar eller randomiserar interaktionsflödena gör det lättare för automation. Exempelvis om varje sida laddar nästa set av objekt via /getItems?page=2, /getItems?page=3 etc, kan en scraper eventuellt kalla de URL:erna direkt utan ens en riktig browser om de upptäcker mönstret.
+6. Automatisk analys: krävs headless eller ej?
+En avancerad scraper vill inte i onödan använda en tung headless-browser för varje sida – det är resurskrävande. Därför kan man implementera logik som automatiskt avgör om en viss sida kräver en riktig browserrendering eller om vanlig HTTP-förfrågan räcker. Strategin är att börja med en lättviktig request och inspektera svaret för tecken på att innehållet saknas eller att en botdetektering triggats, och bara då ta till en headless-lösning som fallback. Här är hur det kan gå till:
+•	Inspektera innehåll: Efter en requests.get kan scrapen analysera HTML:en. Finns den data vi letar efter? Om t.ex. målet är att extrahera produktnamn men HTML-svaret knappt innehåller något sådant (kanske bara ett <div id="app"></div> och några script-taggar) – då är det troligt en SPA som kräver JS. Även presence av fraser som "Please enable JavaScript" eller Cloudflare-varningar antyder att ren request inte räcker.
+•	Kolla på statuskod och headers: Om man får en oväntad omdirigering (t.ex. till en interstitiell CAPTCHA-sida) eller status 403/503 vid vanlig request men inte vid simulering av en browser, så tyder det på bot-blockering.
+•	Heuristik för sidstorlek: Många moderna sidor levererar ett minimalt HTML-skelett (bara några KB) och laddar resten via API-anrop efteråt. En heuristik kan vara: om svaret är under säg 50 KB och vi förväntade oss större, kan det vara värt att prova med headless.
+•	Testa båda och jämför: I vissa fall kan scrapen initialt göra både en requests-fetch och en headless-fetch på en testsida. Genom att diff:a resultaten (t.ex. se hur mycket extra innehåll som dök upp i headless-versionen) kan den dynamiskt lära sig vilka sajter som kräver headless. Detta kan sedan lagras i en konfig (t.ex. en lista över domäner som alltid ska köras via browser).
+Nedan är ett kodexempel i Python som implementerar en enkel automatisk fallback. Den försöker hämta en sida med requests. Om den upptäcker tecken på att det är en bot-svarssida eller att viktigt innehåll saknas, så startar den Playwright för att rendera sidan och returnerar sedan den fullständiga HTML:en.
+import requests
+from playwright.sync_api import sync_playwright
+
+def fetch_page(url):
+    # 1. Försök med vanlig HTTP-förfrågan
+    try:
+        resp = requests.get(url, timeout=10, headers={
+            "User-Agent": "Mozilla/5.0",  # enkel header för att undvika omedelbar block
+        })
+    except requests.RequestException as e:
+        print("Grundläggande begäran misslyckades:", e)
+        use_browser = True
+    else:
+        text = resp.text or ""
+        # Heuristik: sök efter tecken på att sidan inte är komplett eller är blockerad
+        use_browser = False
+        if resp.status_code in (403, 503):  # Forbidden eller Service Unavailable -> möjligen block
+            use_browser = True
+        if "var browser = " in text or "Please enable JavaScript" in text:
+            # Exempel på text som indikerar Cloudflare anti-bot sidor eller "JS required" meddelande
+            use_browser = True
+        # Om sidan verkar vara minimal (t.ex. <html><head>... ett fåtal taggar)
+        if len(text) < 5000:
+            use_browser = True
+
+        if not use_browser:
+            print("✅ Innehåll hämtat utan headless.")
+            return text
+
+    # 2. Om vi kom hit: fallback till headless via Playwright
+    print("ℹ️  Växlar till headless-läge för", url)
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page()
+        page.goto(url, wait_until="load")  # ladda sidan med full rendering
+        content = page.content()  # hämta resulterande HTML-innehåll
+        browser.close()
+        return content
+
+# Användningsexempel
+html = fetch_page("https://exempel.se/produkt/123")
+Förklaring: Funktionen fetch_page implementerar logiken. Först försöker vi requests.get med en basic User-Agent (för att inte se ut som en Python-bot direkt). I use_browser flaggar vi om vi ska ta till headless. Vi sätter use_browser=True om någon av våra villkor uppfylls:
+•	HTTP-statuskod 403/503, vilket ofta betyder att accessen nekades (403 Forbidden kan tyda på block, 503 ibland på Cloudflares "IUAM" JavaScript-utmaning eller liknande).
+•	Om svaret innehåller typiska anti-bot-sida mönster, som variabler som Cloudflare injicerar i utmaningssidor ("var browser = ...") eller en tydlig uppmaning att aktivera JavaScript. Dessa string-mönster avslöjar att vi träffat på en bot-block eller en plats där JS är krav.
+•	Om längden på innehållet är väldigt liten (godtyckligt satt < 5000 tecken här). Detta fångar scenarion där sidan i princip är tom på data (t.ex. en SPA som bara har ett <div id="root"></div> och lite script-taggar i HTML). Den gränsen kan justeras; i en riktig lösning kan man mer sofistikerat kolla om förväntade element finns eller inte.
+Om ingen av dessa triggers uppfylls, antar vi att vi fick riktigt innehåll och returnerar HTML:en direkt. Men om någon trigger slår, så initierar vi Playwright: öppnar en headless Chromium, laddar sidan och väntar tills load-eventet (som innebär att DOM och resurser är i stort sett klara – vi skulle kunna använda networkidle eller specifika vänten på element också). Sedan tar vi page.content(), vilket är HTML-källkoden för den renderade sidan med dynamiska innehållet inlined. Vi stänger browsern och returnerar den HTML:en istället.
+I loggen kommer vi se antingen ✅ Innehåll hämtat utan headless. eller ℹ️ Växlar till headless-läge... vilket indikerar vilken väg som togs. Detta kan hjälpa att diagnostisera om heuristiken funkar rätt.
+Typiska misstag sajter gör (headless-detekteringsbehov):
+•	Skickar tydliga block-sidor: Många anti-bot-lösningar (som Cloudflare) svarar med en speciell sida eller meddelande när de misstänker bot. Dessa sidor är ofta statiska och enkla att känna igen (de innehåller ord som "Attention Required" eller JavaScript-utmaningskoder). Bot-utvecklare kan lätt mönster-matcha sådant och därmed veta när de ska skifta taktik.
+•	Inga gradvisa svar: En smartare strategi från sajten vore att ibland skicka delvis data eller förvirrande svar för att se hur klienten reagerar. Men de flesta skickar antingen full data eller en block-sida. Denna binära skillnad gör det enkelt för en scraper att programmera in en kontroll – antingen fick vi det vi ville (data finns) eller så fick vi något helt annat (dags att testa headless).
+•	Konsekvent användning av JS-ramverk: Om en viss domän alltid använder t.ex. Angular/React utan server-side rendering, då vet en scraper att för just den domänen är det alltid headless som gäller. Sajten som är förutsägbar i detta avseende bjuder in till att scrapers förkonfigurerar sina verktyg (t.ex. “domain X -> always use browser”). Variation eller hybridrendering hade gjort det svårare att veta när browsern behövs.
+•	Ingen aktiv detektering vid fallback: När en klient byter från att misslyckas (med requests) till att lyckas (med browser) på samma resurs, kan det tyda på en bot som gör en fallback. Men de flesta sajter har ingen mekanism för att koppla samman den ”misslyckade” och ”lyckade” försöket som samma aktör – särskilt om olika IP eller fingerprints användes. Utan sådan korrelation kan bottar fritt prova först utan JS och sedan med, utan att sajten “minns” det första försöket som misstänkt.
+7. Cookie- och sessionhantering i scrapers
+Webbplatser använder cookies och sessioner för att hålla reda på användare – inloggningsstatus, preferenser, och även rate-limiting-information kan lagras server-side knutet till en sessionscookie. En scraper som ignorerar cookies kommer framstå som en helt ny användare vid varje request, vilket dels kan trigga repetitiva CAPTCHA-utmaningar, dels förlora fördelar såsom inloggning eller inställningar. Avancerade scrapers hanterar därför cookies på liknande sätt som webbläsare: de behåller en cookiejar per domän eller session och skickar med relevanta cookies på varje request. Detta är viktigt för att t.ex. hålla sig inloggad, eller för att behålla en anti-bot-token som kan ges efter att ha klarat en utmaning.
+I Python är det enkelt att hantera cookies med requests.Session. I en headless-browser sker det automatiskt (Puppeteer/Playwright behåller cookies som en riktig browser så länge instansen lever, och kan ofta spara dem till disk om man vill återanvända dem senare).
+Här är ett Python-exempel som visar cookie-hantering med requests.Session. Exemplet loggar in på en hypotetisk sajt och använder sedan den etablerade sessionen för att hämta en skyddad sida. Cookies återanvänds automatiskt i sessionen. Sedan sparar vi cookies till fil för potentiell återanvändning i ett senare tillfälle (simulerar persistenta cookie jars per domän).
+import requests
+import pickle
+
+login_url = "https://exempel.se/login"
+protected_url = "https://exempel.se/mina-sidor"
+
+# Skapa en session för att hantera cookies automatiskt
+session = requests.Session()
+
+# 1. Logga in genom att posta användaruppgifter
+login_data = {"user": "testuser", "password": "hemligt"}
+resp = session.post(login_url, data=login_data)
+if resp.status_code == 200:
+    print("Inloggning lyckades")
+else:
+    print("Inloggning misslyckades, status:", resp.status_code)
+
+# 2. Använd samma session för att hämta en skyddad sida
+resp2 = session.get(protected_url)
+if resp2.status_code == 200:
+    print("Hämtade skyddad sida, längd:", len(resp2.text))
+else:
+    print("Kunde ej hämta skyddad sida, status:", resp2.status_code)
+
+# 3. Spara cookies från sessionen till fil (för framtida bruk)
+with open("exempel_cookies.pkl", "wb") as f:
+    pickle.dump(session.cookies, f)
+
+# ... (vid ett senare tillfälle kan vi läsa in cookies och fortsätta sessionen)
+new_session = requests.Session()
+with open("exempel_cookies.pkl", "rb") as f:
+    saved_cookies = pickle.load(f)
+    new_session.cookies.update(saved_cookies)
+# new_session kan nu användas med samma cookies som tidigare, utan att logga in igen.
+Förklaring: Vi skapar först en requests.Session. Detta objekt behåller cookies mellan anrop. När vi gör session.post(login_url, data=login_data) och servern svarar med en Set-Cookie (t.ex. en sessions-ID cookie), lagras den i session.cookies. Sedan, när vi gör session.get(protected_url), skickas automatiskt den cookie med, så servern känner igen oss som inloggade och levererar innehållet (t.ex. kontouppgifter). Utan sessionen hade den andra förfrågan blivit avvisad eller omdirigerad till login, eftersom ingen cookie fanns.
+Efter att ha använt sessionen, serialiserar vi cookies till disk med pickle. Senare laddar vi dem och uppdaterar en ny Session med dessa cookies – så kan vår scraper “komma ihåg” tidigare tillstånd även om den startas om. (Notera: cookies har utgångstider; detta är bara giltigt så länge cookies inte hunnit bli ogiltiga på serverns sida.)
+I en headless-browser kan man uppnå liknande persistens genom att spara och läsa cookies via kod, eller enklare genom att använda en user data directory – dvs. låta browsern spara en profil. Puppeteer Extra har t.ex. en plugin för User Data Dir som möjliggör att en Chrome-profil med cookies, cache, localStorage etc. återanvänds mellan körningarzenrows.com. På så sätt kan en bot behålla inloggningar och long-lived cookies precis som en vanlig användare som öppnar webbläsaren varje dag utan att behöva logga in på nytt.
+Typiska misstag sajter gör (session/cookie):
+•	Långa sessionstider: Om sessionscookies varar väldigt länge (veckor eller månader) kan en attackerande bot spara en cookie och använda den om och om igen. Vissa sajter förlitar sig på att sessioner är knutna till IP, men om inte – en cookie kan potentiellt byta IP och ändå gälla. Det innebär att en löst CAPTCHA eller inloggning kan exploateras under lång tid.
+•	Ingen IP-bindning av session: Relaterat till ovan – om en inloggad session inte ogiltigförklaras vid IP-byte kan en botnet byta ut bakgrundsinfrastrukturen och fortfarande använda samma inloggade cookies. Många webbplatser kollar inte IP kontinuerligt efter inloggning, vilket lämnar dörren öppen för att distribuera last över proxies under samma kontocookies.
+•	Överdrivet förlitande på cookies för bot-skydd: Vissa system sätter en speciell cookie när du klarat en bot-utmaning, och så länge du har den cookien slipper du fler utmaningar. Detta är bekvämt för riktiga användare – men en bot kan sno åt sig en sådan cookie (t.ex. genom att lösa en CAPTCHA eller genom att automatisera en huvudlös browser en gång) och sedan återanvända cookien på massor av nya förfrågningar. Om inte servern kontrollerar andra parametrar (user agent, beteende) associerat med den cookien, så fungerar den som en master-nyckel.
+•	Ingen isolering mellan användare: Om en bot kan skapa flera konton eller sessioner, och webbplatsen inte har mekanismer för att upptäcka att dessa tillhör samma källaktor, kan den sprida ut sina requests över många sessioner. Varje enskild session kanske håller sig under radarn för upptäckt. Sajter som bara spårar aktivitetsnivå per session men inte korrelerar dem sinsemellan missar helhetsbilden.
+•	Predictable session identifiers: Även om det är mer ovanligt, om sessions-ID i cookies är förutsägbara eller har svaghet, kan en angripare potentiellt stjäla eller generera giltiga sessioner. Detta är mer ett säkerhetshål än anti-bot, men nämns för att cookies generellt kan utnyttjas om de inte hanteras säkert (t.ex. över HTTP istället för HTTPS, vilket tillåter avlyssning).
+8. Realistiska HTTP-anrop (User-Agent-rotation, headers, referer, locale)
+En av de enklaste sätt att upptäcka en bot är att titta på HTTP-förfrågningens huvuden (headers). En vanlig webbläsare skickar en hel uppsättning rubriker: User-Agent (som identifierar webbläsare/version/OS), accept-rubriker (Accept, Accept-Language, Accept-Encoding etc.), Connection, eventuellt Upgrade-Insecure-Requests, Sec-Fetch-Site med flera moderna headerfält. Ett bibliotek som Python requests skickar däremot en mycket sparsam uppsättning standardrubriker – och en distinkt User-Agent som avslöjar att det är Python requests. Många webbplatser blockar därför alla klienter som har “fel” headers eller uppenbart är skript. För att undvika detta behöver scrapers efterlikna riktiga webbläsare genom att skicka realistiska headers.
+Åtgärder för realistiska anrop:
+•	User-Agent-rotation: Ha en lista med aktuella user-agents för olika vanliga webbläsare (Chrome, Firefox, Safari på olika OS, mobilt vs desktop)zenrows.comzenrows.com. Välj slumpmässigt en för varje ny session eller varje förfrågan. På så vis framstår varje bot-request som en ny användare med en viss webbläsare. (Dock, rotera inte för ofta på samma sajt under samma session – det kan se misstänkt ut om “du” byter webbläsare för varje sida. Bättre att hålla per session.)
+•	Full uppsättning headers: Skicka inte bara User-Agent. Lägg till Accept (t.ex. / eller precis som en riktig browser för HTML: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8), Accept-Language (t.ex. sv-SE,sv;q=0.9,en-US;q=0.8,en;q=0.7 om du vill se ut som en svensk användare), och Accept-Encoding (gzip, deflate, br – för att signalera stöd för kompression). Även Connection: keep-alive är standard. Moderna webbläsare skickar dessutom ofta Sec-Fetch-Site, Sec-Fetch-Mode, Sec-Fetch-Dest osv – men dessa kan vara överkurs att exakt imitera. Det viktiga är att inte sticka ut med för få headers eller tydligt konstiga värden.
+•	Referer och navigationskontext: När en människa klickar runt på en sajt skickas ofta Referer-headern – den berättar var användaren kom ifrån. Bots kan imitera detta genom att vid navigering inom en sajt ange Referer: https://site.com/prevpage så det ser ut som man klickade en länk från föregående sida. Likaså om boten kommer in via en Google-sökning kan man sätta Referer till Google. Detta gör trafiken mer organiskzenrows.comzenrows.com.
+•	Locale/kodning: Genom Accept-Language kan boten se ut som kommer från en viss språkmiljö. Kombinerat med IP-geolokalisering (från proxies) kan detta göra att t.ex. en svensk IP har Accept-Language: sv-SE vilket är logiskt. Missmatch här (t.ex. en rysk IP men språk engelsk) kan flaggas av en vaksam sajt. Boten bör alltså hålla sina signaler konsistenta.
+Nedan ett Python-exempel som demonstrerar hur man kan skicka en förfrågan med ett realistiskt header-paket samt välja en slumpmässig User-Agent från en lista:
+import requests
+import random
+
+# Exempel-listor av User-Agents och Accept-Language (normaliserade för olika scenarios)
+user_agents = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:102.0) Gecko/20100101 Firefox/102.0",
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 16_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1",
+]
+accept_languages = [
+    "sv-SE,sv;q=0.9,en-US;q=0.8,en;q=0.7",  # primärt svenska, sekundärt engelska
+    "en-US,en;q=0.9,en-GB;q=0.8",          # primärt amerikansk engelska
+    "de-DE,de;q=0.9,en;q=0.6",            # primärt tyska
+]
+
+# Bygg ett headers-paket för en simulering av en svensk Chrome användare
+headers = {
+    "User-Agent": random.choice(user_agents),
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": random.choice(accept_languages),
+    "Accept-Encoding": "gzip, deflate, br",
+    "Connection": "keep-alive",
+    # "Referer": "https://www.google.com"  # exempelfall: kommer från en Google-sökning
+}
+
+url = "https://exempel.se/produkt/123"
+resp = requests.get(url, headers=headers)
+print("Statuskod:", resp.status_code)
+Förklaring: I början definierar vi listor över några user-agent-strängar och några accept-language-strängar. Listorna här är korta, men i praktiken kan man ha tiotals eller hundratals för att täcka variation. Vi tar slumpmässigt en user-agent ur listan och en accept-language. Sedan skapar vi en headers-dictionary som efterliknar en modern browser. Accept och Accept-Encoding här är typiska för webbläsare. Connection: keep-alive är standard (HTTP/1.1 har keep-alive som default men explicit header skadar inte och vissa gamla system förväntar sig det). Referer är kommenterad men kan sättas om man vet var navigeringen kom ifrån.
+När vi gör requests.get med dessa headers kommer förfrågan se mycket mer legitim ut. Om vi skulle printa resp.request.headers skulle vi se att våra värden är med istället för requests egna. Vi slumpade user-agent så upprepade körningar kan ge olika strängar, vilket minskar chansen att alla våra requests ser identiska ut.
+I kombination med IP-rotation (från tidigare) betyder detta att en viss IP-adress kommer också åtföljas av en rimlig uppsättning headers. T.ex. om proxyn är en svensk IP och vi valde svenska i Accept-Language, så matchar de. Små detaljer som den gör bottrafik svårare att särskilja.
+Typiska misstag sajter gör (header-baserad detektering):
+•	Statiska blocklistor för User-Agent: En del sajter blockerar bara kända bot-user-agents (som Python-requests, curl, äldre scrapingverktyg). En bot som ändrar User-Agent till något vanligt (Chrome etc) glider då förbi. Om sajten inte tittar på andra headers samtidigt, missar de helheten.
+•	Missar header-anomalier: Vissa enklare system kollar bara om en populär User-Agent finns, inte om övriga headers matchar den. Det finns fall där scrapers sätter en Chrome User-Agent men glömmer t.ex. Accept-Language – en riktig Chrome skickar alltid Accept-Language enligt OS-inställningarna. Om webbplatsen inte verifierar sådana saker kan bots med halvbra headerimitering ändå passera.
+•	Ingen kontroll av header-ordning eller case: En del anti-bot verktyg går så långt att de kollar ordningen på headers eller versalisering (t.ex. en riktig webbläsare skickar "Accept-Language" före "Accept-Encoding" alltid, och vissa rubriker har ett visst mönster av gemener/versaler). Python-requests sorterar t.ex. headers internt och kan ha en egen ordning. Om inte sajten jämför detta eller använder verktyg som gör det, missar de en sofistikerad detektionsmöjlighetzenrows.com. Många sajter nöjer sig med enklare kontroller.
+•	Ingen geografisk konsistens-check: Som nämnt – IP-lokation vs Accept-Language vs tidszon (ibland kan tidszon skickas via JavaScript). Om inte dessa kollas kan en aktör blanda dem fel utan att bli upptäckt. En skarp sajt kanske märker om du har svensk IP men enbart kinesiska som accept-language, men om inte, kan bots med inkonsekvenser passera.
+•	Få eller inga honeypot-fält: En annan header-relaterad taktik är att lägga in custom headers eller formulärfält som riktiga webbläsare inte sätter, för att se om en bot fyller i dem (t.ex. dold fält i formulär som ska lämnas tom). Om sajten inte har sådana trick utan bara litar på headerinnehåll, kan en välkonfigurerad bot helt imitera en legitim klient på header-nivå och undgå upptäckt.
+9. Failsafe och automatisk återförsök (retry-backoff på felkoder)
+Trots alla ovan försiktighetsåtgärder kommer en webbplats ibland att svara med fel när den anar för hög belastning eller misstänkt aktivitet. Vanliga koder är 429 Too Many Requests (när du överskridit en gräns), 403 Forbidden (när access nekas – t.ex. IP blockad eller krav på inloggning), och 5xx Server Error (ibland används 503 som antytt, för temporär block). En robust scraper har därför logik för att hantera felkoder genom automatisk återförsök med backoff. Det innebär att om en request får t.ex. 429, så väntar programmet en stund och försöker igen (kanske med en ny IP eller efter att ha sovit några sekunder). "Backoff" syftar på att tiden mellan försök ökar exponentiellt för att inte spämma servern.
+Att implementera retry-backoff skyddar både scrapers (de undviker onödiga blockeringar) och servern (minskar risken för att boten dumt nog DDoS:ar när den ändå är blockerad). Ofta kombineras detta med att byta proxy/IP när fel uppstår – om en viss IP fick 429 kanske nästa försök görs med en ny IP för att se om blocken är IP-specifik.
+Här är ett kodexempel i Python som illustrerar en enkel retry med exponential backoff:
+import requests
+import time
+
+def fetch_with_retries(url, max_retries=5):
+    delay = 1  # startfördröjning i sekunder
+    for attempt in range(1, max_retries+1):
+        try:
+            resp = requests.get(url, timeout=10)
+        except requests.RequestException as e:
+            print(f"Nätverksfel vid försök {attempt}: {e}")
+            # Vi kan antingen välja att inte räkna detta som ett försök eller backoff likväl
+        else:
+            status = resp.status_code
+            if status in (200, 201):
+                return resp  # lyckades, returnera responsen
+            if status in (403, 429, 500, 502, 503):
+                print(f"Försök {attempt}: fick status {status}, väntar {delay}s innan retry...")
+                time.sleep(delay)
+                delay *= 2  # dubblar väntetiden (exponentiell backoff)
+                continue
+            # Om annan statuskod (t.ex. 404 eller 400-serie som inte är temporär) bryt ut
+            print(f"Avbryter vid status {status} - ingen idé att försöka igen.")
+            break
+    return None
+
+# Använd funktionen
+response = fetch_with_retries("https://exempel.se/api/data")
+if not response:
+    print("Kunde inte hämta datan efter upprepade försök.")
+Förklaring: Funktionen fetch_with_retries försöker hämta url upp till max_retries gånger. Vi börjar med delay = 1 sekund. För varje försök gör vi requests.get. Om requests kastar ett exception (t.ex. timeout, DNS-fel), loggar vi det (i en riktig implementation kanske man skulle hantera det separat – exempelkoden fokuserar på HTTP-svar). Om vi får en respons kollar vi status_code:
+•	Vid 200/201 (OK eller Created) anser vi det lyckat och returnerar responsen direkt.
+•	Vid koderna 403, 429, 500, 502, 503 (typiska temporära fel eller blockeringar) så skriver vi ut en info och sover delay sekunder. Sedan multiplicerar vi delay med 2 (exponentiell ökning). continue går till nästa loopvarv (nästa försök).
+•	Om det är någon annan status (ex 404 Not Found, eller 400 Bad Request etc) så betraktar vi det som ett permanent fel och bryter ut utan fler försök – det finns ingen poäng att loopa på en 404 t.ex.
+Efter att loopat max antal gånger utan framgång returnerar funktionen None (i stället för en respons). Anropande kod kan då hantera att datan inte gick att få (kanske logga eller ge upp).
+Denna strategi gör att om servern bad oss sakta ned (429) eller gav ett tillfälligt fel, så väntar vi gradvis längre: 1s, 2s, 4s, 8s, ... innan varje nytt försök. Det ger servern andrum och minskar chansen att vi blir permanent bannlysta. I ett riktigt system kan man också byta proxy eller tornera user-agent när man gör ett nytt försök, för att variera signalerna – exempelkoden ovan gör inte det, men i kombination med avsnitt 2 och 8 kan man tänka sig att lägga in session.proxies = ... ny proxy i loopen vid fel.
+Typiska misstag sajter gör (felhantering/blockering):
+•	Tydlig Retry-After utan enforcement: Ibland skickar servern headern Retry-After: X vid 429 eller 503 för att tala om hur länge klienten bör vänta. Men inte alla klienter lyder det. En bot kan däremot lätt parse:a den headern och faktiskt vänta angiven tid. Om sajten inte straffar överträdelser hårdare (mer än att skicka 429), så kan en bot samvetsgrant vänta och sedan fortsätta, vilket i praktiken låter den skrapa datan lite långsammare men fortfarande effektivt.
+•	Tillfällig block istället för permanent: Många system låser ute en IP under en kort period vid misstänkt aktivitet, men släpper på igen sedan. En bot med proxylista kan bara rotera till nästa IP och fortsätta där den blev avbruten. Om inte blockeringen eskalerar (t.ex. längre spärrtid för varje överträdelse eller central delning av blocklistor) blir det som ett nålstick: boten kanske får 5 minuters timeout per IP men kan hoppa vidare.
+•	Samma respons för bot och legitima fel: Om sajten inte skiljer på en bot-block och ett normalt serverfel, kan boten inte heller veta säkert – men ofta kan man utläsa av HTML-svaret. Om 503-sidan för en bot innehåller specifik text (”You have been blocked”) medan en riktig 503 skulle vara en generisk error, då är det lätt för boten att veta. Många sajter specialskriver dock inte texten, men i HTML-källan kan det finnas subtila hints (kommentarer eller titel på sidan). Om sådana inte maskeras kan botten programmatisk känna igen dem.
+•	Ingen progressiv upptrappning: En bra försvarsmekanism är att ju fler gånger en klient måste få 429, desto hårdare agera (t.ex. stegra till CAPTCHA-utmaning eller block). Om webbplatsen bara fortsätter skicka 429 och aldrig går till nästa nivå, kan en bot helt enkelt fortsätta försöka med exponentiell backoff tills den lyckaszenrows.com. Scrapers vet att ett 429 inte är slutet – det är en signal att lugna ned sig. Men om det aldrig blir värre än så, kommer en tålmodig scraper ändå få sin data till slut.
+•	Felaktig antagelse om klientbeteende: Vissa anti-bot utgår från att om de svarar med fel, kommer klienten antingen ge upp eller en människa reagerar (t.ex. ser en blank sida). Men bots är envisa och programmerade att försöka om och om. Om inte servern efter X försök ändrar taktik (som sagt, kanske kasta upp en svårare block eller notifiera admin), så kommer boten förr eller senare hitta ett luckra upp mönstret. En människa tröttnar, en bot tröttnar inte. Att bara förlita sig på att felkoder avskräcker är ett misstag – de måste kombineras med riktiga hinder för att vara effektiva.
+
