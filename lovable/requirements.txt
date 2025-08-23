@@ -1,3 +1,0 @@
-# Lovable Requirements
-
-# Stub for lovable module requirements.txt as required by TREE.md.

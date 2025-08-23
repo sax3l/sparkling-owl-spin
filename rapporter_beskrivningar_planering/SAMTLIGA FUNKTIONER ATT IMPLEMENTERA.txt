@@ -1,6 +1,202 @@
  metoder för storskalig datainhämtning och web scraping
 
+Öppna källkodsprojekt för webscraping och stealth-crawling
+BFS/DFS-crawling (crawlers & ramverk)
 
+Scrapy (Python) – Det mest populära ramverket för webscraping, känt för hög prestanda och utbyggbarhet
+scrapfly.io
+. Scrapy låter dig definiera spindlar som följer länkar med t.ex. bredden-först (BFS) eller djupet-först (DFS) logik, och extrahera strukturerad data. Det är asynkront (byggt på Twisted) och klarar storskalig crawling effektivt
+scrapfly.io
+. (Respekterar robots.txt som standard, men kan konfigureras att ignorera det.)
+
+Apache Nutch (Java) – En mogen och skalerbar webb-crawler från Apache
+nutch.apache.org
+. Nutch är produktionsredo och har en höggradigt modulär arkitektur med plugin-stöd för parsers, indexering (t.ex. Solr/Elasticsearch) m.m
+nutch.apache.org
+. Den lämpar sig för stora BFS-genomsökningar (t.ex. bygga sökmotorindex) och kan integreras med Hadoop för distribuerad crawling
+nutch.apache.org
+. (Är en generell crawler som följer robots.txt men kan konfigureras, etiska aspekter beror på användning.)
+
+Colly (Go) – Ett populärt Go-baserat ramverk för webbcrawling/scraping med ren API-design
+go-colly.org
+. Colly är mycket snabb och stödjer hög parallellism, vilket gör det lämpligt för både BFS och DFS genomsökningar i stor skala
+dev.to
+. Det erbjuder smidig extrahering av data via CSS/XPath och hanterar cookies, sessions och begränsning av förfrågningar inbyggt. (Följer inte automatiskt robots.txt, kräver att utvecklaren hanterar det.)
+
+Crawlee (JavaScript/Node & Python) – Ett modernt bibliotek skapat av Apify för att bygga pålitliga crawlers snabbt
+crawlee.dev
+. Crawlee hanterar utmaningar åt dig: blockeringar, kö-hantering för BFS/DFS, proxyrotation och integrering med headless-browsers
+crawlee.dev
+. Det är öppet och aktivt underhållet, stöder både Node och Python, och är byggt av utvecklare med erfarenhet av miljontals sidvisningar dagligen
+crawlee.dev
+. (Crawlee kan ställas in att ignorera robots.txt och har stealth-funktioner, så etisk användning beror på inställningar.)
+
+Proxy-rotation & IP-hantering
+
+Scrapoxy (Node.js) – En proxy-manager som orkestrerar proxyservrar för IP-rotation
+github.com
+. Scrapoxy kan köras i egen infrastruktur (stöder AWS, Azure, GCP m.fl.) och aggregerar flera proxy-källor (datacenter, 4G, öppna listor) till en enda endpoint
+github.com
+github.com
+. Den skalar automatiskt upp/ned antalet proxies, roterar IP adresser regelbundet och kan hålla sticky sessions vid behov
+github.com
+github.com
+. (Fokus är tekniskt – Scrapoxy kringgår aktivt IP-blockeringar och fingerprinting
+github.com
+, så användning mot sajtpolicy kan vara etiskt tveksam.)
+
+ProxyPool (jhao104) (Python) – Ett mycket använt projekt (22k stjärnor) som samlar in gratisproxylistor, verifierar dem och exponerar ett API för att hämta fungerande proxy-IP
+github.com
+github.com
+. ProxyPool uppdaterar kontinuerligt poolen och tar bort döda IP för att erbjuda en stabil proxytjänst. Det är praktiskt för att undvika IP-blockeringar genom att slumpa proxy per förfrågan. (Använder publika proxyservrar, vilka kan vara opålitliga och ibland komprometterade – se upp etiskt, men projektet i sig ignorerar ej specifikt juridik.)
+
+ProxyBroker (Python) – Ett asynkront verktyg som hittar och kontrollerar publika proxies från 50+ källor helt automatiskt
+github.com
+. ProxyBroker kan köras som en lokal proxyserver som distribuerar dina utgående scraper-förfrågningar över funna proxies
+github.com
+. Det kan filtrera proxies efter typ (HTTP/HTTPS/SOCKS), anonymitetsnivå, geografiskt land, svarstid etc. och roterar dem under körning
+github.com
+. (Projektet hjälper att kringgå IP-baserade blockeringar – användning av okända öppna proxies kan vara juridiskt tveksam om källan är osäker.)
+
+Rota (Go) – En ny högprestanda öppen proxy-rotationsmotor med realtids-hälsokoll
+github.com
+. Rota är självhostad och klarar tusentals req/s med IP-rotation (slumpmässig, round-robin, “least connection” eller tidsbaserad)
+github.com
+. Den har inbyggd proxy-validering, stöd för HTTP(S) och SOCKS samt rate-limiting för att undvika överbelastning
+github.com
+. (Rota är experimentell med få stjärnor – designad för att undvika blockeringar via snabb rotation, vilket i sig innebär att den avsiktligt kringgår restriktioner.)
+
+Stealth-läge (undvika botdetektion)
+
+puppeteer-extra-plugin-stealth (JavaScript) – Ett plugin till Puppeteer som döljer typiska “headless”-spår. Det manipulerar User-Agent, navigator och Chrome-objekt m.m. för att efterlikna en riktig webbläsare
+scrapingant.com
+. Pluginet är modulärt – man kan slå på/av olika stealth-tekniker efter behov, t.ex. att dölja navigator.webdriver, ändra tidsavvikelser och canvas-signaturer. Det kan ge förbättrade reCAPTCHA-resultat genom att framstå mer mänsklig
+scrapingant.com
+. (Uttryckligen gjord för att kringgå detektion, bör användas ansvarsfullt – webbplatser kan anse detta som förbigående av skydd.)
+
+undetected-chromedriver (Python) – En specialversion av Seleniums ChromeDriver som passerar alla kända bot-skydd som Distil, Imperva, DataDome, Cloudflare IUAM etc
+github.com
+. Biblioteket patchar automatiskt ChromeDriver under nedladdning så att headless-körning inte avslöjas (t.ex. navigator.webdriver = false)
+github.com
+. Det kräver ingen extra konfiguration och uppdateras kontinuerligt för att hålla jämna steg med anti-bot-system. (Genom att design aktivt kringgår det säkerhetsmekanismer – kan bryta mot sajters användarvillkor, något utvecklaren påpekar i dokumentationen.)
+
+Undetected-Playwright (Python) – En variant/patch av Microsoft Playwright som minimerar detektionsrisken
+scrapingant.com
+. Den ändrar vissa fingeravtryck och beteenden i webbläsaren som Playwright styr, så att automation-spår (CDP-kommandon, standardvärden) inte lika lätt känns igen
+scrapingant.com
+. I övrigt bibehåller den samma API som Playwright, så utvecklare kan enkelt byta för bättre stealth. (Bygger på att försvåra upptäckt – även här bör man vara medveten om juridiska konsekvenser om man medvetet kringgår skydd.)
+
+Selenium-Driverless (Python) – En ny experimentell Selenium-variant som helt skippar den vanliga WebDriver-protokollstyrningen
+blog.castle.io
+. Istället injicerar den lågnivå-händelser (OS-nivå, som om en människa styr mus/tangentbord) och undviker därmed flaggor som navigator.webdriver
+blog.castle.io
+. Detta eliminerar många signaturer som WAF:er letar efter. (Väldigt stealth-fokuserat; uppenbart avsett att kringgå restriktioner – användning kan vara kontroversiell om det används för otillåten automation.)
+
+Nodriver (Python) – En avancerad efterträdare till undetected-chromedriver. Nodriver skrotar helt Chrome DevTools-protokollet och emulerar vanliga browsersessioner via OS-nivå interaktion
+blog.castle.io
+. Genom att inte använda ChromeDriver-binärer eller Seleniums standardkommandon reduceras risken för upptäckt markant
+blog.castle.io
+. All interaktion sker asynkront och med hög prestanda, vilket gör den effektiv för storskalig stealth-crawling
+scrapingant.com
+scrapingant.com
+. (Återigen – byggd för att undvika anti-bot-skydd. Att köra Nodriver på webbplatser som förbjuder bots kan innebära etiska/rättsliga problem.)
+
+Fingerprint spoofing (fingeravtrycksmanipulering)
+
+Camoufox (C++/Python) – “Anti-detect browser” baserad på en specialbyggd Firefox
+github.com
+. Camoufox injekterar falska fingerprint-värden på C++-nivå i webbläsaren (navigator, screen, timezone, WebGL, font-listor, media devices m.m.) så att de inte kan avslöjas via JavaScript
+github.com
+github.com
+. Alla kända identifierare (t.ex. navigator.webdriver = false) tas bort eller ändras, vilket gör den nästintill osynlig för anti-bot-system enligt utvecklaren
+github.com
+github.com
+. Camoufox uppdateras för att följa nya Firefox-versioner. (Projektet kringgår medvetet fingerprint-baserad detektion – det ignorerar alltså webbplatsers försök till identifikation, med potentiella legala följder.)
+
+FakeBrowser (JavaScript/Chromium) – Ett tvådelat projekt för att få puppeteer-botar att se ut som riktiga användare. Basic-läget patchar en Chromium via JavaScript hooks (via Puppeteer) för att ändra egenskaper som navigator.plugins och simulera mänskliga interaktioner
+github.com
+. Advanced-läget kallat “fakechrome” är en omkompilerad Chromium-variant med djupare ändringar för att eliminera alla automatiseringsspår
+github.com
+. FakeBrowser (1.3k★) var populärt, men arkiverades 2025 – det banade väg för projekt som Camoufox. (Hela syftet är att ignorera webbplatsers fingerprint-checkar – ett kraftfullt men potentiellt oetiskt verktyg om det missbrukas.)
+
+Botright (Python/Playwright) – Utöver stealth-funktioner erbjuder Botright dynamisk fingerprint-förändring under körning
+scrapingant.com
+. Det använder insamlade äkta Chrome-fingerprints för att slumpa en fejkad profil per session, så att varje körning ser ut som en unik användare
+scrapingant.com
+. I kombination med att Botright kör en ungoggled Chromium lokalt, kan det lura sajter att tro att varje instans är en legitim, unik webbläsare
+scrapingant.com
+. (Bygger på att simulera nya identiteter – ett implicit kringgående av fingerprinting-skydd, vilket kan bryta mot tjänstevillkor.)
+
+Fingerprint.js (Browser) – (Obs: ej ett crawling-projekt, men värt nämna). Ett öppet bibliotek i JavaScript för att detektera device fingerprint. Intressant nog används detta ofta för anti-fraud, men koden kan studeras för att förstå vilka parametrar att spoofa. För spoofing finns community-forkar av liknande bibliotek (t.ex. moddade versioner för Tampermonkey) – de manipulerar canvas, audio, WebGL m.fl. API:er i webbläsaren. (Att aktivt spoofa dessa i egen browser kräver dock specialbyggda verktyg som ovan nämnda Camoufox/BotBrowser.)
+
+CAPTCHA-lösning
+
+Botright (Python) – Botright utmärker sig med inbyggd CAPTCHA-hantering via datorseende/AI. Det stöder t.ex. hCaptcha och reCAPTCHA och försöker lösa dem automatiskt med neurala nätverk istället för externa tjänster
+scrapingant.com
+. Enligt dokumentationen kan Botright därmed kringgå många CAPTCHA utan extra kostnad, vilket är unikt för ett open-source-verktyg. (Att automatisera CAPTCHA på detta sätt är tekniskt imponerande, men kan uppfattas som att medvetet runda säkerhetsåtgärder – klart på gränsen etiskt.)
+
+Tesseract OCR (C++/Python m.fl.) – En av de mest populära öppna OCR-motorerna, användbar för att läsa enklare bild-CAPTCHAs
+octoparse.com
+. Tesseract kan integreras i din scraper för att tolka förvrängd text i CAPTCHA-bilder och extrahera texten som sträng
+octoparse.com
+. I kombination med bildförbehandling (t.ex. OpenCV för brusreducering) kan Tesseract lösa många äldre textbaserade CAPTCHAs. (Moderna CAPTCHA som reCAPTCHA v2/v3 eller hCaptcha går ej att knäcka rakt av med Tesseract – dessa kräver oftast mänsklig interaktion eller tredjepartstjänster.)
+
+captcha_break (ypwhs) (Python/Keras) – Ett open source-projekt (2.8k★) som demonstrerar hur djupa neurala nätverk kan tränas för att knäcka CAPTCHAs
+github.com
+. Med en CNN och Keras lyckas det läsa vanligt förekommande text-CAPTCHA-bilder med förvrängda bokstäver. Likt andra ML-lösningar krävs ett stort dataset för träning, men projektet visar att automatiserad CAPTCHA-lösning är möjlig med open source-verktyg
+github.com
+. (Att köra sådana modeller mot andras CAPTCHA-system är förstås att gå emot syftet med CAPTCHA – i praktiken oftast otillåtet om det används offensivt.)
+
+OCR.Space / pytesseract – Flera högnivåbibliotek (pytesseract i Python, tesseract.js i Node) förenklar användning av OCR för CAPTCHA. De kan exempelvis ta en bild från en webbläsarskärmdump och returnera texten. För vissa enkla bildgåtor (t.ex. läsa siffror eller bokstäver med lätt distortion) kan detta räcka. (Dessa verktyg i sig kringgår inga lagar – det är hur de används som avgör etiken. Att automatisera formulär med CAPTCHA kan bryta mot användarvillkor om man inte har tillstånd.)
+
+Headless-interaktion (webbläsarautomation)
+
+Selenium WebDriver (flera språk) – Det klassiska open-source-ramverket för att automatisera webbläsare
+github.com
+. Selenium stödjer alla stora webbläsare (Chrome, Firefox, Edge, Safari) och låter dig styra dem via programmeringsspråk som Python, Java, C#, m.fl. Det är främst för tester men används även för scraping av komplexa sidor. (Selenium i sig har inga stealth-funktioner – en ren Selenium-bot är lätt att upptäcka om man inte kombinerar den med t.ex. undetected-chromedriver eller manuellt tweakar profil.)
+
+Puppeteer (Node.js) – Ett bibliotek underhållet av Google Chrome-teamet för att styra Chrome/Chromium (och numera även Firefox) via DevTools-protokollet
+github.com
+. Puppeteer erbjuder ett hög-nivå API för alla vanliga interaktioner (klick, scroll, formulärfyllning, navigation) och kan köras i headless- eller fullbrowser-läge. Idealiskt för att skrapa single-page-appar då det kan köra JavaScript och vänta på dynamiskt innehåll. (Standard-Puppeteer är lätt att detektera då Chrome i headless-läge sätter vissa flaggor. Att använda puppeteer-extra-stealth-plugin är vanligt om man behöver undvika botfilter.)
+
+Playwright (Node/Python/Java) – Microsofts moderna automation-ramverk som stödjer flera browser-motorer (Chromium, WebKit, Firefox) med ett enda API
+github.com
+. Playwright kan köra i många språk och har inbyggda väntelogiker för nätverksidle, elementsynlighet m.m., vilket gör scraping mer robust. Det anses mer “stealthy” än ren Puppeteer – t.ex. exponerar Playwright inte navigator.webdriver i headed mode och hanterar vissa protokollskillnader, men det är inte fullständigt odetekterbart. (Kan kombineras med tillägg som undetected-playwright för bättre resultat om anti-bot är aggressivt.)
+
+Splash (Python/Lua) – En lättvikts headless-webbläsare med HTTP API framtagen av ScrapingHub/Zyte
+oxylabs.io
+. Splash använder QtWebKit för att rendera sidor och kan styras via ett JSON API eller med Lua-skript för att klicka, scrolla etc. Den integreras bra med Scrapy (via scrapy-splash) för att låta Scrapy-spindlar rendera JavaScript-innehåll vid behov
+oxylabs.io
+. För enklare dynamiska sajter kan Splash vara ett snabbare alternativ än fullständig Selenium. (WebKit i Splash är äldre och kan misslyckas på väldigt moderna sajter, och saknar inbyggda stealthfunktioner – men det är öppen källkod och kan själv hostas för att slippa begränsningar i tredje parts tjänster.)
+
+Rod (Go) – Ett Go-bibliotek för Chrome DevTools automation, liknande Puppeteer men anpassat för Go-utvecklare. Det är snabbt och kan kombineras med Go:s goroutines för massiv parallell automatisering. Rod stöder emulering av geolokation, device emulation m.m. (Inte lika utrustat med anti-detection som vissa Python/JS-projekt, men en viktig open-source-lösning för de som scrapar i Go.)
+
+Header-spoofing & sessions (HTTP-förfrågningsfingeravtryck)
+
+fake-useragent (Python) – Ett populärt bibliotek som levererar slumpade realistiska User-Agent-strängar baserat på en databas av riktiga webbläsare
+zenrows.com
+. Genom att byta ut default-identifieraren (t.ex. "python-requests/2.x") mot något som ser ut som Chrome, Firefox, Safari etc., får din scraper “en legitim browseridentitet” och undgår blockering p.g.a. misstänkt User-Agent
+zenrows.com
+. (Att spoofa User-Agent är standardpraxis för att undvika trivial blockering – etiskt ofarligt i sig, då det är likställt med att en användare ändrar sin webbläsares identitet.)
+
+Headers generering i allmänhet – Utöver User-Agent kan man med öppna verktyg generera hela header-profiler. T.ex. har Scrapy inbyggda middleware (som scrapy-fake-useragent och scrapy-rotating-proxies) för att slumpa User-Agent och mimic:ea vanliga header-fält (Accept-Language, Accept, Referer etc.) per request. Detta är viktigt då en typisk Python Requests-request bara har ett fåtal headers och “avslöjar sig själv”, vilket gör den lätt att upptäcka. Genom att efterlikna riktiga webbläsarheaders (alla standardfält som en Chrome/Firefox skulle skicka) minimeras risken att flaggas som bot. Projekt som HeaderGenerator (del av många anti-bot verktyg) kan skapa slumpade men rimliga header-uppsättningar baserat på statistik.
+
+Requests Session (Python) – Även om det inte är ett separat projekt är det värt att nämna att Python Requests-biblioteket har Session-objekt som automatiskt hanterar cookies över flera förfrågningar
+requests.readthedocs.io
+. Genom att använda en session bibehålls t.ex. en inloggningscookie så att alla följande requests är autentiserade – precis som en vanlig webbläsares session. Detta ökar trovärdigheten och minskar belastningen (återanvänder TCP-keep-alive)
+requests.readthedocs.io
+. På samma sätt kan man i Playwright/Selenium spara webbläsarens profil (cookies, localStorage) mellan körningar för att simulera att samma användare återkommer över tid. (Korrekt sessionshantering är etiskt ofproblematiskt – snarare praxis för att inte spamma onödiga nya inloggningar. Man bör dock radera känsliga cookies och inte spara sessioner längre än nödvändigt ur säkerhetssynpunkt.)
+
+CookieJar & ToughCookie – Inom Node.js finns bibliotek som tough-cookie som ger en CookieJar-implementation likt webbläsare. Open-source projekt som Crawlee och Axios kan använda sådana för att spara cookies mellan anrop. Detta är viktigt när man t.ex. måste först besöka en sida, få en session cookie, och sedan använda den cookie i nästa steg (utan cookie skulle sajten behandla varje request som en ny klient). Genom open source-cookiehanterare kan scrapers bete sig stateful, vilket ofta krävs för att inte trigga bot-detektering via oväntade nya sessioner.
+
+Observera: Att variera headers, använda sessions, proxies och liknande tekniker handlar i grund och botten om att efterlikna en normal användares trafikmönster. Dessa metoder är inte olagliga i sig – de är best practices för att inte bli blockerad. Men om de kombineras för att aggressivt kringgå ett systems skydd (t.ex. att systematiskt dölja sin identitet för att överträda en sajts villkor) kliver man över på etiskt osäker mark. Alla ovan nämnda projekt bör således användas med respekt för sajtens robots.txt, användaravtal och lagar. Open source ger kraftfulla verktyg, men ansvaret ligger hos användaren att bruka dem lagenligt.
+
+Källor: De beskrivna egenskaperna och teknikerna har hämtats från projektens GitHub-repositorier och dokumentation samt sammanställningar/bloggar från branschaktörer. Exempelvis har ZenRows och ScrapingAnt analyserat anti-bot-bibliotek
+scrapingant.com
+, och Apache/requests officiella docs har bidragit med information om Nutch, Selenium och Sessions
+nutch.apache.org
+requests.readthedocs.io
+. En fullständig referenslista med länkar till respektive projekts repo och relevant dokumentation finns inline ovan. Each mention of a project includes a clickable link to its repository (【...†】) för fördjupad information.
 
 
 Web scraping på stor skala innebär att automatiserade program (crawler-robotar) hämtar stora mängder data från webbplatser på sätt som ofta bryter mot användarvillkor eller etiska riktlinjer. Denna rapport kartlägger tekniskt avancerade och otillåtna metoder som används för att kringgå skydd och begränsningar på webbplatser. Fokus ligger på de underliggande teknikerna – inte specifika verktyg – och hur dessa tekniker implementeras i kod. Rapporten diskuterar också vilka svagheter på serversidan som utnyttjas av dessa metoder. Vi går igenom vanliga crawling-strategier, metoder för att bypassa anti-bot-skydd (IP-blockeringar, fingeravtrycksdetektering m.m.), tekniker för att undvika eller lösa CAPTCHA, hantering av dynamiskt innehåll med headless-browsers, sessions- och cookiehantering, samt vanliga säkerhetsbrister på webbsidor som möjliggör scraping.
