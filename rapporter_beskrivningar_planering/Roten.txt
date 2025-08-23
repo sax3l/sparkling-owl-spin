@@ -1,0 +1,2828 @@
+Roten
+projektet/
+├─ README.md                                # Start-här: översikt, snabbstart, arkitektur-figur, länkar
+├─ TREE.md                                  # Denna fil – fullständig fil- och mappkarta (håll uppdaterad)
+├─ LICENSE                                   # Licenspolicy
+├─ CODE_OF_CONDUCT.md                        # Etik och community-regler
+├─ CONTRIBUTING.md                           # Bidragsguide, commit-konventioner, PR-process
+├─ SECURITY.md                               # Sårbarhetsrapportering, ansvarfullt avslöjande
+├─ .gitignore                                # Ignorerade filer
+├─ .dockerignore                             # Docker build-kontextfilter
+├─ .editorconfig                             # Enhetlig formattering över editors
+├─ .env.example                              # Exempel på miljövariabler (DB, Redis, S3, OAuth, HMAC, etc.)
+├─ .envrc                                    # direnv-stöd (valfritt)
+├─ Makefile                                  # Enkla kommandon: make up, make test, make lint, make seed, etc.
+├─ pyproject.toml                            # Poetry/PDM (välj en) – beroenden, verktygskonfig
+├─ requirements.txt                          # Lock/”export” för prod
+├─ requirements_dev.txt                      # Dev-beroenden (pytest, mypy, ruff, bandit, black, GE/Soda)
+├─ package.json                              # Rot-skript (formatter, lint-staged), ev. repo-verktyg
+├─ VERSION                                   # En enkel versionsfil (CI läser denna)
+
+Konfiguration (globala, miljö & policies)
+projektet/
+└─ config/
+   ├─ app_config.yml                         # Global app-konfig (crawler/scraper/proxy/scheduler)
+   ├─ logging.yml                            # Loggstruktur (JSON), nivåer, handlers
+   ├─ performance-defaults.yml               # Baseline-konfig (HTTP/Browser, caps, cache-TTL) – Kap. 14
+   ├─ proxies.yml                            # Källor (gratis/betal), regionpreferenser, prioritet
+   ├─ anti_bot.yml                           # Header-profiler, delays, risknivåer, fallbackpolicy
+   ├─ captcha.yml                            # (Valfritt) tredjeparts-CAPTCHA-tjänst (om juridiskt OK)
+   ├─ export_targets.yml                     # Fördefinierade exporter (CSV/Excel/Sheets/BigQuery/ES/Snowflake)
+   ├─ api.yml                                # API-limits, pagination defaults, webhooks (HMAC)
+   ├─ auth.yml                               # OAuth2-klienter, API-nycklar (referenser till secrets)
+   ├─ roles.yml                              # RBAC-roller (admin, analyst, operator)
+   ├─ domain_policies/                       # Per-domän policys (robots, ToS-accept, caps)
+   │  ├─ example.com.yml
+   │  └─ ...
+   └─ env/
+      ├─ development.yml
+      ├─ staging.yml
+      └─ production.yml
+
+Dokumentation (arkitektur, API, runbooks, lag/etik)
+projektet/
+└─ docs/
+   ├─ architecture.md                        # Övergripande arkitektur, Figur 1, sekvensdiagram
+   ├─ system_design_decisions.md             # ADRs (Architecture Decision Records)
+   ├─ developer_guide.md                     # Lokal setup, kommandon, felsökning
+   ├─ usage_guide.md                         # No-code UI, mallskapande, export – för icke-utvecklare
+   ├─ database_schema.md                     # Relationsmodell, index, PK/FK, RLS, PII
+   ├─ api_documentation.md                   # Länk/översikt till OpenAPI + GraphQL SDL
+   ├─ openapi.yaml                           # Full REST-spec (server-url placeholders)
+   ├─ graphql/
+   │  └─ schema.graphql                      # GraphQL SDL (typer, queries, mutations)
+   ├─ postman/
+   │  └─ collection.json                     # Postman-samling av alla endpoints
+   ├─ policies/
+   │  ├─ robots_tos_policy.md                # Robots/ToS-process, vad systemet gör automatiskt
+   │  ├─ gdpr_dpia_template.md               # DPIA-mall och checklista
+   │  ├─ s3_lifecycle_raw_html.json          # S3 Lifecycle policy (raw_html/)
+   │  ├─ s3_lifecycle_db_backups.json        # S3 Lifecycle policy (db_backups/)
+   │  ├─ s3_lifecycle_exports.json           # S3 Lifecycle policy (exports/)
+   │  ├─ backup_restore_policy.md            # Backups, WAL, återställningstest (drill)
+   │  ├─ retention_policy.md                 # TTL per tabell/filtyp
+   │  ├─ erasure_policy.md                   # Radering on-demand (person + relationer)
+   │  └─ provenance_lineage_policy.md        # Lineage-krav (käll-URL, mallversion, run_id)
+   ├─ runbooks/                              # Incident- & driftkörböcker – Kap. 15
+   │  ├─ 403_storm.md
+   │  ├─ 429_spike.md
+   │  ├─ layout_drift.md
+   │  ├─ proxy_drought.md
+   │  └─ restore_drill.md
+   ├─ slo_sla.md                             # Mål & felbudget
+   ├─ changelog.md                           # Versionslogg (synkad med release-taggar)
+   └─ lovable/
+      └─ prompt.md                           # Lovable-initprompt (Kap. 22/22.5)
+
+Docker & Orkestrering (lokal + multi-service)
+projektet/
+└─ docker/
+   ├─ Dockerfile.app                         # Backend API / worker image
+   ├─ Dockerfile.worker                      # Asynkrona workers (scheduler/queue)
+   ├─ Dockerfile.browser                     # Playwright/Selenium-baserad image (med fonts, deps, stealth)
+   ├─ Dockerfile.synthetic                   # Syntetiska testsajter image
+   ├─ entrypoint.sh                          # App entry (migrera, init, start)
+   ├─ docker-compose.yml                     # Lokalt: app + db + redis + synthetic + grafana + prometheus
+   ├─ docker-compose.dev.yml                 # Extra volymer, hot-reload
+   ├─ docker-compose.synthetic.yml           # Endast testsajter + nät för e2e
+   └─ dev/
+      ├─ grafana/
+      │  └─ provisioning/                    # Datasources & dashboards import i dev
+      └─ prometheus/
+         └─ prometheus.yml                   # Lokal prom-konfig
+
+Infrastruktur som kod & K8s
+projektet/
+└─ iac/
+   ├─ terraform/
+   │  ├─ modules/
+   │  │  ├─ network/                         # VPC, subnets, gateways
+   │  │  ├─ eks/                             # K8s-kluster
+   │  │  ├─ rds/                             # PostgreSQL/Aurora
+   │  │  ├─ redis/                           # ElastiCache/Redis
+   │  │  └─ s3/                              # Buckets för raw_html, db_backups, exports
+   │  ├─ envs/
+   │  │  ├─ dev/
+   │  │  ├─ staging/
+   │  │  └─ prod/
+   │  └─ README.md
+   └─ k8s/
+      ├─ namespaces/
+      │  ├─ scraping.yaml
+      │  ├─ data.yaml
+      │  └─ ops.yaml
+      ├─ secrets/                            # SealedSecrets/ExternalSecrets – referenser till Vault
+      │  └─ external-secrets.yaml
+      ├─ configmaps/
+      │  ├─ app-config.yaml
+      │  ├─ anti-bot.yaml
+      │  └─ performance-defaults.yaml
+      ├─ deployments/
+      │  ├─ api.yaml
+      │  ├─ worker.yaml
+      │  ├─ browser-pool.yaml
+      │  └─ proxy-pool.yaml
+      ├─ services/
+      │  ├─ api-svc.yaml
+      │  ├─ proxy-api-svc.yaml
+      │  └─ grafana-svc.yaml
+      ├─ ingress/
+      │  ├─ api-ingress.yaml
+      │  └─ grafana-ingress.yaml
+      ├─ hpa/
+      │  ├─ api-hpa.yaml
+      │  └─ worker-hpa.yaml
+      ├─ cronjobs/                           # Kap. 20 – driftjobb
+      │  ├─ sql_backup.yaml                  # pgBackRest/WAL-G wrapper
+      │  ├─ redis_snapshot_upload.yaml
+      │  ├─ retention_job.yaml
+      │  ├─ erasure_worker.yaml
+      │  ├─ restore_drill.yaml               # Kvartalsvis återställningstest (off)
+      │  └─ selector_regression.yaml
+      └─ monitoring/
+         ├─ prometheus-rules.yaml            # Alerts (Kap. 20)
+         ├─ grafana-dashboards/
+         │  ├─ scraping_overview.json
+         │  ├─ proxy_health.json
+         │  ├─ scheduler_queues.json
+         │  ├─ db_dq_metrics.json
+         │  └─ cost_overview.json
+         └─ kustomization.yaml
+
+Källkod (Python-paket)
+projektet/
+└─ src/
+   ├─ __init__.py
+   ├─ main.py                               # Entrypoint för API eller multiprocess launcher
+   ├─ settings.py                           # Pydantic Settings (läser .env + config/*.yml)
+   │
+   ├─ webapp/                               # Backend (FastAPI/Flask) – REST/GraphQL + UI-servning
+   │  ├─ __init__.py
+   │  ├─ app.py                             # App init (routers, middlewares, CORS, Auth)
+   │  ├─ api.py                             # REST routes registrering
+   │  ├─ graphql.py                         # GraphQL ASGI app (om aktiverat)
+   │  ├─ auth.py                            # OAuth2, API-keys, RBAC
+   │  ├─ deps.py                            # Depends (DB/Redis)
+   │  ├─ schemas/                           # Pydantic-objekt för API
+   │  │  ├─ jobs.py
+   │  │  ├─ data.py
+   │  │  ├─ templates.py
+   │  │  ├─ proxies.py
+   │  │  └─ webhooks.py
+   │  ├─ routers/
+   │  │  ├─ jobs.py                         # POST /jobs/crawl, /jobs/scrape; GET /jobs/{id}
+   │  │  ├─ data.py                         # GET /data/{entity}
+   │  │  ├─ templates.py                    # POST /templates
+   │  │  ├─ proxy.py                        # GET /proxy/stats
+   │  │  ├─ exports.py                      # Trigga/följ exporter
+   │  │  └─ privacy.py                      # Erasure on demand / status
+   │  ├─ middlewares/
+   │  │  ├─ logging.py
+   │  │  └─ rate_limit.py
+   │  ├─ services/
+   │  │  ├─ webhook_dispatcher.py           # HMAC-signerade webhooks, backoff/retry
+   │  │  ├─ export_service.py               # API-initierade exporter
+   │  │  └─ auth_service.py
+   │  ├─ static/                            # Ev. backend-renderad statik
+   │  └─ templates/                         # Jinja (om behövs för enkla vyer)
+   │
+   ├─ crawler/                              # Kap. 3.1 + 10
+   │  ├─ __init__.py
+   │  ├─ sitemap_generator.py               # BFS/DFS, robots, canonical, dedupe
+   │  ├─ template_detector.py               # Heuristik/ML-klassare av sidtyp
+   │  ├─ link_extractors.py                 # Statisk + Browser DOM-länkutvinning
+   │  ├─ pagination.py                      # Nästa-sida logik (HTTP/Browser)
+   │  ├─ infinite_scroll.py                 # Scrollstrategier, stoppkriterier
+   │  ├─ url_queue.py                       # Redis-kö, prioritet, poison-handling
+   │  ├─ policy.py                          # Domänpolicy (caps, risknivå, robots/ToS)
+   │  └─ reporters.py                       # Sitemapskrivare (DB + CSV/JSON export)
+   │
+   ├─ scraper/                              # Kap. 3.2 + 11 + 18
+   │  ├─ __init__.py
+   │  ├─ base_scraper.py                    # Interface, common error-handling
+   │  ├─ http_scraper.py                    # httpx/aiohttp-klient, concurrency, retry
+   │  ├─ selenium_scraper.py                # Selenium/Playwright-driver med stealth
+   │  ├─ form_flows.py                      # GUI-makro (regnr/VIN → sök → vänta → extrahera)
+   │  ├─ template_extractor.py              # Kör DSL: selectors → transform → validate
+   │  ├─ template_runtime.py                # Loader → extractor → writer (minimotor)
+   │  ├─ xpath_suggester.py                 # DOM-diff, kandidat-rankning, stabilitet
+   │  ├─ regex_transformer.py               # Gemensam regex-process (flera steg)
+   │  ├─ login_handler.py                   # Inlogg, sessionpersistens (säker hantering)
+   │  ├─ image_downloader.py                # Bilder/PDF-hämtare med typkontroll
+   │  └─ dsl/
+   │     ├─ schema.py                       # Pydantic-schema för DSL (Kap. 18.1)
+   │     ├─ validators.py                   # Typ/regex/in_range/enum/length
+   │     ├─ transformers.py                 # strip/regex_extract/to_decimal/date_parse/map
+   │     ├─ cross_field.py                  # Regler (modellår → kräver märke/modell)
+   │     └─ examples/
+   │        ├─ vehicle_detail_v3.yml
+   │        ├─ person_profile_v2.yml
+   │        └─ company_profile_v2.yml
+   │
+   ├─ proxy_pool/                           # Kap. 4 + 3.3
+   │  ├─ __init__.py
+   │  ├─ collector.py                       # Hämta källor, normalisera IP:port, meta
+   │  ├─ validator.py                       # Parallella test mot endpoints, latens, anonymitet
+   │  ├─ quality_filter.py                  # Poängsättning, vit/svartlistning
+   │  ├─ rotator.py                         # Utlåningsstrategier: risknivå/domän
+   │  ├─ manager.py                         # API för att tillhandahålla/återlämna proxys
+   │  ├─ monitor.py                         # Poolhälsa, MTBF, blockmönster
+   │  └─ api/
+   │     ├─ __init__.py
+   │     └─ server.py                       # /get, /pop, /delete, /all, /count, /stats
+   │
+   ├─ anti_bot/                             # Kap. 4.3–4.5
+   │  ├─ __init__.py
+   │  ├─ header_generator.py                # Rik uppsättning headers (UA, sec-ch, accept-*)
+   │  ├─ session_manager.py                 # Cookies per proxy+domän, TTL
+   │  ├─ delay_strategy.py                  # Slump/adaptiv (felkvot), per-domän caps
+   │  ├─ credential_manager.py              # Säker lagring (via SecretMgr/Vault)
+   │  ├─ fallback_strategy.py               # HTTP→Browser eskalering, policybaserad
+   │  ├─ fingerprint_profiles/
+   │  │  ├─ chrome.json
+   │  │  ├─ firefox.json
+   │  │  ├─ safari.json
+   │  │  └─ edge.json
+   │  ├─ browser_stealth/
+   │  │  ├─ __init__.py
+   │  │  ├─ stealth_browser.py              # WebDriver-detektion motåtgärder
+   │  │  ├─ human_behavior.py               # Scroll/klick/paus/viewportvariation
+   │  │  ├─ cloudflare_bypass.py            # Särskilda flöden (inom policy)
+   │  │  └─ captcha_solver.py               # Pluggbar lösare (om avtal/policy tillåter)
+   │  └─ diagnostics/
+   │     ├─ __init__.py
+   │     └─ diagnose_url.py                 # UA-multi-test, 403/429/JS-indikatorer
+   │
+   ├─ database/                             # Kap. 7, 12, 19
+   │  ├─ __init__.py
+   │  ├─ models.py                          # SQLAlchemy/Pydantic-relationsobjekt
+   │  ├─ manager.py                         # CRUD, transaktioner, batch upsert, lineage writes
+   │  ├─ seed/
+   │  │  ├─ persons.json
+   │  │  ├─ companies.json
+   │  │  └─ vehicles.json
+   │  ├─ migrations/                        # Alembic eller Supabase migrations
+   │  │  ├─ 0001_init.sql
+   │  │  ├─ 0002_indexes.sql
+   │  │  └─ ...
+   │  └─ schema.sql                         # Komplett schema dump (synk med migrations)
+   │
+   ├─ scheduler/                            # Kap. 5.5, 4.5, 20
+   │  ├─ __init__.py
+   │  ├─ scheduler.py                       # APScheduler/Celery init, jobs-register
+   │  ├─ job_definitions.py                 # crawl/scrape/proxy_validate/backup/retention/erasure
+   │  ├─ job_monitor.py                     # Hälsa, SLA/SLO-uppföljning per jobbtyp
+   │  ├─ notifier.py                        # Slack/Webhooks med HMAC
+   │  └─ jobs/
+   │     ├─ crawl_job.py
+   │     ├─ scrape_job.py
+   │     ├─ proxy_validate_job.py
+   │     ├─ retention_job.py
+   │     ├─ erasure_job.py
+   │     ├─ sql_backup_job.py
+   │     ├─ redis_snapshot_job.py
+   │     ├─ restore_drill_job.py
+   │     └─ selector_regression_job.py
+   │
+   ├─ exporters/                            # Kap. 12, 14
+   │  ├─ __init__.py
+   │  ├─ csv_exporter.py
+   │  ├─ json_exporter.py
+   │  ├─ excel_exporter.py
+   │  ├─ sheets_exporter.py
+   │  ├─ bigquery_exporter.py
+   │  ├─ snowflake_exporter.py
+   │  └─ elastic_exporter.py                # OpenSearch/Elasticsearch
+   │
+   ├─ analysis/                             # Kap. 15 DQ, rapporter
+   │  ├─ __init__.py
+   │  ├─ data_quality.py                    # GE/Soda-integration, DQ-score
+   │  ├─ similarity_analysis.py             # DOM-likhet, variabla element
+   │  ├─ merinfo_analysis_tool.py           # Exempelanalys
+   │  └─ reports/
+   │     └─ README.md
+   │
+   ├─ plugins/                              # Plugin-yta (extractors/exports/heuristics)
+   │  ├─ __init__.py
+   │  ├─ registry.yaml                      # Lista, versioner, capabilities
+   │  └─ examples/
+   │     ├─ extractor_example.py
+   │     └─ export_example.py
+   │
+   └─ utils/
+      ├─ __init__.py
+      ├─ logger.py                          # Strukturerad loggning (JSON)
+      ├─ user_agent_rotator.py              # UA-pool
+      ├─ validators.py                      # Små validerare (postnr, regnr, VIN)
+      ├─ export_utils.py                    # CSV/Excel/Sheets-hjälpare
+      ├─ pattern_detector.py                # Repetitiva DOM-element
+      └─ hashing.py                         # Innehållshash (lineage, idempotens)
+
+Frontend (valfri separat SPA – React/Vue)
+projektet/
+└─ frontend/
+   ├─ package.json
+   ├─ tsconfig.json
+   ├─ vite.config.ts                        # eller webpack config
+   ├─ src/
+   │  ├─ main.tsx
+   │  ├─ App.tsx
+   │  ├─ api/                               # SDK-klienter/tjänster
+   │  │  ├─ http.ts
+   │  │  ├─ rest.ts                         # REST-client (OpenAPI generator valfritt)
+   │  │  └─ graphql.ts
+   │  ├─ components/
+   │  │  ├─ BrowserPanel.tsx                # Inbyggd Playwright-vy (via backend-proxy/socket)
+   │  │  ├─ SelectorOverlay.tsx             # Markera element, visa CSS/XPath
+   │  │  ├─ JobDashboard.tsx
+   │  │  ├─ ProxyHealth.tsx
+   │  │  ├─ PolicyEditor.tsx
+   │  │  └─ PrivacyCenter.tsx               # Radering on-demand UI
+   │  ├─ pages/
+   │  │  ├─ Home.tsx
+   │  │  ├─ NewTemplateWizard.tsx           # Onboarding-wizard
+   │  │  ├─ Jobs.tsx
+   │  │  ├─ Templates.tsx
+   │  │  ├─ Exports.tsx
+   │  │  └─ Settings.tsx
+   │  ├─ hooks/
+   │  ├─ store/
+   │  ├─ styles/
+   │  └─ utils/
+   └─ public/
+      └─ index.html
+
+Data, mallar & artefakter
+projektet/
+└─ data/
+   ├─ raw/                                  # Rå-HTML, JSON före bearbetning
+   │  ├─ html/
+   │  └─ json/
+   ├─ processed/                            # Normaliserade data
+   ├─ exports/
+   │  ├─ csv/
+   │  ├─ json/
+   │  ├─ excel/
+   │  └─ google_sheets/
+   ├─ images/                               # Nedladdade bilder (profil/fordon/logos)
+   └─ templates/                            # Exporterade/arkiverade DSL-mallar (synkat med DB)
+      ├─ vehicle_detail/
+      ├─ person_profile/
+      └─ company_profile/
+
+Script & verktyg
+projektet/
+└─ scripts/
+   ├─ init_db.py                            # Skapa schema/migrera, seeds
+   ├─ seed_data.py                          # Testdata och mallar
+   ├─ run_crawler.py                        # CLI: starta crawling
+   ├─ run_scraper.py                        # CLI: starta scraping
+   ├─ start_scheduler.py                    # Starta schemaläggare
+   ├─ run_analysis.py                       # DQ-körningar, rapporter
+   ├─ diagnostic_tool.py                    # URL-diagnostik (anti-bot-symptom)
+   ├─ backup_now.sh                         # Manuell backup-trigg
+   ├─ restore_drill.sh                      # Återställningsövning end-to-end
+   ├─ s3_sync.sh                            # Synka artefakter (backups/exports) mot S3
+   └─ generate_sdk.sh                       # (Valfritt) generera OpenAPI-klienter
+
+Testning – testpyramid, fixtures, syntetiska sajter
+projektet/
+└─ tests/
+   ├─ README.md                             # Hur tester körs (lokalt/CI), struktur
+   ├─ conftest.py                           # Pytest-hooks, fixtures (DB, Redis, browser)
+   ├─ unit/                                 # Enhetstester – små, snabba
+   │  ├─ test_selectors.py
+   │  ├─ test_transformers.py
+   │  ├─ test_validators.py
+   │  ├─ test_template_runtime.py
+   │  ├─ test_header_generator.py
+   │  └─ test_db_manager.py
+   ├─ integration/                          # Systemdelar ihop (mockade endpoints)
+   │  ├─ test_proxy_api.py
+   │  ├─ test_crawler_queue.py
+   │  ├─ test_scraper_http.py
+   │  ├─ test_scraper_browser.py
+   │  ├─ test_scheduler_jobs.py
+   │  └─ test_exports.py
+   ├─ e2e/                                  # End-to-end mot syntetiska sajter (Docker)
+   │  ├─ test_static_pagination.py
+   │  ├─ test_infinite_scroll.py
+   │  ├─ test_form_flow_vin_regnr.py
+   │  ├─ test_layout_drift_resilience.py
+   │  └─ test_privacy_erasure.py
+   ├─ fixtures/
+   │  ├─ golden_sets/                       # 10–50 URL:er per mall (syntetiska)
+   │  │  ├─ vehicle_detail/
+   │  │  ├─ person_profile/
+   │  │  └─ company_profile/
+   │  ├─ html_samples/
+   │  │  ├─ vehicle_detail/
+   │  │  ├─ person_profile/
+   │  │  └─ company_profile/
+   │  └─ dsl/
+   │     ├─ vehicle_detail_v3.yml
+   │     ├─ person_profile_v2.yml
+   │     └─ company_profile_v2.yml
+   └─ synthetic_sites/                      # Mini-sajter för e2e (kap. 13/14/11)
+      ├─ Dockerfile
+      ├─ docker-compose.synthetic.yml
+      ├─ static_pagination/
+      │  ├─ server.py
+      │  ├─ templates/
+      │  └─ data.json
+      ├─ infinite_scroll/
+      │  ├─ server.py
+      │  └─ assets/
+      ├─ form_flow/
+      │  ├─ server.py
+      │  └─ templates/
+      └─ varied_dom/
+         ├─ server.py
+         └─ variants/
+
+Observability (Prometheus, Grafana, OTEL)
+projektet/
+└─ observability/
+   ├─ prometheus/
+   │  ├─ rules/
+   │  │  ├─ scraping_alerts.yml             # 4xx/5xx, ban rate, retry spikar
+   │  │  ├─ proxy_pool_alerts.yml           # MTBF, poolstorlek, p95-latens
+   │  │  └─ cost_budget_alerts.yml          # Kostnad/1k sidor
+   │  └─ prometheus.yml                     # Remote write/targets (prod)
+   ├─ grafana/
+   │  └─ dashboards/
+   │     ├─ scraping_overview.json
+   │     ├─ proxy_health.json
+   │     ├─ scheduler_queues.json
+   │     ├─ db_dq_metrics.json
+   │     └─ cost_overview.json
+   └─ otel/
+      └─ collector-config.yaml              # OpenTelemetry Collector (valfritt)
+
+SDKs (Python & TypeScript) + exempel
+projektet/
+└─ sdk/
+   ├─ python/
+   │  ├─ pyproject.toml
+   │  ├─ README.md
+   │  └─ src/
+   │     └─ scraping_sdk/
+   │        ├─ __init__.py
+   │        ├─ client.py                    # REST/GraphQL-klient, idempotens, retry, HMAC
+   │        ├─ templates.py                 # Ladda/köra DSL lokalt
+   │        └─ webhooks.py                  # Verifiera signaturer
+   └─ typescript/
+      ├─ package.json
+      ├─ tsconfig.json
+      └─ src/
+         ├─ index.ts
+         ├─ client.ts                       # Axios/fetch, rate-limit-aware
+         ├─ templates.ts
+         └─ webhooks.ts
+
+Supabase (om du kör Postgres via Supabase)
+projektet/
+└─ supabase/
+   ├─ migrations/
+   │  ├─ 0001_init.sql
+   │  ├─ 0002_indexes.sql
+   │  ├─ 0003_rls_policies.sql
+   │  ├─ 0004_functions_triggers.sql
+   │  └─ ...
+   ├─ seed/
+   │  ├─ templates/
+   │  │  ├─ vehicle_detail_v3.yml
+   │  │  ├─ person_profile_v2.yml
+   │  │  └─ company_profile_v2.yml
+   │  └─ demo_data.sql
+   └─ README.md
+
+API-klientdefinitioner & generators
+projektet/
+└─ api_clients/
+   ├─ openapi/                              # Klienter genererade från OpenAPI
+   │  ├─ python/
+   │  └─ typescript/
+   ├─ postman/
+   │  └─ collection.json
+   └─ README.md
+
+CI/CD (GitHub Actions) & policy-kontroller
+projektet/
+└─ .github/
+   ├─ workflows/
+   │  ├─ 01_lint_type.yml                   # ruff/mypy/black/isort
+   │  ├─ 02_unit_tests.yml
+   │  ├─ 03_integration_tests.yml           # Mockade endpoints
+   │  ├─ 04_e2e_tests.yml                   # Syntetiska sajter (docker-compose.synthetic)
+   │  ├─ 05_security.yml                    # bandit, trivy, dep-review, secret-scan
+   │  ├─ 06_build_sbom_sign.yml             # Build images, SBOM (Syft/CycloneDX), Cosign-signering
+   │  ├─ 07_deploy_staging.yml              # Helm/K8s, migrations, smoke tests
+   │  ├─ 08_selector_regression.yml         # Golden sets → blockera merge vid tapp
+   │  ├─ 09_canary_prod.yml                 # Canary + automatiskt rollback
+   │  └─ 10_release_notes.yml               # Generera notes från PRs/labels
+   ├─ ISSUE_TEMPLATE.md
+   ├─ PULL_REQUEST_TEMPLATE.md
+   └─ CODEOWNERS
+
+Exempel, notebooks & demos
+projektet/
+├─ examples/
+│  ├─ crawl_example.md
+│  ├─ scrape_vehicle_detail.md
+│  ├─ export_to_sheets.md
+│  └─ api_usage.md
+└─ notebooks/
+   ├─ data_exploration.ipynb
+   └─ model_prototyping.ipynb
+
+Juridik & etik (explicit)
+projektet/
+└─ legal/
+   ├─ README.md                             # Hur projektet säkerställer efterlevnad (robots/ToS/GDPR)
+   ├─ robots_tos_checklist.md               # Checklista före körning per domän
+   ├─ privacy_policy_internal.md            # Intern datahantering, PII, retention
+   └─ data_processing_agreements/           # (Om relevanta tredjepartsavtal)
+
+Bin & verktyg (valfritt)
+projektet/
+└─ bin/
+   ├─ dev-up                                 # starta lokal stack (alias till make/docker-compose)
+   ├─ dev-down
+   ├─ gen-openapi-clients
+   └─ fmt                                    # format + lint snabbkommando
+
+
+Rot
+projektet/
+├─ README.md
+├─ CHANGELOG.md
+├─ CONTRIBUTING.md
+├─ CODE_OF_CONDUCT.md
+├─ SECURITY.md
+├─ LICENSE
+├─ .gitignore
+├─ .gitattributes
+├─ .editorconfig
+├─ .dockerignore
+├─ .pre-commit-config.yaml
+├─ pyproject.toml
+├─ setup.py
+├─ requirements.txt
+├─ requirements_dev.txt
+├─ mypy.ini
+├─ ruff.toml
+├─ pytest.ini
+├─ Makefile
+├─ .env.example
+└─ CODEOWNERS
+
+Konfiguration
+config/
+├─ app_config.yml
+├─ logging.yml
+├─ proxies.yml
+├─ anti_bot.yml
+├─ performance-defaults.yml
+├─ feature_flags.yml
+├─ domain_policies.yml               # robots/ToS + caps/etik per domän
+├─ rate_limits.yml                   # token-bucket/RPS per host
+├─ export_targets.yml                # BigQuery/Snowflake/ES m.m.
+├─ alerts_thresholds.yml             # SLO/SLA & felbudgetgränser
+└─ env/
+   ├─ development.yml
+   ├─ staging.yml
+   └─ production.yml
+
+Dokumentation & policies
+docs/
+├─ architecture.md
+├─ developer_guide.md
+├─ usage_guide.md
+├─ database_schema.md
+├─ anti_bot_strategy.md
+├─ user_interface_design.md
+├─ api_documentation.md
+├─ graphql_guide.md
+├─ observability.md
+├─ security.md
+├─ roadmap.md
+├─ risks.md
+├─ lovable_prompt.md
+├─ openapi.yaml
+├─ graphql.schema.graphql
+├─ postman_collection.json
+├─ templates/
+│  ├─ dsl.md
+│  ├─ person_profile_v1.yml
+│  ├─ company_profile_v1.yml
+│  ├─ vehicle_detail_v3.yml
+│  ├─ shared_transforms.yml
+│  └─ examples/
+│     ├─ example_list_page.yml
+│     ├─ example_detail_page.yml
+│     └─ form_flow_example.yml
+├─ policies/
+│  ├─ s3_lifecycle_raw_html.json
+│  ├─ s3_lifecycle_db_backups.json
+│  ├─ s3_lifecycle_exports.json
+│  ├─ rbac_policies.md
+│  ├─ privacy_retention_matrix.md
+│  ├─ dpia_template.md                # DPIA/konsekvensbedömning
+│  ├─ data_processing_agreement.md
+│  └─ legal_checklist.md
+├─ runbooks/
+│  ├─ 403_storm.md
+│  ├─ 429_spike.md
+│  ├─ layout_drift.md
+│  ├─ restore_drill.md
+│  ├─ deletion_on_demand.md
+│  └─ incident_comm_template.md
+└─ observability_assets/
+   ├─ grafana/
+   │  ├─ proxypool_dashboard.json
+   │  ├─ crawler_scraper_dashboard.json
+   │  ├─ database_dashboard.json
+   │  └─ cost_dashboard.json
+   └─ prometheus/
+      ├─ alerts.yml
+      └─ recording_rules.yml
+
+Data
+data/
+├─ raw/
+├─ processed/
+├─ exports/
+│  ├─ csv/
+│  ├─ json/
+│  ├─ excel/
+│  └─ google_sheets/
+├─ templates/
+└─ images/
+
+Skript & verktyg
+scripts/
+├─ init_db.py
+├─ seed_data.py
+├─ run_crawler.py
+├─ run_scraper.py
+├─ start_scheduler.py
+├─ run_analysis.py
+├─ diagnostic_tool.py
+├─ restore_drill.sh
+├─ restore_integrity_check.py
+├─ export_postman.py
+├─ gen_openapi_client.sh
+├─ perf_probe.py
+├─ sbom_generate.sh                     # CycloneDX/ Syft
+├─ cosign_sign.sh                       # signera images
+├─ attestation_slsa.sh                  # SLSA-lik provenance
+└─ chaos/
+   ├─ inject_network_latency.sh
+   ├─ kill_worker_pod.sh
+   └─ readme.md
+
+Docker, K8s, lokalt kluster
+docker/
+├─ Dockerfile
+├─ docker-compose.yml
+├─ entrypoint.sh
+├─ dev/
+│  ├─ Dockerfile
+│  └─ docker-compose.dev.yml
+├─ kafka-rabbitmq.yml                   # valfri meddelandebuss
+├─ selenium-grid.yml                    # Selenium Grid
+├─ playwright-workers.yml               # Playwright-sharder
+├─ synthetic-sites/
+│  ├─ docker-compose.yml
+│  ├─ sites/
+│  │  ├─ static-list/...
+│  │  ├─ js-infinite-scroll/...
+│  │  ├─ form-flow/...
+│  │  ├─ variable-dom/...
+│  │  └─ captcha-lite/...
+│  └─ README.md
+└─ k8s/
+   ├─ base/
+   │  ├─ namespace.yaml
+   │  ├─ configmap.yaml
+   │  ├─ secrets.example.yaml
+   │  ├─ deployment-api.yaml
+   │  ├─ deployment-workers.yaml
+   │  ├─ deployment-proxypool.yaml
+   │  ├─ service-api.yaml
+   │  ├─ service-proxypool.yaml
+   │  ├─ ingress.yaml
+   │  ├─ hpa-api.yaml
+   │  ├─ hpa-workers.yaml
+   │  ├─ pdb-api.yaml
+   │  ├─ pdb-workers.yaml
+   │  ├─ cronjob-backup.yaml
+   │  ├─ cronjob-redis-snapshot.yaml
+   │  ├─ cronjob-retention.yaml
+   │  ├─ cronjob-erasure.yaml
+   │  ├─ cronjob-sbom.yaml             # schema/SBOM genereras/arkiveras
+   │  └─ cronjob-cost-report.yaml
+   └─ helm/
+      ├─ Chart.yaml
+      ├─ values.yaml
+      └─ templates/...
+
+Infra as Code (Terraform) & Vault
+infra/
+├─ terraform/
+│  ├─ README.md
+│  ├─ envs/
+│  │  ├─ dev/
+│  │  │  ├─ backend.tf
+│  │  │  ├─ main.tf
+│  │  │  ├─ variables.tf
+│  │  │  └─ outputs.tf
+│  │  ├─ staging/...
+│  │  └─ prod/...
+│  └─ modules/
+│     ├─ network/
+│     │  ├─ vpc.tf
+│     │  ├─ subnets.tf
+│     │  └─ sg.tf
+│     ├─ eks/
+│     │  ├─ cluster.tf
+│     │  ├─ nodegroups.tf
+│     │  └─ iam.tf
+│     ├─ rds/
+│     │  ├─ postgres.tf
+│     │  └─ parameter_groups.tf
+│     ├─ redis/
+│     │  └─ elasticache.tf
+│     ├─ s3/
+│     │  ├─ buckets.tf
+│     │  └─ lifecycle.tf
+│     ├─ ecr/
+│     │  └─ repos.tf
+│     └─ iam/
+│        ├─ roles.tf
+│        └─ policies.tf
+└─ vault/
+   ├─ policies/
+   │  ├─ scraper.hcl
+   │  ├─ crawler.hcl
+   │  ├─ api.hcl
+   │  └─ ci_cd.hcl
+   ├─ kv_layout.md
+   └─ scripts/
+      ├─ put_secrets_dev.sh
+      └─ rotate_database_password.sh
+
+Källkod – src/
+src/
+├─ __init__.py
+│
+├─ crawler/
+│  ├─ __init__.py
+│  ├─ sitemap_generator.py
+│  ├─ template_detector.py
+│  ├─ url_queue.py
+│  ├─ keywords_search.py
+│  └─ emitters.py                      # event/outbox-mönster (Kafka/Redis)
+│
+├─ scraper/
+│  ├─ __init__.py
+│  ├─ base_scraper.py
+│  ├─ http_scraper.py
+│  ├─ selenium_scraper.py
+│  ├─ template_extractor.py
+│  ├─ template_runtime.py
+│  ├─ xpath_suggester.py
+│  ├─ regex_transformer.py
+│  ├─ login_handler.py
+│  ├─ image_downloader.py
+│  ├─ adapters/
+│  │  ├─ http/
+│  │  │  ├─ client.py
+│  │  │  └─ middlewares.py
+│  │  └─ browser/
+│  │     ├─ driver.py
+│  │     └─ interactions.py
+│  └─ exporters/
+│     ├─ base.py
+│     ├─ csv_exporter.py
+│     ├─ json_exporter.py
+│     ├─ excel_exporter.py
+│     ├─ google_sheets_exporter.py
+│     ├─ bigquery_exporter.py
+│     ├─ snowflake_exporter.py
+│     └─ opensearch_exporter.py
+│
+├─ proxy_pool/
+│  ├─ __init__.py
+│  ├─ collector.py
+│  ├─ validator.py
+│  ├─ quality_filter.py
+│  ├─ monitor.py
+│  ├─ manager.py
+│  ├─ rotator.py
+│  └─ api/
+│     ├─ __init__.py
+│     └─ server.py
+│
+├─ anti_bot/
+│  ├─ __init__.py
+│  ├─ header_generator.py
+│  ├─ session_manager.py
+│  ├─ delay_strategy.py
+│  ├─ credential_manager.py
+│  ├─ fallback_strategy.py
+│  ├─ fingerprint_profiles/
+│  │  ├─ chrome.json
+│  │  ├─ firefox.json
+│  │  ├─ safari.json
+│  │  └─ edge.json
+│  ├─ browser_stealth/
+│  │  ├─ __init__.py
+│  │  ├─ stealth_browser.py
+│  │  ├─ human_behavior.py
+│  │  ├─ cloudflare_bypass.py
+│  │  └─ captcha_solver.py
+│  └─ diagnostics/
+│     ├─ __init__.py
+│     └─ diagnose_url.py
+│
+├─ database/
+│  ├─ __init__.py
+│  ├─ models.py
+│  ├─ manager.py
+│  ├─ schema.sql
+│  ├─ migrations/
+│  │  ├─ env.py
+│  │  ├─ alembic.ini
+│  │  └─ versions/
+│  │     ├─ 0001_init.py
+│  │     ├─ 0002_add_indexes.py
+│  │     ├─ 0003_template_versioning.py
+│  │     └─ 0004_dq_tables.py
+│  └─ seed/
+│     ├─ persons.json
+│     ├─ companies.json
+│     └─ vehicles.json
+│
+├─ scheduler/
+│  ├─ __init__.py
+│  ├─ scheduler.py
+│  ├─ job_definitions.py
+│  ├─ job_monitor.py
+│  ├─ notifier.py
+│  └─ jobs/
+│     ├─ proxy_update_job.py
+│     ├─ proxy_validate_job.py
+│     ├─ crawl_job.py
+│     ├─ scrape_job.py
+│     ├─ retention_job.py
+│     ├─ backup_job.py
+│     ├─ erasure_job.py
+│     └─ selector_regression_job.py
+│
+├─ utils/
+│  ├─ __init__.py
+│  ├─ logger.py
+│  ├─ user_agent_rotator.py
+│  ├─ validators.py
+│  ├─ export_utils.py
+│  ├─ pattern_detector.py
+│  ├─ cost_tracker.py
+│  ├─ idempotency.py
+│  ├─ hmac_utils.py
+│  ├─ rate_limiter.py
+│  ├─ pii_scanner.py                  # PII/sekretess-redaktion
+│  ├─ lineage.py                      # OpenLineage-producer
+│  └─ otel.py                         # OpenTelemetry init/export
+│
+├─ webapp/
+│  ├─ __init__.py
+│  ├─ app.py
+│  ├─ api.py
+│  ├─ auth.py
+│  ├─ views.py
+│  ├─ websocket.py
+│  ├─ privacy_center.py               # UI-flik för radering/retention
+│  ├─ i18n/
+│  │  ├─ sv-SE.yml
+│  │  └─ en-US.yml
+│  ├─ templates/
+│  │  ├─ base.html
+│  │  ├─ dashboard.html
+│  │  ├─ selector_tool.html
+│  │  ├─ jobs.html
+│  │  ├─ privacy.html
+│  │  └─ settings.html
+│  └─ static/
+│     ├─ css/app.css
+│     ├─ js/selector_inject.js
+│     └─ img/
+│
+├─ analysis/
+│  ├─ __init__.py
+│  ├─ data_quality.py                 # wrapper mot Great Expectations/Soda
+│  ├─ similarity_analysis.py
+│  ├─ merinfo_analysis_tool.py
+│  └─ reports/
+│
+├─ ml/
+│  ├─ __init__.py
+│  ├─ template_classifier.py          # DOM-baserad mallklassning
+│  ├─ selector_ranker.py              # learning-to-rank för XPath-kandidater
+│  ├─ drift_detector.py               # change-point detection för DOM/drift
+│  ├─ features/
+│  │  ├─ dom_features.py
+│  │  └─ text_features.py
+│  └─ pipelines/
+│     ├─ train_classifier.py
+│     ├─ train_ranker.py
+│     └─ eval_report.py
+│
+├─ plugins/
+│  ├─ README.md
+│  ├─ registry.yaml                   # laddas via config → enable/disable
+│  ├─ sample_extractor/
+│  │  ├─ __init__.py
+│  │  ├─ plugin.py                    # exposes: register(capabilities)
+│  │  └─ README.md
+│  └─ sample_export_target/
+│     ├─ __init__.py
+│     ├─ plugin.py
+│     └─ README.md
+│
+└─ connectors/
+   ├─ __init__.py
+   ├─ bigquery_client.py
+   ├─ snowflake_client.py
+   ├─ opensearch_client.py
+   ├─ google_sheets_client.py
+   └─ slack_webhook.py
+
+Frontend (frikopplat)
+frontend/
+├─ package.json
+├─ pnpm-lock.yaml
+├─ tsconfig.json
+├─ vite.config.ts
+├─ tailwind.config.ts
+├─ postcss.config.js
+├─ .env.example
+└─ src/
+   ├─ main.tsx
+   ├─ App.tsx
+   ├─ index.css
+   ├─ components/
+   │  ├─ SelectorPicker.tsx
+   │  ├─ TemplateWizard.tsx
+   │  ├─ JobDashboard.tsx
+   │  ├─ ProxyDashboard.tsx
+   │  ├─ DataPreview.tsx
+   │  ├─ PolicyPanel.tsx
+   │  ├─ PrivacyPanel.tsx
+   │  └─ Charts/
+   │     ├─ ThroughputChart.tsx
+   │     └─ ErrorRateChart.tsx
+   ├─ pages/
+   │  ├─ Home.tsx
+   │  ├─ Templates.tsx
+   │  ├─ Jobs.tsx
+   │  ├─ Exports.tsx
+   │  └─ Settings.tsx
+   ├─ services/
+   │  ├─ apiClient.ts
+   │  ├─ jobsApi.ts
+   │  ├─ templatesApi.ts
+   │  ├─ dataApi.ts
+   │  ├─ proxyApi.ts
+   │  ├─ privacyApi.ts
+   │  └─ auth.ts
+   └─ assets/
+
+Browser-extension
+extension/
+├─ README.md
+├─ manifest.json
+├─ background.js
+├─ content_script.js
+├─ popup.html
+├─ popup.js
+├─ styles.css
+└─ icons/
+   ├─ icon16.png
+   ├─ icon48.png
+   └─ icon128.png
+
+SDKs
+sdk/
+├─ python/
+│  ├─ pyproject.toml
+│  ├─ README.md
+│  ├─ sdk_client/
+│  │  ├─ __init__.py
+│  │  ├─ client.py
+│  │  ├─ webhooks.py
+│  │  ├─ models.py
+│  │  ├─ idempotency.py
+│  │  └─ retry.py
+│  └─ tests/test_client.py
+└─ typescript/
+   ├─ package.json
+   ├─ tsconfig.json
+   ├─ README.md
+   ├─ src/
+   │  ├─ index.ts
+   │  ├─ client.ts
+   │  ├─ webhooks.ts
+   │  ├─ models.ts
+   │  ├─ idempotency.ts
+   │  └─ retry.ts
+   └─ test/client.test.ts
+
+Supabase
+supabase/
+├─ .env.example
+└─ migrations/
+   ├─ 0001_init.sql
+   ├─ 0002_indexes.sql
+   ├─ 0003_rbac_rls.sql
+   ├─ 0004_templates_extractions.sql
+   ├─ 0005_dq_metrics.sql
+   ├─ 0006_lineage_provenance.sql
+   └─ 0007_erasure_cascade.sql
+
+Tester
+tests/
+├─ __init__.py
+├─ conftest.py
+├─ fixtures/
+│  ├─ html/
+│  │  ├─ vehicle_detail_*.html
+│  │  ├─ company_profile_*.html
+│  │  └─ person_profile_*.html
+│  ├─ templates/
+│  │  ├─ vehicle_detail_v3.yml
+│  │  ├─ company_profile_v1.yml
+│  │  └─ person_profile_v1.yml
+│  └─ data/expected_outputs.json
+├─ unit/
+│  ├─ test_utils.py
+│  ├─ test_regex_transformer.py
+│  ├─ test_header_generator.py
+│  ├─ test_delay_strategy.py
+│  ├─ test_template_runtime.py
+│  ├─ test_validators.py
+│  ├─ test_lineage.py
+│  ├─ test_pii_scanner.py
+│  └─ test_rate_limiter.py
+├─ property_based/
+│  ├─ test_selectors_hypothesis.py
+│  └─ test_transformers_hypothesis.py
+├─ mutation/
+│  └─ mutmut_config.toml
+├─ fuzz/
+│  └─ test_fuzz_extractors.py
+├─ integration/
+│  ├─ test_database.py
+│  ├─ test_migrations.py
+│  ├─ test_proxy_pool_api.py
+│  ├─ test_crawler_integration.py
+│  ├─ test_scraper_integration.py
+│  ├─ test_exporters.py
+│  └─ test_privacy_center.py
+├─ e2e/
+│  ├─ playwright.config.ts
+│  ├─ selectors.spec.ts
+│  ├─ forms_flow.spec.ts
+│  ├─ infinite_scroll.spec.ts
+│  └─ variable_dom.spec.ts
+├─ k6/
+│  ├─ crawl_throughput.js
+│  └─ scrape_latency.js
+├─ chaos/
+│  ├─ test_worker_kill_recovery.py
+│  └─ test_proxy_pool_degradation.py
+├─ test_api.py
+├─ test_webapp.py
+├─ test_scheduler.py
+├─ test_anti_bot.py
+├─ test_proxy_pool.py
+└─ test_exports.py
+
+Monitoring (lokalt)
+monitoring/
+├─ prometheus/prometheus.yml
+└─ grafana/provisioning/
+   ├─ datasources/prometheus.yaml
+   └─ dashboards/
+      ├─ proxypool_dashboard.json
+      ├─ crawler_scraper_dashboard.json
+      ├─ database_dashboard.json
+      └─ cost_dashboard.json
+
+Exempel / klienter / Lovable
+examples/
+├─ import_urls.csv
+├─ export_query_examples.md
+└─ api_calls.http
+
+clients/
+├─ postman_collection.json
+└─ insomnia/insomnia_export.yaml
+
+lovable/
+├─ components_spec.md
+├─ flows.md
+└─ ui_blueprints.json
+
+Ops – backup/retention/erasure
+ops/
+├─ backup/
+│  ├─ wal-g.yaml
+│  ├─ pgbackrest.conf
+│  └─ verify_backup.sh
+├─ retention/
+│  ├─ retention_policy.yml
+│  └─ retention_runner.py
+├─ erasure/
+│  ├─ erasure_worker.py
+│  └─ erasure_api.md
+└─ s3/
+   ├─ lifecycle_raw_html.json
+   ├─ lifecycle_db_backups.json
+   └─ lifecycle_exports.json
+
+Genererade klienter (valfritt)
+generated/
+├─ python/openapi_client/
+└─ typescript/openapi_client/
+
+CI/CD – GitHub Actions & säkerhet
+.github/
+└─ workflows/
+   ├─ ci.yml
+   ├─ build_and_push.yml
+   ├─ deploy_staging.yml
+   ├─ deploy_canary.yml
+   ├─ nightly_selector_regression.yml
+   ├─ security_sast.yml
+   ├─ sbom.yml                       # skapar, signerar SBOM
+   ├─ cosign_verify.yml              # verifierar signatur/attestation
+   └─ dependency_review.yml
+
+
+CONFIG (5 missing):
+  ❌ config/api.yml
+  ❌ config/auth.yml
+  ❌ config/captcha.yml
+  ❌ config/domain_policies/example.com.yml
+  ❌ config/roles.yml
+
+DOCS (17 missing):
+  ❌ docs/lovable/prompt.md
+  ❌ docs/policies/backup_restore_policy.md
+  ❌ docs/policies/erasure_policy.md
+  ❌ docs/policies/gdpr_dpia_template.md
+  ❌ docs/policies/provenance_lineage_policy.md
+  ... and 12 more
+
+ROOT (3 missing):
+  ❌ .envrc
+  ❌ TREE.md
+  ❌ VERSION
+
+SCRIPTS (3 missing):
+  ❌ scripts/backup_now.sh
+  ❌ scripts/generate_sdk.sh
+  ❌ scripts/s3_sync.sh
+
+
+CONFIG (2 missing):
+  ❌ config/export_targets.yml
+  ❌ config/alerts_thresholds.yml
+
+DOCS (35 missing):
+  ❌ docs/graphql_guide.md
+  ❌ docs/observability.md
+  ❌ docs/security.md
+  ❌ docs/roadmap.md
+  ❌ docs/risks.md
+  ❌ docs/lovable_prompt.md
+  ❌ docs/graphql.schema.graphql
+  ❌ docs/templates/dsl.md
+  ❌ docs/templates/person_profile_v1.yml
+  ❌ docs/templates/company_profile_v1.yml
+  ... and 25 more files
+
+DATA (1 missing):
+  ❌ data/templates/.gitkeep
+
+SCRIPTS (10 missing):
+  ❌ scripts/restore_integrity_check.py
+  ❌ scripts/export_postman.py
+  ❌ scripts/gen_openapi_client.sh
+  ❌ scripts/perf_probe.py
+  ❌ scripts/sbom_generate.sh
+  ❌ scripts/cosign_sign.sh
+  ❌ scripts/attestation_slsa.sh
+  ❌ scripts/chaos/inject_network_latency.sh
+  ❌ scripts/chaos/kill_worker_pod.sh
+  ❌ scripts/chaos/readme.md
+
+DOCKER_K8S (34 missing):
+  ❌ docker/dev/Dockerfile
+  ❌ docker/dev/docker-compose.dev.yml
+  ❌ docker/kafka-rabbitmq.yml
+  ❌ docker/selenium-grid.yml
+  ❌ docker/playwright-workers.yml
+  ❌ docker/synthetic-sites/docker-compose.yml
+  ❌ docker/synthetic-sites/README.md
+  ❌ docker/synthetic-sites/sites/static-list/index.html
+  ❌ docker/synthetic-sites/sites/js-infinite-scroll/index.html
+  ❌ docker/synthetic-sites/sites/form-flow/index.html
+  ... and 24 more files
+
+INFRA (28 missing):
+  ❌ infra/terraform/README.md
+  ❌ infra/terraform/envs/dev/backend.tf
+  ❌ infra/terraform/envs/dev/main.tf
+  ❌ infra/terraform/envs/dev/variables.tf
+  ❌ infra/terraform/envs/dev/outputs.tf
+  ❌ infra/terraform/envs/staging/main.tf
+  ❌ infra/terraform/envs/prod/main.tf
+  ❌ infra/terraform/modules/network/vpc.tf
+  ❌ infra/terraform/modules/network/subnets.tf
+  ❌ infra/terraform/modules/network/sg.tf
+  ... and 18 more files
+
+SRC_COMPLETE (67 missing):
+  ❌ src/crawler/emitters.py
+  ❌ src/scraper/adapters/http/client.py
+  ❌ src/scraper/adapters/http/middlewares.py
+  ❌ src/scraper/adapters/browser/driver.py
+  ❌ src/scraper/adapters/browser/interactions.py
+  ❌ src/scraper/exporters/bigquery_exporter.py
+  ❌ src/scraper/exporters/snowflake_exporter.py
+  ❌ src/scraper/exporters/opensearch_exporter.py
+  ❌ src/anti_bot/fingerprint_profiles/chrome.json
+  ❌ src/anti_bot/fingerprint_profiles/firefox.json
+  ... and 57 more files
+
+FRONTEND (24 missing):
+  ❌ frontend/pnpm-lock.yaml
+  ❌ frontend/tailwind.config.ts
+  ❌ frontend/.env.example
+  ❌ frontend/src/index.css
+  ❌ frontend/src/components/SelectorPicker.tsx
+  ❌ frontend/src/components/TemplateWizard.tsx
+  ❌ frontend/src/components/JobDashboard.tsx
+  ❌ frontend/src/components/ProxyDashboard.tsx
+  ❌ frontend/src/components/DataPreview.tsx
+  ❌ frontend/src/components/PolicyPanel.tsx
+  ... and 14 more files
+
+EXTENSION (10 missing):
+  ❌ extension/README.md
+  ❌ extension/manifest.json
+  ❌ extension/background.js
+  ❌ extension/content_script.js
+  ❌ extension/popup.html
+  ❌ extension/popup.js
+  ❌ extension/styles.css
+  ❌ extension/icons/icon16.png
+  ❌ extension/icons/icon48.png
+  ❌ extension/icons/icon128.png
+
+SDK (17 missing):
+  ❌ sdk/python/sdk_client/__init__.py
+  ❌ sdk/python/sdk_client/client.py
+  ❌ sdk/python/sdk_client/webhooks.py
+  ❌ sdk/python/sdk_client/models.py
+  ❌ sdk/python/sdk_client/idempotency.py
+  ❌ sdk/python/sdk_client/retry.py
+  ❌ sdk/python/tests/test_client.py
+  ❌ sdk/typescript/package.json
+  ❌ sdk/typescript/tsconfig.json
+  ❌ sdk/typescript/README.md
+  ... and 7 more files
+
+SUPABASE (8 missing):
+  ❌ supabase/.env.example
+  ❌ supabase/migrations/0001_init.sql
+  ❌ supabase/migrations/0002_indexes.sql
+  ❌ supabase/migrations/0003_rbac_rls.sql
+  ❌ supabase/migrations/0004_templates_extractions.sql
+  ❌ supabase/migrations/0005_dq_metrics.sql
+  ❌ supabase/migrations/0006_lineage_provenance.sql
+  ❌ supabase/migrations/0007_erasure_cascade.sql
+
+TESTS_COMPLETE (38 missing):
+  ❌ tests/fixtures/html/vehicle_detail_sample.html
+  ❌ tests/fixtures/html/company_profile_sample.html
+  ❌ tests/fixtures/html/person_profile_sample.html
+  ❌ tests/fixtures/templates/vehicle_detail_v3.yml
+  ❌ tests/fixtures/templates/company_profile_v1.yml
+  ❌ tests/fixtures/templates/person_profile_v1.yml
+  ❌ tests/fixtures/data/expected_outputs.json
+  ❌ tests/unit/test_utils.py
+  ❌ tests/unit/test_regex_transformer.py
+  ❌ tests/unit/test_lineage.py
+  ... and 28 more files
+
+MONITORING (5 missing):
+  ❌ monitoring/grafana/provisioning/datasources/prometheus.yaml
+  ❌ monitoring/grafana/provisioning/dashboards/proxypool_dashboard.json
+  ❌ monitoring/grafana/provisioning/dashboards/crawler_scraper_dashboard.json
+  ❌ monitoring/grafana/provisioning/dashboards/database_dashboard.json
+  ❌ monitoring/grafana/provisioning/dashboards/cost_dashboard.json
+
+EXAMPLES (3 missing):
+  ❌ examples/import_urls.csv
+  ❌ examples/export_query_examples.md
+  ❌ examples/api_calls.http
+
+CLIENTS (2 missing):
+  ❌ clients/postman_collection.json
+  ❌ clients/insomnia/insomnia_export.yaml
+
+LOVABLE (3 missing):
+  ❌ lovable/components_spec.md
+  ❌ lovable/flows.md
+  ❌ lovable/ui_blueprints.json
+
+OPS (10 missing):
+  ❌ ops/backup/wal-g.yaml
+  ❌ ops/backup/pgbackrest.conf
+  ❌ ops/backup/verify_backup.sh
+  ❌ ops/retention/retention_policy.yml
+  ❌ ops/retention/retention_runner.py
+  ❌ ops/erasure/erasure_worker.py
+  ❌ ops/erasure/erasure_api.md
+  ❌ ops/s3/lifecycle_raw_html.json
+  ❌ ops/s3/lifecycle_db_backups.json
+  ❌ ops/s3/lifecycle_exports.json
+
+GENERATED (2 missing):
+  ❌ generated/python/openapi_client/.gitkeep
+  ❌ generated/typescript/openapi_client/.gitkeep
+
+GITHUB (5 missing):
+  ❌ .github/workflows/deploy_staging.yml
+  ❌ .github/workflows/deploy_canary.yml
+  ❌ .github/workflows/nightly_selector_regression.yml
+  ❌ .github/workflows/sbom.yml
+  ❌ .github/workflows/cosign_verify.yml
+
+TOP MISSING FILES:
+--------------------
+❌ .github/workflows/cosign_verify.yml
+❌ .github/workflows/deploy_canary.yml
+❌ .github/workflows/deploy_staging.yml
+❌ .github/workflows/nightly_selector_regression.yml
+❌ .github/workflows/sbom.yml
+❌ clients/insomnia/insomnia_export.yaml
+❌ clients/postman_collection.json
+❌ config/alerts_thresholds.yml
+❌ config/export_targets.yml
+❌ data/templates/.gitkeep
+❌ docker/dev/Dockerfile
+❌ docker/dev/docker-compose.dev.yml
+❌ docker/k8s/base/configmap.yaml
+❌ docker/k8s/base/cronjob-backup.yaml
+❌ docker/k8s/base/cronjob-cost-report.yaml
+❌ docker/k8s/base/cronjob-erasure.yaml
+❌ docker/k8s/base/cronjob-redis-snapshot.yaml
+❌ docker/k8s/base/cronjob-retention.yaml
+❌ docker/k8s/base/cronjob-sbom.yaml
+❌ docker/k8s/base/deployment-api.yaml
+❌ docker/k8s/base/deployment-proxypool.yaml
+❌ docker/k8s/base/deployment-workers.yaml
+❌ docker/k8s/base/hpa-api.yaml
+❌ docker/k8s/base/hpa-workers.yaml
+❌ docker/k8s/base/ingress.yaml
+❌ docker/k8s/base/namespace.yaml
+❌ docker/k8s/base/pdb-api.yaml
+❌ docker/k8s/base/pdb-workers.yaml
+❌ docker/k8s/base/secrets.example.yaml
+❌ docker/k8s/base/service-api.yaml
+
+CONFIG (2 missing):
+  ❌ config/export_targets.yml
+  ❌ config/alerts_thresholds.yml
+
+DOCS (35 missing):
+  ❌ docs/graphql_guide.md
+  ❌ docs/observability.md
+  ❌ docs/security.md
+  ❌ docs/roadmap.md
+  ❌ docs/risks.md
+  ❌ docs/lovable_prompt.md
+  ❌ docs/graphql.schema.graphql
+  ❌ docs/templates/dsl.md
+  ❌ docs/templates/person_profile_v1.yml
+  ❌ docs/templates/company_profile_v1.yml
+  ... and 25 more files
+
+DATA (1 missing):
+  ❌ data/templates/.gitkeep
+
+SCRIPTS (10 missing):
+  ❌ scripts/restore_integrity_check.py
+  ❌ scripts/export_postman.py
+  ❌ scripts/gen_openapi_client.sh
+  ❌ scripts/perf_probe.py
+  ❌ scripts/sbom_generate.sh
+  ❌ scripts/cosign_sign.sh
+  ❌ scripts/attestation_slsa.sh
+  ❌ scripts/chaos/inject_network_latency.sh
+  ❌ scripts/chaos/kill_worker_pod.sh
+  ❌ scripts/chaos/readme.md
+
+DOCKER_K8S (34 missing):
+  ❌ docker/dev/Dockerfile
+  ❌ docker/dev/docker-compose.dev.yml
+  ❌ docker/kafka-rabbitmq.yml
+  ❌ docker/selenium-grid.yml
+  ❌ docker/playwright-workers.yml
+  ❌ docker/synthetic-sites/docker-compose.yml
+  ❌ docker/synthetic-sites/README.md
+  ❌ docker/synthetic-sites/sites/static-list/index.html
+  ❌ docker/synthetic-sites/sites/js-infinite-scroll/index.html
+  ❌ docker/synthetic-sites/sites/form-flow/index.html
+  ... and 24 more files
+
+INFRA (28 missing):
+  ❌ infra/terraform/README.md
+  ❌ infra/terraform/envs/dev/backend.tf
+  ❌ infra/terraform/envs/dev/main.tf
+  ❌ infra/terraform/envs/dev/variables.tf
+  ❌ infra/terraform/envs/dev/outputs.tf
+  ❌ infra/terraform/envs/staging/main.tf
+  ❌ infra/terraform/envs/prod/main.tf
+  ❌ infra/terraform/modules/network/vpc.tf
+  ❌ infra/terraform/modules/network/subnets.tf
+  ❌ infra/terraform/modules/network/sg.tf
+  ... and 18 more files
+
+SRC_COMPLETE (67 missing):
+  ❌ src/crawler/emitters.py
+  ❌ src/scraper/adapters/http/client.py
+  ❌ src/scraper/adapters/http/middlewares.py
+  ❌ src/scraper/adapters/browser/driver.py
+  ❌ src/scraper/adapters/browser/interactions.py
+  ❌ src/scraper/exporters/bigquery_exporter.py
+  ❌ src/scraper/exporters/snowflake_exporter.py
+  ❌ src/scraper/exporters/opensearch_exporter.py
+  ❌ src/anti_bot/fingerprint_profiles/chrome.json
+  ❌ src/anti_bot/fingerprint_profiles/firefox.json
+  ... and 57 more files
+
+FRONTEND (24 missing):
+  ❌ frontend/pnpm-lock.yaml
+  ❌ frontend/tailwind.config.ts
+  ❌ frontend/.env.example
+  ❌ frontend/src/index.css
+  ❌ frontend/src/components/SelectorPicker.tsx
+  ❌ frontend/src/components/TemplateWizard.tsx
+  ❌ frontend/src/components/JobDashboard.tsx
+  ❌ frontend/src/components/ProxyDashboard.tsx
+  ❌ frontend/src/components/DataPreview.tsx
+  ❌ frontend/src/components/PolicyPanel.tsx
+  ... and 14 more files
+
+EXTENSION (10 missing):
+  ❌ extension/README.md
+  ❌ extension/manifest.json
+  ❌ extension/background.js
+  ❌ extension/content_script.js
+  ❌ extension/popup.html
+  ❌ extension/popup.js
+  ❌ extension/styles.css
+  ❌ extension/icons/icon16.png
+  ❌ extension/icons/icon48.png
+  ❌ extension/icons/icon128.png
+
+SDK (17 missing):
+  ❌ sdk/python/sdk_client/__init__.py
+  ❌ sdk/python/sdk_client/client.py
+  ❌ sdk/python/sdk_client/webhooks.py
+  ❌ sdk/python/sdk_client/models.py
+  ❌ sdk/python/sdk_client/idempotency.py
+  ❌ sdk/python/sdk_client/retry.py
+  ❌ sdk/python/tests/test_client.py
+  ❌ sdk/typescript/package.json
+  ❌ sdk/typescript/tsconfig.json
+  ❌ sdk/typescript/README.md
+  ... and 7 more files
+
+SUPABASE (8 missing):
+  ❌ supabase/.env.example
+  ❌ supabase/migrations/0001_init.sql
+  ❌ supabase/migrations/0002_indexes.sql
+  ❌ supabase/migrations/0003_rbac_rls.sql
+  ❌ supabase/migrations/0004_templates_extractions.sql
+  ❌ supabase/migrations/0005_dq_metrics.sql
+  ❌ supabase/migrations/0006_lineage_provenance.sql
+  ❌ supabase/migrations/0007_erasure_cascade.sql
+
+TESTS_COMPLETE (38 missing):
+  ❌ tests/fixtures/html/vehicle_detail_sample.html
+  ❌ tests/fixtures/html/company_profile_sample.html
+  ❌ tests/fixtures/html/person_profile_sample.html
+  ❌ tests/fixtures/templates/vehicle_detail_v3.yml
+  ❌ tests/fixtures/templates/company_profile_v1.yml
+  ❌ tests/fixtures/templates/person_profile_v1.yml
+  ❌ tests/fixtures/data/expected_outputs.json
+  ❌ tests/unit/test_utils.py
+  ❌ tests/unit/test_regex_transformer.py
+  ❌ tests/unit/test_lineage.py
+  ... and 28 more files
+
+MONITORING (5 missing):
+  ❌ monitoring/grafana/provisioning/datasources/prometheus.yaml
+  ❌ monitoring/grafana/provisioning/dashboards/proxypool_dashboard.json
+  ❌ monitoring/grafana/provisioning/dashboards/crawler_scraper_dashboard.json
+  ❌ monitoring/grafana/provisioning/dashboards/database_dashboard.json
+  ❌ monitoring/grafana/provisioning/dashboards/cost_dashboard.json
+
+EXAMPLES (3 missing):
+  ❌ examples/import_urls.csv
+  ❌ examples/export_query_examples.md
+  ❌ examples/api_calls.http
+
+CLIENTS (2 missing):
+  ❌ clients/postman_collection.json
+  ❌ clients/insomnia/insomnia_export.yaml
+
+LOVABLE (3 missing):
+  ❌ lovable/components_spec.md
+  ❌ lovable/flows.md
+  ❌ lovable/ui_blueprints.json
+
+OPS (10 missing):
+  ❌ ops/backup/wal-g.yaml
+  ❌ ops/backup/pgbackrest.conf
+  ❌ ops/backup/verify_backup.sh
+  ❌ ops/retention/retention_policy.yml
+  ❌ ops/retention/retention_runner.py
+  ❌ ops/erasure/erasure_worker.py
+  ❌ ops/erasure/erasure_api.md
+  ❌ ops/s3/lifecycle_raw_html.json
+  ❌ ops/s3/lifecycle_db_backups.json
+  ❌ ops/s3/lifecycle_exports.json
+
+GENERATED (2 missing):
+  ❌ generated/python/openapi_client/.gitkeep
+  ❌ generated/typescript/openapi_client/.gitkeep
+
+GITHUB (5 missing):
+  ❌ .github/workflows/deploy_staging.yml
+  ❌ .github/workflows/deploy_canary.yml
+  ❌ .github/workflows/nightly_selector_regression.yml
+  ❌ .github/workflows/sbom.yml
+  ❌ .github/workflows/cosign_verify.yml
+
+TOP MISSING FILES:
+--------------------
+❌ .github/workflows/cosign_verify.yml
+❌ .github/workflows/deploy_canary.yml
+❌ .github/workflows/deploy_staging.yml
+❌ .github/workflows/nightly_selector_regression.yml
+❌ .github/workflows/sbom.yml
+❌ clients/insomnia/insomnia_export.yaml
+❌ clients/postman_collection.json
+❌ config/alerts_thresholds.yml
+❌ config/export_targets.yml
+❌ data/templates/.gitkeep
+❌ docker/dev/Dockerfile
+❌ docker/dev/docker-compose.dev.yml
+❌ docker/k8s/base/configmap.yaml
+❌ docker/k8s/base/cronjob-backup.yaml
+❌ docker/k8s/base/cronjob-cost-report.yaml
+❌ docker/k8s/base/cronjob-erasure.yaml
+❌ docker/k8s/base/cronjob-redis-snapshot.yaml
+❌ docker/k8s/base/cronjob-retention.yaml
+❌ docker/k8s/base/cronjob-sbom.yaml
+❌ docker/k8s/base/deployment-api.yaml
+❌ docker/k8s/base/deployment-proxypool.yaml
+❌ docker/k8s/base/deployment-workers.yaml
+❌ docker/k8s/base/hpa-api.yaml
+❌ docker/k8s/base/hpa-workers.yaml
+❌ docker/k8s/base/ingress.yaml
+❌ docker/k8s/base/namespace.yaml
+❌ docker/k8s/base/pdb-api.yaml
+❌ docker/k8s/base/pdb-workers.yaml
+❌ docker/k8s/base/secrets.example.yaml
+❌ docker/k8s/base/service-api.yaml
+
+
+
+
+#!/usr/bin/env python3
+"""
+Comprehensive structure analyzer for the crawler project.
+Analyzes the current project structure against the complete required structure.
+Merges both specification structures intelligently to show full requirements.
+"""
+
+import os
+from pathlib import Path
+from typing import Dict, List, Set, Tuple
+import json
+
+def get_required_files() -> Dict[str, List[str]]:
+    """Get the complete list of required files organized by category."""
+    return {
+        "root": [
+            "README.md",
+            "TREE.md",
+            "CHANGELOG.md", 
+            "CONTRIBUTING.md",
+            "CODE_OF_CONDUCT.md", 
+            "SECURITY.md",
+            "LICENSE",
+            ".gitignore",
+            ".gitattributes",
+            ".editorconfig", 
+            ".dockerignore",
+            ".pre-commit-config.yaml",
+            ".env.example",
+            ".envrc",
+            "Makefile",
+            "pyproject.toml",
+            "requirements.txt", 
+            "requirements_dev.txt",
+            "package.json",
+            "VERSION",
+            "mypy.ini",
+            "ruff.toml", 
+            "pytest.ini",
+            "CODEOWNERS"
+        ],
+        
+        "config": [
+            "config/app_config.yml",
+            "config/logging.yml", 
+            "config/performance-defaults.yml",
+            "config/proxies.yml",
+            "config/anti_bot.yml",
+            "config/captcha.yml",
+            "config/export_targets.yml",
+            "config/api.yml",
+            "config/auth.yml",
+            "config/roles.yml",
+            "config/feature_flags.yml",
+            "config/domain_policies.yml",
+            "config/rate_limits.yml", 
+            "config/alerts_thresholds.yml",
+            "config/domain_policies/example.com.yml",
+            "config/env/development.yml",
+            "config/env/staging.yml", 
+            "config/env/production.yml"
+        ],
+        
+        "docs": [
+            "docs/architecture.md",
+            "docs/system_design_decisions.md",
+            "docs/developer_guide.md",
+            "docs/usage_guide.md", 
+            "docs/database_schema.md",
+            "docs/api_documentation.md",
+            "docs/openapi.yaml",
+            "docs/graphql/schema.graphql",
+            "docs/postman/collection.json",
+            "docs/policies/robots_tos_policy.md",
+            "docs/policies/gdpr_dpia_template.md",
+            "docs/policies/s3_lifecycle_raw_html.json",
+            "docs/policies/s3_lifecycle_db_backups.json",
+            "docs/policies/s3_lifecycle_exports.json",
+            "docs/policies/backup_restore_policy.md",
+            "docs/policies/retention_policy.md",
+            "docs/policies/erasure_policy.md",
+            "docs/policies/provenance_lineage_policy.md",
+            "docs/runbooks/403_storm.md",
+            "docs/runbooks/429_spike.md",
+            "docs/runbooks/layout_drift.md",
+            "docs/runbooks/proxy_drought.md",
+            "docs/runbooks/restore_drill.md",
+            "docs/slo_sla.md",
+            "docs/changelog.md",
+            "docs/lovable/prompt.md",
+            "docs/anti_bot_strategy.md",
+            "docs/user_interface_design.md",
+            "docs/graphql_guide.md", 
+            "docs/observability.md",
+            "docs/security.md",
+            "docs/roadmap.md",
+            "docs/risks.md",
+            "docs/lovable_prompt.md",
+            "docs/templates/dsl.md",
+            "docs/templates/person_profile_v1.yml",
+            "docs/templates/company_profile_v1.yml",
+            "docs/templates/vehicle_detail_v3.yml",
+            "docs/templates/shared_transforms.yml",
+            "docs/templates/examples/example_list_page.yml",
+            "docs/templates/examples/example_detail_page.yml",
+            "docs/templates/examples/form_flow_example.yml",
+            "docs/policies/rbac_policies.md",
+            "docs/policies/privacy_retention_matrix.md",
+            "docs/policies/dpia_template.md",
+            "docs/policies/data_processing_agreement.md",
+            "docs/policies/legal_checklist.md",
+            "docs/runbooks/deletion_on_demand.md",
+            "docs/runbooks/incident_comm_template.md",
+            "docs/observability_assets/grafana/proxypool_dashboard.json",
+            "docs/observability_assets/grafana/crawler_scraper_dashboard.json",
+            "docs/observability_assets/grafana/database_dashboard.json",
+            "docs/observability_assets/grafana/cost_dashboard.json",
+            "docs/observability_assets/prometheus/alerts.yml",
+            "docs/observability_assets/prometheus/recording_rules.yml"
+        ],
+
+        "docker": [
+            "docker/Dockerfile.app",
+            "docker/Dockerfile.worker", 
+            "docker/Dockerfile.browser",
+            "docker/Dockerfile.synthetic",
+            "docker/entrypoint.sh",
+            "docker/docker-compose.yml",
+            "docker/docker-compose.dev.yml",
+            "docker/docker-compose.synthetic.yml",
+            "docker/dev/grafana/provisioning/README.md",
+            "docker/dev/prometheus/prometheus.yml",
+            "docker/Dockerfile",
+            "docker/dev/Dockerfile",
+            "docker/kafka-rabbitmq.yml",
+            "docker/selenium-grid.yml",
+            "docker/playwright-workers.yml",
+            "docker/synthetic-sites/docker-compose.yml",
+            "docker/synthetic-sites/sites/static-list/README.md",
+            "docker/synthetic-sites/sites/js-infinite-scroll/README.md",
+            "docker/synthetic-sites/sites/form-flow/README.md",
+            "docker/synthetic-sites/sites/variable-dom/README.md",
+            "docker/synthetic-sites/sites/captcha-lite/README.md",
+            "docker/synthetic-sites/README.md",
+            "docker/k8s/base/namespace.yaml",
+            "docker/k8s/base/configmap.yaml",
+            "docker/k8s/base/secrets.example.yaml",
+            "docker/k8s/base/deployment-api.yaml",
+            "docker/k8s/base/deployment-workers.yaml",
+            "docker/k8s/base/deployment-proxypool.yaml",
+            "docker/k8s/base/service-api.yaml",
+            "docker/k8s/base/service-proxypool.yaml",
+            "docker/k8s/base/ingress.yaml",
+            "docker/k8s/base/hpa-api.yaml",
+            "docker/k8s/base/hpa-workers.yaml",
+            "docker/k8s/base/pdb-api.yaml",
+            "docker/k8s/base/pdb-workers.yaml",
+            "docker/k8s/base/cronjob-backup.yaml",
+            "docker/k8s/base/cronjob-redis-snapshot.yaml",
+            "docker/k8s/base/cronjob-retention.yaml",
+            "docker/k8s/base/cronjob-erasure.yaml",
+            "docker/k8s/base/cronjob-sbom.yaml",
+            "docker/k8s/base/cronjob-cost-report.yaml",
+            "docker/k8s/helm/Chart.yaml",
+            "docker/k8s/helm/values.yaml",
+            "docker/k8s/helm/templates/README.md"
+        ],
+
+        "iac": [
+            "iac/terraform/modules/network/README.md",
+            "iac/terraform/modules/eks/README.md", 
+            "iac/terraform/modules/rds/README.md",
+            "iac/terraform/modules/redis/README.md",
+            "iac/terraform/modules/s3/README.md",
+            "iac/terraform/envs/dev/README.md",
+            "iac/terraform/envs/staging/README.md",
+            "iac/terraform/envs/prod/README.md",
+            "iac/terraform/README.md",
+            "iac/k8s/namespaces/scraping.yaml",
+            "iac/k8s/namespaces/data.yaml",
+            "iac/k8s/namespaces/ops.yaml",
+            "iac/k8s/secrets/external-secrets.yaml",
+            "iac/k8s/configmaps/app-config.yaml",
+            "iac/k8s/configmaps/anti-bot.yaml", 
+            "iac/k8s/configmaps/performance-defaults.yaml",
+            "iac/k8s/deployments/api.yaml",
+            "iac/k8s/deployments/worker.yaml",
+            "iac/k8s/deployments/browser-pool.yaml",
+            "iac/k8s/deployments/proxy-pool.yaml",
+            "iac/k8s/services/api-svc.yaml",
+            "iac/k8s/services/proxy-api-svc.yaml",
+            "iac/k8s/services/grafana-svc.yaml",
+            "iac/k8s/ingress/api-ingress.yaml",
+            "iac/k8s/ingress/grafana-ingress.yaml",
+            "iac/k8s/hpa/api-hpa.yaml",
+            "iac/k8s/hpa/worker-hpa.yaml",
+            "iac/k8s/cronjobs/sql_backup.yaml",
+            "iac/k8s/cronjobs/redis_snapshot_upload.yaml",
+            "iac/k8s/cronjobs/retention_job.yaml", 
+            "iac/k8s/cronjobs/erasure_worker.yaml",
+            "iac/k8s/cronjobs/restore_drill.yaml",
+            "iac/k8s/cronjobs/selector_regression.yaml",
+            "iac/k8s/monitoring/prometheus-rules.yaml",
+            "iac/k8s/monitoring/grafana-dashboards/scraping_overview.json",
+            "iac/k8s/monitoring/grafana-dashboards/proxy_health.json",
+            "iac/k8s/monitoring/grafana-dashboards/scheduler_queues.json",
+            "iac/k8s/monitoring/grafana-dashboards/db_dq_metrics.json",
+            "iac/k8s/monitoring/grafana-dashboards/cost_overview.json",
+            "iac/k8s/monitoring/kustomization.yaml"
+        ],
+        
+        "src_webapp": [
+            "src/webapp/__init__.py",
+            "src/webapp/app.py",
+            "src/webapp/api.py",
+            "src/webapp/graphql.py",
+            "src/webapp/auth.py",
+            "src/webapp/deps.py",
+            "src/webapp/views.py",
+            "src/webapp/websocket.py",
+            "src/webapp/privacy_center.py",
+            "src/webapp/schemas/jobs.py",
+            "src/webapp/schemas/data.py",
+            "src/webapp/schemas/templates.py",
+            "src/webapp/schemas/proxies.py",
+            "src/webapp/schemas/webhooks.py",
+            "src/webapp/routers/jobs.py",
+            "src/webapp/routers/data.py",
+            "src/webapp/routers/templates.py",
+            "src/webapp/routers/proxy.py",
+            "src/webapp/routers/exports.py",
+            "src/webapp/routers/privacy.py",
+            "src/webapp/middlewares/logging.py",
+            "src/webapp/middlewares/rate_limit.py",
+            "src/webapp/services/webhook_dispatcher.py",
+            "src/webapp/services/export_service.py",
+            "src/webapp/services/auth_service.py",
+            "src/webapp/static/README.md",
+            "src/webapp/templates/README.md",
+            "src/webapp/i18n/sv-SE.yml",
+            "src/webapp/i18n/en-US.yml",
+            "src/webapp/templates/base.html",
+            "src/webapp/templates/dashboard.html",
+            "src/webapp/templates/selector_tool.html",
+            "src/webapp/templates/jobs.html",
+            "src/webapp/templates/privacy.html",
+            "src/webapp/templates/settings.html",
+            "src/webapp/static/css/app.css",
+            "src/webapp/static/js/selector_inject.js",
+            "src/webapp/static/img/README.md"
+        ],
+
+        "src_crawler": [
+            "src/crawler/__init__.py",
+            "src/crawler/sitemap_generator.py",
+            "src/crawler/template_detector.py",
+            "src/crawler/link_extractors.py",
+            "src/crawler/pagination.py",
+            "src/crawler/infinite_scroll.py",
+            "src/crawler/url_queue.py",
+            "src/crawler/policy.py",
+            "src/crawler/reporters.py",
+            "src/crawler/keywords_search.py",
+            "src/crawler/emitters.py"
+        ],
+
+        "src_scraper": [
+            "src/scraper/__init__.py",
+            "src/scraper/base_scraper.py",
+            "src/scraper/http_scraper.py",
+            "src/scraper/selenium_scraper.py",
+            "src/scraper/form_flows.py",
+            "src/scraper/template_extractor.py", 
+            "src/scraper/template_runtime.py",
+            "src/scraper/xpath_suggester.py",
+            "src/scraper/regex_transformer.py",
+            "src/scraper/login_handler.py",
+            "src/scraper/image_downloader.py",
+            "src/scraper/dsl/schema.py",
+            "src/scraper/dsl/validators.py",
+            "src/scraper/dsl/transformers.py",
+            "src/scraper/dsl/cross_field.py",
+            "src/scraper/dsl/examples/vehicle_detail_v3.yml",
+            "src/scraper/dsl/examples/person_profile_v2.yml",
+            "src/scraper/dsl/examples/company_profile_v2.yml",
+            "src/scraper/adapters/http/client.py",
+            "src/scraper/adapters/http/middlewares.py",
+            "src/scraper/adapters/browser/driver.py",
+            "src/scraper/adapters/browser/interactions.py"
+        ],
+
+        "src_exporters": [
+            "src/exporters/__init__.py",
+            "src/exporters/base.py",
+            "src/exporters/csv_exporter.py",
+            "src/exporters/json_exporter.py", 
+            "src/exporters/excel_exporter.py",
+            "src/exporters/sheets_exporter.py",
+            "src/exporters/bigquery_exporter.py",
+            "src/exporters/snowflake_exporter.py",
+            "src/exporters/elastic_exporter.py",
+            "src/exporters/google_sheets_exporter.py",
+            "src/exporters/opensearch_exporter.py"
+        ],
+
+        "src_complete": [
+            "src/__init__.py",
+            "src/main.py",
+            "src/settings.py",
+            "src/proxy_pool/__init__.py",
+            "src/proxy_pool/collector.py",
+            "src/proxy_pool/validator.py",
+            "src/proxy_pool/quality_filter.py", 
+            "src/proxy_pool/rotator.py",
+            "src/proxy_pool/manager.py",
+            "src/proxy_pool/monitor.py",
+            "src/proxy_pool/api/__init__.py",
+            "src/proxy_pool/api/server.py",
+            "src/anti_bot/__init__.py",
+            "src/anti_bot/header_generator.py",
+            "src/anti_bot/session_manager.py",
+            "src/anti_bot/delay_strategy.py",
+            "src/anti_bot/credential_manager.py",
+            "src/anti_bot/fallback_strategy.py",
+            "src/anti_bot/fingerprint_profiles/chrome.json",
+            "src/anti_bot/fingerprint_profiles/firefox.json",
+            "src/anti_bot/fingerprint_profiles/safari.json",
+            "src/anti_bot/fingerprint_profiles/edge.json",
+            "src/anti_bot/browser_stealth/__init__.py",
+            "src/anti_bot/browser_stealth/stealth_browser.py",
+            "src/anti_bot/browser_stealth/human_behavior.py",
+            "src/anti_bot/browser_stealth/cloudflare_bypass.py",
+            "src/anti_bot/browser_stealth/captcha_solver.py",
+            "src/anti_bot/diagnostics/__init__.py",
+            "src/anti_bot/diagnostics/diagnose_url.py",
+            "src/database/__init__.py",
+            "src/database/models.py",
+            "src/database/manager.py",
+            "src/database/seed/persons.json",
+            "src/database/seed/companies.json",
+            "src/database/seed/vehicles.json",
+            "src/database/migrations/0001_init.sql",
+            "src/database/migrations/0002_indexes.sql",
+            "src/database/migrations/env.py",
+            "src/database/migrations/alembic.ini",
+            "src/database/migrations/versions/0001_init.py",
+            "src/database/migrations/versions/0002_add_indexes.py",
+            "src/database/migrations/versions/0003_template_versioning.py",
+            "src/database/migrations/versions/0004_dq_tables.py",
+            "src/database/schema.sql",
+            "src/scheduler/__init__.py",
+            "src/scheduler/scheduler.py",
+            "src/scheduler/job_definitions.py",
+            "src/scheduler/job_monitor.py",
+            "src/scheduler/notifier.py",
+            "src/scheduler/jobs/crawl_job.py",
+            "src/scheduler/jobs/scrape_job.py",
+            "src/scheduler/jobs/proxy_update_job.py",
+            "src/scheduler/jobs/proxy_validate_job.py",
+            "src/scheduler/jobs/retention_job.py",
+            "src/scheduler/jobs/erasure_job.py",
+            "src/scheduler/jobs/sql_backup_job.py",
+            "src/scheduler/jobs/redis_snapshot_job.py",
+            "src/scheduler/jobs/restore_drill_job.py",
+            "src/scheduler/jobs/selector_regression_job.py",
+            "src/scheduler/jobs/backup_job.py",
+            "src/analysis/__init__.py",
+            "src/analysis/data_quality.py",
+            "src/analysis/similarity_analysis.py",
+            "src/analysis/merinfo_analysis_tool.py",
+            "src/analysis/reports/README.md",
+            "src/plugins/__init__.py",
+            "src/plugins/registry.yaml",
+            "src/plugins/examples/extractor_example.py",
+            "src/plugins/examples/export_example.py",
+            "src/plugins/sample_extractor/__init__.py",
+            "src/plugins/sample_extractor/plugin.py",
+            "src/plugins/sample_extractor/README.md",
+            "src/plugins/sample_export_target/__init__.py",
+            "src/plugins/sample_export_target/plugin.py",
+            "src/plugins/sample_export_target/README.md",
+            "src/plugins/README.md",
+            "src/utils/__init__.py",
+            "src/utils/logger.py",
+            "src/utils/user_agent_rotator.py",
+            "src/utils/validators.py",
+            "src/utils/export_utils.py",
+            "src/utils/pattern_detector.py",
+            "src/utils/hashing.py",
+            "src/utils/cost_tracker.py",
+            "src/utils/idempotency.py",
+            "src/utils/hmac_utils.py",
+            "src/utils/rate_limiter.py",
+            "src/utils/pii_scanner.py",
+            "src/utils/lineage.py",
+            "src/utils/otel.py",
+            "src/ml/__init__.py",
+            "src/ml/template_classifier.py",
+            "src/ml/selector_ranker.py",
+            "src/ml/drift_detector.py",
+            "src/ml/features/dom_features.py",
+            "src/ml/features/text_features.py",
+            "src/ml/pipelines/train_classifier.py",
+            "src/ml/pipelines/train_ranker.py",
+            "src/ml/pipelines/eval_report.py",
+            "src/connectors/__init__.py",
+            "src/connectors/bigquery_client.py",
+            "src/connectors/snowflake_client.py",
+            "src/connectors/opensearch_client.py",
+            "src/connectors/google_sheets_client.py",
+            "src/connectors/slack_webhook.py"
+        ],
+
+        "frontend": [
+            "frontend/package.json",
+            "frontend/tsconfig.json",
+            "frontend/vite.config.ts",
+            "frontend/postcss.config.js",
+            "frontend/tailwind.config.js",
+            "frontend/tailwind.config.ts",
+            "frontend/pnpm-lock.yaml",
+            "frontend/.env.example",
+            "frontend/src/main.tsx",
+            "frontend/src/App.tsx",
+            "frontend/src/index.css",
+            "frontend/src/api/http.ts",
+            "frontend/src/api/rest.ts",
+            "frontend/src/api/graphql.ts",
+            "frontend/src/components/BrowserPanel.tsx",
+            "frontend/src/components/SelectorOverlay.tsx",
+            "frontend/src/components/JobDashboard.tsx",
+            "frontend/src/components/ProxyHealth.tsx",
+            "frontend/src/components/PolicyEditor.tsx",
+            "frontend/src/components/PrivacyCenter.tsx",
+            "frontend/src/components/SelectorPicker.tsx",
+            "frontend/src/components/TemplateWizard.tsx",
+            "frontend/src/components/DataPreview.tsx",
+            "frontend/src/components/PolicyPanel.tsx",
+            "frontend/src/components/PrivacyPanel.tsx",
+            "frontend/src/components/ProxyDashboard.tsx",
+            "frontend/src/components/Charts/ThroughputChart.tsx",
+            "frontend/src/components/Charts/ErrorRateChart.tsx",
+            "frontend/src/pages/Home.tsx",
+            "frontend/src/pages/NewTemplateWizard.tsx",
+            "frontend/src/pages/Jobs.tsx",
+            "frontend/src/pages/Templates.tsx",
+            "frontend/src/pages/Exports.tsx",
+            "frontend/src/pages/Settings.tsx",
+            "frontend/src/hooks/README.md",
+            "frontend/src/store/README.md",
+            "frontend/src/styles/README.md",
+            "frontend/src/utils/README.md",
+            "frontend/src/services/apiClient.ts",
+            "frontend/src/services/jobsApi.ts",
+            "frontend/src/services/templatesApi.ts",
+            "frontend/src/services/dataApi.ts",
+            "frontend/src/services/proxyApi.ts",
+            "frontend/src/services/privacyApi.ts",
+            "frontend/src/services/auth.ts",
+            "frontend/public/index.html",
+            "frontend/src/assets/README.md"
+        ],
+
+        "data": [
+            "data/raw/html/.gitkeep",
+            "data/raw/json/.gitkeep",
+            "data/processed/.gitkeep",
+            "data/exports/csv/.gitkeep",
+            "data/exports/json/.gitkeep",
+            "data/exports/excel/.gitkeep",
+            "data/exports/google_sheets/.gitkeep",
+            "data/images/.gitkeep",
+            "data/templates/vehicle_detail/.gitkeep",
+            "data/templates/person_profile/.gitkeep",
+            "data/templates/company_profile/.gitkeep",
+            "data/templates/.gitkeep"
+        ],
+
+        "scripts": [
+            "scripts/init_db.py",
+            "scripts/seed_data.py",
+            "scripts/run_crawler.py",
+            "scripts/run_scraper.py",
+            "scripts/start_scheduler.py",
+            "scripts/run_analysis.py",
+            "scripts/diagnostic_tool.py",
+            "scripts/backup.sh",
+            "scripts/restore_drill.sh",
+            "scripts/generate_sdk.sh",
+            "scripts/backup_now.sh",
+            "scripts/s3_sync.sh",
+            "scripts/restore_integrity_check.py",
+            "scripts/export_postman.py",
+            "scripts/gen_openapi_client.sh",
+            "scripts/perf_probe.py",
+            "scripts/sbom_generate.sh",
+            "scripts/cosign_sign.sh",
+            "scripts/attestation_slsa.sh",
+            "scripts/chaos/inject_network_latency.sh",
+            "scripts/chaos/kill_worker_pod.sh",
+            "scripts/chaos/readme.md"
+        ],
+
+        "tests_complete": [
+            "tests/__init__.py",
+            "tests/README.md",
+            "tests/conftest.py",
+            "tests/pytest.ini",
+            "tests/unit/test_selectors.py",
+            "tests/unit/test_transformers.py",
+            "tests/unit/test_validators.py",
+            "tests/unit/test_template_runtime.py",
+            "tests/unit/test_header_generator.py",
+            "tests/unit/test_db_manager.py",
+            "tests/unit/test_utils.py",
+            "tests/unit/test_regex_transformer.py",
+            "tests/unit/test_delay_strategy.py",
+            "tests/unit/test_lineage.py",
+            "tests/unit/test_pii_scanner.py",
+            "tests/unit/test_rate_limiter.py",
+            "tests/integration/test_proxy_api.py",
+            "tests/integration/test_crawler_queue.py",
+            "tests/integration/test_scraper_http.py",
+            "tests/integration/test_scraper_browser.py",
+            "tests/integration/test_scheduler_jobs.py",
+            "tests/integration/test_exports.py",
+            "tests/integration/test_database.py",
+            "tests/integration/test_migrations.py",
+            "tests/integration/test_crawler_integration.py",
+            "tests/integration/test_scraper_integration.py",
+            "tests/integration/test_exporters.py",
+            "tests/integration/test_privacy_center.py",
+            "tests/e2e/test_static_pagination.py",
+            "tests/e2e/test_infinite_scroll.py",
+            "tests/e2e/test_form_flow_vin_regnr.py",
+            "tests/e2e/test_layout_drift_resilience.py",
+            "tests/e2e/test_privacy_erasure.py",
+            "tests/e2e/playwright.config.ts",
+            "tests/e2e/selectors.spec.ts",
+            "tests/e2e/forms_flow.spec.ts",
+            "tests/e2e/infinite_scroll.spec.ts",
+            "tests/e2e/variable_dom.spec.ts",
+            "tests/fixtures/golden_sets/vehicle_detail/.gitkeep",
+            "tests/fixtures/golden_sets/person_profile/.gitkeep",
+            "tests/fixtures/golden_sets/company_profile/.gitkeep",
+            "tests/fixtures/html_samples/vehicle_detail/.gitkeep",
+            "tests/fixtures/html_samples/person_profile/.gitkeep",
+            "tests/fixtures/html_samples/company_profile/.gitkeep",
+            "tests/fixtures/dsl/vehicle_detail_v3.yml",
+            "tests/fixtures/dsl/person_profile_v2.yml",
+            "tests/fixtures/dsl/company_profile_v2.yml",
+            "tests/fixtures/html/vehicle_detail_1.html",
+            "tests/fixtures/html/company_profile_1.html",
+            "tests/fixtures/html/person_profile_1.html",
+            "tests/fixtures/templates/vehicle_detail_v3.yml",
+            "tests/fixtures/templates/company_profile_v1.yml",
+            "tests/fixtures/templates/person_profile_v1.yml",
+            "tests/fixtures/data/expected_outputs.json",
+            "tests/synthetic_sites/Dockerfile",
+            "tests/synthetic_sites/docker-compose.synthetic.yml",
+            "tests/synthetic_sites/static_pagination/server.py",
+            "tests/synthetic_sites/static_pagination/templates/.gitkeep",
+            "tests/synthetic_sites/static_pagination/data.json",
+            "tests/synthetic_sites/infinite_scroll/server.py",
+            "tests/synthetic_sites/infinite_scroll/assets/.gitkeep",
+            "tests/synthetic_sites/form_flow/server.py",
+            "tests/synthetic_sites/form_flow/templates/.gitkeep",
+            "tests/synthetic_sites/varied_dom/server.py",
+            "tests/synthetic_sites/varied_dom/variants/.gitkeep",
+            "tests/property_based/test_selectors_hypothesis.py",
+            "tests/property_based/test_transformers_hypothesis.py",
+            "tests/mutation/mutmut_config.toml",
+            "tests/fuzz/test_fuzz_extractors.py",
+            "tests/k6/crawl_throughput.js",
+            "tests/k6/scrape_latency.js",
+            "tests/chaos/test_worker_kill_recovery.py",
+            "tests/chaos/test_proxy_pool_degradation.py",
+            "tests/test_api.py",
+            "tests/test_webapp.py",
+            "tests/test_scheduler.py",
+            "tests/test_anti_bot.py",
+            "tests/test_proxy_pool.py",
+            "tests/test_exports.py",
+            "tests/test_template_drift.py"
+        ],
+
+        "observability": [
+            "observability/prometheus/rules/scraping_alerts.yml",
+            "observability/prometheus/rules/proxy_pool_alerts.yml",
+            "observability/prometheus/rules/cost_budget_alerts.yml",
+            "observability/prometheus/prometheus.yml",
+            "observability/grafana/dashboards/scraping_overview.json",
+            "observability/grafana/dashboards/proxy_health.json",
+            "observability/grafana/dashboards/scheduler_queues.json",
+            "observability/grafana/dashboards/db_dq_metrics.json",
+            "observability/grafana/dashboards/cost_overview.json",
+            "observability/otel/collector-config.yaml"
+        ],
+
+        "sdk": [
+            "sdk/python/pyproject.toml",
+            "sdk/python/README.md",
+            "sdk/python/src/scraping_sdk/__init__.py",
+            "sdk/python/src/scraping_sdk/client.py",
+            "sdk/python/src/scraping_sdk/templates.py",
+            "sdk/python/src/scraping_sdk/webhooks.py",
+            "sdk/python/sdk_client/__init__.py",
+            "sdk/python/sdk_client/client.py",
+            "sdk/python/sdk_client/webhooks.py",
+            "sdk/python/sdk_client/models.py",
+            "sdk/python/sdk_client/idempotency.py",
+            "sdk/python/sdk_client/retry.py",
+            "sdk/python/tests/test_client.py",
+            "sdk/typescript/package.json",
+            "sdk/typescript/tsconfig.json",
+            "sdk/typescript/README.md",
+            "sdk/typescript/src/index.ts",
+            "sdk/typescript/src/client.ts",
+            "sdk/typescript/src/templates.ts",
+            "sdk/typescript/src/webhooks.ts",
+            "sdk/typescript/src/models.ts",
+            "sdk/typescript/src/idempotency.ts",
+            "sdk/typescript/src/retry.ts",
+            "sdk/typescript/test/client.test.ts"
+        ],
+
+        "supabase": [
+            "supabase/.env.example",
+            "supabase/migrations/0001_init.sql",
+            "supabase/migrations/0002_indexes.sql",
+            "supabase/migrations/0003_rls_policies.sql",
+            "supabase/migrations/0004_functions_triggers.sql",
+            "supabase/migrations/0005_dq_metrics.sql",
+            "supabase/migrations/0006_lineage_provenance.sql",
+            "supabase/migrations/0007_erasure_cascade.sql",
+            "supabase/seed/templates/vehicle_detail_v3.yml",
+            "supabase/seed/templates/person_profile_v2.yml",
+            "supabase/seed/templates/company_profile_v2.yml",
+            "supabase/seed/demo_data.sql",
+            "supabase/README.md"
+        ],
+
+        "api_clients": [
+            "api_clients/openapi/python/.gitkeep",
+            "api_clients/openapi/typescript/.gitkeep",
+            "api_clients/postman/collection.json",
+            "api_clients/README.md"
+        ],
+
+        "github_workflows": [
+            ".github/workflows/01_lint_type.yml",
+            ".github/workflows/02_unit_tests.yml",
+            ".github/workflows/03_integration_tests.yml",
+            ".github/workflows/04_e2e_tests.yml",
+            ".github/workflows/05_security.yml",
+            ".github/workflows/06_build_sbom_sign.yml",
+            ".github/workflows/07_deploy_staging.yml",
+            ".github/workflows/08_selector_regression.yml",
+            ".github/workflows/09_canary_prod.yml",
+            ".github/workflows/10_release_notes.yml",
+            ".github/workflows/build_and_push.yml",
+            ".github/workflows/security_sast.yml",
+            ".github/workflows/dependency_review.yml",
+            ".github/workflows/ci.yml",
+            ".github/workflows/deploy_staging.yml",
+            ".github/workflows/deploy_canary.yml",
+            ".github/workflows/nightly_selector_regression.yml",
+            ".github/workflows/sbom.yml",
+            ".github/workflows/cosign_verify.yml",
+            ".github/ISSUE_TEMPLATE.md",
+            ".github/PULL_REQUEST_TEMPLATE.md"
+        ],
+
+        "examples": [
+            "examples/crawl_example.md",
+            "examples/scrape_vehicle_detail.md",
+            "examples/export_to_sheets.md",
+            "examples/api_usage.md",
+            "examples/import_urls.csv",
+            "examples/export_query_examples.md",
+            "examples/api_calls.http"
+        ],
+
+        "notebooks": [
+            "notebooks/data_exploration.ipynb",
+            "notebooks/model_prototyping.ipynb"
+        ],
+
+        "legal": [
+            "legal/README.md",
+            "legal/robots_tos_checklist.md",
+            "legal/privacy_policy_internal.md",
+            "legal/data_processing_agreements/.gitkeep"
+        ],
+
+        "bin": [
+            "bin/dev-up",
+            "bin/dev-down", 
+            "bin/gen-openapi-clients",
+            "bin/fmt"
+        ],
+
+        "monitoring": [
+            "monitoring/docker-compose.obsv.yml",
+            "monitoring/alertmanager/.gitkeep",
+            "monitoring/grafana/.gitkeep",
+            "monitoring/loki/.gitkeep",
+            "monitoring/otel-collector/.gitkeep",
+            "monitoring/prometheus/.gitkeep",
+            "monitoring/promtail/.gitkeep",
+            "monitoring/tempo/.gitkeep",
+            "monitoring/prometheus/prometheus.yml",
+            "monitoring/grafana/provisioning/datasources/prometheus.yaml",
+            "monitoring/grafana/provisioning/dashboards/proxypool_dashboard.json",
+            "monitoring/grafana/provisioning/dashboards/crawler_scraper_dashboard.json",
+            "monitoring/grafana/provisioning/dashboards/database_dashboard.json",
+            "monitoring/grafana/provisioning/dashboards/cost_dashboard.json"
+        ],
+
+        "extension": [
+            "extension/README.md",
+            "extension/manifest.json",
+            "extension/background.js",
+            "extension/content_script.js",
+            "extension/popup.html",
+            "extension/popup.js",
+            "extension/styles.css",
+            "extension/icons/icon16.png",
+            "extension/icons/icon48.png",
+            "extension/icons/icon128.png"
+        ],
+
+        "infra": [
+            "infra/terraform/README.md",
+            "infra/terraform/envs/dev/backend.tf",
+            "infra/terraform/envs/dev/main.tf",
+            "infra/terraform/envs/dev/variables.tf",
+            "infra/terraform/envs/dev/outputs.tf",
+            "infra/terraform/envs/staging/main.tf",
+            "infra/terraform/envs/prod/main.tf",
+            "infra/terraform/modules/network/vpc.tf",
+            "infra/terraform/modules/network/subnets.tf",
+            "infra/terraform/modules/network/sg.tf",
+            "infra/terraform/modules/eks/cluster.tf",
+            "infra/terraform/modules/eks/nodegroups.tf",
+            "infra/terraform/modules/eks/iam.tf",
+            "infra/terraform/modules/rds/postgres.tf",
+            "infra/terraform/modules/rds/parameter_groups.tf",
+            "infra/terraform/modules/redis/elasticache.tf",
+            "infra/terraform/modules/s3/buckets.tf",
+            "infra/terraform/modules/s3/lifecycle.tf",
+            "infra/terraform/modules/ecr/repos.tf",
+            "infra/terraform/modules/iam/roles.tf",
+            "infra/terraform/modules/iam/policies.tf",
+            "infra/vault/policies/scraper.hcl",
+            "infra/vault/policies/crawler.hcl",
+            "infra/vault/policies/api.hcl",
+            "infra/vault/policies/ci_cd.hcl",
+            "infra/vault/kv_layout.md",
+            "infra/vault/scripts/put_secrets_dev.sh",
+            "infra/vault/scripts/rotate_database_password.sh"
+        ],
+
+        "clients": [
+            "clients/postman_collection.json",
+            "clients/insomnia/insomnia_export.yaml"
+        ],
+
+        "lovable": [
+            "lovable/components_spec.md",
+            "lovable/flows.md",
+            "lovable/ui_blueprints.json"
+        ],
+
+        "ops": [
+            "ops/backup/wal-g.yaml",
+            "ops/backup/pgbackrest.conf",
+            "ops/backup/verify_backup.sh",
+            "ops/retention/retention_policy.yml",
+            "ops/retention/retention_runner.py",
+            "ops/erasure/erasure_worker.py",
+            "ops/erasure/erasure_api.md",
+            "ops/s3/lifecycle_raw_html.json",
+            "ops/s3/lifecycle_db_backups.json",
+            "ops/s3/lifecycle_exports.json"
+        ],
+
+        "generated": [
+            "generated/python/openapi_client/.gitkeep",
+            "generated/typescript/openapi_client/.gitkeep"
+        ]
+    }
+
+
+def scan_existing_files(root_path: Path) -> Set[str]:
+    """Scan the project directory and return set of existing files."""
+    existing_files = set()
+    
+    for item in root_path.rglob("*"):
+        if item.is_file():
+            # Get relative path from project root
+            rel_path = item.relative_to(root_path)
+            existing_files.add(str(rel_path).replace("\\", "/"))
+    
+    return existing_files
+
+def analyze_structure(root_path: Path) -> Dict:
+    """Analyze the current project structure against requirements."""
+    required_files = get_required_files()
+    existing_files = scan_existing_files(root_path)
+    
+    # Flatten required files
+    all_required = set()
+    for category_files in required_files.values():
+        all_required.update(category_files)
+    
+    # Find missing files by category
+    missing_by_category = {}
+    existing_by_category = {}
+    total_missing = 0
+    
+    for category, files in required_files.items():
+        missing = [f for f in files if f not in existing_files]
+        existing = [f for f in files if f in existing_files]
+        missing_by_category[category] = missing
+        existing_by_category[category] = existing
+        total_missing += len(missing)
+    
+    # Calculate statistics
+    total_required = len(all_required)
+    total_existing = len([f for f in all_required if f in existing_files])
+    completion_percentage = (total_existing / total_required) * 100 if total_required > 0 else 0
+    
+    return {
+        "total_required": total_required,
+        "total_existing": total_existing, 
+        "total_missing": total_missing,
+        "completion_percentage": completion_percentage,
+        "missing_by_category": missing_by_category,
+        "existing_by_category": existing_by_category,
+        "existing_files": sorted(list(existing_files)),
+        "required_files": all_required
+    }
+
+def print_analysis(analysis: Dict) -> None:
+    """Print detailed analysis results."""
+    print("=" * 80)
+    print("COMPREHENSIVE PROJECT STRUCTURE ANALYSIS")
+    print("=" * 80)
+    
+    print(f"\nSTATISTICS:")
+    print(f"Total required files: {analysis['total_required']}")
+    print(f"Existing files: {analysis['total_existing']}")
+    print(f"Missing files: {analysis['total_missing']}")
+    print(f"Completion: {analysis['completion_percentage']:.1f}%")
+    
+    print(f"\nCOMPLETION BY CATEGORY:")
+    for category in analysis['missing_by_category'].keys():
+        total_in_category = len(analysis['missing_by_category'][category]) + len(analysis['existing_by_category'][category])
+        existing_in_category = len(analysis['existing_by_category'][category])
+        missing_in_category = len(analysis['missing_by_category'][category])
+        category_percentage = (existing_in_category / total_in_category * 100) if total_in_category > 0 else 0
+        
+        print(f"  {category:20s}: {existing_in_category:3d}/{total_in_category:3d} ({category_percentage:5.1f}%) - {missing_in_category} missing")
+    
+    print(f"\nMISSING FILES BY CATEGORY:")
+    for category, missing_files in analysis['missing_by_category'].items():
+        if missing_files:
+            print(f"\n{category.upper()} ({len(missing_files)} missing):")
+            for file in sorted(missing_files)[:10]:  # Show first 10 per category
+                print(f"  - {file}")
+            if len(missing_files) > 10:
+                print(f"  ... and {len(missing_files) - 10} more")
+    
+    print(f"\nTOP PRIORITY FILES TO CREATE (first 50):")
+    all_missing = []
+    for missing_files in analysis['missing_by_category'].values():
+        all_missing.extend(missing_files)
+    
+    # Show top 50 missing files
+    for i, file in enumerate(sorted(all_missing)[:50]):
+        print(f"  {i+1:2d}. {file}")
+    
+    if len(all_missing) > 50:
+        print(f"  ... and {len(all_missing) - 50} more files")
+
+def analyze_current_structure(project_root: Path) -> Tuple[Set[str], Set[str], Dict[str, int]]:
+    """Analyze current project structure and return existing files, missing files, and stats."""
+    all_expected = set()
+    expected_by_category = get_required_files()
+    
+    # Flatten all expected files
+    for category, files in expected_by_category.items():
+        all_expected.update(files)
+    
+    # Find existing files
+    existing_files = set()
+    for file_path in all_expected:
+        full_path = project_root / file_path
+        if full_path.exists():
+            existing_files.add(file_path)
+    
+    # Calculate missing files
+    missing_files = all_expected - existing_files
+    
+    # Calculate stats by category
+    category_stats = {}
+    for category, files in expected_by_category.items():
+        expected_count = len(files)
+        existing_count = len([f for f in files if f in existing_files])
+        missing_count = expected_count - existing_count
+        category_stats[category] = {
+            'expected': expected_count,
+            'existing': existing_count,
+            'missing': missing_count,
+            'completion': (existing_count / expected_count * 100) if expected_count > 0 else 0
+        }
+    
+    return existing_files, missing_files, category_stats
+
+
+def print_analysis_report(existing_files: Set[str], missing_files: Set[str], category_stats: Dict[str, Dict]):
+    """Print comprehensive analysis report."""
+    total_expected = len(existing_files) + len(missing_files)
+    total_existing = len(existing_files)
+    overall_completion = (total_existing / total_expected * 100) if total_expected > 0 else 0
+    
+    print("=" * 80)
+    print("COMPLETE PROJECT STRUCTURE ANALYSIS")
+    print("=" * 80)
+    print(f"📊 OVERALL PROGRESS: {total_existing}/{total_expected} files ({overall_completion:.1f}% complete)")
+    print(f"✅ Existing files: {total_existing}")
+    print(f"❌ Missing files: {len(missing_files)}")
+    print()
+    
+    print("📋 COMPLETION BY CATEGORY:")
+    print("-" * 80)
+    for category, stats in sorted(category_stats.items()):
+        completion = stats['completion']
+        status_icon = "✅" if completion == 100 else "🟡" if completion >= 50 else "❌"
+        print(f"{status_icon} {category:20} {stats['existing']:3d}/{stats['expected']:3d} ({completion:5.1f}%)")
+    print()
+    
+    # Show categories with missing files
+    print("🔍 MISSING FILES BY CATEGORY:")
+    print("-" * 80)
+    expected_by_category = get_expected_files()
+    for category, files in sorted(expected_by_category.items()):
+        missing_in_category = [f for f in files if f in missing_files]
+        if missing_in_category:
+            print(f"\n{category.upper()} ({len(missing_in_category)} missing):")
+            for file_path in sorted(missing_in_category)[:5]:  # Show first 5
+                print(f"  ❌ {file_path}")
+            if len(missing_in_category) > 5:
+                print(f"  ... and {len(missing_in_category) - 5} more")
+
+
+def main():
+    """Main function."""
+    # Get project root (one level up from scripts directory)
+    script_dir = Path(__file__).parent
+    project_root = script_dir.parent
+    
+    print(f"Analyzing comprehensive project structure in: {project_root}")
+    
+    # Run analysis
+    analysis = analyze_structure(project_root)
+    
+    # Print results
+    print_analysis(analysis)
+    
+    # Save detailed results
+    output_file = script_dir / "comprehensive_structure_analysis.json"
+    with open(output_file, 'w') as f:
+        # Convert sets to lists for JSON serialization
+        json_analysis = analysis.copy()
+        json_analysis['required_files'] = list(analysis['required_files'])
+        json.dump(json_analysis, f, indent=2, default=str)
+    
+    print(f"\nDetailed analysis saved to: {output_file}")
+
+if __name__ == "__main__":
+    main()
+#!/usr/bin/env python3
+"""
+Detailed comparison between actual and ideal project structure
+Based on Projektbeskrivning.txt Chapter 24.1
+"""
+
+import os
+from pathlib import Path
+
+def check_ideal_vs_actual():
+    """Compare ideal structure from Chapter 24.1 with actual implementation"""
+    
+    project_root = Path(os.getcwd())
+    
+    # Define the ideal structure from Chapter 24.1
+    ideal_structure = {
+        # Root files
+        "README.md": "Root documentation",
+        "LICENSE": "License file", 
+        "CODE_OF_CONDUCT.md": "Code of conduct",
+        "SECURITY.md": "Security policy",
+        ".gitignore": "Git ignore rules",
+        ".editorconfig": "Editor configuration",
+        ".env.example": "Environment template",
+        "pyproject.toml": "Python project config",
+        "requirements.txt": "Python dependencies",
+        "requirements_dev.txt": "Development dependencies",
+        "Makefile": "Build automation",
+        
+        # Config structure
+        "config/app_config.yml": "Main app configuration",
+        "config/logging.yml": "Logging configuration", 
+        "config/anti_bot.yml": "Anti-bot settings",
+        "config/proxies.yml": "Proxy configuration",
+        "config/performance-defaults.yml": "Performance settings",
+        "config/env/development.yml": "Development environment",
+        "config/env/staging.yml": "Staging environment",
+        "config/env/production.yml": "Production environment",
+        
+        # Supabase structure
+        "supabase/migrations/0001_extensions.sql": "Database extensions",
+        "supabase/migrations/0002_types.sql": "Custom types",
+        "supabase/migrations/0003_core.sql": "Core tables",
+        "supabase/migrations/0004_rls.sql": "Row level security",
+        "supabase/migrations/0005_rpc.sql": "Remote procedure calls",
+        "supabase/migrations/0006_cron.sql": "Scheduled jobs",
+        "supabase/migrations/0007_triggers.sql": "Database triggers",
+        "supabase/migrations/0008_preview.sql": "Preview features",
+        "supabase/functions/jobs_webhook/index.ts": "Job webhook handler",
+        "supabase/functions/retention/index.ts": "Data retention handler",
+        "supabase/functions/erasure/index.ts": "Data erasure handler",
+        "supabase/types/database-types.ts": "TypeScript database types",
+        
+        # Core Python modules
+        "src/__init__.py": "Main package init",
+        "src/utils/__init__.py": "Utils package init",
+        "src/utils/logger.py": "Logging utilities",
+        "src/utils/user_agent_rotator.py": "User agent rotation",
+        "src/utils/validators.py": "Data validators",
+        "src/utils/export_utils.py": "Export utilities",
+        "src/utils/pattern_detector.py": "Pattern detection",
+        
+        # Proxy pool module
+        "src/proxy_pool/__init__.py": "Proxy pool package",
+        "src/proxy_pool/collector.py": "Proxy collector",
+        "src/proxy_pool/validator.py": "Proxy validator",
+        "src/proxy_pool/quality_filter.py": "Quality filtering",
+        "src/proxy_pool/monitor.py": "Proxy monitoring",
+        "src/proxy_pool/manager.py": "Proxy management",
+        "src/proxy_pool/rotator.py": "Proxy rotation",
+        "src/proxy_pool/api/__init__.py": "Proxy API package",
+        "src/proxy_pool/api/server.py": "Proxy API server",
+        
+        # Anti-bot module
+        "src/anti_bot/__init__.py": "Anti-bot package",
+        "src/anti_bot/header_generator.py": "HTTP header generation",
+        "src/anti_bot/session_manager.py": "Session management",
+        "src/anti_bot/delay_strategy.py": "Delay strategies",
+        "src/anti_bot/credential_manager.py": "Credential management",
+        "src/anti_bot/diagnostics/__init__.py": "Diagnostics package",
+        "src/anti_bot/diagnostics/diagnose_url.py": "URL diagnostics",
+        "src/anti_bot/fallback_strategy.py": "Fallback strategies",
+        "src/anti_bot/browser_stealth/__init__.py": "Browser stealth package",
+        "src/anti_bot/browser_stealth/stealth_browser.py": "Stealth browser",
+        "src/anti_bot/browser_stealth/human_behavior.py": "Human behavior simulation",
+        "src/anti_bot/browser_stealth/cloudflare_bypass.py": "Cloudflare bypass",
+        "src/anti_bot/browser_stealth/captcha_solver.py": "CAPTCHA solving",
+        
+        # Crawler module
+        "src/crawler/__init__.py": "Crawler package",
+        "src/crawler/sitemap_generator.py": "Sitemap generation",
+        "src/crawler/template_detector.py": "Template detection",
+        "src/crawler/url_queue.py": "URL queue management",
+        "src/crawler/keywords_search.py": "Keyword search",
+        
+        # Scraper module
+        "src/scraper/__init__.py": "Scraper package",
+        "src/scraper/base_scraper.py": "Base scraper class",
+        "src/scraper/http_scraper.py": "HTTP scraper",
+        "src/scraper/selenium_scraper.py": "Selenium scraper",
+        "src/scraper/template_extractor.py": "Template extraction",
+        "src/scraper/xpath_suggester.py": "XPath suggestions",
+        "src/scraper/regex_transformer.py": "Regex transformations",
+        "src/scraper/login_handler.py": "Login handling",
+        "src/scraper/image_downloader.py": "Image downloading",
+        "src/scraper/dsl/__init__.py": "DSL package",
+        "src/scraper/dsl/schema.py": "DSL schema definitions",
+        "src/scraper/dsl/transformers.py": "Data transformers",
+        "src/scraper/template_runtime.py": "Template runtime",
+        
+        # Database module
+        "src/database/__init__.py": "Database package",
+        "src/database/models.py": "Database models",
+        "src/database/schema.sql": "Database schema",
+        "src/database/manager.py": "Database manager",
+        "src/database/seed/persons.json": "Person seed data",
+        "src/database/seed/companies.json": "Company seed data",
+        "src/database/seed/vehicles.json": "Vehicle seed data",
+        
+        # Scheduler module
+        "src/scheduler/__init__.py": "Scheduler package",
+        "src/scheduler/job_definitions.py": "Job definitions",
+        "src/scheduler/scheduler.py": "Main scheduler",
+        "src/scheduler/job_monitor.py": "Job monitoring",
+        "src/scheduler/notifier.py": "Notifications",
+        "src/scheduler/jobs/retention_job.py": "Retention job",
+        "src/scheduler/jobs/dq_job.py": "Data quality job",
+        "src/scheduler/jobs/backup_sql_job.py": "Backup job",
+        "src/scheduler/jobs/redis_snapshot_job.py": "Redis snapshot job",
+        "src/scheduler/jobs/erasure_worker.py": "Data erasure worker",
+        
+        # Web application module
+        "src/webapp/__init__.py": "Web app package",
+        "src/webapp/app.py": "Main web application",
+        "src/webapp/api.py": "API endpoints",
+        "src/webapp/auth.py": "Authentication",
+        "src/webapp/views.py": "Web views",
+        
+        # Analysis module
+        "src/analysis/__init__.py": "Analysis package",
+        "src/analysis/data_quality.py": "Data quality analysis",
+        "src/analysis/similarity_analysis.py": "Similarity analysis",
+        
+        # Frontend structure
+        "frontend/package.json": "Frontend dependencies",
+        "frontend/vite.config.ts": "Vite configuration",
+        "frontend/tsconfig.json": "TypeScript configuration",
+        "frontend/src/main.tsx": "Frontend entry point",
+        "frontend/src/App.tsx": "Main App component",
+        "frontend/src/api/client.ts": "API client",
+        "frontend/src/api/types.ts": "TypeScript types",
+        
+        # SDK structure
+        "sdk/python/pyproject.toml": "Python SDK config",
+        "sdk/python/scrape_sdk.py": "Python SDK",
+        "sdk/ts/package.json": "TypeScript SDK config",
+        "sdk/ts/index.ts": "TypeScript SDK",
+        
+        # Scripts
+        "scripts/init_db.py": "Database initialization",
+        "scripts/seed_data.py": "Data seeding",
+        "scripts/start_scheduler.py": "Scheduler startup",
+        "scripts/run_crawler.py": "Crawler runner",
+        "scripts/run_scraper.py": "Scraper runner", 
+        "scripts/run_analysis.py": "Analysis runner",
+        "scripts/diagnostic_tool.py": "Diagnostic tool",
+        
+        # Docker structure
+        "docker/Dockerfile": "Main Dockerfile",
+        "docker/docker-compose.yml": "Docker composition",
+        "docker/entrypoint.sh": "Container entry point",
+        
+        # Testing structure (implied)
+        "tests/__init__.py": "Test package",
+        "tests/unit/__init__.py": "Unit tests",
+        "tests/integration/__init__.py": "Integration tests",
+        "tests/conftest.py": "Test configuration",
+        
+        # Kubernetes
+        "k8s/helm/Chart.yaml": "Helm chart definition",
+    }
+    
+    print("🔍 DETAILED COMPARISON: IDEAL vs ACTUAL STRUCTURE")
+    print("=" * 80)
+    
+    # Check each file
+    missing_files = []
+    existing_files = []
+    
+    for file_path, description in ideal_structure.items():
+        full_path = project_root / file_path
+        if full_path.exists():
+            size = full_path.stat().st_size if full_path.is_file() else "DIR"
+            existing_files.append((file_path, description, size))
+            print(f"✅ {file_path:<50} ({size} bytes)")
+        else:
+            missing_files.append((file_path, description))
+            print(f"❌ {file_path:<50} MISSING")
+    
+    print(f"\n📊 SUMMARY:")
+    print(f"✅ Existing files: {len(existing_files)}")
+    print(f"❌ Missing files: {len(missing_files)}")
+    print(f"📈 Completion: {len(existing_files)/(len(existing_files)+len(missing_files))*100:.1f}%")
+    
+    print(f"\n🚨 TOP PRIORITY MISSING FILES:")
+    critical_missing = [
+        f for f, desc in missing_files 
+        if any(keyword in f for keyword in [
+            'migrations/', 'scheduler/', 'analysis/', 'proxy_pool/', 
+            'anti_bot/', 'helm/', 'tests/unit', 'tests/integration'
+        ])
+    ]
+    
+    for i, file_path in enumerate(critical_missing[:15], 1):
+        print(f"   {i:2d}. {file_path}")
+    
+    return {
+        'existing': existing_files,
+        'missing': missing_files,
+        'completion_percentage': len(existing_files)/(len(existing_files)+len(missing_files))*100
+    }
+
+if __name__ == "__main__":
+    check_ideal_vs_actual()
+

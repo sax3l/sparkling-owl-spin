@@ -392,3 +392,43 @@ def run_template_over_urls(
         except: pass
 
     return stats
+
+
+class TemplateRuntime:
+    """Runtime executor for template processing operations."""
+    
+    def __init__(self, fetcher: Fetcher = None, writer: Writer = None):
+        self.fetcher = fetcher or HttpxFetcher()
+        self.writer = writer
+    
+    def run_template(self, template, urls, config: RunConfig = None):
+        """Execute template processing on URLs."""
+        config = config or RunConfig()
+        
+        try:
+            # Use the run_template_over_urls function
+            return run_template_over_urls(
+                template=template, 
+                urls=urls if isinstance(urls, list) else [urls],
+                fetcher=self.fetcher,
+                writer=self.writer,
+                cfg=config
+            )
+        except Exception as e:
+            print(f"Template runtime execution failed: {e}")
+            raise TemplateRuntimeError(f"Runtime execution failed: {e}")
+    
+    def extract_fields(self, template, html: str, url: str = None):
+        """Extract fields from HTML using template."""
+        try:
+            return extract_fields_from_html(html, template, url)
+        except Exception as e:
+            print(f"Field extraction failed: {e}")
+            raise TemplateRuntimeError(f"Field extraction failed: {e}")
+
+
+# Convenience function alias for backward compatibility
+def run_template(template, url: str, fetcher: Fetcher = None, writer: Writer = None, cfg: RunConfig = None):
+    """Run template on a single URL."""
+    runtime = TemplateRuntime(fetcher, writer)
+    return runtime.run_template(template, [url], cfg)

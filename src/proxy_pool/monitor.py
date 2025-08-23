@@ -8,11 +8,17 @@ import asyncio
 import logging
 import time
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Optional, Set, Any
 from dataclasses import dataclass
 from collections import defaultdict
 
-import aioredis
+try:
+    import aioredis
+    REDIS_AVAILABLE = True
+except ImportError:
+    aioredis = None
+    REDIS_AVAILABLE = False
+
 from ..observability.metrics import MetricsCollector
 from ..utils.logger import get_logger
 
@@ -64,7 +70,7 @@ class ProxyMonitor:
     
     def __init__(
         self,
-        redis_client: aioredis.Redis,
+        redis_client: Optional[Any],
         metrics_collector: MetricsCollector,
         check_interval: int = 60,
         health_threshold: float = 0.8,

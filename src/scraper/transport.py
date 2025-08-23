@@ -417,3 +417,7 @@ class ScrapingTransport:
             'http_timeout': self.http_timeout,
             'browser_timeout': self.browser_timeout
         }
+
+
+# Backward compatibility alias
+TransportManager = ScrapingTransport

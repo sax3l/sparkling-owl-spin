@@ -25,13 +25,30 @@ from datetime import datetime
 from pathlib import Path
 import aiohttp
 import asyncio
-from PIL import Image, ImageFile
-import magic
+
+try:
+    from PIL import Image, ImageFile
+    PIL_AVAILABLE = True
+    ImageFile.LOAD_TRUNCATED_IMAGES = True
+except ImportError:
+    PIL_AVAILABLE = False
+    Image = None
+    ImageFile = None
+
+try:
+    import magic
+    MAGIC_AVAILABLE = True
+except ImportError:
+    magic = None
+    MAGIC_AVAILABLE = False
 
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
-ImageFile.LOAD_TRUNCATED_IMAGES = True
+
+# Configure PIL if available
+if PIL_AVAILABLE and ImageFile:
+    ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 @dataclass
 class DownloadResult:
@@ -318,11 +335,13 @@ class ImageDownloader:
         content_extension = mimetypes.guess_extension(content_type.split(';')[0])
         
         # Use magic to detect file type from content
-        try:
-            magic_mime = magic.from_buffer(content, mime=True)
-            magic_extension = mimetypes.guess_extension(magic_mime)
-        except Exception:
-            magic_extension = None
+        magic_extension = None
+        if MAGIC_AVAILABLE:
+            try:
+                magic_mime = magic.from_buffer(content, mime=True)
+                magic_extension = mimetypes.guess_extension(magic_mime)
+            except Exception:
+                magic_extension = None
         
         # Determine best extension
         extension = url_extension or content_extension or magic_extension or '.bin'

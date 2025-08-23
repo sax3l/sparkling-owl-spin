@@ -1,0 +1,641 @@
+Översikt: Arkitektur & Filstruktur
+Enkel förklaring
+
+Vi bygger en monorepo där frontend (React), API (FastAPI), “workers” (Python/async) och schemaläggare delar samma typer/scheman. Frontend pratar bara med API:et. API:et skriver/läser i MySQL via ett Repository‑lager och publicerar händelser på en kö (t.ex. Redis/RabbitMQ). Workers konsumerar händelser, gör tunga saker (crawl/render/extraktion/export), och skickar tillbaka status till API/DB. UI får live‑uppdateringar via WebSocket/SSE.
+
+Filstruktur (monorepo)
+sparkling-owl-spin/
+├─ apps/
+│  ├─ frontend/                 # React + Vite/Next
+│  │  ├─ src/pages/             # Sidor (Dashboard, Källor, Mallar, etc.)
+│  │  ├─ src/components/        # Återanvändbara UI-komponenter
+│  │  ├─ src/lib/api.ts         # API-klient (fetch med typer)
+│  │  └─ src/lib/ws.ts          # WebSocket/SSE-klient
+│  ├─ api/                      # FastAPI (REST + WS) + OpenAPI
+│  │  ├─ main.py                # app-init, routers-mount, CORS, auth
+│  │  ├─ routers/               # controllers per domän
+│  │  │  ├─ projects.py
+│  │  │  ├─ crawl_plans.py
+│  │  │  ├─ templates.py
+│  │  │  ├─ jobs.py
+│  │  │  ├─ datalake.py
+│  │  │  ├─ exports.py
+│  │  │  ├─ policies.py
+│  │  │  ├─ dq.py
+│  │  │  ├─ scheduler.py
+│  │  │  ├─ settings.py
+│  │  │  ├─ audit.py
+│  │  │  └─ help_runbooks.py
+│  │  ├─ services/              # affärslogik
+│  │  │  ├─ projects_service.py
+│  │  │  ├─ plans_service.py
+│  │  │  ├─ templates_service.py
+│  │  │  ├─ jobs_service.py
+│  │  │  ├─ datalake_service.py
+│  │  │  ├─ exports_service.py
+│  │  │  ├─ policies_service.py
+│  │  │  ├─ dq_service.py
+│  │  │  ├─ scheduler_service.py
+│  │  │  ├─ settings_service.py
+│  │  │  └─ audit_service.py
+│  │  ├─ repositories/          # MySQL-IO (SQLAlchemy)
+│  │  │  ├─ projects_repo.py
+│  │  │  ├─ plans_repo.py
+│  │  │  ├─ templates_repo.py
+│  │  │  ├─ jobs_repo.py
+│  │  │  ├─ datalake_repo.py
+│  │  │  ├─ exports_repo.py
+│  │  │  ├─ policies_repo.py
+│  │  │  ├─ dq_repo.py
+│  │  │  ├─ scheduler_repo.py
+│  │  │  ├─ settings_repo.py
+│  │  │  └─ audit_repo.py
+│  │  ├─ queues/                # publicera/lyssna på events
+│  │  │  ├─ publisher.py
+│  │  │  └─ schemas.py          # eventscheman
+│  │  └─ ws/                    # WebSocket/SSE endpoints
+│  │     └─ streams.py
+│  ├─ worker/                   # Workers (crawl/render/extraktion/export)
+│  │  ├─ main.py
+│  │  ├─ consumers/
+│  │  │  ├─ crawl_consumer.py
+│  │  │  ├─ scrape_consumer.py
+│  │  │  └─ export_consumer.py
+│  │  ├─ adapters/              # http, headless, storage, proxy
+│  │  │  ├─ http_client.py
+│  │  │  ├─ headless_client.py  # (lagligt bruk: JS-rendering när tillåtet)
+│  │  │  ├─ proxy_pool.py
+│  │  │  └─ storage.py
+│  │  ├─ extractors/
+│  │  │  └─ template_runner.py
+│  │  ├─ dto/                   # pydantic för events/IO
+│  │  └─ telemetry/             # loggning/metrics
+│  └─ scheduler/
+│     ├─ main.py
+│     └─ planner.py
+├─ packages/
+│  ├─ db/                       # SQLAlchemy models + session mgmt
+│  │  ├─ models.py
+│  │  └─ session.py
+│  ├─ schemas/                  # Pydantic request/response
+│  ├─ common/                   # utils, errors, auth, rbac
+│  └─ config/                   # system.yaml laddare
+├─ db/
+│  └─ migrations/               # Alembic för MySQL
+├─ help/
+│  └─ runbooks/                 # Markdown-guider
+├─ infra/
+│  ├─ docker-compose.yml
+│  ├─ Makefile
+│  └─ env/ (.env.example, .env)
+└─ tests/
+   ├─ api/
+   ├─ worker/
+   └─ e2e/
+
+Gemensam “ryggrad” för alla huvudfunktioner
+Enkel förklaring
+
+Alla sidors “Spara/Starta/Exportera” följer samma mönster:
+
+UI skickar validerad payload →
+
+API‑router kallar service →
+
+service gör DB‑transaktion + audit och ev. publicerar event →
+
+worker/scheduler plockar event och jobbar →
+
+status skrivs till DB och pushas till UI via WebSocket/SSE →
+
+UI uppdaterar listor/grafer live.
+
+Standardiserade bitar (förutsägbarhet)
+
+REST: JSON in/ut, idempotenta PUT/PATCH, 201 på create.
+
+Events: topic + event_type + payload (med job_id, correlation_id).
+
+DB: skriva via repo (inga rå‑SQL i service), sessions & transaktioner per request.
+
+Audit: varje muterande åtgärd genererar en rad i audit_events.
+
+WebSocket/SSE: strömmar job_status, metrics, alerts.
+
+End‑to‑end per huvudfunktion
+
+Nedan går vi igenom de stora modulerna. För varje: UI‑sida → API → service/repo → event/worker → DB‑skrivning → live‑uppdatering → verifiering.
+(Jag håller mig till lagliga/tillåtna beteenden: respekt för robots/ToS; om en sida kräver inlogg/JS‑render gör vi det endast där det är tillåtet.)
+
+1) Onboarding Wizard
+
+UI: /onboarding
+
+Fyll org, e‑post, MySQL host/port/db/user/pass/SSL, “Starta testsajter”, “Skapa första projektet”.
+
+Knappar: “Testa DB”, “Starta testsajter”, “Fortsätt”.
+
+API:
+
+POST /api/system/test/db → gör ping SELECT 1.
+
+POST /api/system/migrate → kör Alembic mot MySQL.
+
+POST /api/projects (om checkbox vald).
+
+Service/Repo:
+
+settings_service.save() skriver config/system.yaml + DB‑tabell system_settings.
+
+projects_repo.create() skapar rad i projects.
+
+audit_service.log("system.settings.changed").
+
+Event/Worker:
+
+“Starta testsajter” kallar docker (via backend shell‑call eller lokal agent) och hälsokontroll.
+
+DB: projects, audit_events, ev. system_health.
+
+Live: UI visar “DB ansluten ✓”, “Migrationer: head”, “Testsajter: UP”.
+
+Verifiering:
+
+curl -s http://localhost:8000/api/system/health | jq
+mysql -h127.0.0.1 -ucrawler -psecret -e "SELECT version_num FROM alembic_version;" crawler
+
+2) Dashboard / Hem
+
+UI: /dashboard
+
+Widgets fetchar sammanfattningar var 15–60s eller via SSE.
+
+API:
+
+GET /api/dashboard/summary?range=24h → totalsiffror, feltrender, proxyhälsa.
+
+Service/Repo:
+
+jobs_repo.aggregate(), datalake_repo.count_new(), proxy_repo.health_stats().
+
+DB: läser jobs, runs, extracted_items, proxies.
+
+Live: Vid jobbstart pushas dashboard.update via SSE → grafer animerar in nya datapunkter.
+
+Verifiering: Starta jobb → “Aktiva jobb” visar raden inom sekunder.
+
+3) Källor / Projekt
+
+UI: /projects & /projects/:id
+
+Form: namn, start‑URL:er, auth‑typ, geo, robots‑läge, headers‑profil, renderingspolicy etc.
+
+“Testa åtkomst” → kör diagnostik.
+
+API:
+
+POST /api/projects (create), PATCH /api/projects/{id}, POST /api/projects/{id}/diagnose.
+
+Service/Repo:
+
+projects_repo.upsert().
+
+plans_service.diagnose(url) gör tillåten HTTP/JS‑render när det behövs (ingen kringgång av skydd).
+
+DB: projects (config_json), audit_events.
+
+Verifiering (SQL):
+
+SELECT name, created_at FROM projects ORDER BY created_at DESC LIMIT 1;
+
+4) Crawl Plan / Sitemap‑studio
+
+UI: /plans & /plans/:id
+
+Konfig: inkl/exkl regex, djup, paginering, samtidighet, max‑sidor.
+
+API:
+
+POST /api/crawl-plans (simulera: ?dry_run=true), PATCH /api/crawl-plans/{id}.
+
+Service/Repo:
+
+plans_repo.create(project_id, rules_json).
+
+Event/Worker:
+
+Vid “Simulera” kör worker en torr‑länkextraktion (tillåten fetch).
+
+DB: crawl_plans.
+
+Verifiering: UI visar “Upptäckta URL:er ≈ N”; SQL:
+
+SELECT rules_json FROM crawl_plans WHERE id=?;
+
+5) Template Wizard (Extraktionsmallar)
+
+UI: /templates & /templates/:id
+
+Peka‑och‑plocka selektorer, transformers, validering, förhandsvisa på prov‑URL (där tillåtet).
+
+“Publicera” låser version.
+
+API:
+
+POST /api/templates (utkast), POST /api/templates/{id}/publish, POST /api/templates/{id}/preview.
+
+Service/Repo:
+
+templates_repo.upsert(name, version, spec_yaml); publish skapar unik (name, version).
+
+Event/Worker:
+
+“Preview” kör en render (tillåten) och applicerar mall → returnerar testdata.
+
+DB: templates.
+
+Verifiering:
+
+SELECT name, version, published_at FROM templates ORDER BY published_at DESC LIMIT 1;
+
+6) Job Launcher (Starta run)
+
+UI: /jobs/new
+
+Välj typ (Crawl / Crawl+Scrape / Scrape från lista / Export / Analys), källa, plan, mall, prio, samtidighet, renderingsprofil, proxyprofil, output.
+
+API:
+
+POST /api/jobs → { id:"job_xxx", status:"pending" }.
+
+Service/Repo:
+
+jobs_repo.create() + audit.
+
+publisher.publish("job.created", {...}).
+
+Event/Worker:
+
+worker lyssnar job.created → initierar queue_urls (Crawl) och kör loop.
+
+DB: jobs (status→running), queue_urls fylls.
+
+Live: WebSocket job_status → Jobbdetaljer öppnas med live‑logg.
+
+Verifiering (SQL):
+
+SELECT id, type, status FROM jobs ORDER BY started_at DESC LIMIT 1;
+
+7) Jobbdetaljer / Live Console
+
+UI: /jobs/:id
+
+KPI‑rutor, live‑logg, kö‑status, felklasser, output, knappar (paus/återuppta/skala/avsluta).
+
+API/WS:
+
+GET /api/jobs/{id}, GET /api/jobs/{id}/logs?stream=true (SSE/WS).
+
+POST /api/jobs/{id}/control → {action:"pause"|"resume"|"scale"|"terminate"}.
+
+Service/Repo:
+
+jobs_service.control() skickar styr‑event.
+
+Event/Worker:
+
+Lyder kontrollen (paus, ändra concurrency), rapporterar tillbaka status.
+
+DB: jobs, job_logs, ev. runs.
+
+Verifiering: Byt concurrency → throughput ökar/minskar inom sekunder.
+
+8) Datalager / Katalog
+
+UI: /data
+
+Sök + filter (källa/mall/taggar/datum/status), resultatlista, sidopanel för härkomst & DQ.
+
+API:
+
+GET /api/datalake/items?filters... (server‑paginering).
+
+PATCH /api/datalake/items/{id} (flagga/karantän).
+
+POST /api/exports (skapa exportjobb av urval).
+
+Service/Repo:
+
+datalake_repo.search() → SELECT + COUNT.
+
+exports_repo.create() för exportjobb.
+
+DB: extracted_items, dq_violations.
+
+Verifiering (SQL):
+
+SELECT COUNT(*) FROM extracted_items WHERE created_at >= NOW() - INTERVAL 1 DAY;
+
+9) Browserpanel & Selector Tool
+
+UI: /browser
+
+Fält: URL, UA‑profil, språk/tidszon. Panel: DOM, nätverk, cookies. Overlay för CSS/XPath.
+
+Obs: används för tillåtna renderingsfall (ingen kringgång av skydd).
+
+API:
+
+POST /api/browser/session (skapar isolerad session),
+
+POST /api/browser/goto, POST /api/browser/selectors, POST /api/browser/screenshot.
+
+Service/Worker:
+
+Backend proxar kommandon till en säker headless‑instans när tillåtet (ex. Playwright).
+
+Selektor‑overlay returnerar robusta selektorer + fallback.
+
+DB: endast temporära sessioner; om sparas: i templates för validering.
+
+Verifiering: “Förhandsvisa” i Template Wizard returnerar rätt fält.
+
+10) Proxy & Nätverk
+
+UI: /network/proxies
+
+Pooler, leverantörer, geo‑fördelning, sticky‑fönster, hälsa, kvalitetsfilter.
+
+API:
+
+POST /api/network/proxies/validate, POST /api/network/proxies/blacklist.
+
+Service/Repo:
+
+proxy_repo.upsert()/health_update().
+
+Worker:
+
+Valideringsjobb mäter latens/lyckande (tillåtna endpoints).
+
+DB: proxies.
+
+Verifiering: efter “Validera nu” sjunker dåliga noder i ranking.
+
+11) Exporter
+
+UI: /exports & /exports/new
+
+Typ, urval, schema‑mappning, filuppdelning, destination (lokal/S3/DB), webhook.
+
+API:
+
+POST /api/exports (skapar jobb), GET /api/exports/{id} (status), GET /api/exports/{id}/download.
+
+Service/Repo:
+
+exports_repo.create(); publicera export.created.
+
+Worker:
+
+Konsumerar → bygger fil eller pushar till mål, beräknar checksumma, uppdaterar status.
+
+DB: exports.
+
+Verifiering: status completed och fil kan laddas ned; radantal matchar urvalet.
+
+12) Policies (Policystudion)
+
+UI: /policies & /policies/:id
+
+Domänmönster, hastighet, rendering, headers, referer, consent, robots/ToS, circuit breakers.
+
+API:
+
+POST /api/policies, /publish, /simulate, /apply-to-jobs.
+
+Service/Repo:
+
+policies_repo.upsert(), policy_versions_repo.add(); broadcast till workers.
+
+Worker:
+
+Laddar profil till minnet; nästa request använder ny profil (tillåten konfiguration).
+
+DB: policies, policy_versions, policy_applied.
+
+Verifiering: körning visar policy vN i Jobbdetaljer; RPS följer inställning.
+
+13) DQ & Analys
+
+UI: /dq
+
+Fyllnadsgrad/valideringsfel/selector‑drift, larmregler, regressionstester.
+
+API:
+
+GET /api/dq/*, POST /api/dq/alerts, POST /api/dq/regression-tests.
+
+Service/Repo:
+
+dq_repo.write_metrics(), alerts_service.evaluate().
+
+Worker:
+
+Aggregator batchar mätvärden; larmmotor skickar notiser (lagligt informerande).
+
+DB: dq_metrics, dq_alerts, selector_drift, dq_regressions.
+
+Verifiering: skapa alert → utlöses när villkor stämmer; Audit innehåller larmet.
+
+14) Scheduler & Aviseringar
+
+UI: /scheduler
+
+Kalender, prioritet, fönster, kanaler, “Schemalägg”, “Pausa fönster”, “Testa avisering”.
+
+API:
+
+POST /api/schedules, GET /api/calendar, POST /api/notifications/test.
+
+Service/Repo:
+
+scheduler_repo.save_schedule(), notifications_service.send_test().
+
+Scheduler app:
+
+Beräknar nästa körningar (UTC), publicerar job.due; respekterar fönster/deps.
+
+DB: schedules, windows, notification_rules, runs.
+
+Verifiering: kalender visar kommande körning; testmail levereras och syns i audit.
+
+15) Inställningar (System)
+
+UI: /settings
+
+Databas (MySQL), fil‑lagring, connectorer, logg/observability, säkerhet (CORS/ratelimits), licens.
+
+API:
+
+GET/POST /api/system/settings, POST /api/system/test/db, POST /api/system/migrate.
+
+Service/Repo:
+
+Skriver config/system.yaml + DB. Startar om pooler dynamiskt.
+
+DB: system_settings, alembic_version.
+
+Verifiering: Health OK, alembic_version=head, INSERT‑test fungerar.
+
+16) Audit & Händelseloggar
+
+UI: /audit
+
+Filter, resultatlista, diff‑vy, export JSON, “Verifiera kedja”.
+
+API:
+
+GET /api/audit, GET /api/audit/{id}, POST /api/audit/verify-chain.
+
+Service/Repo:
+
+Append‑only skrivning vid varje förändring/åtgärd.
+
+DB: audit_event (+ ev. audit_diff_text).
+
+Verifiering: alla åtgärder lämnar spår; kedja verifierar OK.
+
+17) Hjälp & Runbooks
+
+UI: /help
+
+Sök, listkort, öppna guide (Markdown), “Skicka till mig e‑post”.
+
+API:
+
+GET /api/help/runbooks?..., POST /api/help/runbooks/{slug}/email.
+
+Service/Repo:
+
+Läser Markdown, renderar HTML/PDF, skickar e‑post (inställd kanal), loggar audit.
+
+DB: runbook_index, runbook_feedback.
+
+Verifiering: e‑post levereras; audit visar help.runbook.emailed.
+
+Gemensam “kontrakt & dataväg” (exakt)
+Exempel: Starta Crawl+Scrape och få rader i MySQL
+1) UI → API
+POST /api/jobs
+Content-Type: application/json
+{
+  "type": "crawl+scrape",
+  "project_id": 12,
+  "plan_id": 5,
+  "template": "vehicle_detail@v1",
+  "concurrency": 4,
+  "render": "auto",
+  "proxy_profile": "se_residential",
+  "output": "db",
+  "tags": ["carinfo","nightly"]
+}
+
+2) API (jobs_router) → Service
+
+Validera template/plan/projekt finns och är aktiva.
+
+Skapa jobs (status=pending), audit_event (job.created).
+
+publisher.publish("job.created", {job_id, ...}).
+
+Svara 201 { id, status:"pending" }.
+
+3) Worker konsumerar job.created
+
+Initierar queue_urls från crawl_plans (börjar med start‑URL:er).
+
+Sätter jobs.status="running", started_at=NOW() och skickar WS‑status.
+
+4) Crawl‑loop (tillåten hämtning)
+
+Ta URL från kö → hämta lagligt (HTTP eller JS‑render om sidan kräver och ToS/robots tillåter).
+
+Extrahera länkar (enligt plan) → lägg i queue_urls.
+
+Om Crawl+Scrape: applicera mall (Template Runner) på sidan → bygg payload_json → INSERT i extracted_items (unik nyckel per post) + eventuella dq_violations.
+
+Skriv job_logs (INFO/ERROR) med tid/kod.
+
+5) Status & metrics
+
+Varje N sek: uppdatera KPI (sidor/min, fel%, p95‑latens) i jobs/runs.metrics_json.
+
+Skicka ws/job_status med senaste siffror till UI.
+
+6) Avslut
+
+När kön tom och allt klarrapporterat: jobs.status="completed", finished_at=NOW().
+
+Audit job.run.succeeded.
+
+7) Verifiering
+
+UI: Jobbdetaljer visar “Completed”, Outputfliken visar antal inskrivna rader.
+
+SQL:
+
+SELECT COUNT(*) FROM extracted_items WHERE job_id='job_xxx';
+SELECT status, started_at, finished_at FROM jobs WHERE id='job_xxx';
+
+MySQL: kärntabeller (sammanfattning)
+
+Du har listan – vi använder den rakt av (med index):
+
+projects, crawl_plans, templates, jobs, job_logs, queue_urls,
+
+extracted_items, dq_violations, proxies, exports, audit_events,
+
+samt policies/DQ/scheduler/settings‑tabeller från tidigare sektioner.
+
+Verifiera skrivningar med enkla COUNT/SELECT som i exemplen.
+
+Gemensamma kontroller & felsökning (alla funktioner)
+
+RBAC: API svarar 403 om roll saknas; UI visar lås‑ikon.
+
+Validering: alla POST/PATCH kör pydantic‑validering; UI visar fältfel.
+
+Transaktioner: service lager gör BEGIN…COMMIT; vid fel ROLLBACK + audit_event (error).
+
+Idempotens: “Starta jobb” med samma client_token skapar inte dubbletter.
+
+Observability: alla endpoints loggar request_id; workers loggar med job_id.
+
+Audit: varje förändring syns i /audit med what, who, ts, diff (om relevant).
+
+Lag & etik: respektera robots.txt/ToS; om block/utmaning upptäcks → backoff/paus och flagga incident (Runbook), ingen kringgång.
+
+Snabb E2E‑checklista (kör i ordning)
+
+Inställningar → MySQL: “Testa anslutning” → “Kör migrationer nu”.
+
+Skapa Projekt → Diagnostik OK.
+
+Crawl Plan → Simulera → Spara.
+
+Template → Förhandsvisa → Publicera.
+
+Job Launcher → Crawl+Scrape → Starta.
+
+Jobbdetaljer → throughput > 0, fel% låg, Output ökar.
+
+Datalager → poster syns; öppna en post (linage/DQ).
+
+Export → CSV → ladda ner; räkna rader = filter.
+
+SQL → SELECT COUNT(*) FROM extracted_items WHERE created_at > NOW() - INTERVAL 1 HOUR;
+
+Audit → se händelser från varje steg.
+
+Runbook → öppna “Hög 429‑nivå” → skicka till e‑post → auditspår.

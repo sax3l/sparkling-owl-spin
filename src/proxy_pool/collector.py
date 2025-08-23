@@ -450,3 +450,7 @@ class ProxyCollector:
         }
         
         return stats
+
+
+# Backward compatibility alias
+ProxyInfo = RawProxy

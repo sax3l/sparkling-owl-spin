@@ -1,0 +1,957 @@
+1) Målbild & sammanslagningsprinciper
+
+Enkelt: Vi slår ihop båda katalogstrukturerna till en kanonisk som UI, backend, workers, proxy‑pool, anti‑bot, test, CI/CD, infrastruktur och dokumentation kan dela. Där namn krockar väljer vi konsekventa namn, där dubbletter existerar pekar vi om dem till ett ställe.
+
+Exakta regler (vi använder dessa “merge‑regler” i resten):
+
+Konfiguration: allt under config/ (inte i docs/observability_assets eller docker/k8s/configmap.yaml – de blir genererade/projicerade från config/).
+
+Backend‑kod: allt i src/… (FastAPI + workers + moduler).
+
+Frontend: allt i frontend/….
+
+Infrastruktur: k8s manifests under iac/k8s/…; Docker under docker/…; Terraform under infra/terraform/….
+
+Supabase: om Postgres/pg är i bruk – ligger under supabase/…. Om MySQL primär → src/database/migrations/ är sanningen; supabase/ blir valfritt.
+
+Dokumentation: docs/… (OpenAPI/GraphQL spec bor här).
+
+Test: tests/… (unit/integration/e2e/chaos/k6).
+
+Exporter & SDK: src/exporters/…, sdk/….
+
+Observability: observability/… för Prom/Grafana/OTEL (separerat från docker/dev/*).
+
+Vad händer: Vi undviker duplicering (t.ex. “openapi.yaml” finns bara i docs/openapi.yaml). K8s‑manifests tar konfig som ConfigMaps/Secrets genererade från config/*.
+
+Verifiering: Vi kommer lägga in ett analyseringsscript och köra make tree-check. Ser du 100% i “completion” har du lyckats.
+
+2) Kanonisk slutstruktur (TREE.md) — komplett innehåll
+
+Enkelt: Här är hela katalogträdet som vi ska ha. Klistra in detta i TREE.md. Det är vår referens vid code‑review.
+
+Skapa/uppdatera filen:
+
+Windows (PowerShell): öppna editor och klistra in.
+
+macOS/Linux: nano TREE.md och klistra in.
+
+TREE.md (hela filens innehåll):
+
+# Project Tree (Canonical)
+
+Root
+├─ README.md
+├─ TREE.md
+├─ CHANGELOG.md
+├─ CONTRIBUTING.md
+├─ CODE_OF_CONDUCT.md
+├─ SECURITY.md
+├─ LICENSE
+├─ .gitignore
+├─ .gitattributes
+├─ .editorconfig
+├─ .dockerignore
+├─ .pre-commit-config.yaml
+├─ pyproject.toml
+├─ setup.py
+├─ requirements.txt
+├─ requirements_dev.txt
+├─ mypy.ini
+├─ ruff.toml
+├─ pytest.ini
+├─ Makefile
+├─ package.json
+├─ .env.example
+├─ .envrc
+├─ VERSION
+└─ CODEOWNERS
+
+config/
+├─ app_config.yml
+├─ logging.yml
+├─ performance-defaults.yml
+├─ proxies.yml
+├─ anti_bot.yml
+├─ captcha.yml
+├─ export_targets.yml
+├─ api.yml
+├─ auth.yml
+├─ roles.yml
+├─ feature_flags.yml
+├─ domain_policies.yml
+├─ rate_limits.yml
+├─ alerts_thresholds.yml
+├─ domain_policies/
+│  └─ example.com.yml
+└─ env/
+   ├─ development.yml
+   ├─ staging.yml
+   └─ production.yml
+
+docs/
+├─ architecture.md
+├─ system_design_decisions.md
+├─ developer_guide.md
+├─ usage_guide.md
+├─ database_schema.md
+├─ api_documentation.md
+├─ openapi.yaml
+├─ graphql/
+│  └─ schema.graphql
+├─ postman/
+│  └─ collection.json
+├─ anti_bot_strategy.md
+├─ user_interface_design.md
+├─ graphql_guide.md
+├─ observability.md
+├─ security.md
+├─ roadmap.md
+├─ risks.md
+├─ slo_sla.md
+├─ changelog.md
+├─ lovable/
+│  └─ prompt.md
+├─ templates/
+│  ├─ dsl.md
+│  ├─ shared_transforms.yml
+│  ├─ person_profile_v1.yml
+│  ├─ company_profile_v1.yml
+│  ├─ vehicle_detail_v3.yml
+│  └─ examples/
+│     ├─ example_list_page.yml
+│     ├─ example_detail_page.yml
+│     └─ form_flow_example.yml
+├─ policies/
+│  ├─ robots_tos_policy.md
+│  ├─ gdpr_dpia_template.md
+│  ├─ backup_restore_policy.md
+│  ├─ retention_policy.md
+│  ├─ erasure_policy.md
+│  ├─ provenance_lineage_policy.md
+│  ├─ rbac_policies.md
+│  ├─ privacy_retention_matrix.md
+│  ├─ dpia_template.md
+│  ├─ data_processing_agreement.md
+│  └─ legal_checklist.md
+├─ runbooks/
+│  ├─ 403_storm.md
+│  ├─ 429_spike.md
+│  ├─ layout_drift.md
+│  ├─ proxy_drought.md
+│  ├─ restore_drill.md
+│  ├─ deletion_on_demand.md
+│  └─ incident_comm_template.md
+└─ observability_assets/
+   ├─ grafana/
+   │  ├─ proxypool_dashboard.json
+   │  ├─ crawler_scraper_dashboard.json
+   │  ├─ database_dashboard.json
+   │  └─ cost_dashboard.json
+   └─ prometheus/
+      ├─ alerts.yml
+      └─ recording_rules.yml
+
+docker/
+├─ Dockerfile.app
+├─ Dockerfile.worker
+├─ Dockerfile.browser
+├─ Dockerfile.synthetic
+├─ Dockerfile
+├─ entrypoint.sh
+├─ docker-compose.yml
+├─ docker-compose.dev.yml
+├─ docker-compose.synthetic.yml
+├─ kafka-rabbitmq.yml
+├─ selenium-grid.yml
+├─ playwright-workers.yml
+├─ synthetic-sites/
+│  ├─ docker-compose.yml
+│  ├─ README.md
+│  └─ sites/
+│     ├─ static-list/...
+│     ├─ js-infinite-scroll/...
+│     ├─ form-flow/...
+│     ├─ variable-dom/...
+│     └─ captcha-lite/...
+└─ k8s/
+   ├─ base/
+   │  ├─ namespace.yaml
+   │  ├─ configmap.yaml
+   │  ├─ secrets.example.yaml
+   │  ├─ deployment-api.yaml
+   │  ├─ deployment-workers.yaml
+   │  ├─ deployment-proxypool.yaml
+   │  ├─ service-api.yaml
+   │  ├─ service-proxypool.yaml
+   │  ├─ ingress.yaml
+   │  ├─ hpa-api.yaml
+   │  ├─ hpa-workers.yaml
+   │  ├─ pdb-api.yaml
+   │  ├─ pdb-workers.yaml
+   │  ├─ cronjob-backup.yaml
+   │  ├─ cronjob-redis-snapshot.yaml
+   │  ├─ cronjob-retention.yaml
+   │  ├─ cronjob-erasure.yaml
+   │  ├─ cronjob-sbom.yaml
+   │  └─ cronjob-cost-report.yaml
+   └─ helm/
+      ├─ Chart.yaml
+      ├─ values.yaml
+      └─ templates/...
+
+iac/
+├─ terraform/
+│  ├─ README.md
+│  ├─ envs/
+│  │  ├─ dev/
+│  │  │  ├─ backend.tf
+│  │  │  ├─ main.tf
+│  │  │  ├─ variables.tf
+│  │  │  └─ outputs.tf
+│  │  ├─ staging/...
+│  │  └─ prod/...
+│  └─ modules/
+│     ├─ network/ (vpc.tf, subnets.tf, sg.tf)
+│     ├─ eks/ (cluster.tf, nodegroups.tf, iam.tf)
+│     ├─ rds/ (postgres.tf, parameter_groups.tf)
+│     ├─ redis/ (elasticache.tf)
+│     ├─ s3/ (buckets.tf, lifecycle.tf)
+│     ├─ ecr/ (repos.tf)
+│     └─ iam/ (roles.tf, policies.tf)
+└─ k8s/
+   ├─ namespaces/ (scraping.yaml, data.yaml, ops.yaml)
+   ├─ secrets/external-secrets.yaml
+   ├─ configmaps/ (app-config.yaml, anti-bot.yaml, performance-defaults.yaml)
+   ├─ deployments/ (api.yaml, worker.yaml, browser-pool.yaml, proxy-pool.yaml)
+   ├─ services/ (api-svc.yaml, proxy-api-svc.yaml, grafana-svc.yaml)
+   ├─ ingress/ (api-ingress.yaml, grafana-ingress.yaml)
+   ├─ hpa/ (api-hpa.yaml, worker-hpa.yaml)
+   ├─ cronjobs/ (sql_backup.yaml, redis_snapshot_upload.yaml, retention_job.yaml, erasure_worker.yaml, restore_drill.yaml, selector_regression.yaml)
+   └─ monitoring/ (prometheus-rules.yaml, grafana-dashboards/*.json, kustomization.yaml)
+
+src/
+├─ __init__.py
+├─ main.py
+├─ settings.py
+├─ webapp/
+│  ├─ __init__.py
+│  ├─ app.py
+│  ├─ api.py
+│  ├─ graphql.py
+│  ├─ auth.py
+│  ├─ deps.py
+│  ├─ views.py
+│  ├─ websocket.py
+│  ├─ privacy_center.py
+│  ├─ schemas/ (jobs.py, data.py, templates.py, proxies.py, webhooks.py)
+│  ├─ routers/ (jobs.py, data.py, templates.py, proxy.py, exports.py, privacy.py)
+│  ├─ middlewares/ (logging.py, rate_limit.py)
+│  ├─ services/ (webhook_dispatcher.py, export_service.py, auth_service.py)
+│  ├─ templates/ (base.html, dashboard.html, selector_tool.html, jobs.html, privacy.html, settings.html, README.md)
+│  ├─ static/ (css/app.css, js/selector_inject.js, img/…)
+│  └─ i18n/ (sv-SE.yml, en-US.yml)
+├─ crawler/
+│  ├─ __init__.py
+│  ├─ sitemap_generator.py
+│  ├─ template_detector.py
+│  ├─ link_extractors.py
+│  ├─ pagination.py
+│  ├─ infinite_scroll.py
+│  ├─ url_queue.py
+│  ├─ policy.py
+│  ├─ reporters.py
+│  ├─ keywords_search.py
+│  └─ emitters.py
+├─ scraper/
+│  ├─ __init__.py
+│  ├─ base_scraper.py
+│  ├─ http_scraper.py
+│  ├─ selenium_scraper.py
+│  ├─ form_flows.py
+│  ├─ template_extractor.py
+│  ├─ template_runtime.py
+│  ├─ xpath_suggester.py
+│  ├─ regex_transformer.py
+│  ├─ login_handler.py
+│  ├─ image_downloader.py
+│  ├─ dsl/ (schema.py, validators.py, transformers.py, cross_field.py, examples/*.yml)
+│  └─ adapters/
+│     ├─ http/ (client.py, middlewares.py)
+│     └─ browser/ (driver.py, interactions.py)
+├─ proxy_pool/
+│  ├─ __init__.py
+│  ├─ collector.py
+│  ├─ validator.py
+│  ├─ quality_filter.py
+│  ├─ rotator.py
+│  ├─ manager.py
+│  ├─ monitor.py
+│  └─ api/ (__init__.py, server.py)
+├─ anti_bot/
+│  ├─ __init__.py
+│  ├─ header_generator.py
+│  ├─ session_manager.py
+│  ├─ delay_strategy.py
+│  ├─ credential_manager.py
+│  ├─ fallback_strategy.py
+│  ├─ fingerprint_profiles/ (chrome.json, firefox.json, safari.json, edge.json)
+│  ├─ browser_stealth/ (__init__.py, stealth_browser.py, human_behavior.py, cloudflare_bypass.py, captcha_solver.py)
+│  └─ diagnostics/ (__init__.py, diagnose_url.py)
+├─ database/
+│  ├─ __init__.py
+│  ├─ models.py
+│  ├─ manager.py
+│  ├─ schema.sql
+│  ├─ migrations/ (env.py, alembic.ini, versions/*.py, 0001_init.sql, 0002_indexes.sql)
+│  └─ seed/ (persons.json, companies.json, vehicles.json)
+├─ scheduler/
+│  ├─ __init__.py
+│  ├─ scheduler.py
+│  ├─ job_definitions.py
+│  ├─ job_monitor.py
+│  ├─ notifier.py
+│  └─ jobs/ (crawl_job.py, scrape_job.py, proxy_update_job.py, proxy_validate_job.py, retention_job.py, erasure_job.py, sql_backup_job.py, redis_snapshot_job.py, restore_drill_job.py, selector_regression_job.py, backup_job.py)
+├─ exporters/
+│  ├─ __init__.py
+│  ├─ base.py
+│  ├─ csv_exporter.py
+│  ├─ json_exporter.py
+│  ├─ excel_exporter.py
+│  ├─ sheets_exporter.py
+│  ├─ bigquery_exporter.py
+│  ├─ snowflake_exporter.py
+│  └─ elastic_exporter.py
+├─ analysis/
+│  ├─ __init__.py
+│  ├─ data_quality.py
+│  ├─ similarity_analysis.py
+│  ├─ merinfo_analysis_tool.py
+│  └─ reports/README.md
+├─ plugins/
+│  ├─ __init__.py
+│  ├─ registry.yaml
+│  └─ examples/ (extractor_example.py, export_example.py)
+├─ connectors/ (bigquery_client.py, snowflake_client.py, opensearch_client.py, google_sheets_client.py, slack_webhook.py)
+└─ utils/
+   ├─ __init__.py
+   ├─ logger.py
+   ├─ user_agent_rotator.py
+   ├─ validators.py
+   ├─ export_utils.py
+   ├─ pattern_detector.py
+   ├─ hashing.py
+   ├─ cost_tracker.py
+   ├─ idempotency.py
+   ├─ hmac_utils.py
+   ├─ rate_limiter.py
+   ├─ pii_scanner.py
+   └─ lineage.py
+
+frontend/
+├─ package.json
+├─ pnpm-lock.yaml
+├─ tsconfig.json
+├─ vite.config.ts
+├─ tailwind.config.ts
+├─ postcss.config.js
+├─ .env.example
+└─ src/
+   ├─ main.tsx
+   ├─ App.tsx
+   ├─ index.css
+   ├─ api/ (http.ts, rest.ts, graphql.ts)
+   ├─ components/
+   │  ├─ BrowserPanel.tsx
+   │  ├─ SelectorOverlay.tsx
+   │  ├─ SelectorPicker.tsx
+   │  ├─ TemplateWizard.tsx
+   │  ├─ JobDashboard.tsx
+   │  ├─ ProxyDashboard.tsx
+   │  ├─ DataPreview.tsx
+   │  ├─ PolicyPanel.tsx
+   │  ├─ PrivacyPanel.tsx
+   │  └─ Charts/ (ThroughputChart.tsx, ErrorRateChart.tsx)
+   ├─ pages/ (Home.tsx, Templates.tsx, Jobs.tsx, Exports.tsx, Settings.tsx, NewTemplateWizard.tsx)
+   ├─ services/ (apiClient.ts, jobsApi.ts, templatesApi.ts, dataApi.ts, proxyApi.ts, privacyApi.ts, auth.ts)
+   ├─ hooks/
+   ├─ store/
+   ├─ styles/
+   ├─ utils/
+   └─ assets/
+      └─ README.md
+
+data/
+├─ raw/html/.gitkeep
+├─ raw/json/.gitkeep
+├─ processed/.gitkeep
+├─ exports/csv/.gitkeep
+├─ exports/json/.gitkeep
+├─ exports/excel/.gitkeep
+├─ exports/google_sheets/.gitkeep
+├─ images/.gitkeep
+└─ templates/
+   ├─ vehicle_detail/.gitkeep
+   ├─ person_profile/.gitkeep
+   ├─ company_profile/.gitkeep
+   └─ .gitkeep
+
+scripts/
+├─ init_db.py
+├─ seed_data.py
+├─ run_crawler.py
+├─ run_scraper.py
+├─ start_scheduler.py
+├─ run_analysis.py
+├─ diagnostic_tool.py
+├─ backup_now.sh
+├─ restore_drill.sh
+├─ s3_sync.sh
+├─ generate_sdk.sh
+├─ export_postman.py
+├─ gen_openapi_client.sh
+├─ perf_probe.py
+├─ sbom_generate.sh
+├─ cosign_sign.sh
+├─ attestation_slsa.sh
+└─ chaos/
+   ├─ inject_network_latency.sh
+   ├─ kill_worker_pod.sh
+   └─ readme.md
+
+tests/
+├─ README.md
+├─ conftest.py
+├─ unit/ (…)
+├─ integration/ (…)
+├─ e2e/
+│  ├─ playwright.config.ts
+│  ├─ selectors.spec.ts
+│  ├─ forms_flow.spec.ts
+│  ├─ infinite_scroll.spec.ts
+│  └─ variable_dom.spec.ts
+├─ fixtures/
+│  ├─ golden_sets/{vehicle_detail,person_profile,company_profile}/.gitkeep
+│  ├─ html_samples/{vehicle_detail,person_profile,company_profile}/.gitkeep
+│  ├─ html/ (vehicle_detail_*.html, company_profile_*.html, person_profile_*.html)
+│  ├─ templates/ (vehicle_detail_v3.yml, company_profile_v1.yml, person_profile_v1.yml)
+│  ├─ dsl/ (vehicle_detail_v3.yml, person_profile_v2.yml, company_profile_v2.yml)
+│  └─ data/expected_outputs.json
+├─ property_based/ (test_selectors_hypothesis.py, test_transformers_hypothesis.py)
+├─ mutation/mutmut_config.toml
+├─ fuzz/test_fuzz_extractors.py
+├─ k6/ (crawl_throughput.js, scrape_latency.js)
+├─ chaos/ (test_worker_kill_recovery.py, test_proxy_pool_degradation.py)
+├─ synthetic_sites/
+│  ├─ Dockerfile
+│  ├─ docker-compose.synthetic.yml
+│  ├─ static_pagination/ (server.py, templates/.gitkeep, data.json)
+│  ├─ infinite_scroll/ (server.py, assets/.gitkeep)
+│  ├─ form_flow/ (server.py, templates/.gitkeep)
+│  └─ varied_dom/ (server.py, variants/.gitkeep)
+└─ test_*.py (api, webapp, scheduler, anti_bot, proxy_pool, exports, template_drift)
+
+observability/
+├─ prometheus/
+│  ├─ rules/ (scraping_alerts.yml, proxy_pool_alerts.yml, cost_budget_alerts.yml)
+│  └─ prometheus.yml
+├─ grafana/dashboards/
+│  ├─ scraping_overview.json
+│  ├─ proxy_health.json
+│  ├─ scheduler_queues.json
+│  ├─ db_dq_metrics.json
+│  └─ cost_overview.json
+└─ otel/collector-config.yaml
+
+sdk/
+├─ python/
+│  ├─ pyproject.toml
+│  ├─ README.md
+│  ├─ src/scraping_sdk/ (__init__.py, client.py, templates.py, webhooks.py)
+│  └─ sdk_client/ (__init__.py, client.py, webhooks.py, models.py, idempotency.py, retry.py)
+└─ typescript/
+   ├─ package.json
+   ├─ tsconfig.json
+   ├─ README.md
+   └─ src/ (index.ts, client.ts, templates.ts, webhooks.ts, models.ts, idempotency.ts, retry.ts, test/client.test.ts)
+
+supabase/  (valfritt om du kör Postgres)
+├─ .env.example
+├─ migrations/ (0001_init.sql … 0007_erasure_cascade.sql)
+├─ seed/templates/ (vehicle_detail_v3.yml, person_profile_v2.yml, company_profile_v2.yml)
+└─ README.md
+
+api_clients/
+├─ openapi/
+│  ├─ python/.gitkeep
+│  └─ typescript/.gitkeep
+├─ postman/collection.json
+└─ README.md
+
+clients/
+├─ postman_collection.json
+└─ insomnia/insomnia_export.yaml
+
+monitoring/
+├─ docker-compose.obsv.yml
+└─ grafana/provisioning/
+   ├─ datasources/prometheus.yaml
+   └─ dashboards/
+      ├─ proxypool_dashboard.json
+      ├─ crawler_scraper_dashboard.json
+      ├─ database_dashboard.json
+      └─ cost_dashboard.json
+
+examples/
+├─ crawl_example.md
+├─ scrape_vehicle_detail.md
+├─ export_to_sheets.md
+├─ api_usage.md
+├─ import_urls.csv
+├─ export_query_examples.md
+└─ api_calls.http
+
+notebooks/
+├─ data_exploration.ipynb
+└─ model_prototyping.ipynb
+
+legal/
+├─ README.md
+├─ robots_tos_checklist.md
+├─ privacy_policy_internal.md
+└─ data_processing_agreements/.gitkeep
+
+bin/
+├─ dev-up
+├─ dev-down
+├─ gen-openapi-clients
+└─ fmt
+
+extension/
+├─ README.md
+├─ manifest.json
+├─ background.js
+├─ content_script.js
+├─ popup.html
+├─ popup.js
+├─ styles.css
+└─ icons/ (icon16.png, icon48.png, icon128.png)
+
+ops/
+├─ backup/ (wal-g.yaml, pgbackrest.conf, verify_backup.sh)
+├─ retention/ (retention_policy.yml, retention_runner.py)
+├─ erasure/ (erasure_worker.py, erasure_api.md)
+└─ s3/ (lifecycle_raw_html.json, lifecycle_db_backups.json, lifecycle_exports.json)
+
+generated/
+├─ python/openapi_client/.gitkeep
+└─ typescript/openapi_client/.gitkeep
+
+.github/
+└─ workflows/
+   ├─ 01_lint_type.yml
+   ├─ 02_unit_tests.yml
+   ├─ 03_integration_tests.yml
+   ├─ 04_e2e_tests.yml
+   ├─ 05_security.yml
+   ├─ 06_build_sbom_sign.yml
+   ├─ 07_deploy_staging.yml
+   ├─ 08_selector_regression.yml
+   ├─ 09_canary_prod.yml
+   ├─ 10_release_notes.yml
+   ├─ ci.yml
+   ├─ build_and_push.yml
+   ├─ security_sast.yml
+   ├─ dependency_review.yml
+   ├─ deploy_staging.yml
+   ├─ deploy_canary.yml
+   ├─ nightly_selector_regression.yml
+   ├─ sbom.yml
+   └─ cosign_verify.yml
+
+
+Vad händer: TREE.md blir “sanningstabla” för code reviews och CI‑kontroll.
+
+Verifiering: I PRs ska TREE.md diffa när struktur ändras. En CI‑check kan validera förekomst av obligatoriska filer.
+
+3) Snabb scaffold av saknade mappar & .gitkeep
+
+Enkelt: Skapa mappar och tomfiler så att projektet blir körbart och CI kan starta.
+
+Kommandon (Windows PowerShell):
+
+# Skapa viktiga bas-mappar
+$dirs = @(
+  "config\env","docs\graphql","docs\postman","docs\lovable",
+  "docs\templates\examples","docs\policies","docs\runbooks","docs\observability_assets\grafana","docs\observability_assets\prometheus",
+  "docker\k8s\base","docker\k8s\helm\templates","docker\synthetic-sites\sites",
+  "iac\terraform\envs\dev","iac\terraform\modules\network","iac\k8s\namespaces","iac\k8s\configmaps","iac\k8s\deployments","iac\k8s\services","iac\k8s\ingress","iac\k8s\hpa","iac\k8s\cronjobs","iac\k8s\monitoring\grafana-dashboards",
+  "src\webapp\schemas","src\webapp\routers","src\webapp\middlewares","src\webapp\services","src\webapp\templates","src\webapp\static\css","src\webapp\static\js","src\webapp\static\img","src\webapp\i18n",
+  "src\crawler","src\scraper\dsl\examples","src\scraper\adapters\http","src\scraper\adapters\browser",
+  "src\proxy_pool\api","src\anti_bot\fingerprint_profiles","src\anti_bot\browser_stealth","src\anti_bot\diagnostics",
+  "src\database\migrations\versions","src\database\seed",
+  "src\scheduler\jobs","src\exporters","src\analysis\reports","src\plugins\examples","src\connectors","src\utils",
+  "frontend\src\api","frontend\src\components\Charts","frontend\src\pages","frontend\src\services","frontend\src\assets",
+  "data\raw\html","data\raw\json","data\processed","data\exports\csv","data\exports\json","data\exports\excel","data\exports\google_sheets","data\images","data\templates\vehicle_detail","data\templates\person_profile","data\templates\company_profile",
+  "scripts\chaos",
+  "tests\unit","tests\integration","tests\e2e","tests\fixtures\golden_sets\vehicle_detail","tests\fixtures\golden_sets\person_profile","tests\fixtures\golden_sets\company_profile","tests\fixtures\html_samples\vehicle_detail","tests\fixtures\html_samples\person_profile","tests\fixtures\html_samples\company_profile","tests\fixtures\dsl","tests\fixtures\html","tests\fixtures\data","tests\property_based","tests\mutation","tests\fuzz","tests\k6","tests\chaos","tests\synthetic_sites\static_pagination\templates","tests\synthetic_sites\infinite_scroll\assets","tests\synthetic_sites\form_flow\templates","tests\synthetic_sites\varied_dom\variants",
+  "observability\prometheus\rules","observability\grafana\dashboards","observability\otel",
+  "sdk\python\src\scraping_sdk","sdk\python\sdk_client","sdk\typescript\src\test",
+  "api_clients\openapi\python","api_clients\openapi\typescript","clients\insomnia",
+  "ops\backup","ops\retention","ops\erasure","ops\s3",
+  "generated\python\openapi_client","generated\typescript\openapi_client",
+  "extension\icons"
+)
+$dirs | ForEach-Object { New-Item -ItemType Directory -Force -Path $_ | Out-Null }
+
+# Lägg in .gitkeep i tomma kataloger
+"data\templates\.gitkeep","generated\python\openapi_client\.gitkeep","generated\typescript\openapi_client\.gitkeep" |
+  ForEach-Object { New-Item -ItemType File -Force -Path $_ | Out-Null }
+
+
+Kommandon (macOS/Linux bash):
+
+# Skapa mappar (samma lista som ovan, i bash)
+# Exempel:
+mkdir -p config/env docs/{graphql,postman,lovable,templates/examples,policies,runbooks,observability_assets/{grafana,prometheus}} \
+ docker/k8s/{base,helm/templates} docker/synthetic-sites/sites \
+ iac/terraform/envs/dev iac/terraform/modules/network iac/k8s/{namespaces,configmaps,deployments,services,ingress,hpa,cronjobs,monitoring/grafana-dashboards} \
+ src/webapp/{schemas,routers,middlewares,services,templates,static/{css,js,img},i18n} \
+ src/{crawler,scraper/dsl/examples,scraper/adapters/{http,browser},proxy_pool/api,anti_bot/{fingerprint_profiles,browser_stealth,diagnostics},database/{migrations/versions,seed},scheduler/jobs,exporters,analysis/reports,plugins/examples,connectors,utils} \
+ frontend/src/{api,components/Charts,pages,services,assets} \
+ data/{raw/{html,json},processed,exports/{csv,json,excel,google_sheets},images,templates/{vehicle_detail,person_profile,company_profile}} \
+ scripts/chaos \
+ tests/{unit,integration,e2e,fixtures/{golden_sets/{vehicle_detail,person_profile,company_profile},html_samples/{vehicle_detail,person_profile,company_profile},dsl,html,data},property_based,mutation,fuzz,k6,chaos,synthetic_sites/{static_pagination/templates,infinite_scroll/assets,form_flow/templates,varied_dom/variants}} \
+ observability/{prometheus/rules,grafana/dashboards,otel} \
+ sdk/python/src/scraping_sdk sdk/python/sdk_client sdk/typescript/src/test \
+ api_clients/openapi/{python,typescript} clients/insomnia \
+ ops/{backup,retention,erasure,s3} \
+ generated/{python/openapi_client,typescript/openapi_client} \
+ extension/icons
+
+# gitkeep
+touch data/templates/.gitkeep generated/python/openapi_client/.gitkeep generated/typescript/openapi_client/.gitkeep
+
+
+Vad händer: Skapar alla nödvändiga kataloger och stubbfiler för att blockare i CI ska försvinna.
+
+Verifiering:
+
+git status
+# Ska visa nya mappar/filer. Lägg till i git:
+git add -A && git commit -m "chore: scaffold canonical project tree"
+
+4) Koppla lokal MySQL (garanterad väg, end‑to‑end)
+
+Enkelt: Vi lägger in MySQL som primär skriv/läs via config/app_config.yml + src/database/manager.py och migrations (Alembic/SQL). Onboarding/Inställningar i UI kommer i nästa steg, men här visar jag CLI‑vägen.
+
+Kommandon (skapa/uppdatera konfig):
+
+# Skapa/uppdatera config/app_config.yml (se innehåll nedan)
+nano config/app_config.yml
+
+
+config/app_config.yml (minsta nödvändiga block – klistra in):
+
+database:
+  engine: mysql
+  primary:
+    dsn: "mysql+pymysql://crawler_user:STRONG_PASS@127.0.0.1:3306/crawler?charset=utf8mb4"
+  replicas: []
+  write_is_primary: true
+  alembic_ini: "src/database/migrations/alembic.ini"
+
+storage:
+  raw_html_dir: "data/raw/html"
+  exports_dir: "data/exports"
+
+proxies:
+  default_pool: "residential"
+  region_bias: ["SE","EU"]
+
+scheduler:
+  broker: "redis://localhost:6379/0"
+  result_backend: "redis://localhost:6379/1"
+
+security:
+  cors:
+    allowed_origins: ["http://localhost:5173","http://127.0.0.1:5173"]
+
+
+Vad händer: Backend kommer att läsa detta via src/settings.py (Pydantic Settings) och rikta ORM mot MySQL.
+
+Verifiering:
+
+# Snabb ping
+mysql -h127.0.0.1 -uroot -p -e "SELECT VERSION();"
+
+# Alembic migrations (exempel)
+make migrate   # om Makefile har target, annars:
+alembic -c src/database/migrations/alembic.ini upgrade head
+
+# Kontrollera tabeller:
+mysql -h127.0.0.1 -ucrawler_user -p crawler -e "SHOW TABLES;"
+
+
+Ska visa t.ex. jobs, extracted_items, templates m.fl.
+
+5) Backend: API → Worker → DB (minimum “rakt igenom”)
+
+Enkelt: Vi säkrar en minsta loop: skapa jobb via API → scheduler startar worker → worker skriver extracted_items i MySQL.
+
+Kommandon:
+
+# Installera
+python -m venv .venv && source .venv/bin/activate  # (Windows: .venv\Scripts\Activate.ps1)
+pip install -r requirements_dev.txt
+
+# Kör API och worker (exempel via Makefile)
+make run-api
+make run-worker  # eller make run-scheduler
+
+
+Vad händer: FastAPI startar på http://localhost:8000 och workers lyssnar på kö/broker.
+
+Verifiering:
+
+curl -X POST http://localhost:8000/jobs/crawl -H "Content-Type: application/json" -d '{
+  "project_id": 1,
+  "plan_id": 1,
+  "rendering": "http",
+  "proxy_profile": "auto",
+  "concurrency": 2
+}'
+# Får JSON med job_id. Följ via:
+curl http://localhost:8000/jobs/{job_id}
+# Efter ett tag:
+mysql -h127.0.0.1 -ucrawler_user -p crawler -e \
+"SELECT COUNT(*) FROM extracted_items WHERE created_at >= NOW() - INTERVAL 10 MINUTE;"
+
+
+Ska vara > 0 efter lyckad scraping (med syntetiska testsajter igång).
+
+6) Frontend: UI→API→DB (Dashboard + Datalager)
+
+Enkelt: Frontend visar “Aktiva jobb”, loggar och “Datalager”.
+
+Kommandon:
+
+cd frontend
+pnpm install   # eller npm install
+pnpm run dev   # eller npm run dev
+# besök http://localhost:5173
+
+
+Vad händer: UI läser sammanfattnings‑API (cache 15–60 s). Du kan starta jobb från UI (“Job Launcher”) och se dem i “Jobbdetaljer”.
+
+Verifiering:
+
+“Aktiva jobb” uppdateras när du startar/stoppar.
+
+“Datalager” växer i antal rader efter extraktion.
+
+7) Teststack: syntetiska sajter & e2e
+
+Enkelt: Vi kör våra syntetiska sajter i Docker och e2e‑tester mot dem.
+
+Kommandon:
+
+# Starta syntetiska sajter
+make docker-up-synthetic   # alias till docker/synthetic-sites/docker-compose.yml
+
+# E2E (Playwright)
+cd tests/e2e
+pnpm install
+pnpm playwright install
+pnpm test
+
+
+Vad händer: Sajter startas på lokala portar (t.ex. 8081/8082/8083). E2E kör flows: statisk lista, infinite scroll, form flow.
+
+Verifiering: Grönt i e2e‑testerna, samt “Datalager” får poster.
+
+8) Automatiserad struktur‑kontroll (skript & Make)
+
+Enkelt: Vi lägger in en “tree‑checker” som jämför källstruktur mot TREE.md.
+
+Kommandon:
+
+# Lägg skript
+mkdir -p scripts
+nano scripts/tree_check.py
+
+
+Innehåll scripts/tree_check.py (kort, minifierad variant):
+
+import sys, pathlib
+root = pathlib.Path(__file__).resolve().parents[1]
+tree = (root / "TREE.md").read_text(encoding="utf-8").splitlines()
+must = [l.strip() for l in tree if l.strip().endswith(("/","...")) is False and not l.startswith("#")]
+missing = []
+# Minimal check: make sure key files exist
+keys = ["README.md","config/app_config.yml","src/webapp/app.py","src/database/manager.py","frontend/package.json"]
+for k in keys:
+    if not (root / k).exists():
+        missing.append(k)
+if missing:
+    print("Missing:", *missing, sep="\n  - ")
+    sys.exit(1)
+print("Structure OK (minimal keys present).")
+
+
+Makefile‑target (lägg till):
+
+tree-check:
+\tpython scripts/tree_check.py
+
+
+Vad händer: En snabb “röd/grön” check körs i CI och lokalt.
+
+Verifiering:
+
+make tree-check
+# Output: Structure OK ...
+
+9) “Var sak av sitt slag” – konflikter & hur vi löste dem
+
+Enkelt: Här är nyckel‑konflikter och beslut:
+
+OpenAPI/GraphQL: bara i docs/openapi.yaml och docs/graphql/schema.graphql. Genererade klienter går till generated/… eller api_clients/openapi/….
+
+Exporters: alla exporttarget i src/exporters/… (inte blandade under scraper/exporters).
+
+Fingerprint‑profiler: src/anti_bot/fingerprint_profiles/*.json (unika filer).
+
+K8s‑manifests: under iac/k8s/… för infra‑kod; “docker/k8s/base” är runtime‑stack för lokal/minikube; båda får innehåll från config/.
+
+Supabase vs MySQL: MySQL är primär enligt config/app_config.yml. supabase/ är valfritt om du kör Postgres‑varianten.
+
+SDK: Python+TS SDK alltid under sdk/…, inte i api_clients/… (som bara håller genererade OpenAPI‑klienter).
+
+Verifiering: Inga dubbletter i repo‑sök (git grep för filnamn som riskerar kollidera).
+
+10) “Från UI till DB” – kärnflöden (kort sammanfattning)
+
+Enkelt: Så här går allt “rakt igenom”:
+
+Onboarding/Inställningar (UI) → POST /settings/databases:test → om OK → POST /settings/databases:migrate → src/database/migrations körs → MySQL redo.
+
+Projekt/Källa → POST /projects → skrivs i projects tabell.
+
+Crawl Plan → POST /crawl_plans → crawl_plans tabell + preview via “simulate”.
+
+Template Wizard → POST /templates (draft) → PUT /templates/{id}/publish → version i templates.
+
+Job Launcher → POST /jobs/{crawl|scrape|crawl+scrape} → jobs + kö → scheduler startar → workers kör crawler/… och scraper/….
+
+Scraping → template‑engine (template_runtime.py) → validering (dsl/validators.py) → skriv extracted_items + lineage.
+
+Datalager (UI) → GET /data/items → serverpaginering → klick → GET /data/items/{id} + lineage/PII flaggor.
+
+Exporter (UI) → POST /exports → exports + worker → skriver fil/tabell enligt config/export_targets.yml.
+
+Audit → varje åtgärd loggas i audit_events.
+
+Verifiering: Audit & Händelseloggar visar spår från alla dessa steg. SQL‑queries mot jobs, extracted_items matchar UI.
+
+11) Snabb “gap‑lista” (högsta prio filer att fylla med stubbar)
+
+Konfig (prio):
+
+config/export_targets.yml
+
+config/alerts_thresholds.yml
+
+config/api.yml, config/auth.yml, config/roles.yml, config/captcha.yml
+
+Docker/K8s (prio lokal):
+
+docker/dev/Dockerfile
+
+docker/dev/docker-compose.dev.yml
+
+docker/synthetic-sites/docker-compose.yml + docker/synthetic-sites/sites/*
+
+Src (prio körbarhet):
+
+src/scraper/adapters/http/client.py
+
+src/scraper/adapters/browser/driver.py
+
+src/anti_bot/fingerprint_profiles/*.json
+
+src/crawler/emitters.py
+
+Frontend (UI minimum):
+
+frontend/tailwind.config.ts
+
+frontend/src/index.css
+
+frontend/src/components/* (TemplateWizard, JobDashboard, DataPreview)
+
+Tests (sanity):
+
+tests/fixtures/templates/*
+
+tests/fixtures/html/*
+
+tests/unit/test_header_generator.py, tests/integration/test_scraper_http.py
+
+Du kan skapa tomma stubbar (pass/return TODO) och successivt fylla på – det låter CI rulla.
+
+12) Körbar “Hello Crawl+Scrape” (säker demo)
+
+Enkelt: Starta syntetiska sidor → skapa template för en detaljsida → kör crawl+scrape → se data i MySQL/Datalager.
+
+Kommandon:
+
+make docker-up-synthetic
+make run-api
+make run-worker
+
+# Skapa enkel mall via API (ex)
+curl -X POST http://localhost:8000/templates -H "Content-Type: application/json" -d @docs/templates/examples/example_detail_page.yml
+
+# Publicera
+curl -X POST http://localhost:8000/templates/{id}/publish
+
+# Skapa crawl plan
+curl -X POST http://localhost:8000/crawl_plans -d '{"project_id":1,"rules_json":{...}}'
+
+# Starta jobb
+curl -X POST http://localhost:8000/jobs/crawl+scrape -d '{"project_id":1,"plan_id":1,"template_id":1}'
+
+
+Vad händer: Worker hämtar listor → följer länkar → renderar (vid behov) → extraherar → skriver i extracted_items.
+
+Verifiering:
+
+SELECT COUNT(*) FROM extracted_items;
+
+
+Antalet ska stämma mot UI “Datalager” och “Exporter” CSV‑radantal.
+
+13) Avslutande checklista
+
+ TREE.md incheckad (denna fil).
+
+ config/app_config.yml finns och pekar på MySQL primär.
+
+ Migrations körda (alembic upgrade head).
+
+ API uppe (/docs öppnar Swagger).
+
+ Worker kör.
+
+ Syntetiska sajter uppe.
+
+ UI uppe, Dashboard visar puls.
+
+ Job Launcher startar jobb; Jobbdetaljer uppdateras live.
+
+ Datalager visar nya poster.
+
+ Export fungerar och fil går att ladda ner.
+
+ Audit visar spår av alla steg.

@@ -1,0 +1,1684 @@
+Implementations guide för web scrapning
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Jämförelse av moderna webscraping-verktyg och implementationsstrategi
+
+I denna rapport jämförs funktionalitet, tekniska lösningar och användningsområden för tio utvalda webscraping- och crawling-verktyg. Verktygen som granskas är Octoparse, Firecrawl, Thunderbit, Browse AI, Apify, ScraperAPI, Webscraper.io, Crawlee, Screaming Frog SEO Spider samt en översikt av ”AI-crawlers” (t.ex. OpenAI:s GPTBot och liknande, baserat på Vercels analys
+vercel.com
+vercel.com
+).
+
+För varje verktyg presenteras först en tabell som sammanfattar dess centrala egenskaper inom crawling och scraping (t.ex. stöd för BFS/DFS, hantering av JavaScript, schemaläggning, proxy/fingerprinting, CAPTCHA, utdataformat, integrationer samt prisnivå och källkodstillgänglighet). Därefter följer en teknisk analys som belyser hur verktyget implementerat dessa funktioner (t.ex. vilken headless-motor som används, anti-bot-strategier, mall- eller AI-baserade extractionstekniker m.m.).
+
+Avslutningsvis presenteras en handlingsplan för hur motsvarande eller bättre funktionalitet kan implementeras i det egna projektet “sparkling-owl-spin”, inklusive förslag på arkitektur, bibliotek, proxy-hantering, mallbaserad dataextraktion, CLI- och webbaserad UI-integration samt observability (övervakning/loggning). Rapporten avslutas med rekommendationer om tekniska val beroende på mål: full anonymitet, kostnadsoptimering eller maximal skalbarhet.
+
+Octoparse
+
+Octoparse är en kommersiell no-code-plattform för webscraping med grafiskt gränssnitt. Användaren bygger skripten genom att klicka på element i en drag‑and‑drop-miljö, och verktyget kan köra insamlingar lokalt eller i molnet. Nedan sammanfattas Octoparse funktionalitet:
+
+Funktion	Octoparse
+Crawlfunktioner	Navigering & schema: Visuellt definierade klicksteg för att följa länkar (flera nivåer). Stöd för paginering, inloggning och interaktioner via UI. Kan schemalägga körningar i molnet (betalfunktion) för regelbunden crawling
+thunderbit.com
+. Standardalgoritm liknar BFS (bredden först) genom att verktyget kan klicka igenom listor och öppna detaljsidor enligt den hierarki användaren anger.
+Scrapingmetoder	Dynamisk & statisk: Kan extrahera data från statiska sidor eller rendera JavaScript-innehåll via en inbyggd webbläsarmotor (Octoparse har en inbyggd headless-browser i Windows-appen och använder molnservrar för rendering i sina högre planer). Stöder att scrola, klicka “Nästa” etc för att ladda innehåll dynamiskt. Utrustad med AI-modul som autodetekterar datafält och repetitiva element.
+Proxy & fingerprinting	IP-rotation & headers: Inbyggd stöd för proxynätverk och IP-rotation i molnversionen. Octoparse kan automatiskt växla IP för att undvika blockeringar, vilket är viktigt vid storskalig skrapning
+thunderbit.com
+. Verktyget använder realistiska User-Agent-strängar och webbläsarheaders (fingerprinting) när det körs i molnet, så att trafiken efterliknar riktiga webbläsare.
+CAPTCHA-hantering	Begränsat: Octoparse har inget inbyggt kapacitet att automatiskt lösa CAPTCHA-utmaningar. Rekommenderad metod är att integrera tredjepartstjänster eller att undvika CAPTCHA genom IP-rotation och mänsklig emulering. Användaren kan i vissa fall hantera CAPTCHA manuellt i designläget, men vid molnkörning stoppas jobben om en CAPTCHA inte kan passeras.
+Output-format	Flera format & API: Utdatamöjligheter inkluderar nedladdning av data som CSV, Excel, JSON, HTML eller export direkt till databaser. Octoparse har också ett API för att hämta ut resultat programmässigt samt stöd för webhooks för notifieringar när en körning är klar.
+Integrationer	Ekosystem & moln: Som fristående app är integrationer begränsade, men via API kan Octoparse kopplas till andra system. Molnplattformen tillhandahåller connectorer för t.ex. Google Sheets och datalagring i molnet. Ingen specifik inbyggd integration med GCP/Supabase/BigQuery, men data kan exporteras och importeras vidare. Webhooks kan användas för att skicka data till valfri endpoint.
+Pris & källkod	Proprietär, freemium: Stängd källkod (kommersiell produkt). Gratisplan med begränsad funktionalitet (t.ex. max 10k datapunkter per export). Betalda planer: Standard ca $75/mån och Professional ca $209/mån ger fler samtidiga uppgifter och molnkörning
+blackbearmedia.io
+. Enterprise-licenser för team finns också.
+
+Teknisk analys: Octoparse är byggt för att vara användarvänligt för icke-utvecklare. Under ytan använder Octoparse en webbläsarliknande motor för att rendera sidor – i desktop-appen sker detta via en inbäddad webbläsare (troligen Chromium-baserad) som kan manipulera DOM:en, medan molnplattformen sannolikt kör Chromium i headless-läge. Den AI-funktionalitet som omnämns handlar om mönsterigenkänning i HTML: Octoparse kan tolka en websida och föreslå vilka datafält som bör extraheras genom att identifiera repetitiva element (t.ex. listor, tabeller). Detta påminner om att Octoparse automatiskt genererar en extraction-mall åt användaren, vilket sparar tid.
+
+Octoparse hanterar sidnavigering genom att användaren i designläget klickar på exempel-länkar (nästa-sida-knappar, produktlänkar etc.). Dessa steg spelas in som en sekvens. Verktyget kan sedan replikera sekvensen iterativt (t.ex. gå genom varje kategorisida och klicka in på varje produkt) – i praktiken implementeras detta som en BFS-crawl begränsad till de regler användaren angett. Octoparse har inbyggd logik för vanliga webbsideelement såsom pagineringslänkar och drop-down-menyer.
+
+Anti-bot-strategi: Octoparse molnversion erbjuder IP rotation och stealth-inställningar. Verktyget undertrycker uppenbara bot-signaturer genom att skicka med en uppsättning vanliga headers (User-Agent, Accept-Language, etc.) som liknar en vanlig webbläsare. IP-rotationen sker genom ett poolat proxynätverk – anrop roteras över olika IP-adresser geografiskt fördelade, vilket motverkar att många förfrågningar kommer från samma adress. Octoparse kan i de högre planerna köra flera instanser parallellt i molnet, var och en med egna proxies. CAPTCHA-utmaningar hanteras dock inte automatiskt; Octoparse rekommenderar användare att undvika sajter som aktivt använder CAPTCHA eller att integrera externa lösningar.
+
+Mallbyggande: När användaren klickar på element i Octoparse skapas under huven en abstrakt sitemap eller arbetsflöde. Detta inkluderar CSS-selectors eller XPath för datafält, vilka Octoparse sedan använder för att extrahera innehåll från varje sida. Användaren kan definiera loopar (t.ex. ”för varje produkt i listan, klicka och skrapa detaljer”) med hjälp av det visuella gränssnittet. Dessa loopar och fält utgör mallen. Mallarna kan sparas och återanvändas, och Octoparse har även ett bibliotek av färdiga mallar (~500+) för populära sajter som Amazon, Twitter m.fl.
+thunderbit.com
+thunderbit.com
+. Under körning använder Octoparse mallen för att hitta relevanta element på sidan; om sidstrukturen ändras kan mallen behöva justeras manuellt, vilket är en begränsning (begränsad motståndskraft mot UI-förändringar).
+
+Firecrawl
+
+Firecrawl är en nyare webscraping-plattform utformad för AI- och LLM-tillämpningar. Den erbjuds både som en öppen källkod-projekt (AGPL-licens) och som en molntjänst (SaaS). Firecrawl fokuserar på att crawla hela webbplatser och leverera innehållet i LLM-klara format (som Markdown, JSON, etc.)
+docs.firecrawl.dev
+docs.firecrawl.dev
+. Nedan är dess funktioner:
+
+Funktion	Firecrawl
+Crawlfunktioner	Helskalescrawl (BFS/DFS): Tar en start-URL och kan automatiskt hitta och besöka alla åtkomliga undersidor (ingen sitemap krävs). Standard är en BFS-liknande crawl som bredd-avsöker en domän
+docs.firecrawl.dev
+docs.firecrawl.dev
+. Stöd för att begränsa djup (max crawl depth) finns. Kan även göra riktad crawl (t.ex. enbart lista URLs utan innehåll, s.k. “Map”‑funktion)
+docs.firecrawl.dev
+. Schemaläggning får hanteras av användaren (via API, cronjobs, etc.), ingen inbyggd scheduler i öppna versionen. Molntjänsten har ett async-API som möjliggör parallell crawling av många sajter samtidigt (batch-jobb)
+brightdata.com
+brightdata.com
+.
+Scrapingmetoder	Dynamisk rendering & statisk: Fullt stöd för att rendera JavaScript. Firecrawl använder en headless webbläsare (t.ex. Playwright) under huven, vilket innebär att dynamiskt innehåll (SPA:s etc.) extraheras korrekt
+brightdata.com
+brightdata.com
+. Samtidigt kan den vid behov också hämta rå HTML utan rendering för snabbhet om sidan inte kräver det. Användaren kan ange handlingar (”Actions”) som ska utföras på sidan innan extraktion, t.ex. click, scroll, input, wait för att simulera användarinteraktion
+docs.firecrawl.dev
+. Detta gör att Firecrawl kan hantera inloggning, modala dialoger eller lazy-loading vid behov.
+Proxy & fingerprinting	Inbyggd anti-bot: Firecrawl har stöd för proxy-rotation och att skicka med egna headers/cookies. Molnversionen roterar automatiskt genom proxies och hanterar ratelimiting åt användaren
+brightdata.com
+. Även tunga anti-bot-mekanismer adresseras: t.ex. kan Firecrawl använda stealth-tekniker (ändra fingerprints, köra ”headful” lägen om krävs). I öppen källkod-varianten måste man själv konfigurera proxies, men stödet finns inbyggt (session management, proxies etc. exponeras i API:et
+brightdata.com
+brightdata.com
+). Verktyget identifierar när åtkomst blockeras (t.ex. 503 från Cloudflare) och kan automatiskt försöka igen via annan proxy eller sänka hastigheten (rate limit handling är inbyggt
+brightdata.com
+brightdata.com
+).
+CAPTCHA-hantering	Delvis: Firecrawl försöker kringgå behovet av CAPTCHA genom ovannämnda stealth-tekniker och proxies. Om en CAPTCHA ändå dyker upp kommer molntjänsten i vissa fall att detektera detta och returnera en flagga om att sidan inte kunde hämtas (alternativt att extra åtgärd krävs). I nuvarande dokumentation nämns ingen integrerad CAPTCHA-solving-tjänst, så detta får hanteras utanför (t.ex. via integration med en tjänst som Anti-Captcha genom att injicera lösning i en Action, om användaren själv implementerar).
+Output-format	LLM-anpassade format: Firecrawl returnerar data rikligt strukturerad. Standard är att hela sidans innehåll levereras som ren Markdown (med bevarad hierarki, listor, tabeller, bilder etc.), vilket är användbart direkt för LLM:er
+docs.firecrawl.dev
+docs.firecrawl.dev
+. Alternativt kan den ge sammanfattning, JSON-strukturerad data (via ett JSON-läge där huvudinnehåll extraheras som strukturerade fält), rå HTML, skärmdumpar, samt metadata som sidtitel och meta-taggar
+docs.firecrawl.dev
+docs.firecrawl.dev
+. Användaren kan välja format via API-parametrar. Output kan också direkt streamas till fil (t.ex. flera Markdown-filer, en per sida) eller JSON-array.
+Integrationer	SDK & AI-ekosystem: Officiella klientbibliotek finns för Python, Node.js, Go och Rust
+docs.firecrawl.dev
+docs.firecrawl.dev
+. Firecrawl integrerar djupt med AI-ramverk – t.ex. finns inbyggt stöd för LangChain och LlamaIndex-dokumentladdare
+firecrawl.dev
+firecrawl.dev
+, vilket gör det enkelt att bygga sökbara AI-kunskapsbaser av det crawlade materialet. Dessutom stöds no-code-plattformar (Dify, Langflow, Flowise) och automationsverktyg som Zapier och Pabbly Connect
+brightdata.com
+brightdata.com
+. JSON-läget möjliggör att koppla Firecrawl med databaser (Supabase el. BigQuery) genom att programmässigt skicka resultat vidare. Webhooks kan användas i moln-API:t för att få callback när crawl-jobb är klara.
+Pris & källkod	Öppen källkod & SaaS: Källkoden (AGPL-3.0) finns på GitHub och kan självhostas
+primotly.com
+. Firecrawl Cloud har en gratisnivå (500 sidor/mån) och därefter betalda planer: Hobby $19/mån (~3000 sidor), Standard $99/mån (100k sidor), Growth $399/mån (500k sidor)
+brightdata.com
+brightdata.com
+. Molnversionens vissa funktioner (full proxies, CAPTCHA-bypass, storskalig concurrency) är begränsade till betalda nivåer och/eller ej tillgängliga i open source-varianten
+brightdata.com
+brightdata.com
+.
+
+Teknisk analys: Firecrawl är byggd med fokus på att kunna leverera hela webbplatsers innehåll till AI-modeller. Arkitekturen består av en crawler-motor, en skräpinsamlingskomponent och ett lager för dataformattering. Den öppna källkodsdelen innehåller kärnfunktionaliteten: den använder sannolikt Playwright (eller Puppeteer) som headless webbläsare för att rendera sidor. Indikationer i dokumentation (t.ex. stöd för click, scroll, input) tyder på att Firecrawl nyttjar Playwrights API för att utföra dessa åtgärder innan extraktion.
+
+Crawl-algoritmen är konfigurerbar: BFS är default för att få bredd (vilket är lämpligt för att snabbt samla en hel sajts sidor upp till ett visst djup), men dokumentation nämner även stöd för DFS och ”BestFirst” strategier i liknande verktyg (t.ex. Crawl4AI)
+brightdata.com
+brightdata.com
+. BFS innebär att Firecrawl upprätthåller en kö över upptäckta URL:er och besöker dem nivåvis. I praktiken extraherar Firecrawl alla länkar (<a href> m.m.) på varje sida och avgör vilka som är interna (inom domänen) och nya, och lägger dem i kön. För att undvika oändliga loops har den logik som känner igen besökta URL:er och skippar duplicerade eller icke-tillåtna länkar (t.ex. utanför domänen eller enligt robots.txt om så önskas). API:et låter användaren begränsa hur djupt eller hur många sidor som ska crawlas, så att man kan stoppa tidigt om det räcker med t.ex. huvudsektioner
+brightdata.com
+brightdata.com
+.
+
+Anti-bot och prestanda: Firecrawl har inbyggd stöd för parallellkörning av förfrågningar (asynkron crawl). Moln-API:et kan starta en crawl som sedan arbetar asynkront i bakgrunden – användaren kan poll:a eller få en callback när den är klar
+firecrawl.dev
+firecrawl.dev
+. Under crawlen anpassar Firecrawl sig efter sajtens respons: om många blockeringar sker kan den försöka “stealth mode” (t.ex. ändra fingerprint, injicera fördröjningar mellan klick, byta proxy oftare). Den utmärker sig genom att skala upp väldigt snabbt – marknadsföring uppger att den är “lightning fast” med concurrency, vilket sannolikt innebär att de har optimerat kö-hantering och att brandbreddsintensiva moment (som LLM-anrop vid dataextraktion) är asynkrona så att inte crawlen bromsas. Firecrawl kan också spara mellanresultat inkrementellt: exempelvis kan den returnera data i batcher eller spara sida-för-sida medan crawlen pågår
+firecrawl.dev
+firecrawl.dev
+, vilket ökar robusthet om en lång crawl avbryts mitt i.
+
+Strukturerad extraktion: En unik aspekt är Firecrawls Extract-funktion med AI. Utöver att bara skicka rå innehåll eller Markdown, kan man be Firecrawl att ge strukturerad data. Detta görs genom att ange ett schema eller att låta AI:n autodetektera datafält. T.ex. skulle man kunna ange att man vill extrahera { namn, pris, beskrivning } för produkter på en sajt, och Firecrawl använder då troligen en LLM i bakgrunden för att mappa sidans innehåll till detta schema
+docs.firecrawl.dev
+. Om inget schema anges kan den försöka identifiera tabellstrukturer eller listor själv (”Extracting without schema” nämns i dokumentationen
+docs.firecrawl.dev
+). Denna AI-stödda extraktion påminner om hur verktyg som Diffbot eller parse.ai fungerar – man slipper manuellt definiera CSS-selectors för varje fält, istället tränas en modell på några exempel eller heuristiker för att hitta relevanta nyckel/värde-par. Öppna versionen har dock inte de mest avancerade AI-extraktionsfunktionerna (de kan vara moln-exklusiva, enligt dokumentation
+brightdata.com
+brightdata.com
+). I open source-läget får man främst Markdown eller HTML, och man kan sedan själv använda LLM (t.ex. via LangChain integration) för att ställa frågor eller extrahera strukturer från texten.
+
+Sammanfattningsvis ger Firecrawl en helhetslösning där mycket av det “svåra” – att hantera proxies, rendera JS, parsa ut huvudinnehåll och navigera sajter – är abstraherat i API:et
+docs.firecrawl.dev
+. För AI-fokuserade projekt är det en attraktiv grund, då man snabbt kan få en hel domän som ren text att använda för träning eller analys.
+
+Thunderbit
+
+Thunderbit är en AI-baserad webbscraper i form av en Chrome-extension med tillhörande molntjänst. Den riktar sig mot affärsanvändare (sälj, marknad, research) som vill kunna skrapa data med minimal konfiguration – ofta ”på två klick” enligt dess slogan. Thunderbit utnyttjar stora språkmodeller (ChatGPT/Claude) för att tolka webbsideinnehåll och automatiskt extrahera strukturerade data
+docs.thunderbit.com
+docs.thunderbit.com
+. Här är en översikt:
+
+Funktion	Thunderbit
+Crawlfunktioner	Lokal navigering + subpages: Thunderbit utgår oftast från den sida användaren har öppen i webbläsaren (”Current Page Scraping”). Därifrån kan den automatiskt klicka sig vidare till underliggande länkar (subpage scraping) om användaren önskar
+docs.thunderbit.com
+thunderbit.com
+. D.v.s. om en sida innehåller en lista (t.ex. produktlistning) kan Thunderbit besöka varje detaljsida och hämta extrainfo, och sedan sammanfoga datat med huvudtabellen. Denna subpage-funktion är agentdriven (AI:n förstår att en länk leder till relevant info) och eliminerar behovet att manuellt ”öppna 20 flikar”
+chromewebstore.google.com
+. Fullständig sajt-crawling (BFS genom hela domänen) stöds inte direkt; verktyget är mer fokuserat på specifika sökningar/listor. Schemaläggning stöds: man kan ange att en viss scraping ska köras med intervall (t.ex. dagligen eller veckovis) via en inbyggd scheduler
+thunderbit.com
+. Detta sker genom att användaren beskriver tidpunkten i naturligt språk eller väljer i UI, så sköter extensionen eller molnet körningen.
+Scrapingmetoder	Dynamisk (via Chrome): All datafångst sker antingen via användarens webbläsare (när extensionen körs på en sida) eller i Thunderbits moln (”Background” mode). I båda fallen används en riktig Chrome-miljö – antingen den interaktiva i webbläsaren eller en headless Chrome i deras moln
+docs.thunderbit.com
+. Därmed renderas JavaScript och AJAX-innehåll naturligt. Verktyget hanterar infinite scroll (det finns inställningar för att scrolla en sida tills slut) och paginering (kan automatiskt klicka ”Nästa” tills sista sidan)
+thunderbit.com
+thunderbit.com
+. AI:n i Thunderbit kan läsa innehållet direkt i dess visuella form (DOM) och behöver inga manuella selectors för att förstå datan – användaren anger bara kolumnnamn eller låter AI:n föreslå kolumner, och verktyget fyller dem genom att tolka sidan semantiskt.
+Proxy & fingerprinting	Webbläsar-baserad: När man kör via extensionen används användarens egen IP och browserprofil, vilket ger maximal äkthet – trafiken ser ut som en vanlig användare (med samma cookies, cache, osv). Detta är fördelaktigt mot fingerprinting, då ingen särskiljande bot-signal skickas. För storskaliga jobb kan man istället välja “Background” (moln), då kör Thunderbit upp scraping-jobbet på sina servrar. De har inte explicit dokumentation om proxyhantering, men förmodligen använder de roterande IP:er i molnet för att undvika blockering. Eftersom Thunderbit i grunden riktar sig mot begränsade datasamlingar (t.ex. en lista med några hundra poster åt gången) är risken att behöva proxies mindre än vid hel-doman-crawl. Verktyget rekommenderar att använda extension-mode om sajten kräver inloggning eller har hårdare blockering, annars kan molnläget ge snabbare hastighet
+docs.thunderbit.com
+ (där de kan skala upp parallell requests).
+CAPTCHA-hantering	Manuell/undviker: Om Thunderbit stöter på en CAPTCHA (t.ex. Google reCAPTCHA vid för många förfrågningar), så finns ingen automatik inbyggd för att lösa den. I extension-läge skulle användaren själv kunna lösa den i browsern, men i praktiken försöker Thunderbit undvika att trigga sådana skydd genom att begränsa hastigheten och köra realistiska interaktioner. Den AI-drivna ansatsen (klicka som en användare snarare än att göra 100 parallella requests) gör att verktyget opererar “snällare” mot sajten, vilket minskar sannolikheten för CAPTCHA.
+Output-format	Tabeller & direktexport: Huvudresultatet presenteras som en tabell med kolumner definierade i Scraper Template. Man kan förhandsgranska datan direkt i extensionens UI eller webb-UI, samt göra enkla filter/sortering där
+docs.thunderbit.com
+. För export finns flera alternativ: ladda ner som CSV/Excel, kopiera till Urklipp (för inklistring i valfri app), eller skicka direkt till Google Sheets, Airtable eller Notion
+thunderbit.com
+thunderbit.com
+. Export till dessa tredjepartsappar är integrerat utan extra kostnad (till skillnad från vissa konkurrenter tar de inget extra för dataexport
+thunderbit.com
+thunderbit.com
+). JSON-export stöds inte som en enkel knapp, men CSV kan förstås omvandlas. Ingen direkt databasexport, men eftersom API saknas (allt sker via UI) får man exportera och sedan importera i DB manuellt om behov finns.
+Integrationer	No-code kopplingar: Som nämnt är stödet för Google Sheets, Airtable, Notion inbyggt för ett klick-export
+thunderbit.com
+. Det finns även playground-läge och demo-use cases för specifika branscher (fastighet, leadsgenerering etc.), men i grunden är Thunderbit inte en plattform man skräddarsyr integrationer på via kod – snarare använder man dess exportmöjligheter eller Zapier-liknande flöden. Det finns en Chrome extension API för att trigga scrapes, men detta är begränsat. Ingen out-of-the-box integration med GCP/Supabase, men data kan efter export laddas upp.
+Pris & källkod	Proprietär SaaS med freemium: Sluten källkod. Grundfunktioner (t.ex. extrahera e-postadresser, telefonnummer, bilder från en sida) är gratis för alltid som del av “Essential Features”
+thunderbit.com
+thunderbit.com
+. Full scraping är gratis för upp till 6 sidor/månad
+thunderbit.com
+thunderbit.com
+. Därefter kreditbaserade planer: t.ex. Starter $15/mån (500 sidor/mån), Pro1 $38/mån (3000 sidor), Pro2 $75 (6000 sidor) upp till Pro4 $249 (20k sidor)
+thunderbit.com
+thunderbit.com
+. Betalplanerna ger även ökad AI-funktionalitet och molnkörning.
+
+Teknisk analys: Thunderbit skiljer sig från traditionella selektor-baserade scrapers genom att den använder AI/LLM för att tolka innehåll. När en användare initierar en skrapning, sker ungefär följande under huven:
+
+Kolumnidentifiering: Om användaren valt ”AI Suggest Columns” analyserar en språkmodell sidan och föreslår lämpliga fält att extrahera (kolumnnamn). T.ex. på en produktsida kanske den föreslår ”Produktnamn”, ”Pris”, ”Beskrivning”, ”BildURL” etc. Detta baseras på att AI:n “förstår” semantiken på sidan – rubriker, prisformat, tabeller etc.
+docs.thunderbit.com
+docs.thunderbit.com
+. Användaren kan justera eller manuellt ange egna kolumner, vilka utgör strukturen i Scraper Template. Varje kolumn kan dessutom ges en typ (dataformat), t.ex. ”datum”, ”text”, ”bild” för att hjälpa AI:n förstå vilket innehåll som förväntas
+docs.thunderbit.com
+.
+
+Innehållsextraktion med LLM: När man trycker ”Scrape” skickas sidans HTML-innehåll (eller relevanta utdrag) tillsammans med templatedefinitionen till Thunderbits backend. Backend använder troligtvis en finjusterad LLM (ex. GPT-4 via OpenAI API) för att plocka ut de värden som motsvarar varje kolumn. Detta kan liknas vid att man ber AI:n ”hitta Name, Phone, Email i denna text”. Faktum att Thunderbit lanserar sig som ”agentic AI” antyder att de kan använda en kedja av AI-steg: t.ex. först ett steg som identifierar list-items på en sida, sedan för varje list-item extraheras fälten genom frågor till AI. För att minimera API-anrop kan Thunderbit också använda heuristik: de nämner att vid bulk scraping kan en template användas över flera sidor utan att behöva AI varje gång
+docs.thunderbit.com
+ (AI:n generaliserar mallen så att den funkar på liknande sidor). Så första sidan kostar kanske ett AI-anrop, men sedan kan resterande sidor extraheras med genererade XPaths/CSS-selectors. Det är troligt att Thunderbit under huven genererar selektorer baserat på AI-analysen – en sorts hybrid mellan AI och traditionella mönster. Detta förklarar hur de kan vara ”blazing fast” för artikel-scraping
+thunderbit.com
+thunderbit.com
+ trots AI: de använder AI för att lära upp scrapen, inte nödvändigtvis för varje enskilt datapunkt.
+
+Subpage-hantering: Vid subpage scraping identifierar AI:n vilka länkar på huvudsidan som leder till relevanta detaljsidor (t.ex. varje listitems titel-länk). Thunderbit klickar dessa en efter en (eller parallellt i molnläge) och på varje sådan undersida kör den återigen extraktion enligt en undermall. Enligt Thunderbit ”AI can visit each subpage and enrich the table for you”
+chromewebstore.google.com
+. Det som sker är att tabellen i huvudvyn får fler kolumner, där t.ex. kolumner som kräver navigering (”Detaljinfo”) fylls i efter att subpages hämtats. AI:n ansvarar för att matcha ihop rätt subpage-data med rätt rad i huvudtabellen. Teknikmässigt lagras nog en nyckel (t.ex. produkt-ID eller namn) för att göra denna matchning.
+
+Post-process med AI: Thunderbit kan även köra påbyggnadssteg med AI: i marknadsföringen nämns att man kan få AI att sammanfatta, kategorisera eller översätta fält direkt under skrapningen
+thunderbit.com
+. Det innebär att efter att t.ex. en rå text extraherats, kan Thunderbit skicka promptar till modellen att generera en sammanfattning, eller att klassificera texten in i en kategori (t.ex. produktkategori utifrån beskrivning), eller översätta texten till engelska. Resultatet placeras i extra kolumner. Detta är en kraftfull funktion för att spara tid – man kan kombinera dataextraktion och dataförädling i en körning. Under huven är det bara extra API-anrop till LLM med relevant prompt (som användaren inte ser, men som Thunderbit förberett för dessa standard-uppgifter).
+
+Prestanda och begränsningar: Eftersom Thunderbit huvudsakligen kör i webbläsaren, är prestandan begränsad av den enskilda miljön. Det är inte tänkt att spindla enorma sajter automatiskt, utan att snabbt få ut data från en given sida eller lista. Att den kör i användarens Chrome ger en fördel: den undviker de flesta anti-scraping-fällor, eftersom den verkligen är en webbläsare med användarens cookie-sammanhang. I molnläge försöker de efterlikna detta med en headless Chrome instans per jobb. Molnläget möjliggör också parallellitet – om man matar in flera URL:er i URLs List Scraping kan Thunderbit köa upp dem och skrapa sekventiellt eller parallellt beroende på plan. I UI kan användaren se progress i Notifications när jobb körs i bakgrunden
+docs.thunderbit.com
+.
+
+Thunderbit är i framkant vad gäller ”promptless” användarupplevelse: användaren behöver inte kunna något om HTML, DOM eller kod. Nackdelen är att helt automatiserade stora datainsamlingar (t.ex. tusentals sidor) kan bli dyra p.g.a. AI-kostnaden och är svåra att driftsätta utan det grafiska gränssnittet. Verktyget lämpar sig bäst för ad-hoc-scraping och återkommande medelstora uppgifter (som prisbevakning på topplistor, kontaktutdrag från katalogsidor etc.).
+
+Browse AI
+
+Browse AI är en etablerad no-code-webscrapingplattform med stark betoning på övervakning av förändringar och integrationer. Den fungerar genom att användaren spelar in en uppsättning handlingar på en webbplats (via en Chrome-baserad inspelare), som sedan sparas som en ”robot” som kan köras i molnet. Browse AI kan därmed extrahera data, omvandla en webbplats till ett API och larma vid uppdateringar. Nedan dess egenskaper:
+
+Funktion	Browse AI
+Crawlfunktioner	Inspelade flöden & deep scraping: Användaren kan spela in navigering inklusive att klicka på länkar, fylla i formulär, etc. Roboten kan sedan följa dessa länkar och också hantera paginering och infinite scroll om det ingår i inspelningen
+thunderbit.com
+thunderbit.com
+. Browse AI stöder ”deep scraping”, dvs att den kan automatiskt hämta data över flera sidor – t.ex. gå igenom alla resultatsidor för en sökning eller gå in på varje profil i en lista
+browse.ai
+. Dock krävs att användaren definierat hur (antingen genom att klicka ”next” under inspelningen, eller genom att aktivera en inställning att roboten ska fortsätta tills sista sidan). Schemaläggning är inbyggt: man kan ställa in att en robot ska köras periodiskt (t.ex. varje dag kl 9) för att monitorera sajten på förändringar
+browse.ai
+browse.ai
+. Flera robotar kan köras parallellt beroende på planens kapacitet.
+Scrapingmetoder	Fullständig rendering: Browse AI kör en riktig headless Chrome i sin molninfrastruktur för att utföra de inspelade stegen
+screamingfrog.co.uk
+. Alltså renderas JavaScript och dynamiskt innehåll utan problem. Den kan hantera inloggningar (inspelning lagrar krypterat de formulärdata du fyllde i
+browse.ai
+browse.ai
+) och navigera komplexa flöden. Robots kan också ta skärmdumpar på utvalda element eller hela sidan. Under extraktionen plockar Browse AI ut definierade datafält via de element valts under inspelningen (användaren klickar på informationen hen vill extrahera under träningsfasen, så sparas dess selector). Intressant nog marknadsförs Browse AI som AI-driven, men de specificerar inte vilka AI-modeller som används; troligen används ML för att robusta mot ändringar i sidstrukturen och för att identifiera innehåll mellan körningar, men huvudsakligen verkar det vara regelbaserat utifrån inspelningen.
+Proxy & fingerprinting	Bot-detektion motmedel: Browse AI har roterande residential proxies inbyggt och löser automatiskt CAPTCHAs när det behövs
+browse.ai
+browse.ai
+. Dessa kostsamma åtgärder markeras som ”Premium” (vissa sajter är flaggade som svårskrapade och drar då extra krediter). Verktyget hanterar headers, cookies och rate limiting automatiskt; användaren behöver inte tänka på det. De nämner ”human behavior emulation”
+brightdata.com
+brightdata.com
+ – roboten kan alltså efterlikna mänskliga rörelsemönster: t.ex. scrolla lite långsamt, klicka runt mer naturligt, kanske vänta slumpmässigt några sekunder. Allt för att inte trigga anti-bot. Samtidigt är systemet SaaS så fingerprinten kan spåras om någon aktivt letar (de har säkert unika user agents för sin tjänst), men generellt uppges att Browse AI tar hand om ”bot detection, proxy management, automatic retries, and rate limiting” åt användaren
+brightdata.com
+brightdata.com
+.
+CAPTCHA-hantering	Automatisk på Premium-sajter: Som nämnt har Browse AI integrerade CAPTCHA-lösare. Om målsajten är känd för att använda t.ex. Cloudflare eller reCAPTCHA, markeras den som Premium i Browse AI. Då kostar varje körning minst 2 till 10 krediter extra
+browse.ai
+browse.ai
+, men i utbyte använder de tyngre infrastruktur (residential IP och betalt CAPTCHA-plugin) för att ta sig igenom skyddet. Detta sker helt automatiskt – användaren ser ingen CAPTCHA, roboten hanterar det i bakgrunden. På icke-premium-sajter är inte CAPTCHA vanligt, men om det skulle dyka upp oväntat kan körningen misslyckas (eller dra fler krediter spontant).
+Output-format	Spreadsheet & API: Resultat från en robot kan hämtas som en tabell (CSV/Excel) eller via Browse AI:s API som JSON. En styrka är att man kan ”turn any website into a live API”, dvs. de hostar ett API-endpoint där ens senaste data kan hämtas i JSON-form
+fahimai.com
+. Detta är möjligt eftersom varje robot har ett unikt ID och Browse AI lagrar de senaste utdata. Man kan också ställa in notifieringar så att t.ex. en e-post skickas när data ändrats (vid monitoring). Data kan pushas till Google Sheets eller andra appar via integrationer (se nedan).
+Integrationer	Omfattande (zapier m.m.): Browse AI glänser i integrationer: de har färdiga kopplingar till över 7 000 appar genom plattformar som Zapier, Make (Integromat), Pabbly etc
+brightdata.com
+brightdata.com
+. T.ex. finns det guider för att integrera med Airtable, Notion, Slack, Trello, Salesforce m.fl. direkt. Man kan trigga flöden när en robot körts klart, vilket möjliggör automatiska pipelines (t.ex. efter skrapning, skicka uppdaterade priser till ett internt dashboard eller posta i Slack). Dessutom finns ett REST API och webhook-stöd – avancerade användare kan programmera runt Browse AI. För utvecklare finns även ett Python- och Node-bibliotek (inofficiella) för att starta/stoppa robotar.
+Pris & källkod	Proprietär, kreditmodell: Browse AI är stängd källkod. Det finns en gratisnivå med 50 krediter per månad
+brightdata.com
+brightdata.com
+ (vilket ungefär motsvarar 500 data-rader). Betalda planer (årspris angivet): Starter $19/mån (10k krediter/år), Professional $99/mån (60k/år), Team $249/mån (120k/år)
+brightdata.com
+brightdata.com
+. Prissystemet kan vara lite svårtolkat; det är i praktiken ~833 krediter/mån i Starter och ~5000/mån i Professional, om man inte betalar årsvis då alla krediter släpps direkt
+browse.ai
+browse.ai
+. En kredit låter dig extrahera 10 rader eller ta en skärmdump
+browse.ai
+browse.ai
+, dock har Premium-sajter en minsta kreditkostnad (2–10 per körning)
+browse.ai
+browse.ai
+.
+
+Teknisk analys: Browse AI följer en klassisk RPA-uppläggning (Robotic Process Automation): användaren spelar in en sekvens av handlingar, och denna sekvens repeteras senare automatiskt. Teknologiskt innebär det att Browse AI:s inspelning genererar en skript (i bakgrunden kan det vara i form av en Puppeteer/Playwright script eller en proprietär JSON-baserad flödesdefinition). Denna innehåller alla nödvändiga selektorer och steg. Exempel: ”Öppna https://site.com, klicka på sökrutan, skriv ‘ABC’, klicka Sök, vänta, extrahera element X som data Y” etc. Den lagrar också visst kontext som cookies och eventuella inloggningsuppgifter (krypterat).
+
+När roboten sedan körs i molnet, sätter deras server upp en headless Chrome instans. Den loggar in ifall inspelningen inkluderade login (Browse AI lagrar inloggningsformulärdata säkert och injicerar vid körning
+browse.ai
+browse.ai
+). Den kör sedan stegen i ordning. För att hantera sidvariationer (t.ex. om en knapp byter ID) använder Browse AI troligen robusta selektorer: de kan ha en fallback-lista av flera sätt att hitta element (baserat på textinnehåll, XPath, CSS). De har inte explicit sagt att LLM används för att justera selektorer, men de pratar om ”AI-driven scraping robots”. Det kan syfta på att de använder ML för ”layout monitoring” – dvs om sajten ändras kan deras system larma eller försöka justera extraktionen. De säger att robotarna är ”AI-powered site layout monitoring to keep data accurate”
+brightdata.com
+brightdata.com
+, vilket indikerar att de jämför DOM-struktur över tid och försöker anpassa extraktionen när små förändringar sker (t.ex. nod flyttas lite).
+
+Bot undvikande: Som plattform hanterar Browse AI saker centralt: innan de släpper en ny IP mot en sajt, kollar de robots.txt och respekterar det (förmodligen, åtminstone de säger sig följa ”standard web scraping guidelines”). De har också en kapacitet att ge sajter respit – om ett steg misslyckas kan de automatiskt ”automatic retries”. Exempel: om sajten gav en tillfällig 429 Too Many Requests, kanske roboten väntar någon minut och försöker igen istället för att ge upp. Proxies: Deras residential proxy-nät är geolokaliserat, så att de kan skrapa data som är regionlåst. Användaren kan kanske inte välja land i vanliga planer, men deras system gör det behövs. De har endast 12 länder tillgängliga enligt en oberoende test
+medium.com
+medium.com
+, vilket kan tyda på de populäraste marknaderna.
+
+Datahantering och integration: Varje Browse AI-robot kan definiera output varianter. T.ex. kan man definiera att en viss del av en sida ska monitoreras. Då tar Browse AI en referens-snapshot (antingen text eller visuell) vid en första körning, och vid senare körningar jämför den för att se om innehållet ändrats. Om så, kan den trigga en alert. För integrationer används ofta deras Zapier-koppling: man kan välja ”När Robot X har nya data, lägg till rad i Google Sheet” exempelvis – detta sker utan kod.
+
+Att ”göra en webbplats till API” innebär att Browse AI håller din data tillgänglig för hämtning. De har en API endpoint för att få ut senaste run’s data i JSON. Det möjliggör att en utvecklare kan fråga Browse AI istället för webbplatsen direkt. Under ytan är det bara en caching – Browse AI tar ju datat från sajten, lagrar i sin databas (de har retention på t.ex. 14 dagar i gratis, längre i högre planer), och när du anropar deras API levereras datat därifrån. Detta avlastar målsajterna kraftigt om du behöver hämta samma data ofta (t.ex. pris övervakning varje timme – Browse AI kan då göra det enligt schema och du hämtar bara från dem).
+
+Browse AI erbjuder även bulk-scraping: man kan ge en lista med t.ex. 100 URL:er som input-parametrar till en robot (om roboten t.ex. extraherar något från en given sida). Plattformen kommer då att köra igenom alla och returnera sammanställda resultat. De använder concurrency så att detta går fort, men varje sida kostar credits.
+
+Begränsningar & lärkurva: Även om det är no-code, finns enligt användarfeedback en viss inlärningskurva
+thunderbit.com
+thunderbit.com
+. Att spela in sekvenser som funkar i alla lägen kräver viss förståelse för webbflöden. Browse AI:s hjälpcenter och support är dock väletablerade och har rykte om sig att vara snabb och hjälpsam för nya användare
+thunderbit.com
+thunderbit.com
+. En utmaning är att extremt komplexa sajter med många villkor kan vara svåra att automatisera helt – roboten kan behöva ”starthjälp” när oväntade popups eller liknande dyker upp (som inte fanns vid inspelningen). För mycket avancerade anti-bot-sajter kan även Browse AI få problem – då kanske man behöver mer skräddarsydd kod. Men för majoriteten av användarfall (prisbevakning, lead-scraping, e-handelsmonitorering) levererar Browse AI en robust och underhållsfri lösning, där man slipper bekymra sig om IP-blockeringar och drift.
+
+Apify (Apify Platform)
+
+Apify är en fullstack-webscrapingplattform för utvecklare och datateam. Den erbjuder en molnplattform där användare kan köra scripts som kallas Actors, med färdiga miljöer för headless Chrome, proxy-hantering, datalagring och schemaläggning. Apify har även ett stort marketplace av färdiga scrapers samt ett open-source SDK som numera heter Crawlee. (Crawlee diskuteras separat nedan). Här fokuserar vi på Apify molnplattform:
+
+Funktion	Apify Platform
+Crawlfunktioner	Programmatisk BFS/DFS: Användare kan koda valfri crawl-logik i sina Actors. Apify SDK (Crawlee) har inbyggt stöd för både BFS och DFS-strategier vid länkföljning, samt en Request queue som gör att en actor i praktiken kör BFS som standard (för att säkra robusthet)
+brightdata.com
+brightdata.com
+. Apify kan därmed crawla mycket stora sajter (miljontals sidor) genom att skala ut över flera container-instanser. Plattformen stöder schemaläggning out-of-the-box; man kan ställa in cron-liknande triggers som startar actors vid givna intervall eller tidpunkter
+blackbearmedia.io
+blackbearmedia.io
+. Parallellisering: Apify hanterar concurrency internt (en actor kan spawna många parallella webbläsare) och via att man kan köra flera aktiva aktörer samtidigt beroende på plan.
+Scrapingmetoder	Statisk + headless: Apifys motto är att klara ”virtually any website”. Man kan köra headless Chrome/Playwright för sajter som kräver det, eller snabbare HTTP-baserad scraping (t.ex. Apify SDK:s CheerioCrawler för statiska sidor). Apify har färdiga bas-Actors: t.ex. Web Scraper actor som tar en konfig (start-URLs, en pseudokod för navigering) och som använder headless browser där nödvändigt
+apify.com
+. Många populära scrapers (Google Maps, Instagram, Amazon etc) kombinerar HTTP-förfrågningar med headless som fallback, för optimering. Apify Cloud tillhandahåller även resurser för tyngre browserautomatisering (t.ex. man kan köra Puppeteer-Stealth plugin för att dölja att det är headless). Stöd finns för att uppge egna funktioner för att extrahera data (ex: ge mig element innerText via DOM API). Eftersom Apify ger full kodkontroll kan alla typer av klick & scroll implementeras med Playwright/Puppeteer-bibliotekens metoder.
+Proxy & fingerprinting	Inbyggd proxyrotation: Apify erbjuder sin egen proxy-tjänst (Apify Proxy) integrerad
+salesforge.ai
+salesforge.ai
+. Med ett enkelt flagga kan en actor rotera genom pooler av datacenter- eller residential-proxies i global skala. Utan extra kod hanteras IP-blockeringar – om ett request får kapade hastighet pga block, kan Apify auto-omsända med ny IP. Fingerprinting-wise, Apify’s headless instanser kan använda Stealth-teknik (de har t.ex. Puppeteer Stealth plugin som tar bort headless-flaggor, ändrar navigator-properties etc.). Apify aktörer får med default en modern User-Agent. Utvecklare kan fritt sätta custom headers/cookies. Vid storskaliga körningar spåras felaktiga proxies automatiskt; poolen uppdateras. Apify’s enterprise-lösningar kan även erbjuda dedikerade exit IPs etc vid behov.
+CAPTCHA-hantering	Externt/halvautomatisk: Apify i sig har inte en magisk CAPTCHA-lösare i plattformen, men man kan integrera lösningar. Många Apify-actors i marketplace inkluderar t.ex. stöd för Anti-Captcha.com eller andra tjänster: man kan ange API-nyckel så löser de reCAPTCHA när det behövs. Apify Proxy har en produkt ”Web Unlocker” (liknar Zytes Smart Proxy) som med hjälp av AI försöker komma runt vissa Cloudflare-utmaningar, men det är mest IP/headers-tricks. I praktiken om en actor stöter på en ren CAPTCHA returneras en felkod eller placeholder – utvecklaren måste hantera det (antingen ge upp eller integrera en solver).
+Output-format	Datasets & API: Apify aktörer kan skriva ut data till en dataset – en schemalös datalagring där varje resultat oftast är en JSON. Apify hanterar detta och exponerar dataset via API i format JSON, CSV, XML eller Excel efter behov
+thunderbit.com
+thunderbit.com
+. Man kan även spara filer (t.ex. bilder, PDF:er) i plattformens filförvaring (Key-Value Store). För direktintegration kan en actor skicka data via webhooks under körning, eller anropa externa API:er (t.ex. direkt skriva till en egen databas) eftersom full kodkontroll finns. Apify har klientbibliotek i olika språk så att utvecklare kan hämta dataset-resultat eller aktörers status via API enkelt.
+Integrationer	Webhooks, Slack, Zapier m.fl.: Plattformen är developer-centric så primära integrationer är webhooks (vid success, error, etc.), REST API för att starta/stoppa jobs och hämta data, och direktstöd för populära devops-lösningar (ex: man kan trigga via Apify CLI, integrera i GitHub Actions, använda Terraform provider för Apify etc.). För icke-kodare finns Zapier/Make-kopplingar precis som hos konkurrenterna
+blackbearmedia.io
+blackbearmedia.io
+. Man kan alltså t.ex. trigga en Apify actor från Zapier och få tillbaka datat in i Google Sheets. Apify har också integrering med GCP/AWS: t.ex. kan man exportera dataset till Google Cloud Storage eller BigQuery via deras API. Supabase direktstöd finns ej, men lätt att ordna via en liten kodsnutt i en actor. Plattformen är dessutom SOC2, GDPR, CCPA-kompatibel vilket underlättar integration i enterprise-miljöer
+salesforge.ai
+salesforge.ai
+.
+Pris & källkod	Freemium (moln) + open SDK: Plattformen är sluten källkod (SaaS), men väldigt mycket är open source: Crawlee-SDK, exempel-actors, klientbibliotek. Pris: Gratis plan med ~$5 i månadskrediter
+salesforge.ai
+salesforge.ai
+ (tillräckligt för småtester). Personal $49/mån (mer krediter, 1 parallell aktor), Scale $499/mån (många krediter, ~4 parallelle körningar), Business $999/mån (ännu mer, prioriterad support)
+salesforge.ai
+salesforge.ai
+. Utöver inkluderade krediter kan man pay-as-you-go om man överträder. Kreditssystemet motsvarar i stort sett CPU-sekunder + datatrafik. För stora behov finns enterprise-avtal med egna instanser.
+
+Teknisk analys: Apify är ”bygglådan” bland dessa verktyg. Istället för att ge ett färdigt GUI där man klickar runt, utgår Apify från att användare antingen kodar själv eller använder andras färdiga scrapers. Molninfrastrukturen som Apify erbjuder är dess stora styrka: du slipper sätta upp egna servrar för att köra dina scrapers – du laddar upp din kod som en Docker-image (hanteras automatiskt under huven) och Apify sköter exekvering, skalning, övervakning, loggning. De erbjuder en webbkonsol där du kan se loggar i realtid, starta/stoppajobb och ställa in scheman.
+
+Apify’s runner allokerar container-resurser baserat på angiven minnesgräns. Under körning samlar Apify in loggar, utdata och fel centralt. Om en actor kraschar, behåller plattformen loggar för debug. Man kan också inställa autosvarta utifall viss data saknas.
+
+Open-source SDK (Crawlee): Apify’s team utvecklade Apify SDK för Node.js, vilket nyligen döptes om till Crawlee och helt open-sourcades. Crawlee innehåller hög-nivå-klasser för att bygga scrapers: t.ex. CheerioCrawler (baserat på fast HTTP + Cheerio DOM-parser), PuppeteerCrawler och PlaywrightCrawler för headless scraping, samt Dataset, KeyValueStore, RequestQueue abstractions. När man kör en actor på Apify Cloud kan man välja Node.js runtime så att Crawlee finns preinstallerat. Crawlee hanterar concurrency med AutoscaledPool – den mäter responstider och justerar antal parallella requests för att optimera användning av CPU utan att överbelasta målserver eller container. Den har också SessionPool som återanvänder sessioner (cookies +fingerprint) över flera requests för att efterlikna en persistent användare under en körning, vilket hjälper på sajter som spårar sessionsbeteende. För utvecklare är Crawlee som att ha ett färdigt “skelett” där du bara fyller i vad du vill göra på varje sida (en funktion handlePageFunction med kod för extraktion). Den popularitet i GitHub (över 8k stars
+brightdata.com
+brightdata.com
+) tyder på att många även använder den utanför Apifys plattform.
+
+Marketplace & Actors: En stor fördel är att Apify har 5000+ färdiga Actors i sitt bibliotek
+blackbearmedia.io
+blackbearmedia.io
+. Behöver du skrapa Instagram-profiler? Det finns en actor för det. Google Maps? Finns (som för övrigt var Apifys “demo use case” och blev mycket populär). Dessa actors är ofta open-source kod som communityn eller Apify själva skrivit. Man kan köra dem direkt i molnet genom att bara ange input (t.ex. en sökterm eller URL). Vissa är gratis att använda (man betalar bara för resursförbrukning), andra tar ut en liten licensavgift per run (typiskt ett par cent). Detta ökosystem gör att Apify kan fungera även för icke-programmerare som är villiga att leta upp rätt actor och läsa instruktionerna. Jämfört med Octoparse/ParseHub som är no-code men kräver att du själv bygger scrapern, kan Apify’s marketplace vara snabbare – någon kan redan ha löst just ditt case.
+
+Anti-bot-strategier och prestanda: Apify’s approach mot anti-bot är ”spray and pray” men med finess: Genom Apify Proxy kan man rotera över 100+ miljoner IP-adresser globalt (via integration med proxy-leverantörer)
+thunderbit.com
+thunderbit.com
+. De erbjuder även att automatiskt växla mellan datacenter, residential och bahkan mobil-proxies om blockeringar sker. De flesta community-actors har default att använda Apify Proxy samt Puppeteer Stealth plugin – vilket tillsammans tar en förbi många enklare botfilter. I svåra fall (Cloudflare IUAM, etc.) kan de aktörerna aktivera ”Headful mode” (icke-headless, dvs en riktig Chrome med UI-liknande kontext) som ibland lurar vissa botfilter. Apify låter också användaren specificera metamaskin-inställningar – t.ex. köra en actor från en specifik geografisk region (USA, Europa,…) om det krävs.
+
+Skalbarheten är ett adelsmärke: Apify kan skala ut crawls över flera noder. T.ex. man kan trigga 10 parallella aktörer, var och en tar en delmängd URL:er. Eller en enskild actor kan signala Apify system att starta kloner av sig själv vid behov. För avancerade användare finns API för actor metamorph (en actor kan starta nya runs av andra actors). All denna flexibilitet betyder att Apify kan hantera väldigt stora datamängder, men det kräver att arkitekturen i scrapen planeras (t.ex. dela upp i flera jobs om dataset är extremt stort – för att undvika att en container blir för tung).
+
+Observability och devops: Apify integreras med övervakningssystem – man kan få e-mail eller Slack-meddelande om ett jobb failar. Man kan definiera larm ifall en aktör plötsligt börjar returnera färre resultat än vanligt (vilket kan tyda på att något gått fel med extraktionen). Apify’s loggar kan dessutom exporteras via API om man vill analysera i egen logghantering.
+
+Användarprofil: Apify är älskat av utvecklare som vill ha frihet och driftsäkerhet. Men för nybörjare kan plattformen kännas teknisk och lite överväldigande
+blackbearmedia.io
+blackbearmedia.io
+ – man möts av begrepp som Actors, Tasks, Datasets, Key-Value Stores, vilket kräver viss inläsning. Apify själva erkänner att absoluta nybörjare kan finna det svårt
+salesforge.ai
+salesforge.ai
+ och att enklare verktyg kan passa bättre i de fallen. De har dock satsat på dokumentation och guider för att mildra detta.
+
+I praktiken används Apify mycket inom SEO-datahämtning, e-handelsprisbevakning, social media crawling och till och med av AI-företag (OpenAI anlitade Apify för att samla träningsdata åt sin chatbot enligt en case study). Dess roll i vårt sammanhang är som referensarkitektur – mycket av det vi vill implementera i sparkling-owl-spin (proxypool, modulär crawler/scraper, etc) finns representerat i Apifys tänk, dock kan vi skräddarsy det för vår egen lösning.
+
+ScraperAPI
+
+ScraperAPI är inte en traditionell scraper-applikation utan en API-tjänst som tar en URL och returnerar HTML (eller färdigparsat data) med anti-bot-hantering skött. Den positionerar sig som ett ”Proxy + Web Browser-as-a-Service”. Utvecklare anropar den istället för att själva bygga en crawler, och API:t ser till att rotera IP, rendera JS, lösa CAPTCHA vid behov och leverera resultatet. Funktionerna sammanfattas:
+
+Funktion	ScraperAPI
+Crawlfunktioner	Ingen egen crawl (användare styr): ScraperAPI följer inte länkar automatiskt. Användaren (utvecklarens kod) måste ange exakt vilken URL att hämta. Det är alltså upp till klienten att implementera BFS/DFS om man vill crawla en hel sida – ScraperAPI är verktyget för att robust hämta en sida i taget. Det finns dock ett asynkront batch-läge där man kan skicka in flera URL:er och få tillbaka data i en samlad respons eller i ström. Det underlättar storskalig crawling genom att API:t tar emot listor av URL:er. Ingen schemaläggning erbjuds; det hanteras av klientens infrastruktur (t.ex. cronjobs som ropar API:t).
+Scrapingmetoder	Statisk eller dynamisk on-demand: API:et har parametrar för om JavaScript ska renderas eller ej. Som standard hämtar det bara HTML direkt (snabbare, billigare), men om man sätter render=true använder ScraperAPI en headless browser internt för att ladda sidan helt (löst med t.ex. Puppeteer i bakgrunden). Man kan även be API:t att auto-parsea vissa sidor: de har specialstöd för t.ex. Google Search-resultat och Amazon-produktsidor – genom att sätta autoparse=true levereras strukturerad JSON direkt för dessa kända sajter
+medium.com
+medium.com
+. I allmänhet returneras annars rå HTML. Ingen interaktionsmöjlighet (man kan ej klicka ett element via API:t, utöver att ladda hela sidan).
+Proxy & fingerprinting	Smart proxyrotation globalt: ScraperAPI’s kärna är dess proxy-pool med IPs i ~12 länder
+medium.com
+medium.com
+. Den roterar IP automatiskt vid varje request om inte användaren begär sticky session. Geotargeting: man kan specificera land (bland de tillgängliga). Alla förfrågningar från ScraperAPI kommer med vanliga webbläsarheaders – de erbjuder också ”premium proxies” (lägre kontention, snabbare) mot högre kostnad. Tjänsten claims 99.9% uptime och obegränsad bandbredd
+medium.com
+medium.com
+. Fingerprinting-mässigt har de ”anti-bot detection” – vilket innebär att om en viss IP/UA kombination blockeras, kan de byta strategi, ev. byta till mobil-user agent, köra headless Chrome med mer avancerad maskering vid behov. Detaljerna är inte publika, men de säljer sin kompetens i att alltid få fram sidan.
+CAPTCHA-hantering	Ja (with headless): ScraperAPI kan lösa enkla CAPTCHA och kringgå Cloudflare. De har ett internt system så om de upptäcker en Cloudflare “Attention Required” sida, så triggar de sin solver (troligen en tjänst som 2Captcha eller egen ML-lösning) för att få ett giltigt svar
+medium.com
+medium.com
+. Detta ingår i priset upp till viss nivå (”Anti-Bot Detection” nämns som inkluderat). Så utvecklaren ser inget extra – HTML:en skickas tillbaka som vanligt, såvida det inte helt misslyckas.
+Output-format	HTML eller JSON: Som nämnt returnerar API normalt HTML-källan av sidan. Vid autoparsade endpoints (SERP, e-handel) returneras JSON med färdiga fält (ex: produktnamn, pris, rating). Data kan också levereras paginerat vid asynkrona batchjobb. Några format som CSV eller XML erbjuds inte direkt – men JSON kan enkelt transformeras av användaren. ScraperAPI levererar också HTTP-statuskoden och eventuella headers från målsidan i sitt svar om man vill ha meta-information.
+Integrationer	SDK & enkla anslutningar: ScraperAPI tillhandahåller klientbibliotek för Python, Node, PHP, Ruby, Java m.fl.
+medium.com
+medium.com
+ för att enkelt integrera i kod. Ingen no-code integration (det är inte för vanliga slutanvändare). Eftersom det är en REST-tjänst kan den användas från vilken miljö som helst, även via cURL. Utvecklare kan bygga vidare – t.ex. koppla ScraperAPI med sin databas: man hämtar HTML via API:t och lagrar i DB. Vissa använder ScraperAPI i kombination med andra verktyg: t.ex. att först skaffa en lista av länkar via Apify/egen crawler, och sedan använda ScraperAPI för att robust hämta innehållet på varje länk.
+Pris & källkod	Proprietär, volymbaserad: Kommersiell tjänst. Gratis plan: 1000 API-krediter per månad (upp till 5 samtidiga requests)
+medium.com
+medium.com
+. Betalda planer startar runt $49/mån för 100k requests
+medium.com
+medium.com
+. Högre nivåer ökar antalet krediter och tillåter fler parallella förfrågningar. De erbjuder även 7 dagars gratis trial med 5000 krediter. Källkoden är inte öppen; man köper en service.
+
+Teknisk analys: ScraperAPI är i princip en kombination av proxy aggregator och headless browser pool. När en begäran kommer in till deras API med en URL, sker ungefär:
+
+Request dispatcher: En load balancer kollar parametern: Om render=false försöker de göra ett enkelt HTTP-get via en av sina proxy-servrar. Proxy-servrarna är utspridda globalt och har pooler av IPs. De sätter med nödvändiga headers (User-Agent etc.). Om sajten svarar med block (403 eller ersättningssida), då eskalerar de:
+
+Headless mode: Antingen automatiskt eller vid render=true startar de en container med en webbläsare (eller använder en pre-poolad). Den laddar URL:en, eventuellt väntar in nätverksidle, och samlar upp page content. Under laddning kan den behöva lösa en CAPTCHA (t.ex. hCaptcha/Cloudflare: de integrerar då en solver i den webbläsarsessionen).
+
+Resultat: Den råa HTML:en (efter eventuella DOM-manipulationer av JS) skickas tillbaka. All klientlogik som cookies hanteras internt – ScraperAPI supportar session stickiness: om en användare vill behålla samma session över flera requests (t.ex. för att logga in och sedan hämta data), kan de skicka ett unikt session-id så kommer ScraperAPI återanvända samma bakomliggande webbläsare/proxy för de anropen.
+
+Att de blockerat vissa sajter som standard (som nämns att sociala medier är blockerade som policy)
+medium.com
+medium.com
+, beror på juridik eller teknisk komplexitet.
+
+Prestanda: Nätverket med datacenter proxies är väldigt snabbt (99%+ av svaren lyckas och är snabba utom i vissa tester)
+medium.com
+medium.com
+, men när headless behöver användas blir det naturligtvis långsammare. I oberoende tester (som Medium-artikeln citerad) var ScraperAPI långsammare än vissa konkurrenter på Google-sökningar
+medium.com
+medium.com
+, troligen för att de då valde att köra en full browser medan andra kanske använde mer special-case. Men robusthet är oftast viktigare än hastighet i de applikationer de siktar på.
+
+Användning: ScraperAPI är populär bland utvecklare som vill bygga egna scrapers men slippa hantera infrastruktur. Ex: Du skriver en liten Python-script som plockar ut data ur HTML med BeautifulSoup – men istället för requests.get(url) använder du ScraperAPI endpoint, så slipper du proxies, blockeringar, Cloudflare-problem. Det är liksom ett plugg-and-play backend.
+
+Inga speciella anti-anti-bot hacks avslöjas, men givet inkluderade funktioner vet vi:
+
+De stöder custom_headers och session – så man kan skicka sin egen User-Agent, cookies, etc om man vill (t.ex. för att testa olika fingerprint).
+
+De har premium=true parameter som troligen använder bättre quality IP (lägre risk för delad svartlistad IP).
+
+Deras concurrency begränsas per plan för att undvika att kunder överbelastar systemet men premium plan kan göra väldigt många parallellt.
+
+Alternativ & jämförelse: ScraperAPI konkurrerar med tjänster som Bright Data’s Web Unlocker, Zyte’s Scraping API, Oxylabs m.fl. Jämfört med Apify är ScraperAPI mer låg-nivå (Apify ger ett helt arbetsflöde, ScraperAPI bara HTTP-fetch). Men det är enklare att integrera i vilken kodbas som helst.
+
+För vårt projekt är ScraperAPI intressant att nämna som ett alternativ när man inte vill bygga en egen proxypool + headless-hantering. Dock kostar det snabbt mycket vid stor datainsamling, så egna lösningar kan vara mer kostnadseffektiva.
+
+Webscraper.io
+
+Web Scraper (från webscraper.io) är en populär Chrome-extension för webscraping med point-and-click-gränssnitt, kompletterat av en molntjänst för körning i stor skala. Det är känt som en av de äldsta och mest använda scraping-extensions och var länge helt gratis i basic-utförande. Funktionaliteten:
+
+Funktion	Webscraper.io
+Crawlfunktioner	Site map & multi-level: Web Scraper bygger på att man skapar en ”sitemap” – en konfiguration där man anger hur sajten ska navigeras (t.ex. start på en kategori-sida, följ länkar till produktsidor, där extrahera data, och ev. klicka nästa för paginering). Detta liknar BFS eftersom extensionen automatiskt följer alla länkar enligt mallen nivå för nivå
+thunderbit.com
+thunderbit.com
+. Den hanterar paginering (användaren definierar en selector för ”nästa” knapp), infinite scroll (finns speciella settings för att scrolla och vänta), och kan gå hur djupt som helst i teorin. Extensionen kör i användarens browser lokalt, så ingen schemaläggning lokalt (man måste själv starta den). Däremot erbjuder Web Scraper Cloud att man kan schemalägga jobs i molnet på fördefinierade tider och upprepningar
+thunderbit.com
+thunderbit.com
+. Cloud-varianten kan också köra flera sitemaps parallellt beroende på prenumeration.
+Scrapingmetoder	Dynamisk (browser): Som extension kör den sida i en riktig webbläsare (Chrome), så den får med JavaScript-laddat innehåll utan extra åtgärd
+thunderbit.com
+thunderbit.com
+. När man kör i Cloud, använder deras server en headless Chrome instans (Chromium utan UI) för samma effekt. Eftersom man definierar selectors i sin sitemap, är extraktionen regelbaserad (ingen AI). Styrkan är att man kan extrahera nästan vad som helst som CSS/XPath kan uttrycka. Stöd finns för att extrahera text, HTML, attribut (som image src), liksom att klicka på element för att avslöja dolda innehåll (t.ex. trycka på en “load more” knapp). Extensionen har inte inbyggd begreppsanalys – det extraherar bokstavligen det DOM-element du specificerat.
+Proxy & fingerprinting	Lokal eller via add-on: I free extension-läge används din vanliga internetanslutning (din IP). Det innebär att om du försöker skrapa t.ex. 10k sidor från din dator kan du bli blockad. Webscraper.io Cloud-läget löser det genom att inkludera proxies för storskalig scraping i de betalda planerna
+thunderbit.com
+thunderbit.com
+. De högre nivåerna (Business/Scale) får residential proxies som roteras under körning. Fingerprinting hanteras delvis: en Chrome-headless har viss risk att upptäckas, men de kan köra Chrome i normalläge i sina dockercontainers för att undvika headless-flagga. Användaren kan också ändra User-Agent i config om så behövs. I practice, Web Scraper Cloud-proxies och att de faktiskt byter IP per sida (om man väljer det) gör att anti-bot blir svårare. Men verktyget i sig siktar inte på att fullt ut imitera mänskliga interaktioner mer än nödvändigt.
+CAPTCHA-hantering	Nej: Webscraper.io har inget inbyggt för att lösa CAPTCHA eller klara Cloudflares blockeringar. Om extensionen stöter på en block-sida kommer den fastna där. Användaren får isåfall byta taktik (t.ex. integrera med en tjänst manuellt genom script injection – men det ligger utanför normal användning). Den förlitar sig istället på proxies och rimlig crawl-delay som motmedel. Cloud-versionens Scale-plan erbjuder residential proxies som ofta undviker CAPTCHA helt genom att se ut som riktiga användare.
+Output-format	CSV, JSON, API: I extension kan man spara skrapad data som CSV eller JSON lokalt. I Cloud-läge lagras data i ett projekt och användaren kan ladda ner CSV/JSON via webbgränssnittet. Web Scraper Cloud ger även API-access: man kan programmatic hämta utdata i JSON format, eller få det via en webhook när klart
+thunderbit.com
+thunderbit.com
+. Denna API/webhook-funktion finns från Project-plan ($50/mån) och uppåt.
+Integrationer	Molnkopplingar: Web Scraper Cloud har färdiga integrationer för att exportera data till Dropbox och Google Sheets bland annat
+thunderbit.com
+thunderbit.com
+. Det finns också en integrering för Amazon S3. Via API/webhook kan man egentligen integrera med vad som helst nedströms. Det finns dock inget direkt gränssnitt mot GCP BigQuery eller Supabase, men man kan tänka sig att via API ta JSON och skicka till BigQuery. De har även en funkton att publikt dela ett dataset via en unikt URL (som JSON), vilket är användbart för snabb integrering utan auth.
+Pris & källkod	Freemium extension, SaaS cloud: Extensionen är gratis och open-source-ish (källkod finns på GitHub). Molntjänsten har följande (2024): Project $50/mån (5000 sidladdningar, 2 parallella jobb)
+thunderbit.com
+thunderbit.com
+, Professional $100 (20k sidor, 3 jobb), Business $200 (50k sidor, 5 jobb)
+thunderbit.com
+thunderbit.com
+. Scale-plan finns för större behov (pris beroende på volym, t.ex. över 50k sidor, med möjlighet till obegränsat). Gratisversionen kan bara användas manuellt lokalt (ingen cloud). Det är värt att notera att lokala körningar är obegränsade i antal URL, så du kan skrapa stora sajter gratis, men du måste hålla webbläsaren öppen och risken för blockering ökar utan proxies.
+
+Teknisk analys: Web Scraper Chrome-extension var ett av de första verktygen som lät icke-programmerare definiera ett sitemap för en webbplats. En sitemap består av selectors och element definitions. T.ex. man anger en start-URL, sedan en ”Link Selector” som pekar på nästa nivå (t.ex. alla länkar till produkter), och inne på produktsidan definierar man Data Selectors för titel, pris etc. Extensionen kör sedan iterativt: laddar start-URL i bakgrunden, samlar länkar enligt link selector, lägger dem i en kö (intern BFS). Sedan besöker första länken, extraherar data, besöker nästa, osv. Den är event-driven – när en sida är färdig extraherad triggas nästa.
+
+Allt sker i webbläsarens kontext, men inte i den synliga fliken: extensionen använder Chromes background scripting för att öppna osynliga flikar (headless eller bara hidden). Den injicerar content scripts som läser DOM enligt de definierade selektorerna. Att det är en extension gör att den har tillgång till samma DOM/JS-kontent som en riktig användare.
+
+Molntjänst: Web Scraper Cloud tar samma koncept men packar in Chrome i dockers. Användarens definierade sitemap skickas till molnet, där en crawltjänst tolkar den och spinner upp en headless Chrome som navigerar. Molnarkitekturen är designad för att automatisera flera scrapes åt gången samt ge stabilitet. I molnet ser de till att om en crawl tar för lång tid eller kraschar, så städas resurser upp och jobb markeras fail. Användaren kan se en logg. Egentligen är det en fjärrstyrd extension – i loggarna ser man precis de steg den tar.
+
+Selectors & data extraction: Användaren anger CSS-selectors oftast, men det finns verktyg i UI:t som hjälper att peka och klicka på element för att generera dem. Extensionen kan hantera element list selectors (för att fånga flera liknande element på sidan) och paginate selectors (för att definiera en “nästa”-knapp). Den kan också extrahera data ur attribut (t.ex. <img src>). All extraherad data sammanställs i tabellform (JSON array internt). Om man skrapar multipla nivåer, länkas data så att output blir ett flat dataset med kolumner från både parent- och child-sidor (om inte annorlunda specificerat).
+
+Prestanda: Lokalt är extensionen begränsad av Chrome och din dator. Den kan navigera kanske ~1 sida per sekund i bra fall, oftast långsammare om mycket JS. Moln kan parallellisera genom flera containers, men antalet parallella uppdrag är begränsat per plan. BFS-approachen gör att memory usage hålls i schack eftersom den inte går djupare förrän bredden avverkas (vissa andra verktyg använder mer DFS-lik, men BFS passar bättre här).
+
+Anti-block: Som noterat kan Business-planen ge residential proxies, vilket är en stor grej – plötsligt kommer förfrågningarna från hushållens IP och inte datacenter. Det minskar risken att bli stoppad. Tillsammans med möjligheten att sätta crawl delay (du kan konfigurera hur länge att vänta mellan sidladdningar) kan man gå under radarn. Men Webscraper har inget avancerat stealth-läge som typ randomiserar mouse movements. Den förlitar sig på standard Chrome fingeravtryck (som dock är väldigt vanligt, så det är inte misstänkt i sig).
+
+Användarvänlighet vs komplexitet: Web Scraper är no-code men inte nödvändigtvis enkelt. Många nybörjare upplever att konfigurera sitemap kan vara lite trickigt – man måste förstå webbplatsens struktur. Som Thunderbits analys visade så nämnde användare att ”sitemap setup is confusing” och kräver trial-and-error
+thunderbit.com
+thunderbit.com
+. Det finns ett community-forum där folk delar sitemaps för olika sajter, vilket hjälper oerfarna att komma igång.
+
+Styrkan är att Webscraper är flexibel inom ramarna för vad CSS/XPath kan uttrycka. Det kan extrahera data som AI-baserade verktyg kanske inte lyckas med om det är mycket ostrukturerat. Och du har total kontroll – du vet exakt vilken text du hämtar. Nackdelen är att när sajter ändras i struktur måste du manuellt uppdatera sitemapen.
+
+Utveckling & API: Webscraper.io’s team har API för cloud-data samt möjliggör att integrera med CI. Vissa power users sätter upp egna servrar med Web Scraper CLI (det finns en headless version man kan köra själv, dock ej officiellt stött mig veterligen, men man kan styra Chrome med deras code). Men oftast används plattformens egna scheduling i Business/Scale plan.
+
+I en tidigare chat nämndes att en användare fick lägga tid på att justera sitemap när kolumner kom ut blandat
+thunderbit.com
+thunderbit.com
+ – det pekar på att noggrann planering krävs, t.ex. att alltid få samma antal element i en lista (om en produkt saknar pris så kanske datastrukturen blev skev). Webbskraparen vet inte konceptuellt att kolumner hör ihop, den bara dumpar element i kolumner i den ordning den möter dem.
+
+Sammanfattningsvis, Webscraper.io är en beprövad lösning för måttliga datamängder och har fördelen att man kan testa gratis och lokalt. För sparkling-owl-spin kan idéer som mall-baserad extraction och sitemap-konceptet inspirera designen.
+
+Crawlee (Apify SDK)
+
+Crawlee (tidigare Apify SDK) är ett öppen källkod-bibliotek (Node.js/TypeScript) för att bygga webcrawlers och scrapers programmatisk. Det är motorn under många Apify Actors men kan användas fristående. Dess funktioner:
+
+Funktion	Crawlee
+Crawlfunktioner	Crawl queue med BFS/DFS: Crawlee har en inbyggd RequestQueue-klass som lagrar URL:er att besöka. Som standard behandlas den som FIFO (för BFS), men användaren kan sortera eller prioritera (så man kan implementera DFS eller andra strategier)
+brightdata.com
+brightdata.com
+. Den stödjer även återupptagning – man kan pausa och fortsätta crawlen senare via persisterad queue. För att starta en crawl definierar man initiala requests och en requestHandler som ska anropa enqueueLinks om fler länkar ska läggas till (typ BFS). Concurrency är inbyggt – man sätter max antal parallella requests så crawlen går snabbare. Schemaläggning i Crawlee i sig finns inte (det är bara ett bibliotek), men Apify Platform eller ett cronjobb kan köra skriptet på schema.
+Scrapingmetoder	Valbart: HTTP eller headless: Crawlee erbjuder flera crawler-klasser: CheerioCrawler (använder HTTP-förfrågningar och parsar HTML till DOM med Cheerio, snabbt men ingen JS), PuppeteerCrawler och PlaywrightCrawler (startar headless Chrome/Firefox via Puppeteer/Playwright, således renderar JS). Även en BrowserCrawler bas-klass finns för att anpassa annan browserkontroll. Så utvecklaren kan välja strategi per målsite: kanske först försöka med Cheerio, om det inte funkar (tom data) switcha till headless. Under hood, PuppeteerCrawler använder en pool av webbläsarinstanser och återanvänder dem för flera pages om möjligt, för effektivitet. Crawlee kan också köra användardefinierade actions i headless: man får tillgång till page-objektet så man kan göra await page.click(...), page.type(...) etc för interaktion. Alla traditionella metoder i Puppeteer/Playwright kan utnyttjas.
+Proxy & fingerprinting	Konfigurerbart: Crawlee har stöd för att använda proxies via ProxyConfiguration. T.ex. kan man enkelt använda Apify Proxy genom att ange token, eller en lista egna proxy-URLs. Man kan ställa in att varje nya browser får ny proxy eller att en hel crawl använder en proxy. Fingerprinting: Crawlee i sig har inte en inbyggd stealth-plugin, men Apify har släppt en integrering med fingerprintjs och puppeteer stealth som kan användas. Man kan via Playwright inställningar ändra User-Agent, viewport, tidzon, språk osv, så allt är möjligt men manuellt. Session-hantering finns: Crawlee’s SessionPool håller koll på cookies m.m. över requests – man kan simulera att 5 parallella användare crawlar genom att ha 5 sessioner som återanvänds i rotation. Detta hjälper att undvika uppmärksamhet. Ingen automatisk block-detektion, men man kan hooka in middleware som kollar response-koder och vid t.ex. 429 byter proxy eller väntar.
+CAPTCHA-hantering	Extern: Som kodbibliotek har Crawlee inget inbyggt CAPTCHA-lösande. Utvecklaren kan integrera med t.ex. 2Captcha API genom att i requestHandler detektera en CAPTCHA-sida (kanske via sidtitel eller element), skicka bilddata till solver och sedan injicera svaret i sidan (t.ex. fylla i formuläret) – men allt detta måste kodas specifikt. Alternativt kan man hoppa över sådana sidor och logga för manuell hantering.
+Output-format	Flexibelt: Crawlee lämnar output helt upp till utvecklarens kod. Oftast samlar man resultat i en array av objekt och sparar som JSON/CSV på slutet, eller så skriver man till en databas direkt inuti requestHandler. Om man kör på Apify så kan man använda Dataset.pushData() vilket sparar JSON-objektet i Apify dataset (då finns senare API för CSV/JSON). Men utanför Apify plattform kan man själv skriva till fil eller returvärde. Ingen automatik, men hög flexibilitet.
+Integrationer	Kod-baserat: Crawlee är integrerbart med allt som Node.js kan integrera med – exempelvis kan man använda det inom en Express-server för att bygga ett eget scraping API. Apify-inkludering finns (sömlös integrering med Apify cloud om Apify.env detekteras). Annars är integrationer som LangChain & LLMs möjlig genom att i koden kalla dessa. Det finns inga färdiga ”Crawlee plugins” för GCP eller Supabase, men Node ekosystem är rikt (man kan använda Google Cloud SDK, Supabase JS client inne i sin crawl).
+Pris & källkod	Öppen källkod (gratis): Crawlee är gratis under MIT-licens. Att köra det har dock kostnader i form av infrastruktur (egna servrar, eller Apify’s credits om man kör där). Källkoden är aktiv på GitHub med community-bidrag, och Apify sponsrar utvecklingen.
+
+Teknisk analys: Crawlee representerar ”roll-your-own” tillvägagångssätt. Det ger byggstenar som tar hand om mycket komplexitet under ytan: köhantering, concurrency, scaling, memory management. Till exempel har Crawlee inbyggt att begränsa antalet Chrome instanser och page per instans för att inte överväldiga systemet. Den stänger sidor och instanser som inte använts på ett tag. Den serialiserar automatiskt en RequestQueue till disk för att man inte ska tappa state ifall processen restartas oväntat.
+
+Arbeta med Crawlee: För en utvecklare kan ett typiskt flöde se ut så här (pseudo-kod):
+
+const crawler = new PlaywrightCrawler({
+    maxConcurrency: 5,
+    proxyConfiguration: { /* proxy settings */ },
+    async requestHandler({ page, request, enqueueLinks, log }) {
+        // extrahera data
+        const title = await page.$eval('h1', el => el.textContent);
+        const price = await page.$eval('.price', el => el.innerText);
+        dataset.pushData({ url: request.url, title, price });
+
+        // hitta fler länkar att crawla
+        await enqueueLinks({ selector: 'a.product-link', globs: ["*/product/*"] });
+    },
+    failedRequestHandler({ request, error }) {
+        log.error(`Request ${request.url} failed too many times`);
+    }
+});
+await crawler.run([{ url: 'https://site.com/catalog' }]);
+
+
+Ovan kod skulle starta en headless browser via Playwright, gå till en katalogsida, extrahera produkter och lägga till nya produktlänkar i kön. enqueueLinks är en bekväm funktion som automatiskt lägger alla <a> som matchar en selector i RequestQueue:n (med automatisk URL-normalisering och duplicate checking).
+
+Kraften med kod: Man kan integrera valfri logik: t.ex. sortera om kön, begränsa crawling till visst domän, parallellt jobba mot flera domäner, göra API-anrop under extraktionen, etc. Det ger mer kontroll än no-code verktyg, men kräver programmeringskunskap.
+
+Scenarios: Crawlee används i allt från akademiska projekt till enterprise crawlers. Man kan köra det på en laptop för att snabbt ta ner data, eller i en Kubernetes-kluster för massiv skala. Apify har djupt testat den i sin moln, så bibliotektet är rätt optimerat.
+
+Jämfört med Scrapy (Python): Crawlee är på Node, men i liknande anda som Scrapy i Python. Scrapy är också populärt men kräver mer infrastruktur för distribuerad körning (men Zyte erbjuder ScrapyCloud). Crawlee känns mer modern med inbyggt headless browser-stöd, medan Scrapy traditionellt är mer HTTP-baserat (man får integrera Splash eller Playwright separat för JS).
+
+För sparkling-owl-spin, om vi väljer en Node stack, skulle Crawlee vara ett utmärkt val att bygga vidare på, istället för att uppfinna hjulet på nytt för köer, concurrency och basala extraction-helpers.
+
+Screaming Frog SEO Spider
+
+Screaming Frog är en desktopbaserad webbspindel känd inom SEO. Den är specialiserad på att crawla en hel webbplats och analysera teknisk SEO (statuskoder, metataggar, rubrik-taggar, länkstruktur etc.). Trots fokus på SEO kan den faktiskt extrahera godtycklig info via Custom Extraction-funktioner, vilket gör den relevant i jämförelsen. Funktioner:
+
+Funktion	Screaming Frog
+Crawlfunktioner	Helskalespindel: SF fungerar som en sökmotor-crawler: ge den en eller flera start-URL:er så kommer den göra en BFS crawl av sajten (den har en kö internt). Den följer bara interna länkar som standard (kan ställas in att ta externa med). Man kan begränsa djup, exkludera vissa URL-mönster, respektera robots.txt etc. Den är väldigt snabb på ren HTML-crawling – kan göra tiotusentals URL på några minuter om sajtens server tillåter. Schemaläggning: I betald version finns en headless-mode som kan triggas via kommandorad, så man kan schemalägga körningar genom OS schemaläggare och få ut rapporter. Ingen inbyggd kalender-funktion, men väl möjlig att automatisera genom skript.
+Scrapingmetoder	Statisk + valbar JS: Grundläget är att SF hämtar sidor med en inbyggd HTTP-klient och parser – detta tar bara med server-side HTML. För sajter som kräver JavaScript kan man aktivera ”rendered crawl”, vilket spinnar upp en headless Chrome inuti SF för varje sida
+screamingfrog.co.uk
+screamingfrog.co.uk
+. Detta kräver licens och är tyngre, men då kan SF crawla t.ex. Angular/React-sajter. Under crawlen extraherar SF en massa fördefinierade data: sidtitel, meta description, H1-H6 rubriker, inlänkar/utlänkar, responskod, kanonisk-tag, sidstorlek, laddtid etc. Utöver SEO-data kan man definiera Custom Extraction med regex eller XPath för att plocka ut specifika element/text på sidor. Så man kan t.ex. konfigurera att för varje sida, även hämta ut <div class="price"> innehållet genom en XPath. Detta är dock inte lika smidigt som i dedikerade scrapers, men fungerar för att få ut upp till 10 extra datapunkter.
+Proxy & fingerprinting	Proxy stöd: SF kan använda proxy vid crawling; man kan ange en proxyserver under inställningar eller köra via systemproxy. Men den kan inte automatiskt rotera mellan en pool. Eventuellt får man köra en roterande proxyURL så det byts per request (om man integrerar med tredjepart som Bright Data via PAC file eller likn.). Fingerprinting: SF identiferar sig som ”Screaming Frog SEO Spider” i User-Agent by default, vilket vissa sajter blockar. Man kan dock ändra User-Agent till valfri sträng (t.ex. imitera Googlebot eller Chrome) i inställningar. Utöver UA förfogar SF inte över mer avancerad stealth – det är inte syftet heller. Vid rendering använder den en vanilj Chrome. För SEO-syften brukar man inte behöva dölja sig lika noga som vid data-scraping, men om man vill använda SF som scraper på känsliga sajter får man ta omvägar (VPN/proxy + sätta UA).
+CAPTCHA-hantering	Nej: SF har ingen inbyggd mekanism för att lösa CAPTCHA. Om den stoppas av Cloudflare eller liknande kommer de drabbade sidorna rapporteras som 4XX-fel. Möjligen kan man importera cookies (om man t.ex. själv löst en Cloudflare-kontroll i browsern och exporterar cookies till SF, så kan den använda dem), men detta är manuellt. Summan: SF undviker inte aktivt anti-bot, så verktyget lämpar sig bäst för sajter som antingen är egna sajter eller inte aggressivt blockerar enstaka klienter.
+Output-format	CSV & Excel, DB export: SF kan exportera alla upptänkliga rapporter i CSV- eller Excel-format via UI (även gratis). T.ex. en lista på alla URL:er med dess titlar och statuskoder, eller alla URL:er där meta description saknas, etc. För extraherade anpassade värden får man CSV med de värden per URL. I den senaste versionen kan SF även skicka utdata direkt till Google Sheets eller Google BigQuery
+github.com
+github.com
+ (kräver konfiguration). Detta är smidigt för större crawls – man kan få datat in i BigQuery och analysera där. Ingen JSON-export, eftersom verktyget främst är tänkt för tabulära SEO-data, men CSV fungerar generellt.
+Integrationer	SEO-verktyg: SF integrerar med Google Analytics och Search Console API – man kan under en crawl hämta in trafikdata för URL:er eller sökord info, för att kombinera med crawl-resultaten. Den integrerar också med PageSpeed Insights API (för att mäta prestanda) och Link Metrics (Moz). För data-integration: BigQuery/Sheets nämndes. SF har dessutom ett CLI-läge i licensversionen, så man kan integrera det i egna skript/pipelines (ex. köra en crawl varje natt och sedan använda outputs i en dashboard). Ingen direkt SDK eller så, men via CLI + exports kan man få in datat i många system.
+Pris & källkod	Freemium, stängd: Gratisversionen låter en crawla upp till 500 URL per sajt-session (vilket räcker för små websidor eller test). Betald licens kostar £149 per år (ca $180) för obegränsat antal URL och tillgång till full funktionalitet (Custom extraction, JS-rendering, save projects, scheduling via CLI etc.). Programmet är stängd källkod (proprietär).
+
+Teknisk analys: Screaming Frog är skrivet i Java och optimerat för snabb link discovery. Det har en utmärkt minneshantering: vid stora sajter kan man byta till ”Storage Mode” som lagrar crawl-data på disk (i en lokal databAS, antingen embedded eller ansluten t.ex. via BigQuery) för att klara miljontals URL utan att spränga RAM
+screamingfrog.co.uk
+github.com
+.
+
+Crawlmotorn i SF är mycket effektiv för länkstrukturer: den trycker URL:er i en väntelista och kan multi-tråda fetches (inställbart antal trådar). Den hanterar även ”retry later” ifall en sajt ger 429, samt respekterar robots.txt throttle (Google-like crawling rate adjust). Men i grunden är den aggressiv om inte bromsad – SEO-crawl ska ju ge en snabb överblick.
+
+När Javascript-rendering är på, startar SF en headless Chrome per tråd (det kan bli tungt, de rekommenderar att man sänker antalet trådar drastiskt vid JS-mode). Under rendering väntar den en konfigurerbar tid eller tills network idle innan den snapshot:ar DOM för att extrahera element.
+
+Dataextraktion och användning: För vårt intresse, SF är inte ett data-scraping-verktyg i första hand, men Custom extraction låter en ange en regex på HTML eller en XPath. T.ex. om man vill få ut priset från alla produktsidor: man identifierar unik HTML-mönster och anger regex som fångar värdet. SF kommer då rapportera värdet per URL i kolumn "Custom 1". Detta är mer primitivt än övriga verktyg (ingen klicka-funktion, man måste ge den statiska mönster), men i många fall funkar det då sajter har repetitiva HTML-uppbyggnader.
+
+Till skillnad från andra scrapers bygger SF upp en helhetsbild: man kan efter en crawl bläddra i en UI-lista över alla sidor, sortera, filtrera och analysera. För SEO syften, man kan t.ex. snabbt filtrera ut alla sidor där status ≠ 200 eller där Title-tag > 60 tecken etc. För datainsamling kan man på liknande sätt leta ut anomali: ifall man extraherade priser, kan man se ifall någon sida hade tomt prisfält (kanske en strukturskillnad).
+
+Begränsningar: SF är single-machine. Även om man kan köra flera instanser eller VM parallellt, finns ingen scaling-lösning utöver att du själv sätter upp det. Den är bäst för att crawla en webbplats i taget, inte 100 olika sajter samtidigt (då är Apify/Scrapy bättre).
+
+Användningsfall: I vår kontext med sparkling-owl-spin, SF kanske inte direkt integreras, men det är ett bevis på hur crawling kan kombineras med enkel extraktion för att få ut stor datamängd snabbt. Och att tänka på BFS vs DFS: SF BFS-crawl plus dataexport liknar vad vi kan behöva bygga. Vi kan inspireras av dess robusthet (t.ex. hur den byter till disk-lagring för stor crawl – i vår design kanske vi också bör streama ut data kontinuerligt till DB istället för att hålla allt i minnet).
+
+AI-drivna sökrobotar (GPTBot, Claude m.fl.)
+
+Utöver verktygen ovan, som är avsedda för användare att själva samla data, finns en växande kategori AI-crawlers – webbrobotar drivna av företag som OpenAI och Anthropic för att samla in träningsdata till AI-modeller. Det kan vara intressant att beröra dessa för att förstå trender i webbcrawling:
+
+Enligt en analys av Vercel/MERJ (dec 2024) utgör AI-botar numera en märkbar andel av trafiken på webben
+vercel.com
+vercel.com
+. Exempel är OpenAI GPTBot, Anthropic Claude crawler, Meta’s “External Agent” och Perplexity bot. Dessa kör autonomt över webben (ofta med hela webbkataloger som startpunkt, likt Common Crawl).
+
+Några utmärkande drag:
+
+Ingen JavaScript-rendering: Studien visade att inga av de stora AI-crawlers (GPTBot, ClaudeBot, Meta, ByteDance etc.) exekverar JS överhuvudtaget
+vercel.com
+vercel.com
+. De hämtar HTML och ibland JS-filer, men de tolkar dem inte. Endast Google’s nya Gemini (som bygger på Googlebot) och Applebot renderar JS fullt ut
+vercel.com
+vercel.com
+. Detta innebär att AI-botarna just nu missar all client-side content. De är intresserade av råtext, inte interaktiva upplevelser. För webbägare innebär det att ska man synas för AI-modeller bör viktigt innehåll finnas i initial HTML/respons.
+
+Innehållsprioritering: ChatGPT’s GPTBot hämtar mest HTML (57.7% av requests) medan Claude fokuserade mer på bilder (35% av requests)
+vercel.com
+vercel.com
+ – kanske för att täcka visuell input för sina modeller. Båda hämtar även JS-filer (11–23% av requests) men som sagt, de kör dem inte, kanske lagrar de dem som text. Googlebot däremot är mer jämnt spridd mellan HTML/JSON/text/JS
+vercel.com
+vercel.com
+. AI-botarna verkar alltså samla mycket multimodalt (text + bild) data.
+
+Effektivitet: AI-crawlers var mindre effektiva än traditionella. GPTBot och Claude hamnade på ~34% 404-fel i sina fetches, ofta p.g.a. att de försökte hämta saker som inte finns (kanske gamla referenser)
+vercel.com
+vercel.com
+. De följde också omdirigeringar onödigt mycket (~14%). Googlebot hade bara ~8% 404-träffar som jämförelse
+vercel.com
+vercel.com
+. Det antyder att AI-botar inte lika sofistikerat väljer vilka länkar som är relevanta eller existerande – de kanske crawler “allt” brute force.
+
+Geografi: Alla uppmätta AI-botar kom från USA-datacenter
+vercel.com
+vercel.com
+, till skillnad från Googlebot som distribueras globalt. Så de har inte (ännu) proxies världen över.
+
+Varför är detta relevant för vår rapport? Dels för att visa hur icke-föränderliga AI-botarna är – trots sina AI-kopplingar, kör de förvånansvärt enkla strategier (ingen JS, följer massvis av länkar inkl. döda). Deras fokus är massinsamling av text för träning, inte precision.
+
+I kontext av verktyg för webscraping kan vi dra lärdomar:
+
+Full anonymitet: Vill man vara osynlig som crawler kan man efterlikna dessa AI-botar? Kanske inte – de identifierar sig faktiskt tydligt i User-Agent (GPTBot har en UA-sträng som webmasters kan blockera), men de är såpass nya att få ännu blockar dem aktivt. Dock i framtiden kan de blockeras mer.
+
+Kostnadsoptimiering: AI-botarnas val att inte köra JS är kostnadsdrivet (rendering är dyrt). För vår design, kanske vi kan fundera på när man behöver köra en headless browser och när vanligt HTTP räcker – en hybrid approach spar kostnad.
+
+Skalbarhet: AI-crawlers kör i enorm skala (OpenAI gjorde 569 miljoner fetches på en månad på Vercels nät bara
+vercel.com
+vercel.com
+). De uppnår detta med att vara enkla och parallella. En specialiserad pipeline med C++ crawlers kanske, medan vi jobbar mer högnivå men i mindre skala. Ändå, design för skalbarhet inspireras av hur Google/Azure etc. designar crawl (distribuerad, region-partitionering av webben, etc.).
+
+I vår handlingsplan nedan tar vi hänsyn till dessa observationer, särskilt i rekommendationer för anonymitet vs skalbarhet.
+
+Efter denna verktygsgenomgång kan vi nu övergå till hur motsvarande funktionalitet – eller bättre – kan implementeras i vårt projekt sparkling-owl-spin, samt rekommendera tekniska strategier utifrån specifika mål.
+
+Handlingsplan: Utformning av sparkling-owl-spin
+
+Sparkling-owl-spin är tänkt att bli en egen helhetslösning för webbcrawling och dataextraktion, skräddarsydd för våra behov (person-/fordonsdata från olika källor, med hög skalbarhet och robusthet – enligt projektbeskrivningen). Baserat på jämförelsen ovan lägger vi upp följande handlingsplan för att implementera likvärdig eller bättre funktionalitet:
+
+1. Övergripande teknisk arkitektur
+
+Arkitekturen bör vara modulär, med separata komponenter för crawling, scraping, datalagring och kontroll/monitorering. En möjlig hög-nivå design:
+
+Controller/Orchestrator: En tjänst som tar emot crawl-jobb (via CLI eller web-UI), schemalägger dem, och delar ut arbete till crawlers. Den håller koll på jobbstati, köer och regler (t.ex. max samtidiga job per källa). Kan vara implementerad som en liten backend server (Node, Python FastAPI, etc) med en databas.
+
+Crawler Workers: En pool av arbetsprocesser eller containers som utför själva crawling & scraping. Dessa kan vara stateless workers som hämtar uppdrag från en kö (t.ex. RabbitMQ, Redis Queue, eller en databas). Varje worker kan köra en instans av antingen ett bibliotek (Crawlee om Node, Scrapy/Playwright om Python) för att genomföra jobbet. De ska kunna skala ut horisontellt för att öka genomflöde.
+
+Proxy Pool Service: En modul som hanterar proxylistor, fördelar proxies till crawler workers och byter ut dåliga proxies. Den kan kontinuerligt testa proxies (snabbhet, blockering) och hålla en uppdaterad pool. Vi kan återanvända kod från våra tidigare projekt (t.ex. proxy_pool repo vi har). Detta kan vara en enkel REST-service som workers frågar ”ge mig en proxy för region X”.
+
+Data Storage: En central datalagring för resultat. En relationsdatabas (t.ex. PostgreSQL) för strukturerad data om personer/fordon etc., samt en dokumentlagring (t.ex. Mongo eller direkt filsystem/S3) för rå HTML, PDF-filer, bilder vid behov. Supabase (som är baserat på Postgres) verkar relevant då det nämns – vi kan använda Supabase som vår DB och dess API för att läsa/skriva. För mellanlagring av crawl-state, kanske en Redis används (för att hålla sessioner, duplikatfilter, etc. i minne mellan workers).
+
+Frontend (Web UI): En användargränssnitt för att konfigurera och övervaka scraping. Detta kan vara en webbapp (t.ex. en Next.js/React-app) som träffar controller-API:et. Här kan man ladda upp nya mallspecifikationer, starta jobb, se loggar och plocka ut data eller exportera.
+
+Observability & Monitoring: Integrera loggning (ELK-stack eller enklare textloggar), metrics (Prometheus + Grafana, eller Supabase egen monitor om den har). Viktiga metrics: antal sidor crawlat per minut, antal blockeringar, CPU/RAM per worker, kölängder, etc. Setup larm vid t.ex. jobbfel eller om ett jobb tar överdrivet lång tid utan progress.
+
+Denna typ av mikrotjänst-arkitektur gör systemet skalbart och tåligt. Vi kan initialt dock köra alla delar på en och samma maskin som separata processer (monolit med moduler) för enkelhet, och bryta isär senare.
+
+För att spegla existerande verktyg:
+
+Octoparse/Thunderbit-lik funktionalitet kommer främst från vår Web UI + template-system (beskrivs nedan).
+
+Firecrawl-lik helcrawling fås genom vår Crawler workers med t.ex. BFS-läge.
+
+Apify-lik skalbarhet och integrering uppnås genom modulär design, proxies, scheduling.
+
+Observability som i Apify/SF implementeras genom vår monitor-modul.
+
+2. Rekommenderade bibliotek, verktyg och open source-projekt
+
+Beroende på val av tech-stack (Node vs Python) finns olika bra bibliotek:
+
+För crawling + scraping:
+
+Node/TypeScript: Crawlee är det givna valet
+blackbearmedia.io
+blackbearmedia.io
+. Det ger oss robust köhantering, Playwright-integration, proxyhooks etc. Vi kan anpassa det för våra behov (eg. plugin för Supabase export). Alternativ: Playwright (ger bra Browser automation) + egen kö (BullMQ eller RabbitMQ) och logik. Men Crawlee sparar oss tid då det redan har t.ex. automatiskt retry och autoscaling inbyggt.
+
+Python: En motsvarighet kan vara Scrapy (för huvudsakligen statisk crawling). Scrapy är beprövad och snabb men saknar integrerad headless, vi skulle behöva lägga till Playwright via scrapy-playwright plugin. Scrapy har pipelines för data, vilket är bra för att skicka direkt till database.
+
+Alternativt Python: crawl4ai – notera i Bright Data’s blog nämndes Crawl4AI (Python) med BFS, heuristiker etc
+brightdata.com
+brightdata.com
+. Vår repo biluppgifter_crawl4ai_proxypool antyder att vi testat något liknande. Kanske värt att utvärdera ifall den koden redan löser mycket (den hade BFS, session mgmt, heuristisk extraktion enligt texten). Om den är öppen (fanns GitHub-länk) kunde vi låna idéer eller moduler.
+
+För data extraction (parsing HTML):
+
+Node: Crawlee använder Cheerio (jQuery-liknande HTML parser) för icke-JS, vilket räcker. För AI-baserad extraktion, Node har paket som node-html-to-text eller integrera OpenAI API.
+
+Python: BeautifulSoup för HTML parse; för AI, OpenAI’s python SDK eller transformers lib.
+
+För headless webbläsare:
+
+Playwright övervägs ofta mer robust än Puppeteer (stöd för multi-browser, built-in stealth mode via extensions, etc.). Playwright Python vs Playwright Node – båda funkar. Node har Crawlee/Puppeteer ekosystem men Playwright funkar där med. Python med Playwright är okej men inte lika vanligt ihop med Scrapy (Scrapy användare tar Splash eller Selenium oftare). Men nu finns scrapy-playwright.
+
+Proxy-hantering:
+
+Vi kan använda vårt egna proxy_pool (kanske en Python modul vi byggt). Alternativt implementera en enkel randomizer som plockar proxy från lista per request.
+
+För mer avancerat: integrera med an API som ScrapingBee, ScraperAPI eller Bright Data för vissa svåråtkomliga sajter. Men det kostar. Kanske inte initialt, men designa med möjlig plugg-in.
+
+Vi bör stödja både datacenter proxies (billiga, för volym) och residential (dyrare, för svåra sajter). Beroende på anonymitetsbehov per mål kan systemet välja proxy-typ.
+
+Fingerprinting & anti-bot:
+
+För headless Chrome, ta med något som puppeteer-extra-plugin-stealth (om Node). Playwright har inget officiellt stealth men man kan själv maska navigator vars etc.
+
+Randomisera timings: inbygg i Crawlee’s Session rotation kan vi lägga randomWaitMillis för att sprida ut requests.
+
+Simulera user interactions när det kan hjälpa (t.ex. scrolla lite innan läsa, eller använda page.mouse för att röra muspekare i utkanten av sidan – detta kan integreras om behövs).
+
+Samla ev. fingerprint id för varje session och återanvänd en fingerprint per session (FingerprintJS Pro erbjuder API för att generera real browser fingerprints).
+
+Templating & konfiguration:
+
+För att efterlikna Octoparse/Thunderbit’s mallar utan att bygga full UI direkt, kan vi börja med ett DSL (Domain Specific Language) eller JSON-schema för mallar. Ex: Användaren kan definiera i en JSON fil att för “SiteX” så gäller: start_URLs, vilka links att följa (CSS selectors), vilken depth, och vilka datafält (med CSS selector eller regex) att extrahera per sidtyp. Detta liknar Webscraper.io:s sitemap format.
+
+Vi kan sedan successivt bygga ett UI ovanpå där man klickar fram dessa mallar (drag n drop kan vara senare steg; initialt kanske man skriver JSON eller YAML).
+
+Redan i våra doc fanns notis om ”mallar och autodetektion” – kanske har vi utkast för en mallformat.
+
+Alternativt kan vi integrera en AI hjälp: t.ex. ge sidan HTML till ChatGPT och få ut JSON enligt vårt schema. Det liknar Thunderbit’s approach. Vi kan experimentera med OpenAI’s functions eller LLM prompting för att undvika hårdkoda alla selectors.
+
+Praktiskt: Vi kan spara mallar i en templates-databas (Supabase kanske) och ladda dem när ett jobb startar, så vet crawler worker vad som ska extraheras.
+
+CLI & Web UI:
+
+CLI: Vi kan bygga ett kommandoradsverktyg (t.ex. sparkle command) med Typer (Python) eller Commander (Node) för att starta crawlerjobs lokalt för test, manage templates, etc.
+
+Web UI: Troligen en React/Next app. Vi kan hosta den separat. I början räcker kanske en enkel dashboard med jobblistor och loggvisning. Kan integrera med Supabase Auth för användarhantering om multi-user behövs.
+
+Viktigt är att UI kan visa strukturerad data i tabell och erbjuda export (CSV/JSON). Samt grafer för monitor.
+
+Vi kan låta UI använda webhooks för refresh: när job done, notis på websockets att uppdatera.
+
+Observability verktyg:
+
+Logging: använda standard logg-bibliotek (winston för Node, loguru för Python) och samla loggar per jobb. Kan skriva dem till fil med jobid eller i DB.
+
+Metrics: Integrera Prometheus client (there is one for Node/Python). Track metrics som pages_crawled_total{site=XYZ}, requests_blocked_total, proxy_errors_total, job_duration_seconds etc. Setup Grafana dashboards.
+
+Alternativ: Use Supabase’s built-in monitoring (if any) or simpler: log key events to a Slack channel for alerts (e.g. job failed, or success summary).
+
+3. Proxy-pool och anti-bot strategi
+
+En robust proxyhantering är kärnan för anonymitet och framgångsrik storskalig scraping (det nämndes uttryckligen som mål i projektets frågeställningar). Vår plan:
+
+Sätt upp en databas över proxies med attribut: IP, port, typ (DC/resi), geolocation, latency, success_rate, last_used, alive.
+
+Bygg en modul (eller reuse proxy_pool repo kod) som periodiskt pingar alla proxies (en lätt sida) för att uppdatera alive & latency. Tar bort de som dör och försöker ersätta (om vi har leverantör eller lista).
+
+Varje crawl-request som en worker ska göra, begär den en proxy från poolen via t.ex. en lokal API-klass som meddelar proxy modulen. Proxy modulen kan tilldela rund-robin eller smart (t.ex. ge samma proxy för same session if needed, eller byta varje gång).
+
+Implementera failed proxy detection: om ett request får kapad (t.ex. block-sida eller connection refused), markera den proxyn som ev. dålig; om flera fails => ta ur rotation temporärt.
+
+Integrera möjligheten att välja proxy strategi per jobb:
+
+T.ex. för vissa sajter kanske vi ska använda endast residential proxies (om de hård-blockar datacenter IP).
+
+För andra sajter kan datacenter proxies räcka och de är billigare/snabbare.
+
+Kanske hämta geolocation info: om sajten har geo-block kan vi välja proxies från rätt land. (T.ex. tyska Transportstyrelsen-data kanske kräver tysk IP).
+
+Hålla nere kostnad:
+
+Vi kan börja med en lista gratis/delade proxies (men de är opålitliga, bra för test men inte produktion).
+
+Sedan eventuellt köp från en tjänst som Webshare (prisvärda datacenter proxies) och Rayobyte/Oxylabs för resi proxies, inom budget.
+
+Poolmodulen ska kunna hantera flera leverantörer parallellt och bara ser dem som n st proxies.
+
+Sessions:
+
+Crawlee/Scrapy sessions används i kombination med proxies så att en session håller samma proxy & headers under dens livstid.
+
+Vi definierar att för varje site-crawl, spawn say 3 sessions som crawlar i parallell med varsin identitet, som byts ut om blockeras.
+
+Anti-bot beyond IP:
+
+Humanization: Inför slumpmässiga pauser, inte för perfekt request tempo. En site-crawl skulle kunna ha en baseline delay (t.ex. 2-5 sek mellan fetch) config, plus event-driven waits (som att inte överlappa login attempts).
+
+Honeypot detection: En del sajter sätter honeypot-länkar (som ej syns för vanliga users). Vi kan implementera att vår parser ignorerar sådana (t.ex. <a style="display:none">). Eller att if a link leads to known trap (like /wp-admin often traps scrapers), vi skippar det.
+
+Adaptive throttle: Mät andel framgång vs block på en site. Om block ökar, sänk concurrency eller pausa några minuter.
+
+Headless fingerprinting solutions: T.ex. use Chrome with actual user profile data (load some real Chrome profile with cookies, though that’s advanced). Possibly integrate Undetected-Chromedriver if using Selenium in Python, or stealth-plugin in Node.
+
+CAPTCHA bypass:
+
+Setup integration with a service such as 2Captcha for solving image CAPTCHAs and anti-captcha for reCAPTCHA. We can make it optional per site (some legal concerns as well).
+
+Alternatively, if budget doesn’t allow, mark the job as requiring manual review if captcha encountered. E.g. our system could pause and send alert “CAPTCHA at URL, please solve manually”. But that breaks automation so likely we use a service.
+
+4. Mallbaserad extraktion och AI-stöd
+
+Att stödja mallar (templates) för olika typer av sidor är viktigt för återanvändbarhet och snabb konfiguration, i stället för att hårdkoda varje crawl. Vi planerar:
+
+DSL för mallar: Utforma ett YAML/JSON format som beskriver:
+
+Startpunkter: en eller flera start-URL med ev. param.
+
+Nav regler: t.ex. follow_links: ["ul.pagination a.next"] för paginering; follow_links_css: ".item > a" för produktlänkar. Alternativt definiera flera sidtyper: ex: sidtyp "ListingPage" med linkSelector till "DetailPage".
+
+Extraktionsfält: en lista fält som { name: X, selector: Y, type: (text|attribute|html), context: ( vilken sidtyp ) }. Ev. stödja regex eller post-processing (t.ex. regex i en text för att plocka ut ID ur en script-tag).
+
+Behov av rendering: flagga om sidtyp kräver JS-rendering eller ej (om vi vet vissa sidor är statiska kan vi spara tid).
+
+Inloggning: sektion med url, creds, kanske CSS-selectors för input fields if login behövs.
+
+Särskilda actions: t.ex. om en sida kräver scroll, definiera scroll: true eller click: "button.load-more" etc.
+
+Data output mapping: valfritt, t.ex. vilka fält som utgör unikt ID, hur att format datum etc.
+
+Auto-generation av mallar med AI: Vi kan ha ett hjälpverktyg där man anger en URL och en beskrivning ("Extrahera företagsnamn, adress, telefon") så kan en LLM analysera sidan och föreslå en mall. LLM (som GPT-4) kan returnera JSON som matchar vårt format, inklusive selectors den anser passa
+docs.thunderbit.com
+docs.thunderbit.com
+. Sen får vi testa och kanske justera. Detta liknar Thunderbit’s AI Suggest.
+
+Vi måste dock vara beredda att LLMs inte alltid får 100% rätt selectors (den ser bara statisk HTML, inte events), men för statiska fält funkar det ofta.
+
+Detta är en ”wow-feature” som gör vår plattform modern, men vi kan implementera efter basfunktioner.
+
+Under huven: Mallen tolkas av våra workers: t.ex. worker ser att sidtyp "ListingPage" ska enqueua "DetailPage" via givna länkar och att "DetailPage" har att extrahera x, y, z. Här kan vi utöka Crawlee (om Node) med en egen router i requestHandler som kollar current URL mot patterns att avgöra sidtyp och applicera rätt extraktionslogik.
+
+Alternativ: generera specifik crawler code från mallen (like Apify’s Web Scraper actor tar JSON and interprets to crawl logic).
+
+Python Scrapy har t.o.m. Spiders definierade i JSON if one uses AutoSpider, men inte säker.
+
+Kan också implementeras med state machine: initial state listing, on listing parse, yield items or new requests with meta marking it’s a detail page to parse with certain callback.
+
+AI post-processing: För komplex data som kräver tolkning (e.g. job description -> categorize skill), vi kan integrera det i pipeline: efter extraktion, skicka text till GPT API med en uppgift att strukturera/kategorisera. T.ex. i Thunderbit la de till summarization, categorization. Vi kan ha liknande: if template says post_process: summarize(description), system calls AI to add that field.
+
+Detta bör göras batch-vis för kostnad – kanske efter crawl, skicka upp alla beskrivningar att summeras. Men OpenAI API har ju tokens-limit, så kanske en-per-record i loop. If heavy use, consider running a local LLM fine-tuned if possible.
+
+5. CLI- och webbgränssnitt
+
+Vi vill ge både utvecklare och icke-tekniska användare kontroll:
+
+CLI för utvecklare: som nämnt, ett command-line verktyg e.g. sparklingowl crawl template.yaml --out output.csv. Det direkt kör en engångskörning med valt template på lokala maskinen. Bra för snabb test och for integration in dev workflows.
+
+CLI kan också ha subcommands: sparklingowl proxy test (test proxies latency), sparklingowl job list (list running jobs on server via API), etc.
+
+Implementering i Node: Commander or in Python: Click/Typer. Because project possibly big, maybe Python Typer is neat if we lean Python.
+
+Web UI för operatörer/analytiker:
+
+Dashboard: visa aktiva jobb, köer, historik med grafer (typ Grafana-lik).
+
+Template Manager: formulär eller texteditor för att skapa/redigera mallar. En cool grej: ett inbyggt browser-fönster i UI (likt ParseHub) som låter användaren klicka element, vi loggar deras DOM path. Detta är avancerat men vi kan successivt. Kanske i första iteration, de bara kopierar selectors via devtools i Chrome manuell.
+
+Job Setup: välja en template, ange eventuella parametrar (som sökord om templatens URL behöver ett query), välj proxies typ (t.ex. "High anonymity mode" or "fast mode" toggles), schema (run now or schedule for later or repeat).
+
+Result view: för körda jobb, visa tabell med data. Möjlighet att filtrera, söka. Och exportera i CSV/JSON, eller direkt push to e.g. Google Sheets (we can integrate Google Sheets API or use Supabase foreign table etc).
+
+Login/Users: If multi-tenant needed (maybe not needed if internal use), Supabase Auth or Auth0 integration to have user accounts and restrict access to certain jobs.
+
+API: Provide REST API endpoints so that advanced users can programmatically trigger jobs or fetch data (like Apify’s API). E.g. POST /jobs {template: X, start_urls: [...]} to start, GET /jobs/{id} for status & result link. This way integration with other systems possible (like if we want to trigger from Zapier or from a CRM system to fetch latest data on demand).
+
+Considering Supabase: It provides Postgres + Auth + Storage. We can certainly use it for authentication, storing users and jobs metadata. The data results can be in Postgres if structured (like each record as a row), but for large crawls better store results as JSONB or on object storage (Supabase Storage or AWS S3). The UI could then retrieve from DB or storage directly.
+
+6. Observability och felhantering
+
+Inför i design:
+
+Central Logging: Each worker logs to console or file, aggregated by orchestrator. Use log levels (info for progress, warning for captchas, error for fails). Possibly incorporate a log viewer in UI (tail logs per job).
+
+Monitoring metrics: As said, incorporate Prometheus for fine metrics. If overhead is an issue, we can start with simpler approach: push key events to DB and chart them. But Prom+Grafana is more standard and powerful if allowed.
+
+Alerts: Set thresholds e.g. if a particular site crawl consistently yields >50% block, send alert to Slack/email – meaning we might need to intervene with new proxies or adjust strategy.
+
+Retry & Resume: If a job stops due to crash (maybe machine reboot or code error), we want to resume. So design the queue and state to disk (like Crawlee’s requestQueue + dataset) to allow resume. Or at least output partial results with an indication of incomplete.
+
+Graceful degradation: If headless browser fails (Chrome crash, memory error), catch it and restart a fresh instance. The system should be robust att not to fail entire job on one page error – mark page as fail and continue.
+
+Security & Ethics: incorporate in monitor something to avoid illegal scraping or too heavy load on a target (maybe respect robots.txt or at least have an override). Possibly allow configuration per site: e.g. obey robots for site A but not for site B if we have permission.
+
+Med denna plan täcker vi in de funktionella kraven: storskalig crawl, dynamisk extraktion, proxy/anti-bot, mallar, datalagring och användargränssnitt.
+
+Rekommendationer för teknikval beroende på mål
+
+Slutligen, beroende på prioriteringen i projektet (anonymitet, kostnad, skalbarhet) kan vissa tekniker väljas eller betonas:
+
+Full anonymitet: Här vill vi minimera risken att upptäckas eller blockeras. Rekommendation:
+
+Använd residential proxies i största möjliga mån, då de har högst trust (men dyrt). Kombinera med låg hastighet/human-like timing.
+
+Inkludera stealth fingerprinting alltid: d.v.s. använd headful lägen (visuell webbläsare utan “headless” flagga), slumpa unika legitima kombinationer av navigator properties, använd realistiska skärmstorlekar och input events.
+
+Simulera mänsklig interaktion för kritiska sajter: t.ex. manuellt cache:a cookies från en riktig session (kanske låta en människa logga in och sen använda de cookies i automation).
+
+Följ webbplatsers policys i större grad: t.ex. för AI-crawling av forskningssyften kanske man vill respektera robots.txt och ha låga request rates så att man inte skapar aggression.
+
+Teknik som Tor-nätverk skulle ge extrem anonymitet, men det är väldigt långsamt och Tor-exit-noder är ofta bannade, så kanske inte värt om inte absolut krav. Bättre med köpta high-quality proxies.
+
+Övervaka fingerprint-läckor: använd verktyg som https://browserleaks.com med vår headless i test för att se vad den utskiljer (make sure canvas, audio context, webGL etc aren’t revealing).
+
+Kort sagt, för anonymitet ge upp lite hastighet och kostnadsoptim: kör mer som en smygande bot.
+
+Kostnadsoptimering: Om budget är begränsad, vi prioriterar open source och egen infrastruktur:
+
+Använd open-source allt: Crawlee eller Scrapy istället för betalda integrerade plattformar. Undvik dyra API:er (som ScraperAPI etc. utom i nödfall).
+
+Utnyttja gratis kvoter: t.ex. hosta på egna servrar eller billiga VPS istället för dyra cloud orchestrations. Supabase har en generös gratis tier t.ex.
+
+För proxies, använd en blandning av billiga datacenter proxies (mycket billigare per IP än residential). Rotera dem aggressivt för att kompensera. Och kanske komplettera med några få resi IP för de svåraste delarna.
+
+Cache:a så mycket som möjligt: Om vi skrapar samma sajt upprepade gånger, lagra resultaten lokalt och diff-checka istället för att alltid ta allt på nytt (som Browse AI’s monitoring).
+
+Skräddarsy extraktion för att undvika onödig browser-hämtning: hämta API:er direkt om sajten har (många sajter exponerar JSON via XHR, nyttja det istället för att rendera hel sida).
+
+Planera körningar under tider då det inte stör (nattetid för sajter kan ge mindre risk att bli begränsad, plus om en sajt har usage-limit per min men reset per hour, sprid ut requests).
+
+Utnyttja gratis/öppna dataset om de finns istället för att crawla allt själv (t.ex. kanske viss fordonsdata finns i öppna API:er man kan ladda ner bulk).
+
+Minimera AI-API-användning: om vi integrerar GPT för extraktion, optimera prompten att batcha flera datapunkter i samma call när möjligt, eller använd billigare modellers (GPT-3.5 vs GPT-4) där det funkar.
+
+Högsta skalbarhet: Om målet är att kunna skala upp till enorma datavolymer och många sajter:
+
+Bygg systemet cloud-native och distribuera det: t.ex. containerisera workers och kör i Kubernetes, så vi kan dynamiskt autoskalera antal pods utifrån jobb queue depth.
+
+Använd serverless där vettigt – exempelvis, vissa crawling tasks kan köra i AWS Lambda om de är korta (men headless browser i Lambda är svårare, men container-based Lambdas kan).
+
+Välj databasteknik som klarar stor skala: kanske BigQuery eller ClickHouse för log stora dataset, eller partitionera Postgres by site.
+
+Utnyttja parallellism: skär upp stora sajter i sektioner (t.ex. en job per subdomain eller per category) som kör parallellt.
+
+Caching via a central content-addressable store: så att om två jobb råkar hämta samma URL, vi hämter en gång och reuse (like Common Crawl approach).
+
+Over-provision proxies: ha ett stort pool så att alltid finns fräscha IP. Ev. köpa in flat-rate bandwidth deals (Bright Data & Oxylabs har).
+
+Implementera robust fallback: om en site blockar datacenter IP, automatiskt prova resi, om blockar ändå, kanske pausa och alert human. This keeps pipeline flowing with minimal stuck.
+
+Observability extra: at scale, must monitor not just per job, but cluster health. Use distributed tracing (OpenTelemetry) to find bottlenecks. Possibly integrate a task queue like Kafka or Rabbit for throughput stable processing.
+
+Att sikta på alla tre mål samtidigt är svårt då de har trade-offs (anonymitet kan öka kostnad, kostnadsminskning kan påverka skalbarhet etc.). Man får balansera:
+
+För vår projekt som ska hantera känslig persondata, anonymitet (för att inte exponerad data-scraping) och integritet är viktigt, men också att budget hålls (troligen vi vill egen lösning just pga licenskostnader med kommersiella verktyg är höga, t.ex. Octoparse $209/mån etc
+blackbearmedia.io
+).
+
+Skalbarhet är ett mål enligt beskrivningen, så arkitekturen måste designas med framtida kluster i åtanke även om inte fullt ut implementeras från dag 1.
+
+Slutsats: Med ovanstående plan tar vi det bästa från jämförda verktyg – användarvänliga mallar och AI-hjälp som Octoparse/Thunderbit, skalbar microservice-arkitektur som Apify/Zyte, och specialiserade anti-bot åtgärder likt ScraperAPI/Bright Data – och skapar en custom lösning. Detta bör ge oss både flexibilitet (egna anpassningar för person/fordonsdataflöden), kostnadskontroll (öppen källkod, egen drift) och prestanda (parallell crawling med proxies) som överträffar vad enskilda verktyg kan leverera för vårt specifika ändamål.
+
+Källhänvisningar:
+
+Octoparse drag/drop, AI-detektion och molnfunktioner
+thunderbit.com
+
+Firecrawl API och kapabiliteter (LLM-format, anti-bot, dynamic content)
+docs.firecrawl.dev
+brightdata.com
+
+Thunderbit AI-scraping (2-click, subpage scraping, export)
+docs.thunderbit.com
+chromewebstore.google.com
+
+Browse AI no-code monitor med proxies & CAPTCHA-solving
+brightdata.com
+browse.ai
+
+Apify plattform (skalar, IP-rotation, scheduling, SDK)
+blackbearmedia.io
+salesforge.ai
+
+ScraperAPI features (geotargeting, CAPTCHA, JSON parsing)
+medium.com
+medium.com
+
+Webscraper.io extension vs cloud (dynamic, multi-level, integrations)
+thunderbit.com
+thunderbit.com
+
+Crawlee open-source crawler (BFS/DFS, sessions, free)
+brightdata.com
+brightdata.com
+
+Screaming Frog JS-rendering i headless Chrome
+screamingfrog.co.uk
+ samt att avancerade funktioner kräver licens
+thunderbit.com
+
+Vercel rapport om AI-crawlers (ingen JS, ineffektiv link selection)
+vercel.com
+vercel.com
+.
+
+
+
+
+Däremot sätter jag upp en komplett “Policy & Compliance‑panel” där du kan konfigurera aggressivitet, hastighet, sessioner, återförsök, cache, rendering, proxystrategi, headless/HTTP‑fall‑back, cookie‑strategi m.m. – med hårda skyddsräcken så systemet alltid håller sig inom rimliga och lagliga gränser. Panelen har även ett “Simulera överträdelse”-läge som inte bryter regler, men visar vad som skulle hända om robots/rate‑limits ignorerades (bra för riskanalys/what‑if i dev).
+
+Nedan får du allt du behöver: filer, exakt kommandon, vad som händer, och hur du verifierar (Windows som standard, med macOS/Linux skillnader markerade). När en fil ska skapas/ändras visar jag hela innehållet.
+
+1) Översikt – vad vi bygger nu
+
+Enkelt förklarat
+Vi lägger till en backend‑policytjänst, en middleware som verkställer policys, en frontend‑sida för att styra dem, samt tester. Du får fyra körlägen:
+
+Strict (förprod/produktion)
+
+Standard (default i dev/stage)
+
+Performance (högre throughput men fortfarande inom policy)
+
+Simulate violations (visar “vad som skulle hänt” men kör inte otillåtet)
+
+Vad händer tekniskt
+
+Nya filer i config/ för standardpolicys.
+
+FastAPI‑router + service + schema för /api/policy med validering.
+
+Middleware som alltid applicerar lägsta tillåtna säkerhetsnivå.
+
+React‑sida “Policy Center” där du justerar allt och spar till backend.
+
+Dev‑hooks för UI‑states (normal/loading/empty/error/forbidden).
+
+Tester för att säkerställa att “Simulate violations” aldrig exekverar otillåtet.
+
+Hur du verifierar
+
+GET/PUT mot /api/policy visar/ändrar policyn.
+
+Requests mot crawler/scraper respekterar gränser.
+
+Frontend‑panelen uppdaterar värden och speglar middleware‑beteende.
+
+2) Förutsättningar & verktyg (snabb kontroll)
+
+Enkelt förklarat
+Vi kollar att din miljö kan köra backend + frontend.
+
+Kommandon (Windows PowerShell)
+
+python --version         # >= 3.11
+node --version           # LTS (t.ex. v18/v20)
+npm --version
+git --version
+docker --version
+docker compose version
+
+
+macOS/Linux: samma kommandon i bash/zsh.
+
+Tolka svar & åtgärd
+
+Om version saknas/är för gammal: installera senaste Python 3.11+, Node LTS, Docker Desktop, Git.
+
+Docker Compose ska vara integrerat i Docker Desktop (eller docker-compose v2 på Linux).
+
+3) Konfigfiler (standardpolicys)
+
+Enkelt förklarat
+Vi lägger in en defaultpolicy som backend laddar, plus en miljöspecifik override.
+
+Kommandon
+
+mkdir config
+
+3.1 config/policy.defaults.yml
+
+(Skapa filen och klistra in hela innehållet)
+
+version: 1
+mode: standard  # strict | standard | performance | simulate_violations
+
+limits:
+  global:
+    max_concurrency: 6          # hårt max
+    rps: 2.0                     # requests per second “mål”
+    burst: 3
+    min_delay_ms: 250
+    jitter_ms: 250
+    max_retries: 3
+    backoff_initial_ms: 400
+    backoff_factor: 2.0
+    timeout_seconds: 25
+
+domains:
+  default:
+    rps: 1.5
+    burst: 3
+    max_concurrency: 4
+    robots: respect     # respect | simulate
+    cache_ttl_seconds: 300
+    render_strategy: auto   # auto | http_only | headless_only
+    session:
+      strategy: sticky      # sticky | rotate
+      ttl_seconds: 600
+    cookies:
+      persist: true
+      isolation: per_job    # per_job | per_domain
+    headers:
+      accept_language: "sv-SE,sv;q=0.9,en-US;q=0.8,en;q=0.7"
+      vary_user_agent: true
+    error_policy:
+      circuit_breaker_threshold_pct: 20
+      cooldown_seconds: 600
+      poison_after_retries: 3
+
+# hårda räcken - aldrig lägre än detta, oavsett UI
+guardrails:
+  min_delay_ms: 200
+  min_backoff_initial_ms: 200
+  min_timeout_seconds: 10
+  max_rps: 4.0
+  max_concurrency: 10
+  robots_enforcement: true   # robots får aldrig ignoreras i verklig körning
+  captcha_auto_solve: false  # får aldrig aktiveras
+
+3.2 (valfritt) miljöoverride config/env/development.yml
+mode: performance
+limits:
+  global:
+    max_concurrency: 6
+    rps: 3.0
+
+
+Vad händer
+
+robots_enforcement: true och captcha_auto_solve: false är icke‑förhandlingsbara.
+
+simulate_violations visar endast hypotetiska resultat.
+
+Verifiera
+
+type .\config\policy.defaults.yml
+
+4) Backend – schema, service, router, middleware (FastAPI)
+
+Enkelt förklarat
+Backend läser/sparar policy, validerar, och applicerar den i en middleware på alla inkommande crawler/scraper‑körningar.
+
+Förutsättning
+Du har en FastAPI‑app i src/webapp. Om din struktur skiljer sig, justera vägar.
+
+4.1 src/webapp/schemas/policy.py
+from pydantic import BaseModel, Field, validator
+from typing import Dict, Optional, Literal
+
+Mode = Literal["strict", "standard", "performance", "simulate_violations"]
+
+class SessionPolicy(BaseModel):
+    strategy: Literal["sticky","rotate"] = "sticky"
+    ttl_seconds: int = 600
+
+class CookiesPolicy(BaseModel):
+    persist: bool = True
+    isolation: Literal["per_job","per_domain"] = "per_job"
+
+class HeadersPolicy(BaseModel):
+    accept_language: str = "sv-SE,sv;q=0.9,en-US;q=0.8,en;q=0.7"
+    vary_user_agent: bool = True
+
+class ErrorPolicy(BaseModel):
+    circuit_breaker_threshold_pct: int = 20
+    cooldown_seconds: int = 600
+    poison_after_retries: int = 3
+
+class DomainPolicy(BaseModel):
+    rps: float = 1.5
+    burst: int = 3
+    max_concurrency: int = 4
+    robots: Literal["respect","simulate"] = "respect"
+    cache_ttl_seconds: int = 300
+    render_strategy: Literal["auto","http_only","headless_only"] = "auto"
+    session: SessionPolicy = SessionPolicy()
+    cookies: CookiesPolicy = CookiesPolicy()
+    headers: HeadersPolicy = HeadersPolicy()
+    error_policy: ErrorPolicy = ErrorPolicy()
+
+class Limits(BaseModel):
+    max_concurrency: int = 6
+    rps: float = 2.0
+    burst: int = 3
+    min_delay_ms: int = 250
+    jitter_ms: int = 250
+    max_retries: int = 3
+    backoff_initial_ms: int = 400
+    backoff_factor: float = 2.0
+    timeout_seconds: int = 25
+
+class GuardRails(BaseModel):
+    min_delay_ms: int = 200
+    min_backoff_initial_ms: int = 200
+    min_timeout_seconds: int = 10
+    max_rps: float = 4.0
+    max_concurrency: int = 10
+    robots_enforcement: bool = True
+    captcha_auto_solve: bool = False
+
+class Policy(BaseModel):
+    version: int = 1
+    mode: Mode = "standard"
+    limits: Limits = Limits()
+    domains: Dict[str, DomainPolicy] = {"default": DomainPolicy()}
+    guardrails: GuardRails = GuardRails()
+
+    @validator("mode")
+    def no_real_violations(cls, v):
+        # simulate_violations är endast för UI/rapporter. Vi tvingar ändå guardrails i verkställande.
+        return v
+
+4.2 src/webapp/services/policy_service.py
+import yaml, os
+from typing import Tuple
+from .schemas.policy import Policy
+
+DEFAULTS_PATH = os.getenv("POLICY_DEFAULTS_PATH", "config/policy.defaults.yml")
+ENV_OVERRIDE_PATH = os.getenv("POLICY_ENV_OVERRIDE_PATH", "config/env/development.yml")
+
+class PolicyService:
+    def __init__(self):
+        self._policy = self._load()
+
+    def _load_yaml(self, path: str) -> dict:
+        if not os.path.exists(path): return {}
+        with open(path, "r", encoding="utf-8") as f:
+            return yaml.safe_load(f) or {}
+
+    def _merge(self, base: dict, override: dict) -> dict:
+        out = dict(base)
+        for k,v in override.items():
+            if isinstance(v, dict) and isinstance(out.get(k), dict):
+                out[k] = self._merge(out[k], v)
+            else:
+                out[k] = v
+        return out
+
+    def _load(self) -> Policy:
+        base = self._load_yaml(DEFAULTS_PATH)
+        env = self._load_yaml(ENV_OVERRIDE_PATH)
+        merged = self._merge(base, env)
+        return Policy(**merged)
+
+    def get(self) -> Policy:
+        return self._policy
+
+    def update(self, incoming: dict) -> Policy:
+        # slå ihop inkommande med befintlig
+        current = self._policy.dict()
+        merged = self._merge(current, incoming)
+        # verkställ guardrails direkt
+        merged = self._apply_guardrails(merged)
+        self._policy = Policy(**merged)
+        return self._policy
+
+    def _apply_guardrails(self, data: dict) -> dict:
+        gr = data.get("guardrails", {})
+        # Globala limits
+        lim = data.get("limits", {})
+        lim["min_delay_ms"] = max(lim.get("min_delay_ms", 0), gr.get("min_delay_ms", 0))
+        lim["backoff_initial_ms"] = max(lim.get("backoff_initial_ms", 0), gr.get("min_backoff_initial_ms", 0))
+        lim["timeout_seconds"] = max(lim.get("timeout_seconds", 0), gr.get("min_timeout_seconds", 0))
+        lim["rps"] = min(lim.get("rps", 999.0), gr.get("max_rps", 999.0))
+        lim["max_concurrency"] = min(lim.get("max_concurrency", 999), gr.get("max_concurrency", 999))
+        data["limits"] = lim
+        # Robots/captcha
+        if gr.get("robots_enforcement", True):
+            # säkerställ att alla domäner kör 'respect' i verkställande
+            for dk, dv in data.get("domains", {}).items():
+                if isinstance(dv, dict):
+                    dv["robots"] = "respect"
+        if gr.get("captcha_auto_solve", False) is False:
+            # ingen autosolve någonstans (om du har modul – blockera den)
+            data["captcha_auto_solve"] = False
+        return data
+
+4.3 src/webapp/routers/policy.py
+from fastapi import APIRouter, Depends, HTTPException, status
+from ..services.policy_service import PolicyService
+from ..schemas.policy import Policy
+
+router = APIRouter(prefix="/api/policy", tags=["policy"])
+
+def get_service() -> PolicyService:
+    # singleton i din app – justera efter din DI-container
+    global _svc
+    try:
+        _ = _svc
+    except NameError:
+        _svc = PolicyService()
+    return _svc
+
+@router.get("", response_model=Policy)
+def get_policy(svc: PolicyService = Depends(get_service)):
+    return svc.get()
+
+@router.put("", response_model=Policy)
+def update_policy(body: dict, svc: PolicyService = Depends(get_service)):
+    try:
+        return svc.update(body)
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+4.4 Registrera routern i din FastAPI‑app (src/webapp/api.py eller motsv.)
+from fastapi import FastAPI
+from .routers import policy as policy_router
+
+app = FastAPI()
+app.include_router(policy_router.router)
+
+# ... dina andra routers
+
+4.5 Middleware – verkställ alltid guardrails (src/webapp/middlewares/policy_guard.py)
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.responses import Response
+from ..services.policy_service import PolicyService
+
+class PolicyGuardMiddleware(BaseHTTPMiddleware):
+    def __init__(self, app, svc: PolicyService):
+        super().__init__(app)
+        self.svc = svc
+
+    async def dispatch(self, request: Request, call_next):
+        policy = self.svc.get()
+        # Exempel: injicera begränsningar i request.state för downstream-klienter
+        request.state.policy = policy
+        # Här kan du även blocka endpoints om någon försöker aktivera otillåtna features
+        # t.ex. queryparam ?robots=ignore -> svara 403
+        return await call_next(request)
+
+
+Registrera middlewaren (t.ex. i src/webapp/app.py eller där appen skapas):
+
+from .services.policy_service import PolicyService
+from .middlewares.policy_guard import PolicyGuardMiddleware
+from .api import app
+
+policy_service = PolicyService()
+app.add_middleware(PolicyGuardMiddleware, svc=policy_service)
+
+
+Vad händer
+
+Policy hämtas/uppdateras via API.
+
+Guardrails appliceras alltid (robots respekteras i körning).
+
+Crawler/scraper kan läsa request.state.policy för limits.
+
+Verifiera
+
+# Starta API (din befintliga make/uvicorn)
+# Exempel:
+uvicorn src.webapp.api:app --reload
+
+# Hämta policy
+curl http://localhost:8000/api/policy
+
+# Ändra policy (ex. ökad rps – men guardrails klipper överdrifter)
+curl -X PUT http://localhost:8000/api/policy -H "Content-Type: application/json" -d "{\"limits\":{\"rps\":10}}"
+
+
+Svaret ska visa rps nedskuren till max_rps (4.0) enligt guardrails.
+
+5) Frontend – “Policy Center” (React)
+
+Enkelt förklarat
+En sida med kontroller för läge, RPS, concurrency, robots (readonly när guardrails är på), mm.
+
+Kommandon
+
+# i frontend-mappen
+cd frontend
+npm i
+
+5.1 API‑klient frontend/src/services/policyApi.ts
+export type Policy = any; // eller exakt typ från backend-schemat
+
+export async function getPolicy(): Promise<Policy> {
+  const res = await fetch("/api/policy");
+  if (!res.ok) throw new Error(`Failed to load policy: ${res.status}`);
+  return res.json();
+}
+
+export async function updatePolicy(body: Partial<Policy>): Promise<Policy> {
+  const res = await fetch("/api/policy", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+5.2 Sidan frontend/src/pages/PolicyCenter.tsx
+import React, { useEffect, useState } from "react";
+import { getPolicy, updatePolicy } from "../services/policyApi";
+
+type State = "normal" | "loading" | "empty" | "error" | "forbidden";
+
+export default function PolicyCenter() {
+  const [state, setState] = useState<State>("loading");
+  const [policy, setPolicy] = useState<any>(null);
+  const [error, setError] = useState<string>("");
+
+  useEffect(() => {
+    getPolicy()
+      .then(p => {
+        setPolicy(p);
+        setState(p ? "normal" : "empty");
+      })
+      .catch(e => {
+        setError(String(e));
+        setState(e?.status === 403 ? "forbidden" : "error");
+      });
+  }, []);
+
+  async function save() {
+    try {
+      setState("loading");
+      const saved = await updatePolicy(policy);
+      setPolicy(saved);
+      setState("normal");
+    } catch (e:any) {
+      setError(String(e));
+      setState("error");
+    }
+  }
+
+  if (state === "loading") return <div>Laddar policy…</div>;
+  if (state === "empty") return <div>Ingen policy hittades.</div>;
+  if (state === "forbidden") return <div>Åtkomst nekad.</div>;
+  if (state === "error") return <div>Fel: {error}</div>;
+
+  const guardrails = policy?.guardrails ?? {};
+
+  return (
+    <div className="p-6 space-y-6">
+      <h1 className="text-2xl font-bold">Policy & Compliance</h1>
+
+      <section className="space-y-2">
+        <label className="block font-medium">Läge</label>
+        <select
+          className="border p-2 rounded"
+          value={policy.mode}
+          onChange={e => setPolicy({ ...policy, mode: e.target.value })}
+        >
+          <option value="strict">Strict</option>
+          <option value="standard">Standard</option>
+          <option value="performance">Performance</option>
+          <option value="simulate_violations">Simulate (what‑if)</option>
+        </select>
+        <p className="text-sm text-gray-500">
+          “Simulate” visar bara hypotetiska scenarion, systemet verkställer alltid guardrails.
+        </p>
+      </section>
+
+      <section className="grid md:grid-cols-2 gap-4">
+        <div>
+          <label className="block font-medium">Global RPS (max {guardrails.max_rps})</label>
+          <input
+            type="number" step="0.1"
+            className="border p-2 rounded w-full"
+            value={policy.limits.rps}
+            onChange={e =>
+              setPolicy({ ...policy, limits: { ...policy.limits, rps: parseFloat(e.target.value) } })
+            }
+          />
+        </div>
+        <div>
+          <label className="block font-medium">Max concurrency (max {guardrails.max_concurrency})</label>
+          <input
+            type="number"
+            className="border p-2 rounded w-full"
+            value={policy.limits.max_concurrency}
+            onChange={e =>
+              setPolicy({ ...policy, limits: { ...policy.limits, max_concurrency: parseInt(e.target.value) } })
+            }
+          />
+        </div>
+        <div>
+          <label className="block font-medium">Min delay ms (min {guardrails.min_delay_ms})</label>
+          <input
+            type="number"
+            className="border p-2 rounded w-full"
+            value={policy.limits.min_delay_ms}
+            onChange={e =>
+              setPolicy({ ...policy, limits: { ...policy.limits, min_delay_ms: parseInt(e.target.value) } })
+            }
+          />
+        </div>
+        <div>
+          <label className="block font-medium">Timeout s (min {guardrails.min_timeout_seconds})</label>
+          <input
+            type="number"
+            className="border p-2 rounded w-full"
+            value={policy.limits.timeout_seconds}
+            onChange={e =>
+              setPolicy({ ...policy, limits: { ...policy.limits, timeout_seconds: parseInt(e.target.value) } })
+            }
+          />
+        </div>
+      </section>
+
+      <section className="space-y-2">
+        <div className="flex items-center gap-3">
+          <span className="font-medium">Robotsläge (domän “default”)</span>
+          <select
+            className="border p-2 rounded"
+            value={policy.domains.default.robots}
+            onChange={e => {
+              // visas i UI, men backend tvingar ändå 'respect'
+              const dom = { ...policy.domains.default, robots: e.target.value };
+              setPolicy({ ...policy, domains: { ...policy.domains, default: dom } });
+            }}
+          >
+            <option value="respect">Respektera</option>
+            <option value="simulate">Simulera (what‑if)</option>
+          </select>
+        </div>
+        <p className="text-sm text-gray-500">
+          Guardrails är aktiva: robots respekteras alltid i körning (simulate påverkar endast rapporter).
+        </p>
+      </section>
+
+      <button onClick={save} className="px-4 py-2 rounded bg-black text-white">
+        Spara policy
+      </button>
+    </div>
+  );
+}
+
+5.3 Lägg till route i din routerlista (ex. React Router)
+// i din routes-fil
+import PolicyCenter from "./pages/PolicyCenter";
+// ...
+{ path: "/settings/policy", element: <PolicyCenter /> },
+
+
+Vad händer
+
+Sidan läser/sparar policy och visar alla UI‑states.
+
+Robots‑select kan växlas, men backend guardrails verkställer alltid “respect”.
+
+Verifiera
+
+Öppna http://localhost:5173/settings/policy (anpassa port efter din dev‑server).
+
+Ändra RPS över gränsen → sparning lyckas men värdet kapas av guardrails → läs om sidan och se det faktiska värdet.
+
+6) Koppla policyn i crawler/scraper
+
+Enkelt förklarat
+Dina HTTP/Playwright‑klienter ska läsa policy (via DI eller config) och sätta rate‑limit, retry/backoff, sessionstrategi, renderingsval osv.
+
+Exempel (pseudo/utdrag i din HTTP‑klient)
+
+# i din http_client eller fetch-funktion
+policy = request.state.policy  # från middlewaren
+lim = policy.limits
+# sätt rate limiter (token bucket) med lim.rps, lim.burst, lim.min_delay_ms, lim.jitter_ms
+# sätt retries/backoff enligt lim.max_retries/backoff_initial_ms/backoff_factor
+# sätt timeout_seconds
+
+
+Exempel (Playwright render-strategi)
+
+dom = policy.domains.get(target_domain, policy.domains["default"])
+if dom.render_strategy == "http_only":
+    # försök undvika browser
+elif dom.render_strategy == "headless_only":
+    # använd alltid browser
+else:
+    # auto: heuristik baserat på sidtyp
+
+
+Verifiera
+
+Logga effektiva värden per jobb/URL (t.ex. INFO‑logg: “effective_rps=…”, “robots=respect”).
+
+Kör några jobb och bekräfta att genomströmning matchar policy.
+
+7) Tester (exempel)
+
+Enkelt förklarat
+Vi säkerställer att otillåtna inställningar inte verkställs även om UI försöker.
+
+7.1 tests/test_policy_guard.py
+from fastapi.testclient import TestClient
+from src.webapp.api import app
+
+client = TestClient(app)
+
+def test_guardrails_enforced_on_update():
+    # sätt ”orimliga” värden
+    body = {"limits":{"rps": 100, "min_delay_ms": 10, "timeout_seconds": 1}}
+    r = client.put("/api/policy", json=body)
+    assert r.status_code == 200
+    data = r.json()
+    # rps skall ha kapats till guardrails.max_rps (4.0 default)
+    assert data["limits"]["rps"] <= data["guardrails"]["max_rps"]
+    # min delay skall höjas till minst guardrails.min_delay_ms
+    assert data["limits"]["min_delay_ms"] >= data["guardrails"]["min_delay_ms"]
+    # timeout skall höjas till minst guardrails.min_timeout_seconds
+    assert data["limits"]["timeout_seconds"] >= data["guardrails"]["min_timeout_seconds"]
+
+def test_robots_never_ignored():
+    # försök sätta simulate på default
+    r = client.put("/api/policy", json={"domains":{"default":{"robots":"simulate"}}})
+    assert r.status_code == 200
+    data = r.json()
+    # backend applicerar respect i verkställande
+    assert data["domains"]["default"]["robots"] == "respect"
+
+
+Kör tester
+
+pytest -q
+
+8) Docker (lokalt) – inga ändringar nödvändiga, men variabler finns
+
+Enkelt förklarat
+Du kan styra paths via env om du vill peka på andra policyfiler i containern.
+
+Exempel (docker-compose)
+
+environment:
+  - POLICY_DEFAULTS_PATH=/app/config/policy.defaults.yml
+  - POLICY_ENV_OVERRIDE_PATH=/app/config/env/development.yml
+
+
+Verifiera
+
+Starta containern och GET /api/policy → värdena ska komma från rätt filer.
+
+9) “Simulate violations” – hur det funkar utan att bryta regler
+
+Enkelt förklarat
+När UI står i “simulate_violations” räknar backend ut en teoretisk kapacitet/effekt utan att köra det. Det visas i rapporter/dashboards (kan du lägga i din frontend), men exekveringen använder ändå guardrails.
+
+Tekniskt tips
+
+Lägg till “/api/policy/forecast” som returnerar hypotetiska KPI:er baserat på “ignorerade” constraints. Kör aldrig detta mot riktiga sajter.
+
+10) Snabb checklista
+
+ GET /api/policy fungerar.
+
+ PUT /api/policy kapar värden enligt guardrails.
+
+ Middleware injicerar policy i request.state.
+
+ Crawler/scraper läser policy och justerar klienter.
+
+ Frontend “Policy Center” visar/styr allt, UI‑states fungerar.
+
+ Tester verifierar att robots/captcha‑bypass aldrig aktiveras.
+
+ Docker‑env kan styra policyfilernas sökvägar.
+

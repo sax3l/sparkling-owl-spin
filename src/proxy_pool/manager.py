@@ -96,3 +96,7 @@ class ProxyPoolManager:
         """Get list of proxy availability zones."""
         # TODO: Implement actual zone detection
         return ["us-east-1", "eu-west-1", "asia-southeast-1"]
+
+
+# Backward compatibility alias
+ProxyManager = ProxyPoolManager
