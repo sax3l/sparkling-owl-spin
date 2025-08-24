@@ -14,29 +14,29 @@ Main Components:
 - ProxyCollector: Proxy source collection
 - ProxyValidator: Health checking and validation
 - ProxyMonitor: Real-time monitoring
-- QualityFilter: Proxy quality assessment
+- ProxyQualityFilter: Proxy quality assessment
 - ProxyRotator: Intelligent rotation logic
-- ProxyAdapter: Protocol adaptation
+- PoolAdapter: Protocol adaptation
 """
 
 from .manager import ProxyManager
 from .collector import ProxyCollector
 from .validator import ProxyValidator
 from .monitor import ProxyMonitor
-from .quality_filter import QualityFilter
+from .quality_filter import ProxyQualityFilter
 from .rotator import ProxyRotator
-from .adapters import ProxyAdapter
+from .adapters import PoolAdapter
 
 # API components
-from .api import ProxyAPI
+from .api import create_proxy_api
 
 __all__ = [
     "ProxyManager",
     "ProxyCollector",
     "ProxyValidator",
     "ProxyMonitor", 
-    "QualityFilter",
+    "ProxyQualityFilter",
     "ProxyRotator",
-    "ProxyAdapter",
-    "ProxyAPI"
+    "PoolAdapter",
+    "create_proxy_api"
 ]

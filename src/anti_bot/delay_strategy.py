@@ -14,7 +14,7 @@ from datetime import datetime, timedelta
 from enum import Enum
 from urllib.parse import urlparse
 
-from src.utils.logger import get_logger
+from utils.logger import get_logger
 
 logger = get_logger(__name__)
 

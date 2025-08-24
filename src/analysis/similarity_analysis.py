@@ -14,8 +14,8 @@ from typing import Dict, List, Optional, Set, Tuple, Any
 from dataclasses import dataclass
 from urllib.parse import urlparse
 
-from ..utils.logger import get_logger
-from ..observability.metrics import MetricsCollector
+from utils.logger import get_logger
+from observability.metrics import MetricsCollector
 
 logger = get_logger(__name__)
 
@@ -45,6 +45,22 @@ class SimilarityScore:
     confidence: float
     common_elements: List[str]
     differences: List[str]
+
+
+@dataclass
+class SimilarityResult:
+    """Result of similarity analysis between pages."""
+    url1: str
+    url2: str
+    similarity_score: SimilarityScore
+    analysis_timestamp: datetime
+    template_cluster: Optional[str] = None
+    drift_detected: bool = False
+    recommendations: List[str] = None
+    
+    def __post_init__(self):
+        if self.recommendations is None:
+            self.recommendations = []
 
 
 class SimilarityAnalyzer:

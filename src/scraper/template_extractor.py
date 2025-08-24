@@ -17,9 +17,9 @@ from lxml import html, etree
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 
-from src.utils.logger import get_logger
-from src.scraper.dsl.schema import ScrapingTemplate, FieldTemplate, SelectorType
-from src.scraper.dsl.transformers import apply_transformation
+from utils.logger import get_logger
+from scraper.dsl.schema import ScrapingTemplate, FieldTemplate, SelectorType
+from scraper.dsl.transformers import apply_transformation
 
 logger = get_logger(__name__)
 

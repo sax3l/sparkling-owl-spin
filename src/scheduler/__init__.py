@@ -24,10 +24,10 @@ Job Types:
 - ErasureWorker: GDPR compliance operations
 """
 
-from .scheduler import JobScheduler
+from .job_scheduler import JobScheduler
 from .job_monitor import JobMonitor
-from .notifier import JobNotifier
-from .job_definitions import JobDefinitions
+from .notifier import NotificationManager as JobNotifier
+from .job_definitions import JobDefinition
 
 # Import job types
 from .jobs import (
@@ -39,7 +39,7 @@ __all__ = [
     "JobScheduler",
     "JobMonitor", 
     "JobNotifier",
-    "JobDefinitions",
+    "JobDefinition",
     "RetentionJob",
     "BackupSQLJob",
     "ExportJob",

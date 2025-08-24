@@ -11,7 +11,7 @@ from typing import Dict, List, Optional, Any, Union, Pattern, Callable, Tuple
 from dataclasses import dataclass
 from enum import Enum
 
-from src.utils.logger import get_logger
+from utils.logger import get_logger
 
 logger = get_logger(__name__)
 

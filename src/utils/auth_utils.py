@@ -50,13 +50,13 @@ def has_scope(required_scopes: List[str], user_scopes: List[str]) -> bool:
 
 def get_user_roles_from_db(db, user_id: UUID) -> List[str]:
     """Fetches roles for a user from the database."""
-    from src.database.models import UserRole # Import here to avoid circular dependency
+    from database.models import UserRole # Import here to avoid circular dependency
     roles = db.query(UserRole.role).filter(UserRole.user_id == user_id).all()
     return [r[0] for r in roles]
 
 def get_role_scopes_from_db(db, role_name: str) -> List[str]:
     """Fetches scopes for a given role from the database."""
-    from src.database.models import RolePermission # Import here to avoid circular dependency
+    from database.models import RolePermission # Import here to avoid circular dependency
     scopes = db.query(RolePermission.scope).filter(RolePermission.role_name == role_name).all()
     return [s[0] for s in scopes]
 

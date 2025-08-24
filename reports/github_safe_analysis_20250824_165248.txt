@@ -1,0 +1,66 @@
+🔍 GITHUB REPOSITORY ANALYS RAPPORT
+==================================================
+
+📅 Datum: 2025-08-24 16:52:48
+📦 Totalt analyserade: 5
+✅ Framgångsrika analyser: 5
+❌ Misslyckade analyser: 0
+
+📊 SAMMANFATTNING:
+🔥 Hög prioritet: 2
+⚡ Medium prioritet: 3
+📝 Låg prioritet: 0
+
+🎯 VANLIGASTE FUNKTIONER:
+  • proxy_management: 5 repositories
+  • web_scraping: 2 repositories
+  • async_support: 2 repositories
+
+📋 DETALJERAD ANALYS:
+
+🔗 proxy_pool (https://github.com/jhao104/proxy_pool)
+   📊 Rekommendation: MEDIUM - Kan vara användbar
+   🐍 Python-filer: 37
+   ⚙️  Komplexitet: 170.83
+   🎯 Funktioner: proxy_management
+   💡 Potentiella integrationer:
+      - Proxy pool management
+
+🔗 ProxyBroker (https://github.com/constverum/ProxyBroker)
+   📊 Rekommendation: MEDIUM - Kan vara användbar
+   🐍 Python-filer: 28
+   ⚙️  Komplexitet: 299.05
+   🎯 Funktioner: proxy_management, web_scraping, async_support
+   💡 Potentiella integrationer:
+      - Proxy pool management
+      - Async functionality
+      - Enhanced web scraping
+
+🔗 ProxyPool (https://github.com/Python3WebSpider/ProxyPool)
+   📊 Rekommendation: MEDIUM - Kan vara användbar
+   🐍 Python-filer: 45
+   ⚙️  Komplexitet: 68.99
+   🎯 Funktioner: proxy_management, web_scraping, async_support
+   💡 Potentiella integrationer:
+      - Proxy pool management
+      - Async functionality
+      - Enhanced web scraping
+
+🔗 requests-ip-rotator (https://github.com/Ge0rg3/requests-ip-rotator)
+   📊 Rekommendation: HIGH - Rekommenderas för integration
+   🐍 Python-filer: 3
+   ⚙️  Komplexitet: 11.36
+   🎯 Funktioner: proxy_management
+   💡 Potentiella integrationer:
+      - Proxy pool management
+
+🔗 selenium-proxy-rotator (https://github.com/markgacoka/selenium-proxy-rotator)
+   📊 Rekommendation: HIGH - Rekommenderas för integration
+   🐍 Python-filer: 10
+   ⚙️  Komplexitet: 30.32
+   🎯 Funktioner: proxy_management
+   💡 Potentiella integrationer:
+      - Proxy pool management
+
+==================================================
+🎉 ANALYS KLAR! Granska rapporten för integrationsrekommendationer.

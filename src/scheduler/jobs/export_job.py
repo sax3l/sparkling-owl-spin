@@ -5,11 +5,11 @@ import logging
 from typing import Dict, Any
 from uuid import UUID
 from sqlalchemy.orm import Session
-from src.database.models import ExportHistory, JobStatus, ExportCreate
-from src.database.manager import SessionLocal
-from src.exporters.registry import get_export_manager
-from src.webhooks.events import export_ready_event # Assuming this event exists
-from src.webhooks.service import WebhookService # Assuming this service exists
+from database.models import Export as ExportHistory, JobStatus, ExportCreate
+from database.manager import SessionLocal
+from exporters.registry import get_export_manager
+from webhooks.events import export_ready_event # Assuming this event exists
+from webhooks.service import WebhookService # Assuming this service exists
 
 logger = logging.getLogger(__name__)
 
@@ -96,3 +96,30 @@ async def execute_export_job(export_id: str, export_params: Dict[str, Any]):
             db.commit()
     finally:
         db.close()
+
+class ExportJob:
+    """
+    Export job class for scheduler integration.
+    Handles export job scheduling and execution.
+    """
+    
+    def __init__(self, config: Dict[str, Any] = None):
+        self.config = config or {}
+        
+    async def execute(self, export_id: str, export_params: Dict[str, Any]) -> Dict[str, Any]:
+        """Execute the export job."""
+        try:
+            await execute_export_job(export_id, export_params)
+            return {
+                'status': 'success', 
+                'export_id': export_id,
+                'timestamp': datetime.datetime.now().isoformat()
+            }
+        except Exception as e:
+            logger.error(f"ExportJob execution failed: {e}")
+            return {
+                'status': 'failed',
+                'export_id': export_id, 
+                'error': str(e),
+                'timestamp': datetime.datetime.now().isoformat()
+            }

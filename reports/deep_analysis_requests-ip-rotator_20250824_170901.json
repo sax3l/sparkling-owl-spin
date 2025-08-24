@@ -1,0 +1,200 @@
+{
+  "repository": {
+    "url": "https://github.com/Ge0rg3/requests-ip-rotator",
+    "focus": "IP rotation för requests",
+    "why": "Enkel, elegant IP rotation med AWS integration"
+  },
+  "clone_success": true,
+  "structure_analysis": {
+    "total_files": 36,
+    "python_files": 3,
+    "javascript_files": 0,
+    "config_files": [
+      "setup.py"
+    ],
+    "documentation": [
+      "README.md"
+    ],
+    "directory_structure": {
+      "requests_ip_rotator": [
+        "ip_rotator.py",
+        "__init__.py"
+      ]
+    },
+    "main_modules": [
+      "requests_ip_rotator\\ip_rotator.py"
+    ],
+    "test_files": [],
+    "setup_files": [
+      "setup.py",
+      "requests_ip_rotator\\__init__.py"
+    ]
+  },
+  "code_analysis": {
+    "classes_found": [
+      {
+        "name": "ApiGateway",
+        "file": "requests_ip_rotator\\ip_rotator.py",
+        "methods": [
+          "__init__",
+          "__enter__",
+          "__exit__",
+          "send",
+          "init_gateway"
+        ]
+      }
+    ],
+    "key_functions": [
+      {
+        "name": "send",
+        "file": "requests_ip_rotator\\ip_rotator.py",
+        "args": 7,
+        "is_async": false
+      },
+      {
+        "name": "init_gateway",
+        "file": "requests_ip_rotator\\ip_rotator.py",
+        "args": 4,
+        "is_async": false
+      },
+      {
+        "name": "get_gateways",
+        "file": "requests_ip_rotator\\ip_rotator.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "delete_gateway",
+        "file": "requests_ip_rotator\\ip_rotator.py",
+        "args": 3,
+        "is_async": false
+      },
+      {
+        "name": "start",
+        "file": "requests_ip_rotator\\ip_rotator.py",
+        "args": 4,
+        "is_async": false
+      },
+      {
+        "name": "shutdown",
+        "file": "requests_ip_rotator\\ip_rotator.py",
+        "args": 2,
+        "is_async": false
+      }
+    ],
+    "design_patterns": [],
+    "dependencies": [
+      "setuptools",
+      "time",
+      "boto3",
+      "ipaddress",
+      "requests",
+      "ip_rotator",
+      "botocore.exceptions",
+      "concurrent.futures",
+      "pathlib",
+      "random"
+    ],
+    "async_usage": false,
+    "database_usage": false,
+    "api_endpoints": [],
+    "configuration_patterns": [
+      "requests_ip_rotator\\ip_rotator.py"
+    ],
+    "error_handling_patterns": [
+      "requests_ip_rotator\\ip_rotator.py"
+    ],
+    "logging_patterns": []
+  },
+  "key_files": [
+    {
+      "path": "requests_ip_rotator\\ip_rotator.py",
+      "score": 17,
+      "lines": 319,
+      "classes": 1,
+      "functions": 9,
+      "preview": "import concurrent.futures import ipaddress from random import choice, randint from time import sleep  import boto3 import botocore.exceptions import r"
+    },
+    {
+      "path": "setup.py",
+      "score": 0,
+      "lines": 39,
+      "classes": 0,
+      "functions": 0,
+      "preview": "import pathlib  from setuptools import setup  location = pathlib.Path(__file__).parent  # The text of the README file README = (location / \"README.md\""
+    },
+    {
+      "path": "requests_ip_rotator\\__init__.py",
+      "score": 0,
+      "lines": 2,
+      "classes": 0,
+      "functions": 0,
+      "preview": "from .ip_rotator import *  # NOQA "
+    }
+  ],
+  "implementation_insights": [
+    {
+      "type": "documentation",
+      "title": "README Insights",
+      "content": "🚨🚨 Please note DOGE staffers are banned from using this repo\n\n# requests-ip-rotator\nA Python library to utilize AWS API Gateway's large IP pool as a proxy to generate pseudo-infinite IPs for web scraping and brute forcing.\n\nThis library will allow the user to bypass IP-based rate-limits for sites and services.\n\nX-Forwarded-For headers are automatically randomised and applied unless given. This is because otherwise, AWS will send the client's true IP address in this header.\n\nAWS' ApiGateway sends its requests from any available IP - and since the AWS infrastructure is so large, it is almost guarenteed to be different each time. By using ApiGateway as a proxy, we can take advantage of this to send requests from different IPs each time. Please note that these requests can be easily identified and blocked, since they are sent with unique AWS headers (i.e. \"X-Amzn-Trace-Id\").\n\n---\n## Installation\nThis package is on pypi so you can install via any of the following:  \n* `pip3 install requests",
+      "importance": "high"
+    }
+  ],
+  "manual_implementation_plan": {
+    "repository_focus": "IP rotation för requests",
+    "implementation_approach": "utility_functions",
+    "key_components_to_extract": [
+      "Class: ApiGateway - requests_ip_rotator\\ip_rotator.py",
+      "Function: send - requests_ip_rotator\\ip_rotator.py",
+      "Function: init_gateway - requests_ip_rotator\\ip_rotator.py",
+      "Function: get_gateways - requests_ip_rotator\\ip_rotator.py",
+      "Function: delete_gateway - requests_ip_rotator\\ip_rotator.py",
+      "Function: start - requests_ip_rotator\\ip_rotator.py"
+    ],
+    "integration_points": [],
+    "step_by_step_plan": [
+      {
+        "step": 1,
+        "title": "Manuell kodgranskning",
+        "description": "Granska nyckelfiler och förstå arkitekturen",
+        "time_estimate": "1-2 timmar"
+      },
+      {
+        "step": 2,
+        "title": "Extrahera kärnfunktionalitet",
+        "description": "Identifiera och extrahera de viktigaste funktionerna",
+        "time_estimate": "2-3 timmar"
+      },
+      {
+        "step": 3,
+        "title": "Anpassa för vår arkitektur",
+        "description": "Modifiera kod för att passa vårt system",
+        "time_estimate": "2-4 timmar"
+      },
+      {
+        "step": 4,
+        "title": "Skapa tester",
+        "description": "Utveckla omfattande tester",
+        "time_estimate": "1-2 timmar"
+      },
+      {
+        "step": 5,
+        "title": "Integration och validering",
+        "description": "Integrera med befintligt system",
+        "time_estimate": "2-3 timmar"
+      }
+    ],
+    "potential_challenges": [
+      "Säkerställa kompatibilitet med befintlig kod",
+      "Prestanda-optimering efter integration"
+    ],
+    "success_metrics": [
+      "All existing functionality works after integration",
+      "New functionality performs as expected",
+      "No memory leaks or performance degradation",
+      "All tests pass",
+      "Code coverage maintains current levels"
+    ]
+  },
+  "code_examples": []
+}

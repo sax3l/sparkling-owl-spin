@@ -18,11 +18,11 @@ from urllib.parse import urlparse
 import httpx
 from playwright.async_api import async_playwright, Page, Browser
 
-from ..anti_bot.policy_manager import DomainPolicy  
-from ..anti_bot.header_generator import HeaderGenerator
-from ..anti_bot.session_manager import SessionManager
-from ..utils.logger import get_logger
-from ..observability.metrics import MetricsCollector
+from anti_bot.policy_manager import DomainPolicy  
+from anti_bot.header_generator import HeaderGenerator
+from anti_bot.session_manager import SessionManager
+from utils.logger import get_logger
+from observability.metrics import MetricsCollector
 
 logger = get_logger(__name__)
 

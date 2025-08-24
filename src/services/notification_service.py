@@ -12,8 +12,8 @@ from datetime import datetime
 from dataclasses import dataclass, field
 from enum import Enum
 import smtplib
-from email.mime.text import MimeText
-from email.mime.multipart import MimeMultipart
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 import json
 
 import httpx
@@ -142,11 +142,11 @@ class NotificationService:
             subject = subject_template.render(**context.__dict__)
             
             # Create message
-            msg = MimeMultipart('alternative')
+            msg = MIMEMultipart('alternative')
             msg['From'] = self.settings.smtp_from
             msg['Subject'] = subject
             
-            html_part = MimeText(html_content, 'html')
+            html_part = MIMEText(html_content, 'html')
             msg.attach(html_part)
             
             # Send to each recipient

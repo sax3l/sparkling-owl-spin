@@ -5,7 +5,7 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from uuid import UUID
 from typing import Optional, List, Dict, Any
-from src.database.models import ExportHistory, ExportCreate, ExportRead, JobType, JobStatus
+from src.database.models import Export as ExportHistory, ExportCreate, ExportRead, JobType, JobStatus
 from src.database.manager import get_db
 from src.webapp.security import get_current_tenant_id, authorize_with_scopes
 from src.scheduler.scheduler import schedule_job

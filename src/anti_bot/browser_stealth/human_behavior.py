@@ -17,7 +17,7 @@ from typing import Tuple, List, Optional, Dict, Any
 from dataclasses import dataclass
 from enum import Enum
 
-from src.utils.logger import get_logger
+from utils.logger import get_logger
 
 logger = get_logger(__name__)
 

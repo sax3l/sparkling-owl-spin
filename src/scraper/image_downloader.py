@@ -42,7 +42,7 @@ except ImportError:
     magic = None
     MAGIC_AVAILABLE = False
 
-from src.utils.logger import get_logger
+from utils.logger import get_logger
 
 logger = get_logger(__name__)
 

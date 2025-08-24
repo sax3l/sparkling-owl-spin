@@ -1,0 +1,85 @@
+{
+  "total_tests": 13,
+  "passed_tests": 13,
+  "failed_tests": 0,
+  "test_details": [
+    {
+      "test_name": "_test_analyzer_initialization",
+      "success": true,
+      "message": "Analyzer initialiserad framgångsrikt",
+      "timestamp": "2025-08-24T16:42:01.659421"
+    },
+    {
+      "test_name": "_test_repository_cloning",
+      "success": true,
+      "message": "Repository-kloning fungerar",
+      "timestamp": "2025-08-24T16:42:01.663067"
+    },
+    {
+      "test_name": "_test_code_analysis",
+      "success": true,
+      "message": "Kod-analys fungerar - Hittade 1 klasser och 2 funktioner",
+      "timestamp": "2025-08-24T16:42:01.676015"
+    },
+    {
+      "test_name": "_test_feature_identification",
+      "success": true,
+      "message": "Funktionsidentifiering fungerar korrekt",
+      "timestamp": "2025-08-24T16:42:01.679169"
+    },
+    {
+      "test_name": "_test_integration_strategies",
+      "success": true,
+      "message": "Integrationsstrategier fungerar",
+      "timestamp": "2025-08-24T16:42:01.682427"
+    },
+    {
+      "test_name": "_test_code_adaptation",
+      "success": true,
+      "message": "Kodanpassning fungerar",
+      "timestamp": "2025-08-24T16:42:01.695474"
+    },
+    {
+      "test_name": "_test_module_writing",
+      "success": true,
+      "message": "Modul-skrivning fungerar",
+      "timestamp": "2025-08-24T16:42:01.710353"
+    },
+    {
+      "test_name": "_test_integration_testing",
+      "success": true,
+      "message": "Integration-test fungerar - Körde 1 tester",
+      "timestamp": "2025-08-24T16:42:01.727896"
+    },
+    {
+      "test_name": "_test_cleanup_process",
+      "success": true,
+      "message": "Cleanup-process fungerar",
+      "timestamp": "2025-08-24T16:42:01.746143"
+    },
+    {
+      "test_name": "_test_report_generation",
+      "success": true,
+      "message": "Rapportgenerering fungerar",
+      "timestamp": "2025-08-24T16:42:01.750114"
+    },
+    {
+      "test_name": "_test_complete_workflow",
+      "success": true,
+      "message": "Komplett workflow fungerar - Bearbetade 2 repositories",
+      "timestamp": "2025-08-24T16:42:01.754849"
+    },
+    {
+      "test_name": "_test_error_handling",
+      "success": true,
+      "message": "Error handling fungerar",
+      "timestamp": "2025-08-24T16:42:01.895393"
+    },
+    {
+      "test_name": "_test_performance_characteristics",
+      "success": true,
+      "message": "Prestanda OK - Signatur-generering tog 0.00s",
+      "timestamp": "2025-08-24T16:42:01.901173"
+    }
+  ]
+}

@@ -201,3 +201,25 @@ class DatabaseMigrator:
             )
         
         logger.info(f"Migration {version} applied successfully")
+
+
+# Global connection instance (for backward compatibility)
+_global_connection: Optional[DatabaseConnection] = None
+
+async def get_db_connection() -> DatabaseConnection:
+    """
+    Get a database connection for backward compatibility.
+    This is a simple implementation for scheduler jobs.
+    """
+    global _global_connection
+    if _global_connection is None:
+        from settings import get_settings
+        settings = get_settings()
+        config = ConnectionConfig(
+            url=settings.database_url,
+            pool_size=10,
+            max_overflow=20
+        )
+        _global_connection = DatabaseConnection(config)
+        await _global_connection.initialize()
+    return _global_connection

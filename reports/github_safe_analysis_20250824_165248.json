@@ -1,0 +1,173 @@
+{
+  "total_repositories": 5,
+  "analyzed": 5,
+  "successful_analysis": 5,
+  "failed_analysis": 0,
+  "analyses": [
+    {
+      "url": "https://github.com/jhao104/proxy_pool",
+      "name": "proxy_pool",
+      "description": "\nProxyPool 爬虫代理IP池\n=======\n[![Build Status](https://travis-ci.org/jhao104/proxy_pool.svg?branch=master)](https://travis-ci.org/jhao104/proxy_pool)\n[![](https://img.shields.io/badge/Powered%20by-@j_hao",
+      "language": "Python",
+      "files_analyzed": 37,
+      "python_files": 37,
+      "javascript_files": 0,
+      "key_features": [
+        "proxy_management"
+      ],
+      "potential_integrations": [
+        "Proxy pool management"
+      ],
+      "complexity_score": 170.83,
+      "recommendation": "MEDIUM - Kan vara användbar"
+    },
+    {
+      "url": "https://github.com/constverum/ProxyBroker",
+      "name": "ProxyBroker",
+      "description": "ProxyBroker\n===========\n\n.. image:: https://img.shields.io/pypi/v/proxybroker.svg?style=flat-square\n    :target: https://pypi.python.org/pypi/proxybroker/\n.. image:: https://img.shields.io/travis/cons",
+      "language": "Python",
+      "files_analyzed": 28,
+      "python_files": 28,
+      "javascript_files": 0,
+      "key_features": [
+        "proxy_management",
+        "web_scraping",
+        "async_support"
+      ],
+      "potential_integrations": [
+        "Proxy pool management",
+        "Async functionality",
+        "Enhanced web scraping"
+      ],
+      "complexity_score": 299.05,
+      "recommendation": "MEDIUM - Kan vara användbar"
+    },
+    {
+      "url": "https://github.com/Python3WebSpider/ProxyPool",
+      "name": "ProxyPool",
+      "description": "# ProxyPool\n\n![build](https://github.com/Python3WebSpider/ProxyPool/workflows/build/badge.svg)\n![deploy](https://github.com/Python3WebSpider/ProxyPool/workflows/deploy/badge.svg)\n![](https://img.shiel",
+      "language": "Python",
+      "files_analyzed": 45,
+      "python_files": 45,
+      "javascript_files": 0,
+      "key_features": [
+        "proxy_management",
+        "web_scraping",
+        "async_support"
+      ],
+      "potential_integrations": [
+        "Proxy pool management",
+        "Async functionality",
+        "Enhanced web scraping"
+      ],
+      "complexity_score": 68.99,
+      "recommendation": "MEDIUM - Kan vara användbar"
+    },
+    {
+      "url": "https://github.com/Ge0rg3/requests-ip-rotator",
+      "name": "requests-ip-rotator",
+      "description": "🚨🚨 Please note DOGE staffers are banned from using this repo\n\n# requests-ip-rotator\nA Python library to utilize AWS API Gateway's large IP pool as a proxy to generate pseudo-infinite IPs for web scrap",
+      "language": "Python",
+      "files_analyzed": 3,
+      "python_files": 3,
+      "javascript_files": 0,
+      "key_features": [
+        "proxy_management"
+      ],
+      "potential_integrations": [
+        "Proxy pool management"
+      ],
+      "complexity_score": 11.36,
+      "recommendation": "HIGH - Rekommenderas för integration"
+    },
+    {
+      "url": "https://github.com/markgacoka/selenium-proxy-rotator",
+      "name": "selenium-proxy-rotator",
+      "description": "# Selenium proxy-rotator\nA python wrapper around selenium that makes web automation anonymous through elite proxy rotation.\n\n## Features\n- Supports incognito\n- Random MAC address\n- Random user agent\n-",
+      "language": "Python",
+      "files_analyzed": 10,
+      "python_files": 10,
+      "javascript_files": 0,
+      "key_features": [
+        "proxy_management"
+      ],
+      "potential_integrations": [
+        "Proxy pool management"
+      ],
+      "complexity_score": 30.32,
+      "recommendation": "HIGH - Rekommenderas för integration"
+    }
+  ],
+  "summary": {
+    "total_analyzed": 5,
+    "high_priority": 2,
+    "medium_priority": 3,
+    "low_priority": 0,
+    "top_features": {
+      "proxy_management": 5,
+      "web_scraping": 2,
+      "async_support": 2
+    },
+    "recommended_repos": [
+      {
+        "url": "https://github.com/constverum/ProxyBroker",
+        "name": "ProxyBroker",
+        "description": "ProxyBroker\n===========\n\n.. image:: https://img.shields.io/pypi/v/proxybroker.svg?style=flat-square\n    :target: https://pypi.python.org/pypi/proxybroker/\n.. image:: https://img.shields.io/travis/cons",
+        "language": "Python",
+        "files_analyzed": 28,
+        "python_files": 28,
+        "javascript_files": 0,
+        "key_features": [
+          "proxy_management",
+          "web_scraping",
+          "async_support"
+        ],
+        "potential_integrations": [
+          "Proxy pool management",
+          "Async functionality",
+          "Enhanced web scraping"
+        ],
+        "complexity_score": 299.05,
+        "recommendation": "MEDIUM - Kan vara användbar"
+      },
+      {
+        "url": "https://github.com/Python3WebSpider/ProxyPool",
+        "name": "ProxyPool",
+        "description": "# ProxyPool\n\n![build](https://github.com/Python3WebSpider/ProxyPool/workflows/build/badge.svg)\n![deploy](https://github.com/Python3WebSpider/ProxyPool/workflows/deploy/badge.svg)\n![](https://img.shiel",
+        "language": "Python",
+        "files_analyzed": 45,
+        "python_files": 45,
+        "javascript_files": 0,
+        "key_features": [
+          "proxy_management",
+          "web_scraping",
+          "async_support"
+        ],
+        "potential_integrations": [
+          "Proxy pool management",
+          "Async functionality",
+          "Enhanced web scraping"
+        ],
+        "complexity_score": 68.99,
+        "recommendation": "MEDIUM - Kan vara användbar"
+      },
+      {
+        "url": "https://github.com/jhao104/proxy_pool",
+        "name": "proxy_pool",
+        "description": "\nProxyPool 爬虫代理IP池\n=======\n[![Build Status](https://travis-ci.org/jhao104/proxy_pool.svg?branch=master)](https://travis-ci.org/jhao104/proxy_pool)\n[![](https://img.shields.io/badge/Powered%20by-@j_hao",
+        "language": "Python",
+        "files_analyzed": 37,
+        "python_files": 37,
+        "javascript_files": 0,
+        "key_features": [
+          "proxy_management"
+        ],
+        "potential_integrations": [
+          "Proxy pool management"
+        ],
+        "complexity_score": 170.83,
+        "recommendation": "MEDIUM - Kan vara användbar"
+      }
+    ]
+  }
+}

@@ -1,5 +1,5 @@
 import redis
-from src.utils.url_utils import normalize_and_canonicalize_url
+from utils.url_utils import normalize_and_canonicalize_url
 from typing import Optional
 
 class URLFrontier:

@@ -11,10 +11,10 @@ from typing import Dict, Any, List, Optional, Tuple
 from dataclasses import dataclass
 from enum import Enum
 
-from src.database.manager import SessionLocal
-from src.database.models import ScrapedData, Job
-from src.utils.logger import get_logger
-from src.utils.metrics import DQ_SCORE
+from database.manager import SessionLocal
+from database.models import Job, ScrapedData  # Added ScrapedData back
+from utils.logger import get_logger
+from utils.metrics import DQ_SCORE
 
 logger = get_logger(__name__)
 

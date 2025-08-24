@@ -8,14 +8,14 @@ from typing import Dict, Any, List, Optional, Union
 from dataclasses import dataclass
 from enum import Enum
 
-from src.scraper.base_scraper import BaseScraper
-from src.scraper.http_scraper import HTTPScraper
-from src.scraper.selenium_scraper import SeleniumScraper
-from src.exporters.base import BaseExporter
-from src.exporters.json_exporter import JSONExporter
-from src.exporters.csv_exporter import CSVExporter
-from src.utils.validators import DataValidator
-from src.proxy_pool.manager import ProxyManager
+from scraper.base_scraper import BaseScraper
+from scraper.http_scraper import HTTPScraper
+from scraper.selenium_scraper import SeleniumScraper
+from exporters.base import BaseExporter
+from exporters.json_exporter import JSONExporter
+from exporters.csv_exporter import CSVExporter
+from utils.validators import DataValidator
+from proxy_pool.manager import ProxyManager
 
 logger = logging.getLogger(__name__)
 

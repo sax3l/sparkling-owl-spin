@@ -10,7 +10,7 @@ from typing import List, Dict, Any, Generator, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import inspect, text, asc, desc, func
 try:
-    from src.database.models import Person, Company, Vehicle # Import relevant models
+    from database.models import Person, Company, Vehicle # Import relevant models
     MODELS_AVAILABLE = True
 except ImportError:
     # Create dummy classes if models are not available
@@ -20,7 +20,7 @@ except ImportError:
     MODELS_AVAILABLE = False
 
 try:
-    from src.integrations.supabase.client import supabase # Assuming supabase client is available
+    from integrations.supabase.client import supabase # Assuming supabase client is available
     SUPABASE_AVAILABLE = True
 except ImportError:
     supabase = None

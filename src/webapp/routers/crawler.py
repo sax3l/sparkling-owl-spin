@@ -583,7 +583,7 @@ async def get_crawl_pages(
     crawl_id: int,
     skip: int = 0,
     limit: int = 100,
-    status_filter: Optional[str] = Query(None, regex="^(success|error)$"),
+    status_filter: Optional[str] = Query(None, pattern="^(success|error)$"),
     current_user = Depends(get_current_active_user),
     crawler_service: CrawlerService = Depends(get_crawler_service)
 ):

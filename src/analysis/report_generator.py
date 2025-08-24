@@ -78,6 +78,31 @@ class GeneratedReport:
     file_path: Optional[str] = None
     size_bytes: int = 0
 
+
+@dataclass  
+class ReportData:
+    """Data container for report generation"""
+    raw_data: List[Dict[str, Any]]
+    aggregated_data: Dict[str, Any]
+    time_series_data: Dict[str, List[Any]] = field(default_factory=dict)
+    metadata: Dict[str, Any] = field(default_factory=dict)
+    quality_metrics: Optional[Dict[str, Any]] = None
+    trends: Optional[Dict[str, Any]] = None
+
+
+@dataclass
+class ReportConfiguration:
+    """Configuration for report generation"""
+    report_type: ReportType
+    format: ReportFormat
+    title: str
+    time_period: Optional[Tuple[datetime, datetime]] = None
+    filters: Dict[str, Any] = field(default_factory=dict)
+    include_charts: bool = True
+    include_recommendations: bool = True
+    template_id: Optional[int] = None
+    output_path: Optional[str] = None
+
 class ReportGenerator:
     """
     Comprehensive report generation engine

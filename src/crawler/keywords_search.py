@@ -12,8 +12,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from urllib.parse import urljoin, urlparse
 
-from ..utils.logger import get_logger
-from ..observability.metrics import MetricsCollector
+from utils.logger import get_logger
+from observability.metrics import MetricsCollector
 
 logger = get_logger(__name__)
 

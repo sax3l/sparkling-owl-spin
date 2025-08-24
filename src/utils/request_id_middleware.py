@@ -4,7 +4,7 @@ from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoin
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.types import ASGIApp
-from src.observability.instrumentation import set_context, get_context # Assuming set_context and get_context are available
+from observability.instrumentation import set_context, get_context # Assuming set_context and get_context are available
 
 class RequestIDMiddleware(BaseHTTPMiddleware):
     def __init__(self, app: ASGIApp):

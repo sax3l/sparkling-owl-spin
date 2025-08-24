@@ -1,0 +1,1122 @@
+{
+  "repository": {
+    "url": "https://github.com/constverum/ProxyBroker",
+    "focus": "Avancerad proxy broker",
+    "why": "Sofistikerad async proxy management"
+  },
+  "clone_success": true,
+  "structure_analysis": {
+    "total_files": 83,
+    "python_files": 28,
+    "javascript_files": 0,
+    "config_files": [
+      "pyproject.toml",
+      "requirements.txt",
+      "setup.py"
+    ],
+    "documentation": [
+      "README.rst"
+    ],
+    "directory_structure": {
+      "docs": [
+        "Makefile",
+        "source"
+      ],
+      "examples": [
+        "basic.py",
+        "find_and_save.py",
+        "find_and_use.py",
+        "only_grab.py",
+        "proxy_server.py",
+        "proxy_smtp_port.py"
+      ],
+      "proxybroker": [
+        "api.py",
+        "checker.py",
+        "cli.py",
+        "data",
+        "errors.py",
+        "judge.py",
+        "negotiators.py",
+        "providers.py",
+        "proxy.py",
+        "resolver.py"
+      ],
+      "requirements": [
+        "base.txt",
+        "dev.txt"
+      ],
+      "tests": [
+        "conftest.py",
+        "test_negotiators.py",
+        "test_proxy.py",
+        "test_resolver.py",
+        "test_utils.py",
+        "utils.py",
+        "__init__.py"
+      ]
+    },
+    "main_modules": [
+      "examples\\basic.py",
+      "examples\\find_and_save.py",
+      "examples\\find_and_use.py",
+      "examples\\only_grab.py",
+      "examples\\proxy_server.py",
+      "examples\\proxy_smtp_port.py",
+      "proxybroker\\api.py",
+      "proxybroker\\checker.py",
+      "proxybroker\\cli.py",
+      "proxybroker\\errors.py",
+      "proxybroker\\judge.py",
+      "proxybroker\\negotiators.py",
+      "proxybroker\\providers.py",
+      "proxybroker\\proxy.py",
+      "proxybroker\\resolver.py",
+      "proxybroker\\server.py",
+      "proxybroker\\utils.py",
+      "tests\\utils.py"
+    ],
+    "test_files": [
+      "tests\\conftest.py",
+      "tests\\test_negotiators.py",
+      "tests\\test_proxy.py",
+      "tests\\test_resolver.py",
+      "tests\\test_utils.py"
+    ],
+    "setup_files": [
+      "setup.py",
+      "proxybroker\\__init__.py",
+      "tests\\__init__.py",
+      "proxybroker\\data\\__init__.py"
+    ]
+  },
+  "code_analysis": {
+    "classes_found": [
+      {
+        "name": "Broker",
+        "file": "proxybroker\\api.py",
+        "methods": [
+          "__init__",
+          "serve",
+          "_is_unique",
+          "_geo_passed",
+          "_push_to_result"
+        ]
+      },
+      {
+        "name": "Checker",
+        "file": "proxybroker\\checker.py",
+        "methods": [
+          "__init__",
+          "_types_passed"
+        ]
+      },
+      {
+        "name": "ProxyChecker",
+        "file": "proxybroker\\checker.py",
+        "methods": [
+          "__init__"
+        ]
+      },
+      {
+        "name": "ProxyError",
+        "file": "proxybroker\\errors.py",
+        "methods": []
+      },
+      {
+        "name": "NoProxyError",
+        "file": "proxybroker\\errors.py",
+        "methods": []
+      },
+      {
+        "name": "ResolveError",
+        "file": "proxybroker\\errors.py",
+        "methods": []
+      },
+      {
+        "name": "ProxyConnError",
+        "file": "proxybroker\\errors.py",
+        "methods": []
+      },
+      {
+        "name": "ProxyRecvError",
+        "file": "proxybroker\\errors.py",
+        "methods": []
+      },
+      {
+        "name": "ProxySendError",
+        "file": "proxybroker\\errors.py",
+        "methods": []
+      },
+      {
+        "name": "ProxyTimeoutError",
+        "file": "proxybroker\\errors.py",
+        "methods": []
+      },
+      {
+        "name": "ProxyEmptyRecvError",
+        "file": "proxybroker\\errors.py",
+        "methods": []
+      },
+      {
+        "name": "BadStatusError",
+        "file": "proxybroker\\errors.py",
+        "methods": []
+      },
+      {
+        "name": "BadResponseError",
+        "file": "proxybroker\\errors.py",
+        "methods": []
+      },
+      {
+        "name": "BadStatusLine",
+        "file": "proxybroker\\errors.py",
+        "methods": []
+      },
+      {
+        "name": "ErrorOnStream",
+        "file": "proxybroker\\errors.py",
+        "methods": []
+      },
+      {
+        "name": "Judge",
+        "file": "proxybroker\\judge.py",
+        "methods": [
+          "__init__",
+          "__repr__",
+          "get_random",
+          "clear"
+        ]
+      },
+      {
+        "name": "BaseNegotiator",
+        "file": "proxybroker\\negotiators.py",
+        "methods": [
+          "__init__"
+        ]
+      },
+      {
+        "name": "Socks5Ngtr",
+        "file": "proxybroker\\negotiators.py",
+        "methods": []
+      },
+      {
+        "name": "Socks4Ngtr",
+        "file": "proxybroker\\negotiators.py",
+        "methods": []
+      },
+      {
+        "name": "Connect80Ngtr",
+        "file": "proxybroker\\negotiators.py",
+        "methods": []
+      },
+      {
+        "name": "Connect25Ngtr",
+        "file": "proxybroker\\negotiators.py",
+        "methods": []
+      },
+      {
+        "name": "HttpsNgtr",
+        "file": "proxybroker\\negotiators.py",
+        "methods": []
+      },
+      {
+        "name": "HttpNgtr",
+        "file": "proxybroker\\negotiators.py",
+        "methods": []
+      },
+      {
+        "name": "Provider",
+        "file": "proxybroker\\providers.py",
+        "methods": [
+          "__init__",
+          "proxies",
+          "proxies",
+          "find_proxies",
+          "_find_proxies"
+        ]
+      },
+      {
+        "name": "Freeproxylists_com",
+        "file": "proxybroker\\providers.py",
+        "methods": []
+      },
+      {
+        "name": "Blogspot_com_base",
+        "file": "proxybroker\\providers.py",
+        "methods": []
+      },
+      {
+        "name": "Blogspot_com",
+        "file": "proxybroker\\providers.py",
+        "methods": []
+      },
+      {
+        "name": "Blogspot_com_socks",
+        "file": "proxybroker\\providers.py",
+        "methods": []
+      },
+      {
+        "name": "Webanetlabs_net",
+        "file": "proxybroker\\providers.py",
+        "methods": []
+      },
+      {
+        "name": "Checkerproxy_net",
+        "file": "proxybroker\\providers.py",
+        "methods": []
+      },
+      {
+        "name": "Proxz_com",
+        "file": "proxybroker\\providers.py",
+        "methods": [
+          "find_proxies"
+        ]
+      },
+      {
+        "name": "Proxy_list_org",
+        "file": "proxybroker\\providers.py",
+        "methods": [
+          "find_proxies"
+        ]
+      },
+      {
+        "name": "Aliveproxy_com",
+        "file": "proxybroker\\providers.py",
+        "methods": []
+      },
+      {
+        "name": "Maxiproxies_com",
+        "file": "proxybroker\\providers.py",
+        "methods": []
+      },
+      {
+        "name": "_50kproxies_com",
+        "file": "proxybroker\\providers.py",
+        "methods": []
+      },
+      {
+        "name": "Proxylist_me",
+        "file": "proxybroker\\providers.py",
+        "methods": []
+      },
+      {
+        "name": "Foxtools_ru",
+        "file": "proxybroker\\providers.py",
+        "methods": []
+      },
+      {
+        "name": "Gatherproxy_com",
+        "file": "proxybroker\\providers.py",
+        "methods": [
+          "find_proxies"
+        ]
+      },
+      {
+        "name": "Gatherproxy_com_socks",
+        "file": "proxybroker\\providers.py",
+        "methods": []
+      },
+      {
+        "name": "Tools_rosinstrument_com_base",
+        "file": "proxybroker\\providers.py",
+        "methods": [
+          "find_proxies"
+        ]
+      },
+      {
+        "name": "Tools_rosinstrument_com",
+        "file": "proxybroker\\providers.py",
+        "methods": []
+      },
+      {
+        "name": "Tools_rosinstrument_com_socks",
+        "file": "proxybroker\\providers.py",
+        "methods": []
+      },
+      {
+        "name": "Xseo_in",
+        "file": "proxybroker\\providers.py",
+        "methods": [
+          "char_js_port_to_num",
+          "find_proxies"
+        ]
+      },
+      {
+        "name": "Nntime_com",
+        "file": "proxybroker\\providers.py",
+        "methods": [
+          "char_js_port_to_num",
+          "find_proxies"
+        ]
+      },
+      {
+        "name": "Proxynova_com",
+        "file": "proxybroker\\providers.py",
+        "methods": []
+      },
+      {
+        "name": "Spys_ru",
+        "file": "proxybroker\\providers.py",
+        "methods": [
+          "char_js_port_to_num",
+          "find_proxies"
+        ]
+      },
+      {
+        "name": "My_proxy_com",
+        "file": "proxybroker\\providers.py",
+        "methods": []
+      },
+      {
+        "name": "Free_proxy_cz",
+        "file": "proxybroker\\providers.py",
+        "methods": [
+          "find_proxies"
+        ]
+      },
+      {
+        "name": "Proxyb_net",
+        "file": "proxybroker\\providers.py",
+        "methods": [
+          "find_proxies"
+        ]
+      },
+      {
+        "name": "Proxylistplus_com",
+        "file": "proxybroker\\providers.py",
+        "methods": []
+      },
+      {
+        "name": "Proxylist_download",
+        "file": "proxybroker\\providers.py",
+        "methods": []
+      },
+      {
+        "name": "ProxyProvider",
+        "file": "proxybroker\\providers.py",
+        "methods": [
+          "__init__"
+        ]
+      },
+      {
+        "name": "Proxy",
+        "file": "proxybroker\\proxy.py",
+        "methods": [
+          "__init__",
+          "__repr__",
+          "types",
+          "is_working",
+          "is_working"
+        ]
+      },
+      {
+        "name": "Resolver",
+        "file": "proxybroker\\resolver.py",
+        "methods": [
+          "__init__",
+          "host_is_ip",
+          "get_ip_info",
+          "_pop_random_ip_host"
+        ]
+      },
+      {
+        "name": "ProxyPool",
+        "file": "proxybroker\\server.py",
+        "methods": [
+          "__init__",
+          "put"
+        ]
+      },
+      {
+        "name": "Server",
+        "file": "proxybroker\\server.py",
+        "methods": [
+          "__init__",
+          "start",
+          "stop",
+          "_accept",
+          "_identify_scheme"
+        ]
+      },
+      {
+        "name": "_CapturingHandler",
+        "file": "tests\\conftest.py",
+        "methods": [
+          "__init__",
+          "flush",
+          "emit"
+        ]
+      },
+      {
+        "name": "_AssertLogsContext",
+        "file": "tests\\conftest.py",
+        "methods": [
+          "__init__",
+          "__enter__",
+          "__exit__"
+        ]
+      }
+    ],
+    "key_functions": [
+      {
+        "name": "main",
+        "file": "examples\\find_and_save.py",
+        "args": 0,
+        "is_async": false
+      },
+      {
+        "name": "main",
+        "file": "examples\\find_and_use.py",
+        "args": 0,
+        "is_async": false
+      },
+      {
+        "name": "main",
+        "file": "examples\\only_grab.py",
+        "args": 0,
+        "is_async": false
+      },
+      {
+        "name": "main",
+        "file": "examples\\proxy_server.py",
+        "args": 0,
+        "is_async": false
+      },
+      {
+        "name": "main",
+        "file": "examples\\proxy_smtp_port.py",
+        "args": 0,
+        "is_async": false
+      },
+      {
+        "name": "serve",
+        "file": "proxybroker\\api.py",
+        "args": 4,
+        "is_async": false
+      },
+      {
+        "name": "stop",
+        "file": "proxybroker\\api.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "show_stats",
+        "file": "proxybroker\\api.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "create_parser",
+        "file": "proxybroker\\cli.py",
+        "args": 0,
+        "is_async": false
+      },
+      {
+        "name": "add_broker_args",
+        "file": "proxybroker\\cli.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "add_find_args",
+        "file": "proxybroker\\cli.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "add_grab_args",
+        "file": "proxybroker\\cli.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "add_serve_args",
+        "file": "proxybroker\\cli.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "add_limit_arg",
+        "file": "proxybroker\\cli.py",
+        "args": 3,
+        "is_async": false
+      },
+      {
+        "name": "add_outfile_arg",
+        "file": "proxybroker\\cli.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "add_format_arg",
+        "file": "proxybroker\\cli.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "add_show_stats_arg",
+        "file": "proxybroker\\cli.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "add_help_arg",
+        "file": "proxybroker\\cli.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "outformat",
+        "file": "proxybroker\\cli.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "cli",
+        "file": "proxybroker\\cli.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "get_judges",
+        "file": "proxybroker\\judge.py",
+        "args": 3,
+        "is_async": false
+      },
+      {
+        "name": "get_random",
+        "file": "proxybroker\\judge.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "clear",
+        "file": "proxybroker\\judge.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "proxies",
+        "file": "proxybroker\\providers.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "proxies",
+        "file": "proxybroker\\providers.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "find_proxies",
+        "file": "proxybroker\\providers.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "find_proxies",
+        "file": "proxybroker\\providers.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "find_proxies",
+        "file": "proxybroker\\providers.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "find_proxies",
+        "file": "proxybroker\\providers.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "find_proxies",
+        "file": "proxybroker\\providers.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "char_js_port_to_num",
+        "file": "proxybroker\\providers.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "find_proxies",
+        "file": "proxybroker\\providers.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "char_js_port_to_num",
+        "file": "proxybroker\\providers.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "find_proxies",
+        "file": "proxybroker\\providers.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "char_js_port_to_num",
+        "file": "proxybroker\\providers.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "find_proxies",
+        "file": "proxybroker\\providers.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "find_proxies",
+        "file": "proxybroker\\providers.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "find_proxies",
+        "file": "proxybroker\\providers.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "types",
+        "file": "proxybroker\\proxy.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "is_working",
+        "file": "proxybroker\\proxy.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "is_working",
+        "file": "proxybroker\\proxy.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "writer",
+        "file": "proxybroker\\proxy.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "reader",
+        "file": "proxybroker\\proxy.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "priority",
+        "file": "proxybroker\\proxy.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "error_rate",
+        "file": "proxybroker\\proxy.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "schemes",
+        "file": "proxybroker\\proxy.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "avg_resp_time",
+        "file": "proxybroker\\proxy.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "avgRespTime",
+        "file": "proxybroker\\proxy.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "geo",
+        "file": "proxybroker\\proxy.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "ngtr",
+        "file": "proxybroker\\proxy.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "ngtr",
+        "file": "proxybroker\\proxy.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "as_json",
+        "file": "proxybroker\\proxy.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "log",
+        "file": "proxybroker\\proxy.py",
+        "args": 4,
+        "is_async": false
+      },
+      {
+        "name": "get_log",
+        "file": "proxybroker\\proxy.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "close",
+        "file": "proxybroker\\proxy.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "host_is_ip",
+        "file": "proxybroker\\resolver.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "get_ip_info",
+        "file": "proxybroker\\resolver.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "put",
+        "file": "proxybroker\\server.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "start",
+        "file": "proxybroker\\server.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "stop",
+        "file": "proxybroker\\server.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "get_headers",
+        "file": "proxybroker\\utils.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "get_all_ip",
+        "file": "proxybroker\\utils.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "get_status_code",
+        "file": "proxybroker\\utils.py",
+        "args": 3,
+        "is_async": false
+      },
+      {
+        "name": "parse_status_line",
+        "file": "proxybroker\\utils.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "parse_headers",
+        "file": "proxybroker\\utils.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "update_geoip_db",
+        "file": "proxybroker\\utils.py",
+        "args": 0,
+        "is_async": false
+      },
+      {
+        "name": "log",
+        "file": "tests\\conftest.py",
+        "args": 0,
+        "is_async": false
+      },
+      {
+        "name": "flush",
+        "file": "tests\\conftest.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "emit",
+        "file": "tests\\conftest.py",
+        "args": 2,
+        "is_async": false
+      }
+    ],
+    "design_patterns": [],
+    "dependencies": [
+      "random",
+      "tempfile",
+      "base64",
+      "shutil",
+      "pytest",
+      "pprint",
+      "sys",
+      "api",
+      "codecs",
+      "signal",
+      "html",
+      "ssl",
+      "json",
+      "utils",
+      "proxybroker.errors",
+      "server",
+      "collections",
+      "judge",
+      "ipaddress",
+      "maxminddb"
+    ],
+    "async_usage": true,
+    "database_usage": false,
+    "api_endpoints": [],
+    "configuration_patterns": [
+      "proxybroker\\cli.py",
+      "proxybroker\\resolver.py"
+    ],
+    "error_handling_patterns": [
+      "examples\\find_and_use.py",
+      "examples\\proxy_server.py",
+      "proxybroker\\api.py",
+      "proxybroker\\checker.py",
+      "proxybroker\\cli.py",
+      "proxybroker\\judge.py",
+      "proxybroker\\providers.py",
+      "proxybroker\\proxy.py",
+      "proxybroker\\resolver.py",
+      "proxybroker\\server.py",
+      "proxybroker\\utils.py"
+    ],
+    "logging_patterns": [
+      "proxybroker\\api.py",
+      "proxybroker\\checker.py",
+      "proxybroker\\cli.py",
+      "proxybroker\\judge.py",
+      "proxybroker\\providers.py",
+      "proxybroker\\proxy.py",
+      "proxybroker\\resolver.py",
+      "proxybroker\\server.py",
+      "proxybroker\\utils.py",
+      "proxybroker\\__init__.py",
+      "tests\\conftest.py"
+    ]
+  },
+  "key_files": [
+    {
+      "path": "proxybroker\\providers.py",
+      "score": 135,
+      "lines": 820,
+      "classes": 29,
+      "functions": 48,
+      "preview": "import asyncio import re import warnings from base64 import b64decode from html import unescape from math import sqrt from urllib.parse import unquote"
+    },
+    {
+      "path": "proxybroker\\proxy.py",
+      "score": 42,
+      "lines": 406,
+      "classes": 1,
+      "functions": 24,
+      "preview": "import asyncio import ssl as _ssl import time import warnings from collections import Counter  from .errors import (     ProxyConnError,     ProxyEmpt"
+    },
+    {
+      "path": "proxybroker\\errors.py",
+      "score": 41,
+      "lines": 50,
+      "classes": 12,
+      "functions": 0,
+      "preview": "\"\"\"Errors.\"\"\"   class ProxyError(Exception):     pass   class NoProxyError(Exception):     pass   class ResolveError(Exception):     pass   class Prox"
+    },
+    {
+      "path": "proxybroker\\negotiators.py",
+      "score": 35,
+      "lines": 180,
+      "classes": 7,
+      "functions": 9,
+      "preview": "import struct from abc import ABC, abstractmethod from socket import inet_aton  from .errors import BadResponseError, BadStatusError from .utils impor"
+    },
+    {
+      "path": "proxybroker\\server.py",
+      "score": 34,
+      "lines": 319,
+      "classes": 2,
+      "functions": 15,
+      "preview": "import asyncio import heapq import time  from .errors import (     BadResponseError,     BadStatusError,     BadStatusLine,     ErrorOnStream,     NoP"
+    },
+    {
+      "path": "tests\\test_proxy.py",
+      "score": 30,
+      "lines": 277,
+      "classes": 0,
+      "functions": 20,
+      "preview": "import time from asyncio.streams import StreamReader  import pytest  from proxybroker import Proxy from proxybroker.errors import ProxyConnError, Prox"
+    },
+    {
+      "path": "proxybroker\\api.py",
+      "score": 29,
+      "lines": 531,
+      "classes": 1,
+      "functions": 18,
+      "preview": "import asyncio import io import signal import warnings from collections import Counter, defaultdict from functools import partial from pprint import p"
+    },
+    {
+      "path": "examples\\proxy_server.py",
+      "score": 26,
+      "lines": 76,
+      "classes": 0,
+      "functions": 3,
+      "preview": "\"\"\"Run a local proxy server that distributes    incoming requests to external proxies.\"\"\"  import asyncio  import aiohttp  from proxybroker import Bro"
+    },
+    {
+      "path": "proxybroker\\checker.py",
+      "score": 24,
+      "lines": 358,
+      "classes": 2,
+      "functions": 13,
+      "preview": "import asyncio import time import warnings import zlib  from .errors import (     BadResponseError,     BadStatusError,     ProxyConnError,     ProxyE"
+    },
+    {
+      "path": "proxybroker\\cli.py",
+      "score": 18,
+      "lines": 443,
+      "classes": 0,
+      "functions": 13,
+      "preview": "\"\"\"CLI.\"\"\"  import argparse import asyncio import json import logging import sys from contextlib import contextmanager  from . import __version__ as v"
+    }
+  ],
+  "implementation_insights": [
+    {
+      "type": "documentation",
+      "title": "README Insights",
+      "content": "ProxyBroker\n===========\n\n.. image:: https://img.shields.io/pypi/v/proxybroker.svg?style=flat-square\n    :target: https://pypi.python.org/pypi/proxybroker/\n.. image:: https://img.shields.io/travis/constverum/ProxyBroker.svg?style=flat-square\n    :target: https://travis-ci.org/constverum/ProxyBroker\n.. image:: https://img.shields.io/pypi/wheel/proxybroker.svg?style=flat-square\n    :target: https://pypi.python.org/pypi/proxybroker/\n.. image:: https://img.shields.io/pypi/pyversions/proxybroker.svg?style=flat-square\n    :target: https://pypi.python.org/pypi/proxybroker/\n.. image:: https://img.shields.io/pypi/l/proxybroker.svg?style=flat-square\n    :target: https://pypi.python.org/pypi/proxybroker/\n\nProxyBroker is an open source tool that asynchronously finds public proxies from multiple sources and concurrently checks them.\n\n.. image:: https://raw.githubusercontent.com/constverum/ProxyBroker/master/docs/source/_static/index_find_example.gif\n\n\nFeatures\n--------\n\n* Finds more than 7000 workin",
+      "importance": "high"
+    }
+  ],
+  "manual_implementation_plan": {
+    "repository_focus": "Avancerad proxy broker",
+    "implementation_approach": "async_integration",
+    "key_components_to_extract": [
+      "Class: Broker - proxybroker\\api.py",
+      "Class: Checker - proxybroker\\checker.py",
+      "Class: ProxyChecker - proxybroker\\checker.py",
+      "Class: ProxyError - proxybroker\\errors.py",
+      "Class: NoProxyError - proxybroker\\errors.py",
+      "Function: main - examples\\find_and_save.py",
+      "Function: main - examples\\find_and_use.py",
+      "Function: main - examples\\only_grab.py",
+      "Function: main - examples\\proxy_server.py",
+      "Function: main - examples\\proxy_smtp_port.py"
+    ],
+    "integration_points": [
+      "src/proxy_pool/manager.py - Enhance ProxyPoolManager",
+      "src/proxy_pool/validator.py - Add new validation methods",
+      "src/proxy_pool/ - New rotation strategies"
+    ],
+    "step_by_step_plan": [
+      {
+        "step": 1,
+        "title": "Manuell kodgranskning",
+        "description": "Granska nyckelfiler och förstå arkitekturen",
+        "time_estimate": "1-2 timmar"
+      },
+      {
+        "step": 2,
+        "title": "Extrahera kärnfunktionalitet",
+        "description": "Identifiera och extrahera de viktigaste funktionerna",
+        "time_estimate": "2-3 timmar"
+      },
+      {
+        "step": 3,
+        "title": "Anpassa för vår arkitektur",
+        "description": "Modifiera kod för att passa vårt system",
+        "time_estimate": "2-4 timmar"
+      },
+      {
+        "step": 4,
+        "title": "Skapa tester",
+        "description": "Utveckla omfattande tester",
+        "time_estimate": "1-2 timmar"
+      },
+      {
+        "step": 5,
+        "title": "Integration och validering",
+        "description": "Integrera med befintligt system",
+        "time_estimate": "2-3 timmar"
+      }
+    ],
+    "potential_challenges": [
+      "Async/await integration med befintlig sync kod",
+      "Många externa beroenden att hantera",
+      "Säkerställa kompatibilitet med befintlig kod",
+      "Prestanda-optimering efter integration"
+    ],
+    "success_metrics": [
+      "All existing functionality works after integration",
+      "New functionality performs as expected",
+      "No memory leaks or performance degradation",
+      "All tests pass",
+      "Code coverage maintains current levels"
+    ]
+  },
+  "code_examples": [
+    {
+      "type": "class",
+      "name": "ProxyPool",
+      "file": "proxybroker\\server.py",
+      "code": "class ProxyPool:\n    \"\"\"Imports and gives proxies from queue on demand.\"\"\"\n\n    def __init__(\n        self, proxies, min_req_proxy=5, max_error_rate=0.5, max_resp_time=8\n    ):\n        self._proxies = proxies\n        self._pool = []\n        self._min_req_proxy = min_req_proxy\n        # if num of erros greater or equal 50% - proxy will be remove from pool\n        self._max_error_rate = max_error_rate\n        self._max_resp_time = max_resp_time\n\n    async def get(self, scheme):\n        scheme = scheme.upper()\n        for priority, proxy in self._pool:\n            if scheme in proxy.schemes:\n                chosen = proxy\n                self._pool.remove((proxy.priority, proxy))\n                break\n        else:\n            chosen = await self._import(scheme)\n        return chosen\n\n    async def _import(self, expected_scheme):\n        while True:\n            proxy = await self._proxies.get()\n            self._proxies.task_done()\n            if not proxy:\n                raise NoProxyError('No more available proxies')"
+    },
+    {
+      "type": "class",
+      "name": "Server",
+      "file": "proxybroker\\server.py",
+      "code": "class Server:\n    \"\"\"Server distributes incoming requests to a pool of found proxies.\"\"\"\n\n    def __init__(\n        self,\n        host,\n        port,\n        proxies,\n        timeout=8,\n        max_tries=3,\n        min_req_proxy=5,\n        max_error_rate=0.5,\n        max_resp_time=8,\n        prefer_connect=False,\n        http_allowed_codes=None,\n        backlog=100,\n        loop=None,\n        **kwargs\n    ):\n        self.host = host\n        self.port = int(port)\n        self._loop = loop or asyncio.get_event_loop()\n        self._timeout = timeout\n        self._max_tries = max_tries\n        self._backlog = backlog\n        self._prefer_connect = prefer_connect\n\n        self._server = None\n        self._connections = {}\n        self._proxy_pool = ProxyPool("
+    },
+    {
+      "type": "function",
+      "name": "put",
+      "file": "proxybroker\\server.py",
+      "code": "    def put(self, proxy):\n        if proxy.stat['requests'] >= self._min_req_proxy and (\n            (proxy.error_rate > self._max_error_rate)\n            or (proxy.avg_resp_time > self._max_resp_time)\n        ):\n            log.debug(\n                '%s:%d removed from proxy pool' % (proxy.host, proxy.port)\n            )\n        else:\n            heapq.heappush(self._pool, (proxy.priority, proxy))\n        log.debug('%s:%d stat: %s' % (proxy.host, proxy.port, proxy.stat))\n\n\nclass Server:\n    \"\"\"Server distributes incoming requests to a pool of found proxies.\"\"\"\n\n    def __init__(\n        self,\n        host,\n        port,"
+    },
+    {
+      "type": "function",
+      "name": "start",
+      "file": "proxybroker\\server.py",
+      "code": "    def start(self):\n        srv = asyncio.start_server(\n            self._accept,\n            host=self.host,\n            port=self.port,\n            backlog=self._backlog,\n            loop=self._loop,\n        )\n        self._server = self._loop.run_until_complete(srv)\n\n        log.info(\n            'Listening established on {0}'.format(\n                self._server.sockets[0].getsockname()\n            )\n        )\n\n    def stop(self):\n        if not self._server:\n            return\n        for conn in self._connections:"
+    },
+    {
+      "type": "function",
+      "name": "stop",
+      "file": "proxybroker\\server.py",
+      "code": "    def stop(self):\n        if not self._server:\n            return\n        for conn in self._connections:\n            if not conn.done():\n                conn.cancel()\n        self._server.close()\n        if not self._loop.is_running():\n            self._loop.run_until_complete(self._server.wait_closed())\n            # Time to close the running futures in self._connections\n            self._loop.run_until_complete(asyncio.sleep(0.5))\n        self._server = None\n        self._loop.stop()\n        log.info('Server is stopped')\n\n    def _accept(self, client_reader, client_writer):\n        def _on_completion(f):\n            reader, writer = self._connections.pop(f)\n            writer.close()\n            log.debug('client: %d; closed' % id(client_reader))"
+    }
+  ]
+}

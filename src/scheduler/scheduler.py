@@ -14,18 +14,18 @@ try:
 except ImportError:
     SCHEDULER_AVAILABLE = False
     
-from src.database.models import Job, JobStatus, JobType
-from src.scraper.dsl.schema import ScrapingTemplate
-from src.scraper.template_runtime import run_template
-from src.database.manager import SessionLocal
-from src.anti_bot.policy_manager import PolicyManager
-from src.scraper.transport import TransportManager
-from src.crawler.sitemap_generator import Crawler
-from src.crawler.url_frontier import URLFrontier
-from src.crawler.robots_parser import RobotsParser
-from src.utils.metrics import REQUESTS_TOTAL, EXTRACTIONS_OK_TOTAL, REQUEST_DURATION_SECONDS, DQ_SCORE
-from src.scheduler.jobs.export_job import execute_export_job
-from src.utils.logger import get_logger
+from database.models import Job, JobStatus, JobType
+from scraper.dsl.schema import ScrapingTemplate
+from scraper.template_runtime import run_template
+from database.manager import SessionLocal
+from anti_bot.policy_manager import PolicyManager
+from scraper.transport import TransportManager
+from crawler.sitemap_generator import Crawler
+from crawler.url_frontier import URLFrontier
+from crawler.robots_parser import RobotsParser
+from utils.metrics import REQUESTS_TOTAL, EXTRACTIONS_OK_TOTAL, REQUEST_DURATION_SECONDS, DQ_SCORE
+from scheduler.jobs.export_job import execute_export_job
+from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -262,7 +262,7 @@ class ECaDPScheduler:
             "last_updated": datetime.datetime.now().isoformat()
         }
     
-    def _execute_scraping_job(self, job_id: str, job_data: dict):
+    async def _execute_scraping_job(self, job_id: str, job_data: dict):
         """Execute a scraping job."""
         try:
             self.logger.info(f"Starting execution of scraping job {job_id}")
@@ -274,7 +274,7 @@ class ECaDPScheduler:
             
             # Execute actual scraping logic
             try:
-                result = await self._execute_scraping_job(job)
+                result = await self._execute_scraping_job_impl(self._running_jobs[job_id])
                 
                 # Update job status with result
                 if job_id in self._running_jobs:
@@ -295,7 +295,7 @@ class ECaDPScheduler:
             logger.error(f"Scraping job {job_id} failed: {e}")
             self._complete_job(job_id, "failed", str(e))
     
-    async def _execute_scraping_job(self, job) -> Dict[str, Any]:
+    async def _execute_scraping_job_impl(self, job) -> Dict[str, Any]:
         """Execute the actual scraping job logic"""
         try:
             # Get job parameters

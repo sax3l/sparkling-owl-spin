@@ -5,12 +5,12 @@ from urllib.parse import urlparse, urljoin
 from typing import List, Dict, Set, Optional, Any
 import aiohttp
 import asyncio
-from src.crawler.url_frontier import URLFrontier
-from src.crawler.robots_parser import RobotsParser
-from src.crawler.link_extractor import extract_links
-from src.crawler.template_detector import TemplateDetector
-from src.anti_bot.policy_manager import PolicyManager
-from src.scraper.transport import TransportManager
+from crawler.url_frontier import URLFrontier
+from crawler.robots_parser import RobotsParser
+from crawler.link_extractor import extract_links
+from crawler.template_detector import TemplateDetector
+from anti_bot.policy_manager import PolicyManager
+from scraper.transport import TransportManager
 
 logger = logging.getLogger(__name__)
 

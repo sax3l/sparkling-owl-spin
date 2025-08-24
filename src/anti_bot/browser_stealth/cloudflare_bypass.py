@@ -20,8 +20,8 @@ from urllib.parse import urlparse
 from playwright.async_api import Page
 from lxml import html
 
-from ...utils.logger import get_logger
-from ...observability.metrics import MetricsCollector
+from utils.logger import get_logger
+from observability.metrics import MetricsCollector
 
 logger = get_logger(__name__)
 

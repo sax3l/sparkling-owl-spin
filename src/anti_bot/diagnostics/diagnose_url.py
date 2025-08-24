@@ -13,8 +13,8 @@ from typing import Dict, List, Optional, Set, Any, Tuple
 from dataclasses import dataclass, asdict
 from urllib.parse import urlparse, urljoin
 
-from ...utils.logger import get_logger
-from ...observability.metrics import MetricsCollector
+from utils.logger import get_logger
+from observability.metrics import MetricsCollector
 
 logger = get_logger(__name__)
 

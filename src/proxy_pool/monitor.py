@@ -19,8 +19,8 @@ except ImportError:
     aioredis = None
     REDIS_AVAILABLE = False
 
-from ..observability.metrics import MetricsCollector
-from ..utils.logger import get_logger
+from observability.metrics import MetricsCollector
+from utils.logger import get_logger
 
 logger = get_logger(__name__)
 

@@ -31,7 +31,7 @@ class UserCreate(BaseModel):
     password: str = Field(min_length=8)
     full_name: Optional[str] = None
     is_active: bool = True
-    tier: str = Field(default="free", regex="^(free|pro|enterprise)$")
+    tier: str = Field(default="free", pattern="^(free|pro|enterprise)$")
 
 class UserResponse(BaseModel):
     """User response model."""

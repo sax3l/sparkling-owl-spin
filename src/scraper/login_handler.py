@@ -19,10 +19,10 @@ from urllib.parse import urljoin, urlparse
 from playwright.async_api import Page, Browser
 from lxml import html
 
-from ..utils.logger import get_logger
-from ..observability.metrics import MetricsCollector
-from ..anti_bot.browser_stealth.captcha_solver import CaptchaSolver
-from ..anti_bot.header_generator import HeaderGenerator
+from utils.logger import get_logger
+from observability.metrics import MetricsCollector
+from anti_bot.browser_stealth.captcha_solver import CaptchaSolver
+from anti_bot.header_generator import HeaderGenerator
 
 logger = get_logger(__name__)
 

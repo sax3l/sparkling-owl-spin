@@ -17,13 +17,13 @@ import time
 import random
 from datetime import datetime, timedelta
 
-from .models import (
+from database.models import (
     Base, Project, CrawlPlan, Template, Job, JobLog, QueueUrl, ExtractedItem,
     DQViolation, Export, Proxy, AuditEvent, User, APIKey, Policy, 
     Notification, PrivacyRequest, PIIScanResult, RetentionPolicy,
     generate_item_key, generate_url_fingerprint
 )
-from ..settings import get_settings
+from settings import get_settings
 
 
 logger = logging.getLogger(__name__)
@@ -275,6 +275,11 @@ def drop_tables():
 # Global database manager instance
 _db_manager = None
 
+# Legacy session factory for backwards compatibility
+def SessionLocal():
+    """Create a new database session (legacy compatibility)."""
+    db_manager = get_database_manager()
+    return db_manager._session_factory()
 
 def get_database_manager() -> DatabaseManager:
     """Get global database manager instance."""

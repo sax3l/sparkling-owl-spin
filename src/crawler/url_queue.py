@@ -12,7 +12,7 @@ from dataclasses import dataclass, asdict
 from urllib.parse import urljoin, urlparse
 
 import redis.asyncio as redis
-from src.utils.logger import get_logger
+from utils.logger import get_logger
 
 logger = get_logger(__name__)
 

@@ -21,8 +21,8 @@ from dataclasses import dataclass
 from lxml import html, etree
 from difflib import SequenceMatcher
 
-from ..utils.logger import get_logger
-from ..observability.metrics import MetricsCollector
+from utils.logger import get_logger
+from observability.metrics import MetricsCollector
 
 logger = get_logger(__name__)
 

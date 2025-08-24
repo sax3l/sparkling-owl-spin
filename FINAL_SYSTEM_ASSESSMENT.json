@@ -1,0 +1,37 @@
+{
+  "timestamp": "2025-08-24T12:15:23.899330",
+  "integration_results": {
+    "timestamp": "2025-08-24T12:15:13.200448",
+    "tests": {
+      "imports": true,
+      "manager_creation": true,
+      "browser_launch": true,
+      "context_creation": true,
+      "page_creation": true,
+      "navigation": true,
+      "crawler_creation": true,
+      "crawler_run": true,
+      "cleanup": true
+    },
+    "overall_success": true,
+    "errors": [],
+    "navigation_result": {
+      "status": 200,
+      "url": "https://httpbin.org/headers",
+      "success": true,
+      "title": ""
+    },
+    "crawler_results": 1,
+    "successful_tests": 9,
+    "total_tests": 9,
+    "success_rate": 100.0
+  },
+  "api_score": 100.0,
+  "overall_score": 100.0,
+  "production_ready": true,
+  "recommendations": [
+    "\u2705 System ready for production deployment",
+    "\ud83d\ude80 Consider performance optimization",
+    "\ud83d\udcca Set up monitoring and logging"
+  ]
+}

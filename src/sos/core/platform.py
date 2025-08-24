@@ -9,7 +9,7 @@ from typing import Dict, List, Any, Optional
 import time
 
 from .config import get_settings
-from .enhanced_crawler import EnhancedCrawlerManager
+from .enhanced_crawler import EnhancedCrawler
 from .stealth_browser import StealthBrowserManager
 from .anti_detection import AntiDetectionManager
 from .distributed import DistributedCoordinator
@@ -35,7 +35,7 @@ class SOSPlatform:
         
         # Core components
         self.base_crawler: Optional[BaseCrawler] = None
-        self.enhanced_crawler: Optional[EnhancedCrawlerManager] = None  
+        self.enhanced_crawler: Optional[EnhancedCrawler] = None  
         self.stealth_browser: Optional[StealthBrowserManager] = None
         self.anti_detection: Optional[AntiDetectionManager] = None
         self.distributed_coordinator: Optional[DistributedCoordinator] = None
@@ -142,7 +142,7 @@ class SOSPlatform:
     
     async def _initialize_enhanced_crawler(self):
         """Initialize enhanced crawler manager"""
-        self.enhanced_crawler = EnhancedCrawlerManager(
+        self.enhanced_crawler = EnhancedCrawler(
             max_concurrency=self.config.CRAWL_MAX_CONCURRENCY,
             default_delay=self.config.CRAWL_DEFAULT_DELAY_MS / 1000
         )

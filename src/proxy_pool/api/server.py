@@ -12,8 +12,8 @@ import logging
 
 from ..manager import ProxyManager
 from ..monitor import ProxyMonitor, ProxyHealth, PoolMetrics
-from ...observability.metrics import MetricsCollector
-from ...utils.logger import get_logger
+from observability.metrics import MetricsCollector
+from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -37,11 +37,11 @@ class ProxyRequest(BaseModel):
     """Request model for adding new proxy."""
     host: str = Field(..., description="Proxy host/IP address")
     port: int = Field(..., ge=1, le=65535, description="Proxy port")
-    protocol: str = Field(default="http", regex="^(http|https|socks4|socks5)$")
+    protocol: str = Field(default="http", pattern="^(http|https|socks4|socks5)$")
     username: Optional[str] = None
     password: Optional[str] = None
     country: Optional[str] = None
-    anonymity: Optional[str] = Field(default="unknown", regex="^(elite|anonymous|transparent|unknown)$")
+    anonymity: Optional[str] = Field(default="unknown", pattern="^(elite|anonymous|transparent|unknown)$")
 
 
 class PoolStatsResponse(BaseModel):

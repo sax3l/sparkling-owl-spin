@@ -1,7 +1,7 @@
 import datetime
 from typing import Optional, Dict, Any
 from sqlalchemy.orm import Session
-from src.database.models import UserQuota
+from database.models import UserQuota
 import logging
 
 logger = logging.getLogger(__name__)

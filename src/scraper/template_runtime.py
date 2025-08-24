@@ -25,7 +25,7 @@ try:
 except ImportError:
     Engine = None  # type: ignore
 
-from src.scraper.dsl.schema import ScrapingTemplate as TemplateDefinition, FieldDef, Transform, Validator
+from scraper.dsl.schema import ScrapingTemplate as TemplateDefinition, FieldDef, Transform, Validator
 
 
 # ----------------------------- Feltyper ---------------------------------------

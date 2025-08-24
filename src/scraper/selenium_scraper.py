@@ -27,8 +27,8 @@ try:
 except ImportError:
     STEALTH_AVAILABLE = False
 
-from src.scraper.base_scraper import BaseScraper
-from src.utils.logger import get_logger
+from scraper.base_scraper import BaseScraper
+from utils.logger import get_logger
 
 logger = get_logger(__name__)
 

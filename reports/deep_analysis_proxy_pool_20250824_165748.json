@@ -1,0 +1,1141 @@
+{
+  "repository": {
+    "url": "https://github.com/jhao104/proxy_pool",
+    "focus": "Proxy pool management architecture",
+    "why": "Välstrukturat proxy pool system med scheduler och validator"
+  },
+  "clone_success": true,
+  "structure_analysis": {
+    "total_files": 87,
+    "python_files": 37,
+    "javascript_files": 0,
+    "config_files": [
+      "requirements.txt"
+    ],
+    "documentation": [
+      "README.md"
+    ],
+    "directory_structure": {
+      "api": [
+        "proxyApi.py",
+        "__init__.py"
+      ],
+      "db": [
+        "dbClient.py",
+        "redisClient.py",
+        "ssdbClient.py",
+        "__init__.py"
+      ],
+      "docs": [
+        "changelog.rst",
+        "conf.py",
+        "dev",
+        "index.rst",
+        "make.bat",
+        "Makefile",
+        "user"
+      ],
+      "fetcher": [
+        "proxyFetcher.py",
+        "__init__.py"
+      ],
+      "handler": [
+        "configHandler.py",
+        "logHandler.py",
+        "proxyHandler.py",
+        "__init__.py"
+      ],
+      "helper": [
+        "check.py",
+        "fetch.py",
+        "launcher.py",
+        "proxy.py",
+        "scheduler.py",
+        "validator.py",
+        "__init__.py"
+      ],
+      "test": [
+        "testConfigHandler.py",
+        "testDbClient.py",
+        "testLogHandler.py",
+        "testProxyClass.py",
+        "testProxyFetcher.py",
+        "testProxyValidator.py",
+        "testRedisClient.py",
+        "testSsdbClient.py",
+        "__init__.py"
+      ],
+      "util": [
+        "lazyProperty.py",
+        "singleton.py",
+        "six.py",
+        "webRequest.py",
+        "__init__.py"
+      ]
+    },
+    "main_modules": [
+      "proxyPool.py",
+      "setting.py",
+      "api\\proxyApi.py",
+      "db\\dbClient.py",
+      "db\\redisClient.py",
+      "db\\ssdbClient.py",
+      "docs\\conf.py",
+      "fetcher\\proxyFetcher.py",
+      "handler\\configHandler.py",
+      "handler\\logHandler.py",
+      "handler\\proxyHandler.py",
+      "helper\\check.py",
+      "helper\\fetch.py",
+      "helper\\launcher.py",
+      "helper\\proxy.py",
+      "helper\\scheduler.py",
+      "helper\\validator.py",
+      "util\\lazyProperty.py",
+      "util\\singleton.py",
+      "util\\six.py",
+      "util\\webRequest.py"
+    ],
+    "test_files": [
+      "test.py",
+      "test\\testConfigHandler.py",
+      "test\\testDbClient.py",
+      "test\\testLogHandler.py",
+      "test\\testProxyClass.py",
+      "test\\testProxyFetcher.py",
+      "test\\testProxyValidator.py",
+      "test\\testRedisClient.py",
+      "test\\testSsdbClient.py",
+      ".github\\workflows\\docker-image-latest.yml"
+    ],
+    "setup_files": [
+      "api\\__init__.py",
+      "db\\__init__.py",
+      "fetcher\\__init__.py",
+      "handler\\__init__.py",
+      "helper\\__init__.py",
+      "test\\__init__.py",
+      "util\\__init__.py"
+    ]
+  },
+  "code_analysis": {
+    "classes_found": [
+      {
+        "name": "JsonResponse",
+        "file": "api\\proxyApi.py",
+        "methods": [
+          "force_type"
+        ]
+      },
+      {
+        "name": "StandaloneApplication",
+        "file": "api\\proxyApi.py",
+        "methods": [
+          "__init__",
+          "load_config",
+          "load"
+        ]
+      },
+      {
+        "name": "DbClient",
+        "file": "db\\dbClient.py",
+        "methods": [
+          "__init__",
+          "parseDbConn",
+          "__initDbClient",
+          "get",
+          "put"
+        ]
+      },
+      {
+        "name": "RedisClient",
+        "file": "db\\redisClient.py",
+        "methods": [
+          "__init__",
+          "get",
+          "put",
+          "pop",
+          "delete"
+        ]
+      },
+      {
+        "name": "SsdbClient",
+        "file": "db\\ssdbClient.py",
+        "methods": [
+          "__init__",
+          "get",
+          "put",
+          "pop",
+          "delete"
+        ]
+      },
+      {
+        "name": "ProxyFetcher",
+        "file": "fetcher\\proxyFetcher.py",
+        "methods": [
+          "freeProxy01",
+          "freeProxy02",
+          "freeProxy03",
+          "freeProxy04",
+          "freeProxy05"
+        ]
+      },
+      {
+        "name": "ConfigHandler",
+        "file": "handler\\configHandler.py",
+        "methods": [
+          "__init__",
+          "serverHost",
+          "serverPort",
+          "dbConn",
+          "tableName"
+        ]
+      },
+      {
+        "name": "LogHandler",
+        "file": "handler\\logHandler.py",
+        "methods": [
+          "__init__",
+          "__setFileHandler__",
+          "__setStreamHandler__"
+        ]
+      },
+      {
+        "name": "ProxyHandler",
+        "file": "handler\\proxyHandler.py",
+        "methods": [
+          "__init__",
+          "get",
+          "pop",
+          "put",
+          "delete"
+        ]
+      },
+      {
+        "name": "DoValidator",
+        "file": "helper\\check.py",
+        "methods": [
+          "validator",
+          "httpValidator",
+          "httpsValidator",
+          "preValidator",
+          "regionGetter"
+        ]
+      },
+      {
+        "name": "_ThreadChecker",
+        "file": "helper\\check.py",
+        "methods": [
+          "__init__",
+          "run",
+          "__ifRaw",
+          "__ifUse"
+        ]
+      },
+      {
+        "name": "_ThreadFetcher",
+        "file": "helper\\fetch.py",
+        "methods": [
+          "__init__",
+          "run"
+        ]
+      },
+      {
+        "name": "Fetcher",
+        "file": "helper\\fetch.py",
+        "methods": [
+          "__init__",
+          "run"
+        ]
+      },
+      {
+        "name": "Proxy",
+        "file": "helper\\proxy.py",
+        "methods": [
+          "__init__",
+          "createFromJson",
+          "proxy",
+          "fail_count",
+          "region"
+        ]
+      }
+    ],
+    "key_functions": [
+      {
+        "name": "cli",
+        "file": "proxyPool.py",
+        "args": 0,
+        "is_async": false
+      },
+      {
+        "name": "schedule",
+        "file": "proxyPool.py",
+        "args": 0,
+        "is_async": false
+      },
+      {
+        "name": "server",
+        "file": "proxyPool.py",
+        "args": 0,
+        "is_async": false
+      },
+      {
+        "name": "index",
+        "file": "api\\proxyApi.py",
+        "args": 0,
+        "is_async": false
+      },
+      {
+        "name": "get",
+        "file": "api\\proxyApi.py",
+        "args": 0,
+        "is_async": false
+      },
+      {
+        "name": "pop",
+        "file": "api\\proxyApi.py",
+        "args": 0,
+        "is_async": false
+      },
+      {
+        "name": "refresh",
+        "file": "api\\proxyApi.py",
+        "args": 0,
+        "is_async": false
+      },
+      {
+        "name": "getAll",
+        "file": "api\\proxyApi.py",
+        "args": 0,
+        "is_async": false
+      },
+      {
+        "name": "delete",
+        "file": "api\\proxyApi.py",
+        "args": 0,
+        "is_async": false
+      },
+      {
+        "name": "getCount",
+        "file": "api\\proxyApi.py",
+        "args": 0,
+        "is_async": false
+      },
+      {
+        "name": "runFlask",
+        "file": "api\\proxyApi.py",
+        "args": 0,
+        "is_async": false
+      },
+      {
+        "name": "force_type",
+        "file": "api\\proxyApi.py",
+        "args": 3,
+        "is_async": false
+      },
+      {
+        "name": "load_config",
+        "file": "api\\proxyApi.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "load",
+        "file": "api\\proxyApi.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "parseDbConn",
+        "file": "db\\dbClient.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "get",
+        "file": "db\\dbClient.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "put",
+        "file": "db\\dbClient.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "update",
+        "file": "db\\dbClient.py",
+        "args": 3,
+        "is_async": false
+      },
+      {
+        "name": "delete",
+        "file": "db\\dbClient.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "exists",
+        "file": "db\\dbClient.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "pop",
+        "file": "db\\dbClient.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "getAll",
+        "file": "db\\dbClient.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "clear",
+        "file": "db\\dbClient.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "changeTable",
+        "file": "db\\dbClient.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "getCount",
+        "file": "db\\dbClient.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "test",
+        "file": "db\\dbClient.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "get",
+        "file": "db\\redisClient.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "put",
+        "file": "db\\redisClient.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "pop",
+        "file": "db\\redisClient.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "delete",
+        "file": "db\\redisClient.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "exists",
+        "file": "db\\redisClient.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "update",
+        "file": "db\\redisClient.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "getAll",
+        "file": "db\\redisClient.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "clear",
+        "file": "db\\redisClient.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "getCount",
+        "file": "db\\redisClient.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "changeTable",
+        "file": "db\\redisClient.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "test",
+        "file": "db\\redisClient.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "get",
+        "file": "db\\ssdbClient.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "put",
+        "file": "db\\ssdbClient.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "pop",
+        "file": "db\\ssdbClient.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "delete",
+        "file": "db\\ssdbClient.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "exists",
+        "file": "db\\ssdbClient.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "update",
+        "file": "db\\ssdbClient.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "getAll",
+        "file": "db\\ssdbClient.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "clear",
+        "file": "db\\ssdbClient.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "getCount",
+        "file": "db\\ssdbClient.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "changeTable",
+        "file": "db\\ssdbClient.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "test",
+        "file": "db\\ssdbClient.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "freeProxy01",
+        "file": "fetcher\\proxyFetcher.py",
+        "args": 0,
+        "is_async": false
+      },
+      {
+        "name": "freeProxy02",
+        "file": "fetcher\\proxyFetcher.py",
+        "args": 0,
+        "is_async": false
+      },
+      {
+        "name": "freeProxy03",
+        "file": "fetcher\\proxyFetcher.py",
+        "args": 0,
+        "is_async": false
+      },
+      {
+        "name": "freeProxy04",
+        "file": "fetcher\\proxyFetcher.py",
+        "args": 0,
+        "is_async": false
+      },
+      {
+        "name": "freeProxy05",
+        "file": "fetcher\\proxyFetcher.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "freeProxy06",
+        "file": "fetcher\\proxyFetcher.py",
+        "args": 0,
+        "is_async": false
+      },
+      {
+        "name": "freeProxy07",
+        "file": "fetcher\\proxyFetcher.py",
+        "args": 0,
+        "is_async": false
+      },
+      {
+        "name": "freeProxy08",
+        "file": "fetcher\\proxyFetcher.py",
+        "args": 0,
+        "is_async": false
+      },
+      {
+        "name": "freeProxy09",
+        "file": "fetcher\\proxyFetcher.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "freeProxy10",
+        "file": "fetcher\\proxyFetcher.py",
+        "args": 0,
+        "is_async": false
+      },
+      {
+        "name": "freeProxy11",
+        "file": "fetcher\\proxyFetcher.py",
+        "args": 0,
+        "is_async": false
+      },
+      {
+        "name": "parse_ip",
+        "file": "fetcher\\proxyFetcher.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "serverHost",
+        "file": "handler\\configHandler.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "serverPort",
+        "file": "handler\\configHandler.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "dbConn",
+        "file": "handler\\configHandler.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "tableName",
+        "file": "handler\\configHandler.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "fetchers",
+        "file": "handler\\configHandler.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "httpUrl",
+        "file": "handler\\configHandler.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "httpsUrl",
+        "file": "handler\\configHandler.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "verifyTimeout",
+        "file": "handler\\configHandler.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "maxFailCount",
+        "file": "handler\\configHandler.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "poolSizeMin",
+        "file": "handler\\configHandler.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "proxyRegion",
+        "file": "handler\\configHandler.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "timezone",
+        "file": "handler\\configHandler.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "get",
+        "file": "handler\\proxyHandler.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "pop",
+        "file": "handler\\proxyHandler.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "put",
+        "file": "handler\\proxyHandler.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "delete",
+        "file": "handler\\proxyHandler.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "getAll",
+        "file": "handler\\proxyHandler.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "exists",
+        "file": "handler\\proxyHandler.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "getCount",
+        "file": "handler\\proxyHandler.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "Checker",
+        "file": "helper\\check.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "validator",
+        "file": "helper\\check.py",
+        "args": 3,
+        "is_async": false
+      },
+      {
+        "name": "httpValidator",
+        "file": "helper\\check.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "httpsValidator",
+        "file": "helper\\check.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "preValidator",
+        "file": "helper\\check.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "regionGetter",
+        "file": "helper\\check.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "run",
+        "file": "helper\\check.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "run",
+        "file": "helper\\fetch.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "run",
+        "file": "helper\\fetch.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "startServer",
+        "file": "helper\\launcher.py",
+        "args": 0,
+        "is_async": false
+      },
+      {
+        "name": "startScheduler",
+        "file": "helper\\launcher.py",
+        "args": 0,
+        "is_async": false
+      },
+      {
+        "name": "createFromJson",
+        "file": "helper\\proxy.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "proxy",
+        "file": "helper\\proxy.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "fail_count",
+        "file": "helper\\proxy.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "region",
+        "file": "helper\\proxy.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "anonymous",
+        "file": "helper\\proxy.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "source",
+        "file": "helper\\proxy.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "check_count",
+        "file": "helper\\proxy.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "last_status",
+        "file": "helper\\proxy.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "last_time",
+        "file": "helper\\proxy.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "https",
+        "file": "helper\\proxy.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "to_dict",
+        "file": "helper\\proxy.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "to_json",
+        "file": "helper\\proxy.py",
+        "args": 1,
+        "is_async": false
+      },
+      {
+        "name": "fail_count",
+        "file": "helper\\proxy.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "check_count",
+        "file": "helper\\proxy.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "last_status",
+        "file": "helper\\proxy.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "last_time",
+        "file": "helper\\proxy.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "https",
+        "file": "helper\\proxy.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "region",
+        "file": "helper\\proxy.py",
+        "args": 2,
+        "is_async": false
+      },
+      {
+        "name": "add_source",
+        "file": "helper\\proxy.py",
+        "args": 2,
+        "is_async": false
+      }
+    ],
+    "design_patterns": [
+      "REST API"
+    ],
+    "dependencies": [
+      "setting",
+      "test",
+      "urllib",
+      "db.dbClient",
+      "logging.handlers",
+      "re",
+      "os",
+      "redis.connection",
+      "helper.scheduler",
+      "flask",
+      "util.lazyProperty",
+      "threading",
+      "platform",
+      "util.singleton",
+      "logging",
+      "api.proxyApi",
+      "redis.exceptions",
+      "handler.configHandler",
+      "helper.validator",
+      "fetcher.proxyFetcher"
+    ],
+    "async_usage": false,
+    "database_usage": true,
+    "api_endpoints": [
+      "/",
+      "/get/",
+      "/pop/",
+      "/refresh/",
+      "/all/",
+      "/delete/",
+      "/count/"
+    ],
+    "configuration_patterns": [
+      "proxyPool.py",
+      "setting.py",
+      "test.py",
+      "api\\proxyApi.py",
+      "docs\\conf.py",
+      "handler\\configHandler.py",
+      "handler\\proxyHandler.py",
+      "helper\\check.py",
+      "helper\\fetch.py",
+      "helper\\launcher.py"
+    ],
+    "error_handling_patterns": [
+      "db\\redisClient.py",
+      "db\\ssdbClient.py",
+      "fetcher\\proxyFetcher.py",
+      "handler\\logHandler.py",
+      "helper\\check.py",
+      "helper\\fetch.py"
+    ],
+    "logging_patterns": [
+      "db\\redisClient.py",
+      "db\\ssdbClient.py",
+      "handler\\logHandler.py",
+      "helper\\check.py",
+      "helper\\fetch.py",
+      "helper\\launcher.py"
+    ]
+  },
+  "key_files": [
+    {
+      "path": "api\\proxyApi.py",
+      "score": 44,
+      "lines": 139,
+      "classes": 3,
+      "functions": 12,
+      "preview": "# -*- coding: utf-8 -*- # !/usr/bin/env python \"\"\" -------------------------------------------------    File Name：     ProxyApi.py    Description :   "
+    },
+    {
+      "path": "helper\\proxy.py",
+      "score": 38,
+      "lines": 137,
+      "classes": 1,
+      "functions": 20,
+      "preview": "# -*- coding: utf-8 -*- \"\"\" -------------------------------------------------    File Name：     Proxy    Description :   代理对象类型封装    Author :        J"
+    },
+    {
+      "path": "fetcher\\proxyFetcher.py",
+      "score": 34,
+      "lines": 242,
+      "classes": 1,
+      "functions": 16,
+      "preview": "# -*- coding: utf-8 -*- \"\"\" -------------------------------------------------    File Name：     proxyFetcher    Description :    Author :        JHao "
+    },
+    {
+      "path": "db\\dbClient.py",
+      "score": 30,
+      "lines": 121,
+      "classes": 1,
+      "functions": 14,
+      "preview": "# -*- coding: utf-8 -*- # !/usr/bin/env python \"\"\" -------------------------------------------------    File Name：    DbClient.py    Description :  DB"
+    },
+    {
+      "path": "db\\redisClient.py",
+      "score": 28,
+      "lines": 156,
+      "classes": 1,
+      "functions": 12,
+      "preview": "# -*- coding: utf-8 -*- \"\"\" -----------------------------------------------------    File Name：     redisClient.py    Description :   封装Redis相关操作    A"
+    },
+    {
+      "path": "db\\ssdbClient.py",
+      "score": 28,
+      "lines": 154,
+      "classes": 1,
+      "functions": 12,
+      "preview": "# -*- coding: utf-8 -*- # !/usr/bin/env python \"\"\" -------------------------------------------------    File Name：     ssdbClient.py    Description : "
+    },
+    {
+      "path": "handler\\configHandler.py",
+      "score": 28,
+      "lines": 84,
+      "classes": 1,
+      "functions": 15,
+      "preview": "# -*- coding: utf-8 -*- \"\"\" -------------------------------------------------    File Name：     configHandler    Description :    Author :        JHao"
+    },
+    {
+      "path": "handler\\proxyHandler.py",
+      "score": 26,
+      "lines": 87,
+      "classes": 1,
+      "functions": 8,
+      "preview": "# -*- coding: utf-8 -*- \"\"\" -------------------------------------------------    File Name：     ProxyHandler.py    Description :    Author :       JHa"
+    },
+    {
+      "path": "helper\\check.py",
+      "score": 21,
+      "lines": 159,
+      "classes": 2,
+      "functions": 10,
+      "preview": "# -*- coding: utf-8 -*- \"\"\" -------------------------------------------------    File Name：     check    Description :   执行代理校验    Author :        JHa"
+    },
+    {
+      "path": "helper\\fetch.py",
+      "score": 21,
+      "lines": 89,
+      "classes": 4,
+      "functions": 4,
+      "preview": "# -*- coding: utf-8 -*- \"\"\" -------------------------------------------------    File Name：     fetchScheduler    Description :    Author :        JHa"
+    }
+  ],
+  "implementation_insights": [
+    {
+      "type": "documentation",
+      "title": "README Insights",
+      "content": "\nProxyPool 爬虫代理IP池\n=======\n[![Build Status](https://travis-ci.org/jhao104/proxy_pool.svg?branch=master)](https://travis-ci.org/jhao104/proxy_pool)\n[![](https://img.shields.io/badge/Powered%20by-@j_hao104-green.svg)](http://www.spiderpy.cn/blog/)\n[![Packagist](https://img.shields.io/packagist/l/doctrine/orm.svg)](https://github.com/jhao104/proxy_pool/blob/master/LICENSE)\n[![GitHub contributors](https://img.shields.io/github/contributors/jhao104/proxy_pool.svg)](https://github.com/jhao104/proxy_pool/graphs/contributors)\n[![](https://img.shields.io/badge/language-Python-green.svg)](https://github.com/jhao104/proxy_pool)\n\n    ______                        ______             _\n    | ___ \\_                      | ___ \\           | |\n    | |_/ / \\__ __   __  _ __   _ | |_/ /___   ___  | |\n    |  __/|  _// _ \\ \\ \\/ /| | | ||  __// _ \\ / _ \\ | |\n    | |   | | | (_) | >  < \\ |_| || |  | (_) | (_) || |___\n    \\_|   |_|  \\___/ /_/\\_\\ \\__  |\\_|   \\___/ \\___/ \\_____\\\n                           __ / ",
+      "importance": "high"
+    }
+  ],
+  "manual_implementation_plan": {
+    "repository_focus": "Proxy pool management architecture",
+    "implementation_approach": "class_based_architecture",
+    "key_components_to_extract": [
+      "Class: JsonResponse - api\\proxyApi.py",
+      "Class: StandaloneApplication - api\\proxyApi.py",
+      "Class: DbClient - db\\dbClient.py",
+      "Class: RedisClient - db\\redisClient.py",
+      "Class: SsdbClient - db\\ssdbClient.py",
+      "Function: cli - proxyPool.py",
+      "Function: schedule - proxyPool.py",
+      "Function: server - proxyPool.py",
+      "Function: index - api\\proxyApi.py",
+      "Function: get - api\\proxyApi.py"
+    ],
+    "integration_points": [
+      "src/proxy_pool/manager.py - Enhance ProxyPoolManager",
+      "src/proxy_pool/validator.py - Add new validation methods",
+      "src/proxy_pool/ - New rotation strategies"
+    ],
+    "step_by_step_plan": [
+      {
+        "step": 1,
+        "title": "Manuell kodgranskning",
+        "description": "Granska nyckelfiler och förstå arkitekturen",
+        "time_estimate": "1-2 timmar"
+      },
+      {
+        "step": 2,
+        "title": "Extrahera kärnfunktionalitet",
+        "description": "Identifiera och extrahera de viktigaste funktionerna",
+        "time_estimate": "2-3 timmar"
+      },
+      {
+        "step": 3,
+        "title": "Anpassa för vår arkitektur",
+        "description": "Modifiera kod för att passa vårt system",
+        "time_estimate": "2-4 timmar"
+      },
+      {
+        "step": 4,
+        "title": "Skapa tester",
+        "description": "Utveckla omfattande tester",
+        "time_estimate": "1-2 timmar"
+      },
+      {
+        "step": 5,
+        "title": "Integration och validering",
+        "description": "Integrera med befintligt system",
+        "time_estimate": "2-3 timmar"
+      }
+    ],
+    "potential_challenges": [
+      "Många externa beroenden att hantera",
+      "Databasintegration och migration",
+      "Säkerställa kompatibilitet med befintlig kod",
+      "Prestanda-optimering efter integration"
+    ],
+    "success_metrics": [
+      "All existing functionality works after integration",
+      "New functionality performs as expected",
+      "No memory leaks or performance degradation",
+      "All tests pass",
+      "Code coverage maintains current levels"
+    ]
+  },
+  "code_examples": []
+}

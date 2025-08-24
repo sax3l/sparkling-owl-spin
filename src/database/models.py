@@ -297,6 +297,9 @@ class Proxy(Base):
     stats_json = Column(JSON, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
+    # Relationships
+    health_checks = relationship("ProxyHealth", back_populates="proxy")
+    
     __table_args__ = (
         Index('ix_proxies_pool_health', 'pool', 'health_state'),
         Index('ix_proxies_geo_health', 'geo', 'health_state'),
@@ -339,6 +342,7 @@ class User(Base):
     
     # Relationships
     api_keys = relationship("APIKey", back_populates="user")
+    audit_logs = relationship("AuditLog", back_populates="user")
     
     __table_args__ = (
         Index('ix_users_role_active', 'role', 'is_active'),
@@ -553,3 +557,93 @@ def generate_url_fingerprint(url: str) -> str:
         normalized += "?" + "&".join(f"{k}={v[0] if v else ''}" for k, v in sorted_params)
     
     return hashlib.sha256(normalized.encode()).hexdigest()
+
+
+class AuditLog(Base):
+    """Audit logs - comprehensive system audit trail."""
+    __tablename__ = "audit_logs"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    action = Column(String(100), nullable=False)
+    resource_type = Column(String(100), nullable=False)
+    resource_id = Column(String(255), nullable=True)
+    details = Column(JSON, nullable=True)
+    ip_address = Column(String(45), nullable=True)
+    user_agent = Column(String(500), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    # Relationships
+    user = relationship("User", back_populates="audit_logs")
+    
+    __table_args__ = (
+        Index('ix_audit_logs_user_action', 'user_id', 'action'),
+        Index('ix_audit_logs_resource', 'resource_type', 'resource_id'),
+        Index('ix_audit_logs_created_at', 'created_at'),
+    )
+
+
+class ProxyHealth(Base):
+    """Proxy health monitoring - tracks proxy performance and availability."""
+    __tablename__ = "proxy_health"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    proxy_id = Column(Integer, ForeignKey("proxies.id"), nullable=False)
+    response_time_ms = Column(Float, nullable=False)
+    success_rate = Column(Float, nullable=False)
+    last_check = Column(DateTime(timezone=True), server_default=func.now())
+    is_healthy = Column(Boolean, default=True)
+    error_count = Column(Integer, default=0)
+    consecutive_failures = Column(Integer, default=0)
+    
+    # Relationships
+    proxy = relationship("Proxy", back_populates="health_checks")
+    
+    __table_args__ = (
+        Index('ix_proxy_health_proxy_id', 'proxy_id'),
+        Index('ix_proxy_health_last_check', 'last_check'),
+        Index('ix_proxy_health_healthy', 'is_healthy'),
+    )
+
+
+class ScrapedData(Base):
+    """
+    Scraped data model - placeholder for data quality jobs.
+    Contains scraped content and metadata.
+    """
+    __tablename__ = 'scraped_data'
+    
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    url = Column(String, nullable=False)
+    data = Column(JSON, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Data quality metadata
+    quality_score = Column(Float, nullable=True)
+    completeness_score = Column(Float, nullable=True)
+    freshness_score = Column(Float, nullable=True)
+
+
+# Pydantic schemas for API validation
+from pydantic import BaseModel
+from typing import Optional
+from datetime import datetime
+
+class ExportCreate(BaseModel):
+    """Schema for creating exports"""
+    target: str
+    format: str
+    filters: Optional[dict] = None
+    fields: Optional[list] = None
+    
+class ExportRead(BaseModel):
+    """Schema for reading exports"""
+    id: str
+    target: str
+    format: str
+    status: str
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
