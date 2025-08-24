@@ -1,0 +1,9 @@
+"""
+SOS - Simplifierad init för test-kompatibilitet
+
+Minimal import för att undvika import-fel under test.
+"""
+
+__version__ = "0.1.0"
+
+# Tom för att undvika import-fel

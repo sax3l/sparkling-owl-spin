@@ -1,7 +1,121 @@
-Skapa ett test som kontrollerar att alla domäner följande domäner kontrolleras genom att man importerar det från github. Sedan analyseras all importerad kod. Sedan kompieras all den kod som är unikj och som vi inte tidigare har och implementeras i befintlig kod eller om vi inte har funktionen så läggs koden till i sin helhet med tillhörande backend och front end funktionalitet så att det kan användas på en egen sida eller som en egen funktion. Antingen läggs det alltså till genom en helt ny funttion som anpassas till övrig kod och med egen frontend funtionalitet eller så implementeras i det i befintlig kod/funktion om detta gör befintlig kod/funktion bättre och mer funktionell. När all kod i ett importerat respiratory är testad/implementerad och fungerande så tas det importerade respiratoryt bort varpå nästa respiratory importeras och samma process körs med den på ett systematiskt sätt.
+https://github.com/ag2ai/fastagency
+https://github.com/vanna-ai/vanna
+https://github.com/ag2ai/fastagency
+https://github.com/superagi
+https://github.com/codeintegrity-ai/mutahunter
+https://github.com/sweepai/sweep
+https://github.com/irgolic/AutoPR
+https://github.com/Aider-AI/aider
+https://github.com/Canner/WrenAI
+https://github.com/vanna-ai/vanna
+https://github.com/PromtEngineer/localGPT
+https://www.privatefindr.com/
+https://github.com/HumanSignal/Adala
+https://github.com/langroid/langroid
+https://github.com/crewAIInc/crewAI
+https://github.com/OpenBMB/AgentVerse
+https://github.com/eylonmiz/react-agent
+https://github.com/TaxyAI/browser-extension
+https://github.com/greim/hoxy
+https://github.com/HoShiMin/Kernel-Bridge
+https://github.com/ShulinCao/OpenNRE-PyTorch
+https://github.com/Tencent/wwsearch
+https://github.com/rapidfuzz/RapidFuzz
+https://github.com/shenweichen/DeepMatch
+https://github.com/asyml/texar
+https://github.com/BrikerMan/Kashgari
+https://github.com/lemonhu/open-entity-relation-extraction
+https://github.com/baidu/information-extraction
+https://github.com/Microsoft/Recognizers-Text
+https://github.com/shadoww117/Buy-Parser-Checker-Brute-Autoreg?tab=readme-ov-file#introduction
+https://github.com/alexander-hamme/Automatic_Email_Checker
+https://github.com/RockENZO/Automatic-web-scraper-with-LLM-parsing
+https://gist.github.com/techenthusiast167/76ef6f0e1e3af74045f4d85bc1a7c60e
+https://github.com/yogeshojha/rengine
+https://github.com/XDeadHackerX/The_spy_job
+https://github.com/XDeadHackerX/NetSoc_OSINT
+https://github.com/NanoNets/docstrange
+https://github.com/Trusted-AI/adversarial-robustness-toolbox
+https://github.com/shcherbak-ai/contextgem
+https://github.com/apache/tika
+https://github.com/adbar/trafilatura
+https://github.com/webpack-contrib/mini-css-extract-plugin
+https://github.com/opendatalab/PDF-Extract-Kit
+https://github.com/blue-yonder/tsfresh
+https://github.com/getomni-ai/zerox
+https://github.com/getmaxun/maxun
+https://github.com/sefinek/Sefinek-Blocklist-Collection
+https://github.com/badmojr/1Hosts
+https://github.com/coolaj86/greenlock
+https://github.com/p32929/openai-gemini-api-key-rotator
+https://github.com/animir/node-rate-limiter-flexible
+https://github.com/avast/retry-go
+https://github.com/techenthusiast167/DeepWebHarvester
+https://github.com/nette/http
+https://github.com/n8henrie/pycookiecheat
+https://github.com/dlundquist/sniproxy
+https://github.com/TalhaBruh/OpenAI-RAG-for-Reddit-Comments-QnA-using-Docker
+https://github.com/daily-coding-problem/chatgpt-scraper
+https://github.com/st1vms/unofficial-claude-api
+https://github.com/rhijjawi/ManageBac-API
+https://github.com/hyperdxio/hyperdx
+https://github.com/unbug/codelf
+https://github.com/FlareSolverr/FlareSolverr
+https://github.com/srush/GPU-Puzzles
+https://github.com/Anorov/cloudflare-scrape
+https://github.com/VeNoMouS/cloudscraper
+https://github.com/mitchellkrogza/nginx-ultimate-bad-bot-blocker
+https://github.com/kata198/AdvancedHTMLParser
+https://github.com/jhy/jsoup
+https://github.com/Tencent/rapidjson
+https://github.com/cure53/DOMPurify
+https://github.com/cheeriojs/cheerio
+https://github.com/DigitalPlatDev/FreeDomain
+https://github.com/moonfy/moonfy.github.io
+https://github.com/ariya/phantomjs
+https://github.com/checkly/headless-recorder
+https://github.com/browserless/browserless
+https://github.com/chromedp/chromedp
+https://github.com/NoahCardoza/CaptchaHarvester
+https://github.com/2captcha/2captcha-python
+https://github.com/samc621/SneakerBot
+https://github.com/NopeCHALLC/nopecha-extension
+https://github.com/ecthros/uncaptcha
+https://github.com/niespodd/browser-fingerprinting
+https://github.com/lining0806/PythonSpiderNotes
+https://github.com/chaitin/SafeLine
+https://github.com/sml2h3/ddddocr
+https://github.com/ultrafunkamsterdam/undetected-chromedriver
+https://github.com/ayush5harma/PixelFeatureDrops
+https://github.com/Noooste/azuretls-client
+https://github.com/Danny-Dasilva/CycleTLS
+https://github.com/sleeyax/burp-awesome-tls
+https://github.com/code4craft/webmagic
+https://github.com/s0md3v/Photon
+https://github.com/crawlab-team/crawlab
+https://github.com/projectdiscovery/katana
+https://github.com/binux/pyspider
+https://github.com/apify/crawlee
+https://github.com/BuilderIO/gpt-crawler
+https://github.com/NanmiCoder/MediaCrawler
+https://github.com/gocolly/colly
+https://github.com/firecrawl/firecrawl
+https://github.com/bluebeach/BfsCrawler
+https://github.com/ngryman/tree-crawl
 
-
-
+https://github.com/christophetd/CloudFlair
+https://github.com/bhavsec/reconspider
+https://github.com/api0cradle/UltimateAppLockerByPassList
+https://github.com/Ge0rg3/requests-ip-rotator
+https://github.com/amethystnetwork-dev/Incognito
+https://github.com/F0rc3Run/F0rc3Run
+https://github.com/qeeqbox/chameleon
+https://github.com/mauricelambert/WebPayloadsEncodings
+https://github.com/capture0x/XSS-LOADER
+https://github.com/v2ray/v2ray-core
+https://github.com/PSPDFKit-labs/bypass
+https://github.com/Uncodin/bypass
+https://github.com/iamj0ker/bypass-403
 https://github.com/m14r41/PentestingEverything
 https://github.com/PhHitachi/HackBar
 https://github.com/arainho/awesome-api-security
@@ -85,16 +199,6 @@ https://github.com/solve-cloudflare/cloudflare-protection
 https://github.com/javapuppteernodejs/Cloudflare-Solver-
 https://github.com/Theyka/Turnstile-Solver
 https://github.com/swisskyrepo/PayloadsAllTheThings
-https://github.com/api0cradle/UltimateAppLockerByPassList
-https://github.com/Ge0rg3/requests-ip-rotator
-https://github.com/amethystnetwork-dev/Incognito
-https://github.com/F0rc3Run/F0rc3Run
-https://github.com/mauricelambert/WebPayloadsEncodings
-https://github.com/capture0x/XSS-LOADER
-https://github.com/v2ray/v2ray-core
-https://github.com/PSPDFKit-labs/bypass
-https://github.com/Uncodin/bypass
-https://github.com/iamj0ker/bypass-403
 https://github.com/LandGrey/webshell-detect-bypass
 https://github.com/v2fly/v2ray-core
 https://github.com/0xlane/BypassUAC
@@ -148,3 +252,176 @@ https://github.com/Ge0rg3/requests-ip-rotator
 https://github.com/SadeghHayeri/GreenTunnel
 https://github.com/m14r41/PentestingEverything
 https://github.com/arainho/awesome-api-security
+
+
+CloudFlair
+
+Funktionalitet och teknisk implementation: CloudFlair är ett verktyg för att hitta “bakre” origin-servrar för webbplatser skyddade av Cloudflare eller CloudFront
+GitHub
+. Det använder sig av Internet-skanningsdata från Censys (ett SSL-certifikatindex) för att hitta offentligt exponerade IPv4-adresser som presenterar ett certifikat för målwebbplatsens domän
+GitHub
+. Därefter filtreras bort kända Cloudflare-/CloudFront-IP-områden (via hämtning av CDN:ernas IP-listor och kontroll), och verktyget testar kvarvarande kandidater genom att skicka HTTP(S)-förfrågningar med måldomänens värdhuvud (“Host”). Slutligen används ett HTML-likhetsmått (via html_similarity) för att jämföra svarens innehåll med originalwebbplatsen och identifiera de IP-adresser vars svar överensstämmer (troliga origin-servrar). Verktyget hanterar också roulettliknande user-agenter för att efterlikna webbläsare vid hämtning av original- och testadresser.
+
+Vad som särskiljer projektet: CloudFlair är unikt genom att det utnyttjar certifikatdata från Internet-skanning (Censys) för bypass av CDN-skydd – en metod som få andra verktyg använder. Genom att matcha SSL-certifikatfingraturer kan det hitta ”hosttränade” servrar bakom Cloudflare/CloudFront. Andra liknande verktyg (t.ex. infoga eller brute-forca origin-IP) är ofta mer begränsade eller manuella. CloudFlair är automatiserat, omfattar både Cloudflare- och CloudFront-kontroll, och använder intelligent filtrering och content-similaritetskontroll för hög precision
+GitHub
+. Prestandamässigt är det beroende av Censys API-hastighet och nätverkstester, och är inriktat på säkerhetstestning snarare än datainsamling.
+
+Integration i sparkling-owl-spin: För att integrera CloudFlairs funktioner skulle man behöva implementera en modul som kan detektera om ett mål ligger bakom Cloudflare/CloudFront och sedan initiera en Censys-sökning efter certifikat. Det saknas troligen motsvarande modul i det befintliga systemet, så detta blir en ny pipeline. Man skulle kunna lägga till en submodul i crawl-motorn som vidnga target-domäner, kontrollerar uses_cloudflare(domain)/uses_cloudfront(domain) (som CloudFlair gör) och – om så – anropas “Cloudflare-bypass”-logik. Modulen skulle använda Censys Python SDK (som i CloudFlair) för att söka certifikat (kräver Censys API-nycklar). Därefter skulle återfådda IP-adresser testas via systemets befintliga HTTP-klient (t.ex. requests) med rätt headers, och HTML-responser jämföras mot originalet (kan använda t.ex. html_similarity eller liknande).
+
+Saknas i sparkling-owl-spin: I nuläget finns sannolikt ingen Censys-integration eller specifik logik för att hitta ursprungsserver bakom en CDN. Även funktioner som hämtning av Cloudflare/CloudFront-IP-områden, samt content-likhetskoll, saknas förmodligen. Det finns heller inget gränssnitt för att hantera Censys-nycklar eller liknande i systemets konfiguration.
+
+Förslag till implementation: Man bör lägga till beroenden för Censys (t.ex. censys-biblioteket) och html_similarity. Skapa en ny modul, t.ex. cdnbypass.py, som exponerar funktioner som find_origin_servers(domain). Denna modul använder Censys-certifikatsökning (eller alternativt Shodan), filtrerar IP-adresser, och gör jämförande HTTP-förfrågningar (bygg gärna vidare på kod från CloudFlair). Modulen kan integreras i web-scannern: om en crawl upptäcker Cloudflare-skydd (genom DNS-uppslagning eller CAPTCHA), kan systemet automatiskt aktivera “origin detection” och i förekommande fall omkonfigurera host-header eller direkt göra requests mot origin-IP. Konfigurationsmöjligheter (t.ex. aktivera/deaktivera CDN-bypass, ange API-nycklar) bör finnas i sparkling-owl-spin konfigurationsfiler.
+
+ReconSpider
+
+Funktionalitet och teknisk implementation: ReconSpider är ett omfattande OSINT-ramverk för informationsinsamling kring IP-adresser, domäner, e-postadresser, användarnamn med mera
+github.com
+. Det är CLI-baserat och kombinerar en mängd funktioner: IP- och domänsökning via externa API:er (ex. Shodan, IPStack), genomsökning av telefonnummer och e-post, kartläggning av DNS-ytor, metadatautvinning från filer, omvänd bildsökning, honeypot-identifiering (med “honeyscore”), MAC-adressuppslagning, IP-heatmaps, torrentspårning, användarinfo från sociala medier, proxy/VPN-detektion (IP2Proxy) samt sökningar efter läckta mail adresser
+github.com
+github.com
+. Verktyget samlar in data från olika källor, korrelerar resultaten och kan visa dem i en dashboard (från readme). Teknikerna innefattar användning av befintliga verktyg och API:er (t.ex. Wave, Photon, ReconDog för subdomän/attackytor) samt egna skript för t.ex. XSS-dork-sökning.
+
+Vad som särskiljer projektet: ReconSpider är enormt brett, en “allt-i-ett”-OSINT-pipeline vilket få andra enskilda verktyg är. Unika inslag är till exempel integrering av IP2Proxy-databaser för att avgöra om en given IP är ett känt VPN/proxy
+github.com
+, och en inbyggd honeypot-kontroll som ger en “honeyscore” för IPs
+github.com
+. Den är GPL-licensierad och batch-orienterad (styrs via val i CLI-menyn). Prestandamässigt är ReconSpider begränsad av externa API-nycklar (ex. Shodan, NumVerify) och är inte optimerad för storskalig crawling, utan för penetrationstestning och insamling kring ett specifikt “target”.
+
+Integration i sparkling-owl-spin: Eftersom ReconSpider täcker bred OSINT som går utanför traditionell webbskrapning finns ingen direkt motsvarighet i det befintliga systemet. Däremot finns relevanta delar: t.ex. proxy-/VPN-detektion och honeypot-kontroll är potentiellt användbara. Att integrera ReconSpider-moduler skulle kräva att systemet kan anropa t.ex. “check_honeypot(ip)” (som utnyttjar T-Pot eller IPQualityScore) och IP2Proxy för att flagga misstänkta proxies. I kodmodulerna skulle detta kunna ligga under en “AntiBot”- eller “Proxypool”-komponent för att filtrera eller varna för farliga IPs. Vid domänkartläggning nämns att ReconSpider även använder verktyg som Wave, Photon, ReconDog för attackyta-utforskning
+github.com
+; om sparkling-owl-spin inte har fullskalig attackyta-skanning, kan dessa verktyg övervägas för att förbättra subdomänsökning och länkupptäckt vid kryptering av crawl-riktlinjer.
+
+Saknas i sparkling-owl-spin: Systemet saknar troligen funktioner för avancerad OSINT-analys utöver grundläggande crawling. Till exempel finns ingen inbyggd honeypot-identifiering eller “proxy-check” mot IP2Proxy-databaser. Eventuella API-nycklar för Shodan eller andra tjänster är inte konfigurerade i den standardiserade konfigurationen. Däremot finns funktioner för att crawla och hämta data; saknas gör däremot nätverks- och metadata-sök som ReconSpider erbjuder (t.ex. reverse image-sökning, telefonnummeruppslagningar etc.) – funktionalitet som kanske inte är prioriterad för webbskrapning.
+
+Förslag till implementation: För nytta i en crawler/scraper kan man fokusera på de OSINT-inslag som stärker robusthet och stealth. Ett förslag är att implementera ett API-stöd mot t.ex. IP2Proxy (man kan installera deras databaser eller API) för att flagga om en given proxyadresse är av VPS/Datacenter-typ. Honeypot-kontroll kan eventuellt utnyttjas genom externa tjänster (t.ex. T-Pot honeyscore). Teknisk integration innebär att lägga in sådana kontroller i proxyhanteraren: t.ex. verifiera nya proxies mot en “is_honeypot(ip)” eller “is_proxy(ip)”-funktion. För subdomänkryptering kan befintliga Python-verktyg som Photon eller ReconDog importeras (de är fristående CTF-verktyg) för att utöka domänupptäckt. Dessa kan köras som externa processer eller bibliotek. Konfigurationsmässigt skulle man kunna lägga till inställningar för Shodan/IP2Proxy-nycklar om man vill använda sådana API:er. Men eftersom ReconSpider är så omfattande är det inte realistiskt att implementera allt; fokusera på att tillföra de delar som direkt ökar crawlers relevans (t.ex. förbättrad länk-upptäckt eller proxykvalitetskontroll) och integrera dessa på lämpliga ställen i den modulariserade arkitekturen.
+
+UltimateAppLockerByPassList
+
+Funktionalitet och teknisk implementation: Detta är egentligen inte ett körbart verktyg utan ett dokumentationsbibliotek för att beskriva olika tekniker för att kringgå Microsoft Windows AppLocker-regler
+github.com
+. AppLocker är en säkerhetsmekanism som styr vilka program/processer som får köras på Windows. Repot samlar “Generic”, “Verified” och “Unverified” listor med metoder (t.ex. användning av certifierade Windows-program, kommandon via certifierade DLL:er, speciella filformat osv.) som kan kringgå AppLockers restriktioner. Det innehåller inte exekverbara script eller kodlogik för nätverksåtkomst utan är en referensguide över exempelkommandon och leverantörers signaturer.
+
+Vad som särskiljer projektet: Det är unikt i sitt syfte att fokusera på AppLocker-bypass, något som normalt tillhör lokal host-säkerhet snarare än web scraping. Det är en omfattande samling av Windows-baserade “LOLBas” (living-off-the-land binaries) och andra tricks. För vår frågeställning är detta i stort sett irrelevant, eftersom det inte tillför funktionalitet för webb- eller proxyhantering.
+
+Integration i sparkling-owl-spin: I princip finns inget direkt att integrera – detta är dokumentation, inte ett modulärt bibliotek. Det skulle endast vara relevant i en situation där själva data-insamlingsprogrammen begränsas av AppLocker (t.ex. om crawling-API-verktygen körs i en Windows-miljö med restriktioner). Om så är fallet kunde man konsultera listan för att säkerställa att verktyg man använder är vitaListade eller att kringgå begränsningar. Men i en typisk Linux- eller molnmiljö är det inte aktuellt.
+
+Saknas i sparkling-owl-spin: Inget – repot innehåller ingen funktionalitet att återskapa, och sparkling-owl-spin behöver inte hantera AppLocker-scenerier.
+
+Förslag till implementation: Eftersom detta bara är en uppsättning tekniker/kommandon, finns ingen kod att implementera direkt. Man kan nämna att om systemet skall distribueras på Windows kan man se över vilka binärfiler som används (och undvika de som AppLocker ofta blockerar). Men det ligger utanför scope för scrapersystemet.
+
+requests-ip-rotator
+
+Funktionalitet och teknisk implementation: Detta är en Python-klient för att utnyttja Amazons API Gateway som ett gigantiskt, roterande proxynätverk
+github.com
+. Principen är att man skapar API-gateways i flera AWS-regioner; när en HTTP-förfrågan skickas genom gatewayn kommer Amazon att anropa målsidan från en AWS-server (med ett AWS-specifikt header), och varje gång kan käll-IP:n variera eftersom Amazons infrastruktur “flyttar” källnoder. Verktyget randomiserar också X-Forwarded-For-headern för att dölja klientens verkliga IP. På så sätt får man “nästan obegränsat” många IP:er tillgängliga för webbskrapning och brute-forcing
+github.com
+. Användning sker genom att instansiera ett ApiGateway-objekt (initierar gateways i valda regioner), starta det, och sedan montera det på en requests.Session mot specifik domän. Verktyget hanterar att ta ned gateways vid avslut (annars kan kostnader uppstå). Notera dock att trafiken kan spåras via AWS-specific headers (“X-Amzn-Trace-Id”), så det är inte ett perfekt anonymitetsmått.
+
+Vad som särskiljer projektet: Requests-IP-Rotator är speciellt genom sin användning av AWS API Gateway som proxy – de flesta proxy-bibliotek baserar sig på öppna proxyservrar eller egna VPS:ar, medan detta utnyttjar AWS mycket stora publik IP-bas. Detta ger teoretiskt en “pseudo-oändlig” pool av IP-adresser
+github.com
+. Jämfört med många proxylösningar har den relativt låg driftkostnad (gratis första miljonen förfrågningar per region) men potentiellt hög latens och hög upptäckbarhet (p.g.a. AWS headers). Prestandamässigt kräver det ofta creation/takedown av AWS-resurser och gör att varje förfrågan går via AWS:s API.
+
+Integration i sparkling-owl-spin: Det finns ingen motsvarande AWS-integration i sparkling-owl-spin, så detta skulle innebära en ny proxy-strategi. Man kan implementera en adapter för requests.Session liknande den i biblioteket. I praktiken behöver man lägga in stöd för AWS-nycklar i konfigurationen, samt metoder för att skapa och hantera gateways. Ett praktiskt tillvägagångssätt är att behandla detta som en specialproxy: använd ApiGateway-objektet när man vill skicka förfrågningar till en mål-domän, i stället för de vanliga proxyservrarna. Eftersom systemet redan har moduler för HTTP-begäran, kan man tillåta att vissa domäner hanteras genom AWS-gateways: t.ex. en flagga i konfigurationen “use_aws_rotator: true” eller en särskild proxy-profil som man kan montera på en session.
+
+Saknas i sparkling-owl-spin: För att matcha denna funktionalitet saknas främst själva biblioteket requests-ip-rotator samt de AWS-behörigheter som krävs. Ingen kod för att lägga upp API Gateways och rotera via dem finns idag. Däremot behövs ingen signifikant databas eller systemarkitektur för detta utöver befintlig proxyhantering – det är mer en tilläggsstrategi.
+
+Förslag till implementation: Installera paketet via pip eller som en modul i projektet. Lägg till konfigurationsmöjligheter för AWS (t.ex. att läsa AWS_ACCESS_KEY_ID och AWS_SECRET_ACCESS_KEY, samt regionval). Implementera en start/stop-flöde: t.ex. vid init av scraping för en domän med AWS-rotator, skapa ApiGateway(domain) och kör gateway.start(), använd sedan session.mount(domain, gateway) som i biblioteksexemplet
+github.com
+. Efter crawlingen, anropa gateway.shutdown(). För användbarhet bör detta hanteras av frameworket: kanske en proxy-typ “aws-gateway” med parametrar (domän, regionslista) som automatiskt utför start/mount/shutdown. Var noga med att logga kostnader och fel från AWS. Eftersom denna teknik är ganska avvikande (och AWS-servertrafiken är synlig), bör den användas som sista utväg eller under hög sekretess.
+
+Incognito (av amethystnetwork-dev)
+
+Funktionalitet och teknisk implementation: Incognito är huvudsakligen en webbproxy/tjänst (NodeJS-baserad) designad för att undvika censur och botdetektering. Repositoriet i fråga är en oficiell deployment-variant som inkluderar en så kallad “wisp server” (en http-proxying server) och UI, vilket gör det enkelt att distribuera Incognito på molntjänster
+github.com
+. Källkoden är JavaScript/HTML-baserad, inte Python. Enligt README använder denna Incognito-implementation en proxy-motor kallad Ultraviolet som sin enda proxykälla
+github.com
+. Den erbjuder bland annat funktioner som “tab cloaks” (små trick i webbläsaren) och andra webbläsarliknande tekniker för att efterlikna en vanlig användare.
+
+Vad som särskiljer projektet: Incognito/Ultraviolet är designat som en klientvänlig webbtjänst för att bläddra anonymt, ofta från en webbläsare. Det är inte ett API eller bibliotek för programmatisk åtkomst, utan en hel lösning med frontend och serverkomponenter. Det som sticker ut är att proxy-motorn Ultraviolet är specialbyggd för att kringgå blockeringar (men den har begränsningar, t.ex. buggar vid nedladdning och egen HTTP-huvudssekvens)
+github.com
+.
+
+Integration i sparkling-owl-spin: Eftersom detta är en separat webbproxylösning, är direkt integration komplicerad. Det skulle teoretiskt kunna användas som extern proxy: man skulle behöva kunna anropa Ultraviolet-servern via HTTP från crawlern. Om Ultraviolet exponerar ett API eller om man kan köra den som container, kan man kanske konfigurera crawlingbiblioteket (t.ex. Selenium eller requests) att använda Incognito som en HTTP-proxy (t.ex. instanserar Selenium med det som proxy). I praktiken är det troligt mer arbete än nytta; man kan istället se Ultraviolet som en inspirationskälla eller valmöjlighet.
+
+Saknas i sparkling-owl-spin: För att återskapa Incognitos funktionalitet behövs i så fall en webbläsarproxfunktion som stöder Ultraviolet-format. Inga sådana komponenter finns i grundkoden. Oavsett saknas implementerade styrningsmöjligheter för “tab cloaks” eller användning av Incognito-domäner.
+
+Förslag till implementation: Om man vill inkludera Incognito-tjänster kan man överväga att köra Incognito/Ultraviolet som en extern proxyserver (kanske i en Docker-container) och sedan lägga till den som en proxy i proxy-poolen. Detta kräver dock att Ultraviolet har ett publik API eller proxyport att kontakta. Då skulle sparkling-owl-spin behöva stöd för att dirigera vissa crawling-requests genom denna proxy (tekniskt: ange proxies={‘http’: 'http://ultraviolet:port', ...} i HTTP-klient eller i WebDriver-inställningar). Eftersom detta är JavaScript/CSS/UI-baserat (inte ett Python-API) kan även säkerhetsbedömning krävas. Kort sagt är Incognito mer ett alternativt verktyg för slutbrukare än en modul att koda in i backend; det är sannolikt tillräckligt att känna till dess existens som extraverktyg.
+
+F0rc3Run
+
+Funktionalitet och teknisk implementation: F0rc3Run är i praktiken en samling fria VPN-konfigurationslänkar (subscription-länkar) för protokoll som V2Ray (VMess, VLESS), Shadowsocks, SSTP och Trojan
+github.com
+github.com
+. Repot håller kontinuerligt uppdaterade listor över servrar hämtade från offentliga källor och testar dem automatiskt var sjätte timme
+github.com
+. Filstrukturen innehåller t.ex. kataloger “splitted-by-protocol” med textfiler som listor av konfig-data. Tanken är att en användare kan ladda ner en “subscription” och använda dessa med en kompatibel VPN-klient för att skydda anonymitet och kringgå blockering. Inget Python-skript eller API exekverar här – det är i huvudsak en datakälla.
+
+Vad som särskiljer projektet: Det som är unikt är att man erbjuder många protokollstyper samlade och att länkarna uppdateras och testas ofta – praktiskt för användare som vill ha gratis VPN. Eftersom det bygger på V2Ray-ekosystemet kan det inte direkt användas som HTTP/HTTPS-proxy i traditionell mening. Prestandamässigt beror anslutningen på VPN-servrarnas kapacitet; det kan ge höga hastigheter men kräver externa klienter som förstår protokollen.
+
+Integration i sparkling-owl-spin: Indirekt kan detta användas för att utöka proxybasen. Om systemet kan hantera V2Ray/Shadowsocks-proxyer (t.ex. via integration med v2rayN eller Python-bibliotek för V2Ray/SS), skulle man kunna skriva kod som laddar ner dessa listor och konfigurerar en proxy-tunnel. Mer praktiskt skulle man kunna skrapa textfilerna i F0rc3Run och konvertera dem till respektive proxyobjekt. Exempel: hämta splitted-by-protocol/shadowsocks.txt, extrahera IP/port/passphras/algoritm, och sedan anropa en Shadowsocks-klient (via CLI eller bib) för att skapa en lokal proxy (samma för V2Ray). Sedan kan sparkling-owl-spin använda dessa lokala proxies i sin pool. Om detta är komplext kan man åtminstone tillåta proxy-vyer från V2Ray/Sub-nätverket genom att lägga in dessa konfigurerade proxies i proxy-poolen med högre prioritet (för att få fräsch IP via V2Ray).
+
+Saknas i sparkling-owl-spin: Systemet har troligen ingen färdig hantering av V2Ray- eller Shadowsocks-proxyer (om inte dessa lagts till separat). Det saknas kod för att hämta och tolka textfiler eller Sub-länkar från externa källor. Det saknas också eventuellt klientbibliotek för att initiera dessa avancerade proxyer från Python.
+
+Förslag till implementation: Ett förslag är att lägga till ett skript eller modul som kan uppdatera en lista av proxies från F0rc3Run. Exempel: periodiskt klona eller curl repositoriets råfiler (eller använda GitHub-API) för att hämta protokollinställningarna. Sedan parse:a t.ex. Shadowsocks-URL:er och initiera en Shadowsocks-anslutning (t.ex. med sslocal som systemkommando) på en slumpad port, och registrera http://127.0.0.1:denna_port som proxy i proxy-poolen. För V2Ray (VMess/VLESS), använd v2ray med en JSON-konfig som byggs från sub-länkar. För SSTP kan sttps/ config användas via OpenVPN-tools. Allt detta kräver nya beroenden (v2ray, shadowsocks) och konfiguration (exempelvis att ha dem installerade). Ett enklare alternativ är att använda en färdig Python-VPN-client-bibliotek (om sådant finns) eller att låta användaren manuellt lägga in valda F0rc3Run-länkar i en konfiguration och sedan skapa proxies utifrån dem.
+
+Chameleon
+
+Funktionalitet och teknisk implementation: Chameleon är en omfattande honeypot-samling som emulerar 19 olika nätverks- och applikationstjänster (DNS, HTTP proxy, HTTP(S), SSH, POP3, IMAP, SMTP, RDP, VNC, SMB, SOCKS5, Redis, TELNET, PostgreSQL, MySQL, MSSQL, Elasticsearch, LDAP)
+github.com
+. Varje honeypot är anpassningsbar och kan konfigureras för att registrera all trafik och t.ex. stjäla credentials eller uppmärksamma intrångsförsök. Projektet inkluderar Docker-filer och konfigurationsmallar för att enkelt starta upp dessa honeypots och analysera loggar (t.ex. med Grafana). Syftet är att upptäcka botar eller angripare som söker öppna tjänster och fälla dem med “skräpfällor”.
+
+Vad som särskiljer projektet: Det är unikt i sin bredd och modularitet: 19 olika protokoll i samma ramverk är ovanligt. Många honeypotprojekt fokuserar på en eller några protokoll, medan Chameleon gör allt i en container-stack. Licensen är AGPL-3.0. Prestandamässigt är det en utmaning att köra alla honeypots, men eftersom de mestadels endast ska logga försök är det inte tungt för CPU (men kan exponera portar, och kräver att dessa portar är tillåtna i nätverket).
+
+Integration i sparkling-owl-spin: För en avancerad crawler kan honeypots utnyttjas som fällor eller analyseringsverktyg. Ett potentiellt integrationsscenario är att sätta upp ett Chameleon-honeypot-nätverk på samma server eller nätverkssegment som crawlersystemet, för att locka botar/proxyer till att ansluta mot dessa identifierbara tjänster. Data från honeypots (t.ex. databas av fångade IPs) kan sedan matas tillbaka för att förbättra proxyfiltrering (om en proxy försöker göra SSH i våra honeypots, kanske det är en skräpproxy). Implementationsmässigt skulle man behöva köra Chameleon i Docker eller Kubernetes och sedan läsa av loggar (det finns t.ex. en run.sh och Docker-konfig) för att extrahera information. Denna information kan sedan importeras till systemets datalager. Man kan också tänka sig att låta honeypot-analysen styra trafik: om en proxy är “interaktiv” med honeypots, kan den svartlistas.
+
+Saknas i sparkling-owl-spin: Sannolikt finns inga honeypots idag. För att matcha Chameleon skulle man behöva både infrastrukturen (containrar med olika tjänster exponerade) och analysverktyget (som identifierar bot-aktiviteter). Detta är helt utanför standard web-crawling och skulle kräva betydande nya komponenter (loggsamlare, dashboards, alert-system).
+
+Förslag till implementation: Om målet är att öka stealth och upptäcktsriskhantering kan man lägga till en modul “honeypot-övervakning”. Detta innebär att man lanserar Chameleon (kanske i en sandlåda) och sedan bygger en egen process som regelbundet kontrollerar dess loggar. Den processen skulle markera och kanske delvis blockera IPs som Chameleon-fällor loggat. Man kan använda t.ex. ELK/Grafana-stack (som medföljer Chameleon) för att visualisera attacker, men enklare är att i Python-parsa loggkatalogerna. Den tekniska utmaningen är deployment: Chameleon kräver Docker och flera konfigureringar. En enklare variant är att endast använda ett eller några få av dess honeypots (t.ex. en enkel HTTP-proxy-honeypot) som microtjänst. Men att integrera hela Chameleon som en del av en crawlerarkitektur är komplext. Alternativt notera projektet som inspirationskälla för avancerad återkoppling snarare än direkt plugin-kod.
+
+WebPayloadsEncodings
+
+Funktionalitet och teknisk implementation: Detta är ett Python-paket för att enkoda webb-payloads i olika format
+github.com
+. Det kan köra från CLI eller som importerat bibliotek. Verktyget stöder flera typer av enkodning för ett givet textpayload: HTML-entitetskodning, URL-kodning, Unicode/UTF-16/32, hexa-escaping, base64, slutna/öppna taggar och olika former av splitting/bypass-mönster (t.ex. dela skript-taggar med avslutsvänster), m.fl. I README visas exempelkommandon: t.ex. WebPayloadsEncodings 'url' 'payload' '...
+github.com
+. Syftet är att hjälpa penetrationstestare att skapa varianter av XSS/SQL/Injektion-payloads för att kringgå WAF-regler och filter.
+
+Vad som särskiljer projektet: Det är relativt enkelt och fokuserat – den största fördelen är att det samlar många enkodningsalgoritmer i ett paket. Det är open source, GPL-licens, och verkar underhållas av en enskild utvecklare. Det finns liknande verktyg (t.ex. urllib.parse.quote, olika Python-bibliotek för URL-enkod), men detta ger ett enhetligt gränssnitt för flera koder samtidigt. Projektets prestanda är inte kritisk då det bara utför texttransformationer (snabbt i Python för korta strängar).
+
+Integration i sparkling-owl-spin: För en web crawler är detta primärt relevant som en potentiell hjälp för att generera ”polite” varianter av indata vid test av formulär eller insättningar, speciellt om systemet gör penetrationstest eller vill kringgå enkel WAF-blockering. Om sparkling-owl-spin inkluderar moduler för att posta data eller skicka dynamiska förfrågningar (t.ex. populera ett sökformulär för att hämta nya länkar), kan WebPayloadsEncodings användas för att automatiskt anpassa payloads. Integrationsmässigt kan man erbjuda detta som ett hjälppaket för “Stealth”- eller “Bypass”-verktyg. Koden kan anropas t.ex. via import WebPayloadsEncodings; WebPayloadsEncodings.payloads_encodings('url', payload) i en datainsamlingspipeline.
+
+Saknas i sparkling-owl-spin: Troligen finns inget dedikerat verktyg för att generera obfuskerad eller kodad indata. Om systemet ska ha avancerad formhantering saknas således en modul för payload-encoding. Däremot är detta kanske sekundärt, eftersom sys. huvudfokus är insamling snarare än aktiv omproduktion av attacker.
+
+Förslag till implementation: Lägga till paketet som ett beroende (t.ex. via pip install WebPayloadsEncodings). Skapa en wrapper eller util-funktion som kan användas där lämpligt: till exempel i en modul som hanterar XHR-sökfrågor kan man randomisera mellan rå text eller URL-kodad text baserat på målserverns känslighet. För konfiguration kan man erbjuda nivåval (“ingen kodning”, “URL-kodad”, “HTML-enkodad” etc) i template-DSL så att operatörer kan välja om de vill försöka avancera sin form-data. Funktionellt sett är det enkelt att använda – man behöver bara skicka in sin payload-sträng och välja kodningstyper.
+
+XSS-LOADER
+
+Funktionalitet och teknisk implementation: XSS-LOADER är ett verktyg som kombinerar XSS-payloadgenerator, scanner och Google Dork-sökare i ett
+github.com
+. I korthet hjälper det användaren att skapa XSS-injektion-payloads (för standard <script>-taggar och variationer med <div>, <img> osv.), automatiskt koda dem (många encoding-alternativ listas, från stora/små bokstäver till Base64, Unicode, html-entiteter, mutant-filer etc.)
+github.com
+github.com
+. Det har även en skannerdel (som troligen injicerar dessa payloads i givna URL-parametrar för att testa om de körs), samt en “dork finder” som kan hitta potentiellt sårbara URL:er via Google-sökningar. Projektet är Python-baserat (skiljer sig från WebPayloadsEncodings som bara kodar; XSS-LOADER är ett större CLI-verktyg byggt för penetrationstester). Exempel i readme visar hur olika taggbaserade payloads sätts upp och kodas i olika format.
+
+Vad som särskiljer projektet: Det är “allt-i-ett” för XSS-skapande och -upptäckt. Jämfört med enklare payload-genererare innehåller den inbyggd scanning och sökning (dorkning) samt ett omfattande antal kodningsexempel. Licensen är CC0 (public domain) för själva koden. Projektet passar för säkerhetstestare snarare än dataextraktion: det har inga avancerade crawlalgoritmer utan fokuserar på attackparametrar.
+
+Integration i sparkling-owl-spin: För en ren webbskrapare är XSS-LOADER:s kärnfunktioner i princip utanför kärnområdet. Emellertid kan en avancerad crawlersystem använda vissa delar: exempelvis för att kontrollera att indata (som skickas i forms) inte triggar XSS-filtrering. Men detta är mer en “pentest”-funktion. Om man ändå vill erbjuda den här kapaciteten kan man importera eller anropa verktygets delar (eller mer troligt en intern implementering). Tekniken kan användas som en “stealth”-teknik genom att skapa omvägskodade representationer av vanliga scripts för att undvika filter i exempelvis körda formulär.
+
+Saknas i sparkling-owl-spin: Det finns troligen inget liknande XSS-genereringsverktyg i plattformen. För att matcha denna funktionalitet skulle man behöva utveckla eller integrera ett modulärt system för att generera olika injektionspayloads (inklusive kodningstyper) och eventuellt automatisera scanning. Detta är en hel pentest-funktionalitet som ligger utanför standardgränssnittet, så det saknas mest som ett “specialverktyg”.
+
+Förslag till implementation: Om man ändå vill ha något sådant kan man antingen integrera XSS-LOADER som ett externt verktyg (kalla det via CLI med subprocess när man vill testa URL:er), eller lägga in enkla enkodare liknande WebPayloadsEncodings i systemet. En modul “XSSGenerator” skulle kunna erbjuda några vanliga payload-mallar (från README) och funktionen att koda dem (t.ex. via Python:s urllib.parse för URL-kodning, etc.). För scanning/dorking är detta mer komplext – skulle kräva att systemet kallar Google eller andra sökmotorer och analyserar, vilket riskerar crawlblockering. Troligtvis räcker det att nämna möjligheten som framtida funktion för penetrationstestning, alternativt kräva att en “security”-modul aktiveras om man vill använda denna typ av avancerade attacker.
+
+Källor: Officiella GitHub-sidor och README för respektive projekt har använts för att beskriva funktioner och implementation
+GitHub
+github.com
+github.com
+github.com
+github.com
+github.com
+github.com
+github.com
+github.com
+github.com
+github.com
+github.com
+. Dessa källor ger detaljer om vad varje verktyg gör och hur de skiljer sig, vilket ligger till grund för jämförelsen och integrationsförslagen ovan.

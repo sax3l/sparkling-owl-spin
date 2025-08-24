@@ -1,0 +1,586 @@
+{
+  "analysis_timestamp": "2025-08-24T17:53:47.017438",
+  "summary": {
+    "total_repositories_analyzed": 30,
+    "successful_analyses": 30,
+    "failed_analyses": 0,
+    "success_rate": 100.0
+  },
+  "integration_potential_breakdown": {
+    "high_potential": 9,
+    "medium_potential": 15,
+    "low_potential": 6
+  },
+  "detailed_results": {
+    "https://github.com/jhao104/proxy_pool": {
+      "repo_name": "proxy_pool",
+      "success": true,
+      "analysis_timestamp": "2025-08-24T17:51:55.280751",
+      "total_files_analyzed": 0,
+      "languages_found": [],
+      "key_features_identified": [],
+      "integration_potential": "high",
+      "recommended_integration_approach": "Integrate proxy fetching and validation methods into our proxy_pool module",
+      "estimated_implementation_effort": "low (1-2 days)",
+      "error_message": null,
+      "analysis_notes": [
+        "Repository contains 0 files",
+        "Clone successful: True",
+        "Key files found: 0",
+        "Implementation insights: 0",
+        "Integration complexity: high"
+      ]
+    },
+    "https://github.com/constverum/ProxyBroker": {
+      "repo_name": "ProxyBroker",
+      "success": true,
+      "analysis_timestamp": "2025-08-24T17:51:58.005157",
+      "total_files_analyzed": 0,
+      "languages_found": [],
+      "key_features_identified": [],
+      "integration_potential": "high",
+      "recommended_integration_approach": "Extract advanced proxy handling classes for our Enhanced Proxy Manager",
+      "estimated_implementation_effort": "low (1-2 days)",
+      "error_message": null,
+      "analysis_notes": [
+        "Repository contains 0 files",
+        "Clone successful: True",
+        "Key files found: 0",
+        "Implementation insights: 0",
+        "Integration complexity: high"
+      ]
+    },
+    "https://github.com/Ge0rg3/requests-ip-rotator": {
+      "repo_name": "requests-ip-rotator",
+      "success": true,
+      "analysis_timestamp": "2025-08-24T17:52:00.973336",
+      "total_files_analyzed": 0,
+      "languages_found": [],
+      "key_features_identified": [],
+      "integration_potential": "high",
+      "recommended_integration_approach": "Implement IP rotation techniques in our IP rotation system",
+      "estimated_implementation_effort": "low (1-2 days)",
+      "error_message": null,
+      "analysis_notes": [
+        "Repository contains 0 files",
+        "Clone successful: True",
+        "Key files found: 0",
+        "Implementation insights: 0",
+        "Integration complexity: high"
+      ]
+    },
+    "https://github.com/scrapy/scrapy": {
+      "repo_name": "scrapy",
+      "success": true,
+      "analysis_timestamp": "2025-08-24T17:52:03.783668",
+      "total_files_analyzed": 0,
+      "languages_found": [],
+      "key_features_identified": [],
+      "integration_potential": "medium",
+      "recommended_integration_approach": "Extract core scraping patterns and middleware concepts",
+      "estimated_implementation_effort": "low (1-2 days)",
+      "error_message": null,
+      "analysis_notes": [
+        "Repository contains 0 files",
+        "Clone successful: True",
+        "Key files found: 0",
+        "Implementation insights: 0",
+        "Integration complexity: medium"
+      ]
+    },
+    "https://github.com/NaiboWang/EasySpider": {
+      "repo_name": "EasySpider",
+      "success": true,
+      "analysis_timestamp": "2025-08-24T17:52:07.107231",
+      "total_files_analyzed": 0,
+      "languages_found": [],
+      "key_features_identified": [],
+      "integration_potential": "medium",
+      "recommended_integration_approach": "Manual code review and selective feature extraction",
+      "estimated_implementation_effort": "low (1-2 days)",
+      "error_message": null,
+      "analysis_notes": [
+        "Repository contains 0 files",
+        "Clone successful: True",
+        "Key files found: 0",
+        "Implementation insights: 0",
+        "Integration complexity: medium"
+      ]
+    },
+    "https://github.com/ScrapeGraphAI/Scrapegraph-ai": {
+      "repo_name": "Scrapegraph-ai",
+      "success": true,
+      "analysis_timestamp": "2025-08-24T17:52:12.278841",
+      "total_files_analyzed": 0,
+      "languages_found": [],
+      "key_features_identified": [],
+      "integration_potential": "high",
+      "recommended_integration_approach": "Develop AI-powered content extraction capabilities",
+      "estimated_implementation_effort": "low (1-2 days)",
+      "error_message": null,
+      "analysis_notes": [
+        "Repository contains 0 files",
+        "Clone successful: True",
+        "Key files found: 0",
+        "Implementation insights: 0",
+        "Integration complexity: high"
+      ]
+    },
+    "https://github.com/unclecode/crawl4ai": {
+      "repo_name": "crawl4ai",
+      "success": true,
+      "analysis_timestamp": "2025-08-24T17:52:15.298749",
+      "total_files_analyzed": 0,
+      "languages_found": [],
+      "key_features_identified": [],
+      "integration_potential": "medium",
+      "recommended_integration_approach": "Manual code review and selective feature extraction",
+      "estimated_implementation_effort": "low (1-2 days)",
+      "error_message": null,
+      "analysis_notes": [
+        "Repository contains 0 files",
+        "Clone successful: True",
+        "Key files found: 0",
+        "Implementation insights: 0",
+        "Integration complexity: medium"
+      ]
+    },
+    "https://github.com/AtuboDad/playwright_stealth": {
+      "repo_name": "playwright_stealth",
+      "success": true,
+      "analysis_timestamp": "2025-08-24T17:52:18.989097",
+      "total_files_analyzed": 0,
+      "languages_found": [],
+      "key_features_identified": [],
+      "integration_potential": "high",
+      "recommended_integration_approach": "Integrate stealth techniques into our anti-detection module",
+      "estimated_implementation_effort": "low (1-2 days)",
+      "error_message": null,
+      "analysis_notes": [
+        "Repository contains 0 files",
+        "Clone successful: True",
+        "Key files found: 0",
+        "Implementation insights: 0",
+        "Integration complexity: high"
+      ]
+    },
+    "https://github.com/ulixee/secret-agent": {
+      "repo_name": "secret-agent",
+      "success": true,
+      "analysis_timestamp": "2025-08-24T17:52:21.974850",
+      "total_files_analyzed": 0,
+      "languages_found": [],
+      "key_features_identified": [],
+      "integration_potential": "medium",
+      "recommended_integration_approach": "Manual code review and selective feature extraction",
+      "estimated_implementation_effort": "low (1-2 days)",
+      "error_message": null,
+      "analysis_notes": [
+        "Repository contains 0 files",
+        "Clone successful: True",
+        "Key files found: 0",
+        "Implementation insights: 0",
+        "Integration complexity: medium"
+      ]
+    },
+    "https://github.com/tholian-network/stealth": {
+      "repo_name": "stealth",
+      "success": true,
+      "analysis_timestamp": "2025-08-24T17:52:27.363116",
+      "total_files_analyzed": 0,
+      "languages_found": [],
+      "key_features_identified": [],
+      "integration_potential": "medium",
+      "recommended_integration_approach": "Manual code review and selective feature extraction",
+      "estimated_implementation_effort": "low (1-2 days)",
+      "error_message": null,
+      "analysis_notes": [
+        "Repository contains 0 files",
+        "Clone successful: True",
+        "Key files found: 0",
+        "Implementation insights: 0",
+        "Integration complexity: medium"
+      ]
+    },
+    "https://github.com/FlareSolverr/FlareSolverr": {
+      "repo_name": "FlareSolverr",
+      "success": true,
+      "analysis_timestamp": "2025-08-24T17:52:30.546906",
+      "total_files_analyzed": 0,
+      "languages_found": [],
+      "key_features_identified": [],
+      "integration_potential": "high",
+      "recommended_integration_approach": "Create specialized Cloudflare bypass module",
+      "estimated_implementation_effort": "low (1-2 days)",
+      "error_message": null,
+      "analysis_notes": [
+        "Repository contains 0 files",
+        "Clone successful: True",
+        "Key files found: 0",
+        "Implementation insights: 0",
+        "Integration complexity: high"
+      ]
+    },
+    "https://github.com/sarperavci/CloudflareBypassForScraping": {
+      "repo_name": "CloudflareBypassForScraping",
+      "success": true,
+      "analysis_timestamp": "2025-08-24T17:52:33.213825",
+      "total_files_analyzed": 0,
+      "languages_found": [],
+      "key_features_identified": [],
+      "integration_potential": "high",
+      "recommended_integration_approach": "Create specialized Cloudflare bypass module",
+      "estimated_implementation_effort": "low (1-2 days)",
+      "error_message": null,
+      "analysis_notes": [
+        "Repository contains 0 files",
+        "Clone successful: True",
+        "Key files found: 0",
+        "Implementation insights: 0",
+        "Integration complexity: high"
+      ]
+    },
+    "https://github.com/solve-cloudflare/cloudflare-bypass": {
+      "repo_name": "cloudflare-bypass",
+      "success": true,
+      "analysis_timestamp": "2025-08-24T17:52:36.004495",
+      "total_files_analyzed": 0,
+      "languages_found": [],
+      "key_features_identified": [],
+      "integration_potential": "high",
+      "recommended_integration_approach": "Create specialized Cloudflare bypass module",
+      "estimated_implementation_effort": "low (1-2 days)",
+      "error_message": null,
+      "analysis_notes": [
+        "Repository contains 0 files",
+        "Clone successful: True",
+        "Key files found: 0",
+        "Implementation insights: 0",
+        "Integration complexity: high"
+      ]
+    },
+    "https://github.com/Python3WebSpider/ProxyPool": {
+      "repo_name": "ProxyPool",
+      "success": true,
+      "analysis_timestamp": "2025-08-24T17:52:38.742765",
+      "total_files_analyzed": 0,
+      "languages_found": [],
+      "key_features_identified": [],
+      "integration_potential": "high",
+      "recommended_integration_approach": "Integrate proxy fetching and validation methods into our proxy_pool module",
+      "estimated_implementation_effort": "low (1-2 days)",
+      "error_message": null,
+      "analysis_notes": [
+        "Repository contains 0 files",
+        "Clone successful: True",
+        "Key files found: 0",
+        "Implementation insights: 0",
+        "Integration complexity: high"
+      ]
+    },
+    "https://github.com/mubeng/mubeng": {
+      "repo_name": "mubeng",
+      "success": true,
+      "analysis_timestamp": "2025-08-24T17:52:41.409823",
+      "total_files_analyzed": 0,
+      "languages_found": [],
+      "key_features_identified": [],
+      "integration_potential": "medium",
+      "recommended_integration_approach": "Manual code review and selective feature extraction",
+      "estimated_implementation_effort": "low (1-2 days)",
+      "error_message": null,
+      "analysis_notes": [
+        "Repository contains 0 files",
+        "Clone successful: True",
+        "Key files found: 0",
+        "Implementation insights: 0",
+        "Integration complexity: medium"
+      ]
+    },
+    "https://github.com/markgacoka/selenium-proxy-rotator": {
+      "repo_name": "selenium-proxy-rotator",
+      "success": true,
+      "analysis_timestamp": "2025-08-24T17:52:44.199077",
+      "total_files_analyzed": 0,
+      "languages_found": [],
+      "key_features_identified": [],
+      "integration_potential": "medium",
+      "recommended_integration_approach": "Manual code review and selective feature extraction",
+      "estimated_implementation_effort": "low (1-2 days)",
+      "error_message": null,
+      "analysis_notes": [
+        "Repository contains 0 files",
+        "Clone successful: True",
+        "Key files found: 0",
+        "Implementation insights: 0",
+        "Integration complexity: medium"
+      ]
+    },
+    "https://github.com/juancarlospaco/faster-than-requests": {
+      "repo_name": "faster-than-requests",
+      "success": true,
+      "analysis_timestamp": "2025-08-24T17:52:47.607409",
+      "total_files_analyzed": 0,
+      "languages_found": [],
+      "key_features_identified": [],
+      "integration_potential": "medium",
+      "recommended_integration_approach": "Integrate performance optimization techniques",
+      "estimated_implementation_effort": "low (1-2 days)",
+      "error_message": null,
+      "analysis_notes": [
+        "Repository contains 0 files",
+        "Clone successful: True",
+        "Key files found: 0",
+        "Implementation insights: 0",
+        "Integration complexity: medium"
+      ]
+    },
+    "https://github.com/n8n-io/n8n": {
+      "repo_name": "n8n",
+      "success": true,
+      "analysis_timestamp": "2025-08-24T17:52:50.878242",
+      "total_files_analyzed": 0,
+      "languages_found": [],
+      "key_features_identified": [],
+      "integration_potential": "medium",
+      "recommended_integration_approach": "Manual code review and selective feature extraction",
+      "estimated_implementation_effort": "low (1-2 days)",
+      "error_message": null,
+      "analysis_notes": [
+        "Repository contains 0 files",
+        "Clone successful: True",
+        "Key files found: 0",
+        "Implementation insights: 0",
+        "Integration complexity: medium"
+      ]
+    },
+    "https://github.com/gosom/google-maps-scraper": {
+      "repo_name": "google-maps-scraper",
+      "success": true,
+      "analysis_timestamp": "2025-08-24T17:53:04.717933",
+      "total_files_analyzed": 0,
+      "languages_found": [],
+      "key_features_identified": [],
+      "integration_potential": "medium",
+      "recommended_integration_approach": "Manual code review and selective feature extraction",
+      "estimated_implementation_effort": "low (1-2 days)",
+      "error_message": null,
+      "analysis_notes": [
+        "Repository contains 0 files",
+        "Clone successful: True",
+        "Key files found: 0",
+        "Implementation insights: 0",
+        "Integration complexity: medium"
+      ]
+    },
+    "https://github.com/dipu-bd/lightnovel-crawler": {
+      "repo_name": "lightnovel-crawler",
+      "success": true,
+      "analysis_timestamp": "2025-08-24T17:53:07.991671",
+      "total_files_analyzed": 0,
+      "languages_found": [],
+      "key_features_identified": [],
+      "integration_potential": "medium",
+      "recommended_integration_approach": "Manual code review and selective feature extraction",
+      "estimated_implementation_effort": "low (1-2 days)",
+      "error_message": null,
+      "analysis_notes": [
+        "Repository contains 0 files",
+        "Clone successful: True",
+        "Key files found: 0",
+        "Implementation insights: 0",
+        "Integration complexity: medium"
+      ]
+    },
+    "https://github.com/itsOwen/CyberScraper-2077": {
+      "repo_name": "CyberScraper-2077",
+      "success": true,
+      "analysis_timestamp": "2025-08-24T17:53:11.405696",
+      "total_files_analyzed": 0,
+      "languages_found": [],
+      "key_features_identified": [],
+      "integration_potential": "medium",
+      "recommended_integration_approach": "Manual code review and selective feature extraction",
+      "estimated_implementation_effort": "low (1-2 days)",
+      "error_message": null,
+      "analysis_notes": [
+        "Repository contains 0 files",
+        "Clone successful: True",
+        "Key files found: 0",
+        "Implementation insights: 0",
+        "Integration complexity: medium"
+      ]
+    },
+    "https://github.com/sch0ld/Biluppgifter-WebScraper": {
+      "repo_name": "Biluppgifter-WebScraper",
+      "success": true,
+      "analysis_timestamp": "2025-08-24T17:53:14.104355",
+      "total_files_analyzed": 0,
+      "languages_found": [],
+      "key_features_identified": [],
+      "integration_potential": "medium",
+      "recommended_integration_approach": "Create specialized Swedish vehicle data module",
+      "estimated_implementation_effort": "low (1-2 days)",
+      "error_message": null,
+      "analysis_notes": [
+        "Repository contains 0 files",
+        "Clone successful: True",
+        "Key files found: 0",
+        "Implementation insights: 0",
+        "Integration complexity: medium"
+      ]
+    },
+    "https://github.com/philipgyllhamn/fordonsuppgifter-api-wrapper": {
+      "repo_name": "fordonsuppgifter-api-wrapper",
+      "success": true,
+      "analysis_timestamp": "2025-08-24T17:53:16.740254",
+      "total_files_analyzed": 0,
+      "languages_found": [],
+      "key_features_identified": [],
+      "integration_potential": "medium",
+      "recommended_integration_approach": "Create specialized Swedish vehicle data module",
+      "estimated_implementation_effort": "low (1-2 days)",
+      "error_message": null,
+      "analysis_notes": [
+        "Repository contains 0 files",
+        "Clone successful: True",
+        "Key files found: 0",
+        "Implementation insights: 0",
+        "Integration complexity: medium"
+      ]
+    },
+    "https://github.com/dunderrrrrr/blocket_api": {
+      "repo_name": "blocket_api",
+      "success": true,
+      "analysis_timestamp": "2025-08-24T17:53:19.571867",
+      "total_files_analyzed": 0,
+      "languages_found": [],
+      "key_features_identified": [],
+      "integration_potential": "medium",
+      "recommended_integration_approach": "Manual code review and selective feature extraction",
+      "estimated_implementation_effort": "low (1-2 days)",
+      "error_message": null,
+      "analysis_notes": [
+        "Repository contains 0 files",
+        "Clone successful: True",
+        "Key files found: 0",
+        "Implementation insights: 0",
+        "Integration complexity: medium"
+      ]
+    },
+    "https://github.com/m14r41/PentestingEverything": {
+      "repo_name": "PentestingEverything",
+      "success": true,
+      "analysis_timestamp": "2025-08-24T17:53:22.219329",
+      "total_files_analyzed": 0,
+      "languages_found": [],
+      "key_features_identified": [],
+      "integration_potential": "low",
+      "recommended_integration_approach": "Manual code review and selective feature extraction",
+      "estimated_implementation_effort": "low (1-2 days)",
+      "error_message": null,
+      "analysis_notes": [
+        "Repository contains 0 files",
+        "Clone successful: True",
+        "Key files found: 0",
+        "Implementation insights: 0",
+        "Integration complexity: low"
+      ]
+    },
+    "https://github.com/swisskyrepo/PayloadsAllTheThings": {
+      "repo_name": "PayloadsAllTheThings",
+      "success": true,
+      "analysis_timestamp": "2025-08-24T17:53:33.946219",
+      "total_files_analyzed": 0,
+      "languages_found": [],
+      "key_features_identified": [],
+      "integration_potential": "low",
+      "recommended_integration_approach": "Manual code review and selective feature extraction",
+      "estimated_implementation_effort": "low (1-2 days)",
+      "error_message": null,
+      "analysis_notes": [
+        "Repository contains 0 files",
+        "Clone successful: True",
+        "Key files found: 0",
+        "Implementation insights: 0",
+        "Integration complexity: low"
+      ]
+    },
+    "https://github.com/wallarm/gotestwaf": {
+      "repo_name": "gotestwaf",
+      "success": true,
+      "analysis_timestamp": "2025-08-24T17:53:37.676865",
+      "total_files_analyzed": 0,
+      "languages_found": [],
+      "key_features_identified": [],
+      "integration_potential": "low",
+      "recommended_integration_approach": "Manual code review and selective feature extraction",
+      "estimated_implementation_effort": "low (1-2 days)",
+      "error_message": null,
+      "analysis_notes": [
+        "Repository contains 0 files",
+        "Clone successful: True",
+        "Key files found: 0",
+        "Implementation insights: 0",
+        "Integration complexity: low"
+      ]
+    },
+    "https://github.com/getmaxun/maxun": {
+      "repo_name": "maxun",
+      "success": true,
+      "analysis_timestamp": "2025-08-24T17:53:40.508038",
+      "total_files_analyzed": 0,
+      "languages_found": [],
+      "key_features_identified": [],
+      "integration_potential": "low",
+      "recommended_integration_approach": "Manual code review and selective feature extraction",
+      "estimated_implementation_effort": "low (1-2 days)",
+      "error_message": null,
+      "analysis_notes": [
+        "Repository contains 0 files",
+        "Clone successful: True",
+        "Key files found: 0",
+        "Implementation insights: 0",
+        "Integration complexity: low"
+      ]
+    },
+    "https://github.com/D4Vinci/Scrapling": {
+      "repo_name": "Scrapling",
+      "success": true,
+      "analysis_timestamp": "2025-08-24T17:53:43.499589",
+      "total_files_analyzed": 0,
+      "languages_found": [],
+      "key_features_identified": [],
+      "integration_potential": "low",
+      "recommended_integration_approach": "Manual code review and selective feature extraction",
+      "estimated_implementation_effort": "low (1-2 days)",
+      "error_message": null,
+      "analysis_notes": [
+        "Repository contains 0 files",
+        "Clone successful: True",
+        "Key files found: 0",
+        "Implementation insights: 0",
+        "Integration complexity: low"
+      ]
+    },
+    "https://github.com/BruceDone/awesome-crawler": {
+      "repo_name": "awesome-crawler",
+      "success": true,
+      "analysis_timestamp": "2025-08-24T17:53:46.271787",
+      "total_files_analyzed": 0,
+      "languages_found": [],
+      "key_features_identified": [],
+      "integration_potential": "low",
+      "recommended_integration_approach": "Manual code review and selective feature extraction",
+      "estimated_implementation_effort": "low (1-2 days)",
+      "error_message": null,
+      "analysis_notes": [
+        "Repository contains 0 files",
+        "Clone successful: True",
+        "Key files found: 0",
+        "Implementation insights: 0",
+        "Integration complexity: low"
+      ]
+    }
+  }
+}

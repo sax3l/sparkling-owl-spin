@@ -1,0 +1,898 @@
+AI ATT IMPLEMENTERA
+
+
+Toppen — här får du en hands‑on, från‑noll‑till‑klart implementeringsplan som kopplar in:
+
+Taxy AI + React Agent (avancerad navigering/scraping)
+
+AgentVerse / CrewAI / Langroid (multi‑agent, robusthet)
+
+Adala + PrivateGPT/LocalGPT + Vanna/Wren (dataanvändning & analys)
+
+Aider + AutoPR/Sweep + MutahunterAI (utveckling & CI/CD)
+
+SuperAGI / FastAgency (orkestrering & produktion)
+
+Jag följer din önskade stil: först enkel förklaring på svenska, sedan exakta kommandon, vad som ska hända, hur du kontrollerar. När filer ändras visar jag hela filens innehåll.
+
+🧭 Antaganden om din stack
+Repo: sparkling-owl-spin (Python/FastAPI/Playwright/PostgreSQL/Supabase/Redis/Docker/K8s).
+Frontend: React (Next.js/SPA – vi väljer SSR med Next.js för bästa UX/SEO).
+Databas: Postgres lokalt via Docker, senare Supabase.
+OS: Windows 11 som primär (kommandon för PowerShell), jag nämner macOS/Linux när det skiljer.
+
+0) Arkitekturöversikt (varför dessa moduler hör ihop)
+
+Förklaring (enkelt):
+Vi ger din crawler en “hjärna” (multi‑agenter) som planerar, navigerar och extraherar data. Vi lägger till verktyg som låter dig köra komplexa UI‑flöden (Taxy AI/React Agent), märka/validera data (Adala), fråga din databas med naturligt språk (Vanna/Wren) och chatta privat med dina dokument (PrivateGPT/LocalGPT). Vi höjer teamets utvecklingshastighet (Aider/AutoPR/Sweep/Mutahunter) och ger produktions‑orkestrering (SuperAGI/FastAgency).
+
+Källor (huvudstöd): TaxyAI är en öppen källkods‑webbläsar‑automation som styrs med naturligt språk via GPT‑4 och körs som browser‑extension. 
+GitHub
++1
+taxy.ai
+
+React Agent genererar/komponerar React‑komponenter från “user stories” (experimentellt, GPT‑4). 
+GitHub
+
+AgentVerse erbjuder task‑solving/simulation för multi‑agenter; CrewAI orkestrerar rollspelande agenter; Langroid är ett principfast, lätt Python‑ramverk för multi‑agent‑appar. 
+GitHub
++2
+GitHub
++2
+langroid.github.io
+
+Adala ger autonom datamärkning med iterativt lärande; PrivateGPT/LocalGPT möjliggör privat Q&A på egna dokument lokalt. 
+GitHub
++2
+GitHub
++2
+humansignal.github.io
+
+Vanna (text‑to‑SQL tränad på ditt schema) och Wren (GenBI: text‑to‑SQL/charts/insights) ger NL→SQL. 
+GitHub
++1
+Vanna.ai
+Wren AI
+
+Aider = AI‑pair‑programming i terminalen med auto‑commits; AutoPR & Sweep skapar PRs automatisk; Mutahunter = LLM‑drivet mutation‑testing. 
+GitHub
++4
+GitHub
++4
+GitHub
++4
+
+SuperAGI = dev‑first agent‑ramverk; FastAgency = snabb väg från AG2/AutoGen‑prototyper till produktion. 
+GitHub
++2
+GitHub
++2
+
+1) Monorepo‑layout & bas‑beroenden
+
+Förklaring:
+Vi lägger till nya mappar för agenter, data‑labelling, NL→SQL, och en “navigator” som driver Playwright (ev. med Taxy‑extension i interaktivt läge). Vi förbereder Postgres med pgvector för embeddings (för PrivateGPT/LocalGPT & Vanna/Wren) och Redis för köer.
+
+Kommandon (PowerShell):
+
+# Från repo-roten
+mkdir agents, navigator, data_labeling, data_chat, text2sql, orchestration, .github\workflows
+
+
+Vad ska hända: Nya mappar skapas.
+
+Verifiera:
+
+ls
+
+
+Ska lista mapparna ovan.
+
+2) Docker Compose: kärnservrar (Postgres + pgvector, Redis, Ollama, PrivateGPT)
+
+Förklaring:
+Vi kör Postgres med pgvector (för embeddings), Redis, Ollama (lokal LLM för privat körning) och PrivateGPT (eller LocalGPT) som tjänst för privat frågesvar.
+
+Skapa/ersätt docker/docker-compose.ai.yml med fullständigt innehåll:
+
+version: "3.9"
+
+services:
+  db:
+    image: ankane/pgvector:latest
+    container_name: sowldb
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: sparkling
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d sparkling"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: sw_redis
+    ports: ["6379:6379"]
+
+  # Lokal LLM (för PrivateGPT/LocalGPT och offline-läge)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: sw_ollama
+    ports: ["11434:11434"]
+    volumes:
+      - ollama:/root/.ollama
+
+  # PrivateGPT (frågor på dokument lokalt). Alternativt LocalGPT-container.
+  privategpt:
+    image: zylonai/private-gpt:latest
+    container_name: sw_privategpt
+    environment:
+      PGPT_EMBEDDINGS: "text-embedding-3-large" # eller lokal via Ollama om stöds
+      PGPT_DB_CONN: "postgresql://postgres:postgres@db:5432/sparkling"
+      PGPT_VECTOR_TABLE: "doc_chunks"
+    ports: ["8005:8000"]
+    depends_on:
+      - db
+      - ollama
+
+volumes:
+  pgdata:
+  ollama:
+
+
+Vad händer: Startar Postgres (med pgvector), Redis, Ollama och PrivateGPT‑API.
+
+Start/Verifiera:
+
+docker compose -f docker\docker-compose.ai.yml up -d
+docker ps
+# Kolla att sowldb, sw_redis, sw_ollama, sw_privategpt körs
+
+
+Källa: PrivateGPT är produktionsredo för privat Q&A och kan köras helt lokalt. 
+GitHub
+
+3) Taxy AI + React Agent (avancerad navigering/scraping)
+3.1 Taxy AI – när & hur vi använder den
+
+Förklaring:
+Taxy AI är en webbläsar‑extension som styrs av naturligt språk (GPT‑4). Ideal för interaktiv automation (manuell tillsyn, snabbt “do‑this” i webbläsaren). För headless server‑scraping driver vi i stället Playwright automatiskt och “imiterar” Taxy‑beteenden via vår egen agentstyrning (nedan). 
+GitHub
+taxy.ai
+
+Installera (lokal Chrome/Edge):
+
+Klona:
+
+git clone https://github.com/TaxyAI/browser-extension.git
+
+
+Ladda som “Unpacked extension” i Chrome → chrome://extensions → Developer mode → Load unpacked → mappen browser-extension.
+
+Kör ett enkelt kommando i UI:t: “Öppna https://example.com
+ och klicka på första länken”.
+
+Verifiera: Se att extensionen utför instruktionen (öppnar sida, klick).
+
+Tips: Använd Taxy AI för manuella scenarion, komplexa engångsflöden eller demo. För backend‑jobb → låt vår Playwright‑agent köra headless.
+
+3.2 React Agent – UI‑generering och E2E‑assistans
+
+Förklaring:
+React Agent kan generera/komponera React‑komponenter från user stories (experimentellt). Vi använder den i dev‑läge för att påskynda UI och för att skapa “probing components” vid E2E‑tester. 
+GitHub
+
+Snabbkörning lokalt (separat repo):
+
+git clone https://github.com/eylonmiz/react-agent.git
+cd react-agent
+npm install
+npm run dev
+
+
+Verifiera: Lokal dev‑server startar (instruktioner i terminal). Skapa en enkel user story och låt verktyget generera en komponent som du sen kan kopiera in i din frontend.
+
+4) Multi‑agent scraping via Langroid (primär) + CrewAI (alternativ)
+
+Förklaring:
+Vi definierar 5 roller: Planner, Navigator, Extractor, AntiBlock, Validator/Writer. Langroid ger ett rent Python‑API för att skapa agenter som skickar meddelanden till varandra; CrewAI har ett “rollspelande” mönster med uppgifter och verktyg. 
+GitHub
++1
+langroid.github.io
+
+4.1 Beroenden (repo‑lokalt)
+# I projektroten (Python 3.11+)
+pip install langroid playwright pydantic-settings tenacity httpx
+playwright install
+# (Alternativ: CrewAI)
+pip install crewai
+
+4.2 Implementera agentteam (ny fil)
+
+Skapa agents/agents_langroid.py:
+
+from __future__ import annotations
+from dataclasses import dataclass
+from typing import Any, Dict, Optional
+
+from langroid import Agent, Task
+from langroid.vector_store import VectorStore
+from langroid.language_models.openai_gpt import OpenAIGPTConfig
+from langroid.agent_tools.web_tools import WebSearchTool
+from langroid.pydantic_v1 import BaseModel
+
+# --- Roller ---
+class CrawlPlan(BaseModel):
+    goals: list[str]
+    scope: str
+    constraints: list[str]
+
+@dataclass
+class Context:
+    job_id: str
+    start_url: str
+    plan: Optional[CrawlPlan] = None
+    proxy_pool: Optional[list[str]] = None
+
+# Planner: bryter ner mål
+class PlannerAgent(Agent):
+    def handle(self, msg: str, ctx: Context) -> str:
+        prompt = f"""
+        Du är PLANNER. Mål: {msg}.
+        Svara i JSON med keys: goals[], scope, constraints[].
+        """
+        return self.llm_response(prompt)
+
+# Navigator: beslutar nästa åtgärd (Playwright-kommandon)
+class NavigatorAgent(Agent):
+    def handle(self, msg: str, ctx: Context) -> str:
+        prompt = f"""
+        Du är NAVIGATOR. URL: {ctx.start_url}
+        Uppgift: stegvis plan för navigation och interaktion (klick/fyll/pagination).
+        Returnera en lista av steg i JSON. Varje steg: action, selector/xpath, value?, wait?.
+        """
+        return self.llm_response(prompt)
+
+# Extractor: CSS/XPath-regler + normalisering
+class ExtractorAgent(Agent):
+    def handle(self, msg: str, ctx: Context) -> str:
+        prompt = """
+        Du är EXTRACTOR. Ta fram CSS/XPath-selectors och fält-schema (JSON Schema).
+        Lägg även transformations (trim, number_parse, date_parse).
+        """
+        return self.llm_response(prompt)
+
+# AntiBlock: proxy, delays, headers
+class AntiBlockAgent(Agent):
+    def handle(self, msg: str, ctx: Context) -> str:
+        prompt = """
+        Du är ANTIBLOCK. Föreslå proxy-rotation, human-like delays, random UA, cookie-strategier.
+        Svara med konfig i JSON.
+        """
+        return self.llm_response(prompt)
+
+# Validator/Writer: validera records och skriv till DB
+class ValidatorWriterAgent(Agent):
+    def handle(self, msg: str, ctx: Context) -> str:
+        prompt = """
+        Du är VALIDATOR. Beskriv valideringsregler (required, types, uniques).
+        Svara JSON: { "rules": [...], "reject_examples": [...] }
+        """
+        return self.llm_response(prompt)
+
+# Orkestrering
+def run_crawl(job_id: str, start_url: str) -> Dict[str, Any]:
+    ctx = Context(job_id=job_id, start_url=start_url)
+
+    planner = PlannerAgent(OpenAIGPTConfig())
+    navigator = NavigatorAgent(OpenAIGPTConfig())
+    extractor = ExtractorAgent(OpenAIGPTConfig())
+    antiblock = AntiBlockAgent(OpenAIGPTConfig())
+    writer = ValidatorWriterAgent(OpenAIGPTConfig())
+
+    plan_json = planner.handle(f"Crawla {start_url} med målet att hämta produkter", ctx)
+    ctx.plan = CrawlPlan.parse_raw(plan_json)
+
+    nav_steps = navigator.handle("Planera steg", ctx)
+    selectors = extractor.handle("Ta fram selectors och schema", ctx)
+    blocking = antiblock.handle("Föreslå antiblock", ctx)
+    rules = writer.handle("Validering och skrivning", ctx)
+
+    return {
+        "plan": plan_json,
+        "steps": nav_steps,
+        "selectors": selectors,
+        "antiblock": blocking,
+        "validation": rules,
+    }
+
+
+Vad händer: Vi skapar ett enkelt multi‑agentflöde i Python (Langroid) där varje roll producerar JSON som senare körs av vår navigator‑motor (Playwright).
+
+Källa: Langroid är ett Python‑ramverk för att definiera agenter, deras LLM:er, verktyg och multi‑agent‑utbyte. 
+GitHub
+langroid.github.io
+
+4.3 Körbar orchestration‑endpoint (FastAPI)
+
+Skapa/ersätt src/api/agents.py:
+
+from fastapi import APIRouter
+from pydantic import BaseModel
+from agents.agents_langroid import run_crawl
+
+router = APIRouter(prefix="/agents", tags=["agents"])
+
+class CrawlReq(BaseModel):
+    job_id: str
+    start_url: str
+
+@router.post("/plan")
+def plan(req: CrawlReq):
+    result = run_crawl(req.job_id, req.start_url)
+    return result
+
+
+Registrera routern i din src/main.py (visa hela filen efter ändring):
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from src.api import agents as agents_api
+
+app = FastAPI(title="Sparkling Owl Spin API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], allow_credentials=True,
+    allow_methods=["*"], allow_headers=["*"],
+)
+
+app.include_router(agents_api.router)
+
+@app.get("/health")
+def health():
+    return {"ok": True}
+
+
+Verifiera:
+Starta API:
+
+make run-api
+# eller python -m uvicorn src.main:app --reload
+
+
+Testa:
+
+curl -X POST http://localhost:8000/agents/plan -H "content-type: application/json" ^
+  -d "{ \"job_id\":\"demo1\", \"start_url\":\"https://example.com\" }"
+
+
+Du ska få JSON med plan/steps/selectors/antiblock/validation.
+
+4.4 Navigator‑motor (Playwright) som exekverar “steps”
+
+Skapa navigator/playwright_runner.py:
+
+import json, asyncio
+from playwright.async_api import async_playwright
+
+async def run_steps(start_url: str, steps_json: str, antiblock_json: str) -> None:
+    steps = json.loads(steps_json)
+    antiblock = json.loads(antiblock_json)
+
+    ua = antiblock.get("user_agent", "Mozilla/5.0")
+    proxy = antiblock.get("proxy")
+
+    launch_args = {"headless": True, "args": ["--no-sandbox"]}
+    if proxy:
+        launch_args["proxy"] = {"server": proxy}
+
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(**launch_args)
+        context = await browser.new_context(user_agent=ua)
+        page = await context.new_page()
+        await page.goto(start_url)
+
+        for step in steps:
+            action = step["action"]
+            if action == "click":
+                await page.click(step["selector"])
+            elif action == "fill":
+                await page.fill(step["selector"], step.get("value",""))
+            elif action == "wait":
+                await page.wait_for_timeout(int(step.get("ms", 1000)))
+            elif action == "scroll":
+                await page.evaluate("window.scrollBy(0, document.body.scrollHeight)")
+            # ... utöka med fler actions: select, check, press, route, etc.
+
+        await context.close()
+        await browser.close()
+
+def run(start_url: str, steps_json: str, antiblock_json: str):
+    asyncio.run(run_steps(start_url, steps_json, antiblock_json))
+
+
+Verifiera:
+Anropa run(...) med steps och antiblock från /agents/plan‑svaret. Se att Playwright kör flödet headless.
+
+5) Adala – autonom datamärkning/validering
+
+Förklaring:
+Vi låter Adala märka eller validera extraherade dataposter (t.ex. kategorier, PII‑tags, kvalitetsflaggor). Du ger ground truth (liten uppsättning korrekt märkta exempel), Adala lär sig och itererar för att märka nytt. 
+GitHub
+humansignal.github.io
+
+Installera & struktur:
+
+pip install adala
+mkdir data_labeling\adala
+
+
+Skapa data_labeling/adala/label_products.py:
+
+from adala import Agent, Environment, Skill
+import pandas as pd
+
+# 1) Ground truth
+gt = pd.read_csv("data_labeling/adala/ground_truth.csv")  # kolumner: text,label
+
+env = Environment(ground_truth=gt)
+
+# 2) Definiera "skill" (klassificera produktkategori)
+class CategorySkill(Skill):
+    name = "category"
+    description = "Klassificera text till en produktkategori"
+    labels = ["electronics","fashion","home","other"]
+
+agent = Agent(
+    skills=[CategorySkill()],
+    environment=env
+)
+
+# 3) Kör på nytt dataset
+df = pd.read_csv("export/new_records.csv")
+pred = agent.run(df["text"].tolist())
+df["category"] = pred
+df.to_csv("export/new_records_labeled.csv", index=False)
+print("Done, wrote export/new_records_labeled.csv")
+
+
+Verifiera:
+Skapa en minimal ground_truth.csv (10–50 rader), kör skriptet och kontrollera att nya rader får category.
+
+6) PrivateGPT/LocalGPT – chatta privat med dina dokument
+
+Förklaring:
+Du kan “prata” med dina scraped data privat. Vi exporterar valda fält till Markdown/HTML, indexerar via PrivateGPT och frågar via dess API – allt stannar i din miljö. 
+GitHub
+
+Exportskript data_chat/export_for_privategpt.py:
+
+import psycopg2, os, pathlib
+
+OUT = pathlib.Path("data_chat/out")
+OUT.mkdir(parents=True, exist_ok=True)
+
+conn = psycopg2.connect("postgresql://postgres:postgres@localhost:5432/sparkling")
+cur = conn.cursor()
+cur.execute("select id, title, description, url from products limit 500")
+rows = cur.fetchall()
+
+with open(OUT/"products.md", "w", encoding="utf-8") as f:
+  for r in rows:
+    f.write(f"## {r[1]}\n\n{r[2]}\n\n`{r[3]}`\n\n---\n")
+
+print("Wrote data_chat/out/products.md")
+
+
+Indexera (via PrivateGPT REST – ex. endpoint varierar):
+
+# Antag att PrivateGPT kör på :8005 och har ett /ingest
+curl -F "file=@data_chat/out/products.md" http://localhost:8005/ingest
+
+
+Verifiera:
+Fråga:
+
+curl -X POST http://localhost:8005/ask -H "content-type: application/json" ^
+  -d "{ \"question\": \"Vilka produkter nämner 'SSD'?\" }"
+
+
+Du ska få ett svar med citat från products.md.
+
+7) Vanna & Wren – Text‑to‑SQL (NL→SQL) mot Postgres
+
+Förklaring:
+Vanna tränas på ditt schema och ger SQL‑frågor du kan köra. Wren (GenBI) kan också generera diagram och insikter. Vi bygger ett enkelt API‑lager. 
+GitHub
++1
+Vanna.ai
+Wren AI
+
+Installation:
+
+pip install vanna
+# Wren kan köras via Docker eller Node. Här antas moln/oss-lösning separat.
+
+
+Skapa text2sql/vanna_api.py:
+
+from fastapi import APIRouter
+from pydantic import BaseModel
+from vanna import VannaDefault
+
+router = APIRouter(prefix="/nlq", tags=["nlq"])
+
+vn = VannaDefault(model="gpt-4o-mini")  # välj modell
+# Lägg till schemahintar:
+vn.connect_to_postgres("postgresql://postgres:postgres@localhost:5432/sparkling")
+vn.train(
+    ddl="""
+    CREATE TABLE products (
+      id serial primary key,
+      title text,
+      description text,
+      price numeric,
+      created_at timestamptz
+    );
+    """,
+)
+
+class NLQ(BaseModel):
+    question: str
+
+@router.post("/query")
+def query(nlq: NLQ):
+    sql = vn.generate_sql(nlq.question)
+    rows = vn.run_sql(sql)
+    return {"sql": sql, "rows": rows}
+
+
+Registrera routern i src/main.py (lägg till):
+
+from text2sql.vanna_api import router as vanna_router
+app.include_router(vanna_router)
+
+
+Verifiera:
+
+curl -X POST http://localhost:8000/nlq/query -H "content-type: application/json" ^
+  -d "{ \"question\": \"Visa topp 5 dyraste products\" }"
+
+
+Svaret ska innehålla SQL + rader.
+
+8) Aider + AutoPR + Sweep + Mutahunter – effektiv utveckling & CI/CD
+
+Förklaring:
+Aider = AI‑parprogrammerare i terminalen (auto‑commits). AutoPR = kör AI‑workflows över koden (t.ex. sammanfattningar, TODO‑synk). Sweep = förvandlar issues till PRs automatiskt. Mutahunter = mutation‑testing för att hårdtesta er testsvit och föreslå förbättringar. 
+GitHub
++4
+GitHub
++4
+GitHub
++4
+
+8.1 Aider lokalt
+pip install aider-chat
+aider --version
+# Starta i repo-roten:
+aider --architect
+
+
+Verifiera: Skriv “Refaktorera src/api/agents.py till modulär design” → se föreslagen diff + auto‑commit.
+
+8.2 AutoPR (GitHub Action)
+
+Skapa .github/workflows/autopr.yml:
+
+name: AutoPR
+on:
+  pull_request:
+    types: [opened, labeled, synchronize]
+  workflow_dispatch:
+
+jobs:
+  autopr:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run AutoPR
+        uses: irgolic/AutoPR@v0.7
+        with:
+          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+
+
+Källa: AutoPR kör AI‑workflows över din kodbas, inkl. README‑sammanställningar och label‑triggade uppgifter. 
+GitHub
+
+8.3 Sweep (GitHub App/Action)
+
+Skapa .github/workflows/sweep.yml:
+
+name: Sweep
+on:
+  issues:
+    types: [opened, edited, labeled]
+  issue_comment:
+    types: [created]
+  workflow_dispatch:
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Sweep
+        uses: sweepai/sweep@main
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+
+
+Källa: Sweep kan vända Issues → PRs och svara på review‑kommentarer. 
+GitHub
+
+8.4 Mutahunter i CI
+
+Skapa .github/workflows/mutahunter.yml:
+
+name: Mutahunter
+on:
+  workflow_dispatch:
+  pull_request:
+    paths: ["src/**", "tests/**"]
+
+jobs:
+  mutate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: Install Mutahunter
+        run: pip install https://github.com/codeintegrity-ai/mutahunter
+      - name: Run Mutation Testing
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          mutahunter run --test-command "pytest -q" --model "gpt-4o-mini" --source-path "src" --test-path "tests"
+
+
+Verifiera: Öppna en PR → se att jobben triggas och ger rapporter.
+
+Källa: Mutahunter är LLM‑drivet mutation‑testing (språkochagnostiskt). 
+GitHub
+
+9) Orkestrering & produktion: SuperAGI + FastAgency
+
+Förklaring:
+SuperAGI: kör, övervaka och hantera autonoma agenter (webb‑UI, plugin‑stöd). FastAgency: ta AG2/AutoGen‑prototyper och skala till produktion (API/webapp‑runtime). Vi använder FastAgency för att paketera vårt multi‑agentflöde som tjänst och (valfritt) kopplar in SuperAGI som kontrolltorn. 
+GitHub
++2
+GitHub
++2
+
+9.1 FastAgency – kapsla vårt flöde
+
+Install:
+
+pip install fastagency ag2  # ag2 = AutoGen 2.0
+
+
+Skapa orchestration/fastagency_app.py:
+
+from fastapi import FastAPI
+from agents.agents_langroid import run_crawl
+from pydantic import BaseModel
+
+app = FastAPI(title="Sparkling Agents via FastAgency")
+
+class Job(BaseModel):
+    job_id: str
+    start_url: str
+
+@app.post("/run-crawl")
+def run(job: Job):
+    result = run_crawl(job.job_id, job.start_url)
+    # TODO: dispatch till navigator/playwright_runner.run(...) async (celery/redis-queue)
+    return result
+
+
+Dockerfile (ny orchestration/Dockerfile):
+
+FROM python:3.11-slim
+WORKDIR /app
+COPY . .
+RUN pip install fastapi uvicorn langroid playwright && playwright install
+EXPOSE 8080
+CMD ["uvicorn", "orchestration.fastagency_app:app", "--host", "0.0.0.0", "--port", "8080"]
+
+
+Compose‑tillägg (docker/docker-compose.ai.yml, lägg till service):
+
+  fastagency:
+    build:
+      context: ..
+      dockerfile: orchestration/Dockerfile
+    ports: ["8080:8080"]
+    depends_on: [db, redis]
+
+
+Verifiera:
+
+docker compose -f docker\docker-compose.ai.yml up -d --build fastagency
+curl -X POST http://localhost:8080/run-crawl -H "content-type: application/json" ^
+  -d "{ \"job_id\":\"job-001\", \"start_url\":\"https://example.com\" }"
+
+
+Du får vår plan/steps/… tillbaka via FastAgency.
+
+Källa: FastAgency skalar multi‑agent‑workflows (AG2/AutoGen) till produktion. 
+GitHub
++1
+
+9.2 (Valfritt) SuperAGI som kontroll‑UI
+
+Snabbstart (egen docker‑stack i separat compose typiskt): Följ repo‑instruktionerna för att komma igång med web‑UI, definiera en “Tool” som anropar vårt fastagency‑API /run-crawl när en SuperAGI‑agent får uppgiften att starta crawl. 
+GitHub
+
+10) Anpassningar i befintlig kod (exakt var du krokar in)
+
+Backend (src/)
+
+src/main.py – uppdaterad för att inkludera:
+
+/agents/plan (multi‑agent planering – Langroid)
+
+/nlq/query (Vanna NL→SQL)
+
+Nya moduler:
+
+agents/agents_langroid.py (roller & planering)
+
+navigator/playwright_runner.py (exekvering)
+
+text2sql/vanna_api.py (NL→SQL)
+
+data_labeling/adala/label_products.py (datamärkning)
+
+data_chat/export_for_privategpt.py (export → PrivateGPT)
+
+orchestration/fastagency_app.py (+ Dockerfile) (produktionstjänst)
+
+Frontend
+
+Lägg till sidor/komponenter:
+
+/dashboard/agents – visa plan/steps/antiblock/validation + “Run in headless”.
+
+/data/chat – UI mot PrivateGPT (frågeruta + svar).
+
+/data/explore – NL→SQL‑konsol (Vanna/Wren).
+React Agent används lokalt för att generera komponenter snabbare (manuell kopiering till din app). 
+GitHub
+
+Databas
+
+Säkerställ pgvector extension (lokalt image ovan).
+
+Lägg tabell doc_chunks (PrivateGPT), index på embedding (om du använder pgvector direkt).
+
+11) Supabase‑läge (senare)
+
+Förklaring:
+När du vill köra mot Supabase i stället för lokal Postgres:
+
+Peka PGPT_DB_CONN/Vanna‑connection mot Supabase‑Postgres.
+
+Aktivera pgvector i Supabase‑projektet.
+
+Auth: Frontend läser Supabase JWT och skickar som Authorization mot dina endpoints (RLS‑vänligt schema).
+
+12) Drift & verifiering – checklista
+
+Compose upp:
+
+docker compose -f docker\docker-compose.ai.yml up -d --build
+
+
+API‑hälsa:
+
+curl http://localhost:8000/health
+
+
+Planering:
+
+curl -X POST http://localhost:8000/agents/plan -H "content-type: application/json" `
+  -d "{ \"job_id\":\"demo\", \"start_url\":\"https://example.com\" }"
+
+
+Exekvera steps (lokalt anrop i Python shell):
+
+from navigator.playwright_runner import run
+run("https://example.com", steps_json="<från /plan>", antiblock_json="<från /plan>")
+
+
+Adala märkning:
+
+python data_labeling/adala/label_products.py
+
+
+PrivateGPT ingest + frågeställning: se #6.
+
+NL→SQL: se #7.
+
+CI‑jobb: öppna en PR → se AutoPR/Sweep/Mutahunter köras i Actions.
+
+13) Felhantering & vanliga problem
+
+Playwright hittar inte selectors: justera ExtractorAgent prompt eller lägg fallback‑logik i playwright_runner (t.ex. locator.get_by_role, nth-of-type, wait_for_selector).
+
+Captcha/403: använd AntiBlockAgent output → proxy‑pool, “human‑like” delays; rotera UA; spara/kontinuitet via cookies.
+
+PrivateGPT indexerar inte: kontrollera filstorlek/format; prova ren text/Markdown. 
+GitHub
+
+Vanna returnerar fel SQL: lägg mer schema‑hintar (DDL, exempel), eller koppla in Wren som alternativ. 
+GitHub
++1
+
+Sweep/AutoPR kör inte: se att secrets finns (OPENAI_API_KEY) och att Actions är aktiverade. 
+GitHub
++1
+
+Mutahunter fallerar: sänk omfattningen (kör mot en modul), kontrollera --test-command. 
+GitHub
+
+14) Var detta ger konkret effekt
+
+Taxy AI/React Agent: snabb UI‑automation/generering (interaktivt och i dev) — svåra manuella flöden blir enkla. 
+GitHub
++1
+
+Langroid/CrewAI: robust multi‑agentplanering — färre manuella script‑specialfall. 
+GitHub
++1
+
+Adala: datakvalitet och skalbar etikettering — automatiskt bättre dataset. 
+GitHub
+
+PrivateGPT/LocalGPT: privat Q&A — snabb insikt i skördade data, utan att lämna miljön. 
+GitHub
+
+Vanna/Wren: NL→SQL — produktchefer kan själva fråga datan. 
+GitHub
++1
+
+Aider/AutoPR/Sweep/Mutahunter: snabbare dev‑loop + bättre tests — PRs kommer snabbare och säkrare. 
+GitHub
++3
+GitHub
++3
+GitHub
++3
+
+FastAgency/SuperAGI: enklare drift — från prototyp till skalbar tjänst. 
+GitHub
++1
+
+15) Nästa steg (kan jag göra nu direkt)
+
+Kör docker-compose.ai.yml och bekräfta db/redis/ollama/privategpt.
+
+Testa /agents/plan och kör playwright_runner.
+
+Etablera NL→SQL endpoint och testa ett par frågor.
+
+Lägg till CI-workflows (AutoPR/Sweep/Mutahunter) och öppna en PR.
+
+Rulla ut FastAgency‑containern och anropa /run-crawl.
+
+(Valfritt) koppla in SuperAGI UI‑kontroll.

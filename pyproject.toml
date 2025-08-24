@@ -60,6 +60,8 @@ ignore_missing_imports = true
 strict = true
 
 [tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
 markers = [
     "unit: marks tests as unit tests",
     "integration: marks tests as integration tests",

@@ -204,7 +204,7 @@ class TestTemplateValidation:
           - name: "regex_field"
             selector: ".price"
             type: "text"
-            regex: "\\$([0-9,\\.]+)"
+            regex: "\\\\$([0-9,\\\\.]+)"
         """
         
         template = parse_template_yaml(template_yaml)
