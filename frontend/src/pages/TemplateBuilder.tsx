@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,11 +15,16 @@ import {
   Edit,
   Trash2,
   Plus,
-  Eye
+  Eye,
+  AlertTriangle
 } from 'lucide-react';
-
-const TemplateBuilder = () => {
-  const [activeTab, setActiveTab] = useState('builder');
+import { 
+  getTemplates, 
+  createTemplate, 
+  updateTemplate, 
+  deleteTemplate,
+  getTemplateDetails
+} from '@/api/client';
 
 const yamlTemplate = `# ECaDP Template - biluppgifter.se
 name: "Vehicle Registry Scraper"
@@ -48,23 +53,134 @@ extraction:
       make: ".vehicle-make"
       model: ".vehicle-model"
       year: ".vehicle-year"
-      mileage: ".mileage"
-      price: ".price"
-    
-    transformations:
-      price: 
-        - regex: "[^0-9]"
-        - cast: "integer"
-      
-      year:
-        - cast: "integer"
-        - validate: "range(1900, 2025)"
+`;
 
-# Output configuration  
-output:
-  format: "json"
-  batch_size: 100
-  destination: "supabase.vehicles"`;
+const TemplateBuilder = () => {
+  const [activeTab, setActiveTab] = useState('builder');
+  const [templates, setTemplates] = useState<any[]>([]);
+  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  
+  // Form state
+  const [templateName, setTemplateName] = useState('');
+  const [templateDescription, setTemplateDescription] = useState('');
+  const [templateYaml, setTemplateYaml] = useState(yamlTemplate);
+
+  useEffect(() => {
+    loadTemplates();
+  }, []);
+
+  const loadTemplates = async () => {
+    try {
+      setLoading(true);
+      const result = await getTemplates();
+      setTemplates(result.templates || []);
+      setError(null);
+    } catch (err) {
+      setError('Failed to load templates');
+      console.error('Template loading error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateTemplate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!templateName || !templateYaml) {
+      setError('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const templateData = {
+        name: templateName,
+        description: templateDescription,
+        yaml_content: templateYaml,
+        category: 'custom'
+      };
+
+      const result = await createTemplate(templateData);
+      
+      // Add to templates list
+      setTemplates(prev => [...prev, result]);
+      
+      // Reset form
+      setTemplateName('');
+      setTemplateDescription('');
+      setTemplateYaml(yamlTemplate);
+      
+      setSuccess('Template created successfully!');
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      setError('Failed to create template');
+      console.error('Template creation error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateTemplate = async (templateId: string) => {
+    try {
+      const templateData = {
+        name: templateName,
+        description: templateDescription,
+        yaml_content: templateYaml
+      };
+
+      await updateTemplate(templateId, templateData);
+      
+      // Update templates list
+      setTemplates(prev => prev.map(t => 
+        t.id === templateId ? { ...t, ...templateData } : t
+      ));
+      
+      setSuccess('Template updated successfully!');
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      setError('Failed to update template');
+      console.error('Template update error:', err);
+    }
+  };
+
+  const handleDeleteTemplate = async (templateId: string) => {
+    if (!confirm('Are you sure you want to delete this template?')) {
+      return;
+    }
+
+    try {
+      await deleteTemplate(templateId);
+      setTemplates(prev => prev.filter(t => t.id !== templateId));
+      setSuccess('Template deleted successfully!');
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      setError('Failed to delete template');
+      console.error('Template deletion error:', err);
+    }
+  };
+
+  const handleLoadTemplate = async (templateId: string) => {
+    try {
+      setLoading(true);
+      const details = await getTemplateDetails(templateId);
+      
+      setSelectedTemplate(details);
+      setTemplateName(details.name || '');
+      setTemplateDescription(details.description || '');
+      setTemplateYaml(details.yaml_content || yamlTemplate);
+      
+      setActiveTab('builder');
+    } catch (err) {
+      setError('Failed to load template details');
+      console.error('Template loading error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -79,6 +195,25 @@ output:
           New Template
         </Button>
       </div>
+
+      {/* Error and Success Messages */}
+      {error && (
+        <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+          <div className="flex items-center space-x-2">
+            <AlertTriangle className="w-4 h-4 text-destructive" />
+            <p className="text-destructive text-sm">{error}</p>
+          </div>
+        </div>
+      )}
+      
+      {success && (
+        <div className="p-4 bg-success/10 border border-success/20 rounded-lg">
+          <div className="flex items-center space-x-2">
+            <Eye className="w-4 h-4 text-success" />
+            <p className="text-success text-sm">{success}</p>
+          </div>
+        </div>
+      )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-3">

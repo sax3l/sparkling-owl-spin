@@ -1,0 +1,52 @@
+# Bilregistreringsdata från Transportstyrelsen (exempel)
+name: "Fordonsdata Transportstyrelsen"
+start_urls:
+  - "https://fu-regnr.transportstyrelsen.se/extweb/"
+
+# Följ sökresultat och paginering
+follow:
+  - selector: ".search-result a"
+    type: "detail"
+  - selector: ".pagination .next"
+    type: "pagination"
+
+# Extrahera fordonsdata
+extract:
+  - name: "regnummer"
+    selector: ".registration-number"
+    type: "text"
+  - name: "marke"
+    selector: ".vehicle-make"
+    type: "text"
+  - name: "modell"
+    selector: ".vehicle-model"
+    type: "text"
+  - name: "arsmodell"
+    selector: ".model-year"
+    type: "text"
+    regex: "([0-9]{4})"
+  - name: "bransle"
+    selector: ".fuel-type"
+    type: "text"
+  - name: "farg"
+    selector: ".vehicle-color"
+    type: "text"
+  - name: "status"
+    selector: ".vehicle-status"
+    type: "text"
+
+# Kräver rendering för sökformulär
+render:
+  enabled: true
+
+# Fyll i sökformulär actions
+actions:
+  click_selector: "#search-button"
+  wait_ms: 3000
+
+limits:
+  max_pages: 1000
+  max_depth: 3
+
+respect_robots: true
+delay_ms: 2000

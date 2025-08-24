@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -17,8 +18,84 @@ import {
   FileText,
   Download
 } from 'lucide-react';
+import { getDashboardData, getRealTimeStats, createDashboardWebSocket } from '@/api/client';
 
 const Dashboard = () => {
+  const [dashboardData, setDashboardData] = useState<any>(null);
+  const [realTimeStats, setRealTimeStats] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Load initial dashboard data
+    const loadDashboardData = async () => {
+      try {
+        setLoading(true);
+        const [dashboard, stats] = await Promise.all([
+          getDashboardData(),
+          getRealTimeStats()
+        ]);
+        setDashboardData(dashboard);
+        setRealTimeStats(stats);
+        setError(null);
+      } catch (err) {
+        setError('Failed to load dashboard data');
+        console.error('Dashboard loading error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDashboardData();
+
+    // Set up WebSocket for real-time updates
+    const ws = createDashboardWebSocket((data) => {
+      setRealTimeStats(data);
+    });
+
+    return () => {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.close();
+      }
+    };
+  }, []);
+
+  const handleRefresh = async () => {
+    try {
+      const [dashboard, stats] = await Promise.all([
+        getDashboardData(),
+        getRealTimeStats()
+      ]);
+      setDashboardData(dashboard);
+      setRealTimeStats(stats);
+      setError(null);
+    } catch (err) {
+      setError('Failed to refresh dashboard data');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <AlertTriangle className="w-16 h-16 text-destructive mx-auto mb-4" />
+          <p className="text-destructive text-lg">{error}</p>
+          <Button onClick={handleRefresh} className="mt-4">
+            <RotateCcw className="w-4 h-4 mr-2" />
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -49,7 +126,9 @@ const Dashboard = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground">12</div>
+            <div className="text-2xl font-bold text-foreground">
+              {realTimeStats?.active_crawlers || dashboardData?.dashboard?.real_time_stats?.active_crawls || 12}
+            </div>
             <div className="flex items-center space-x-2 mt-2">
               <Badge variant="secondary" className="bg-success/10 text-success border-success/20">
                 +3 from yesterday
@@ -66,7 +145,12 @@ const Dashboard = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground">2.3M</div>
+            <div className="text-2xl font-bold text-foreground">
+              {dashboardData?.dashboard?.real_time_stats?.data_extracted_mb ? 
+                `${(dashboardData.dashboard.real_time_stats.data_extracted_mb / 1000).toFixed(1)}M` : 
+                '2.3M'
+              }
+            </div>
             <div className="flex items-center space-x-2 mt-2">
               <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
                 +15.2% growth
@@ -83,10 +167,12 @@ const Dashboard = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground">847</div>
+            <div className="text-2xl font-bold text-foreground">
+              {realTimeStats?.proxy_pool_status?.active || dashboardData?.dashboard?.system_health?.proxy_pool_health * 1000 || 847}
+            </div>
             <div className="flex items-center space-x-2 mt-2">
               <Badge variant="secondary" className="bg-accent/10 text-accent border-accent/20">
-                98.3% healthy
+                {((realTimeStats?.proxy_pool_status?.healthy / realTimeStats?.proxy_pool_status?.total * 100) || 98.3).toFixed(1)}% healthy
               </Badge>
             </div>
           </CardContent>

@@ -1,0 +1,58 @@
+SHELL := /bin/bash
+
+.PHONY: help install-dev run-api run-worker run-sos-system playwright-install db-up db-down fmt lint test
+
+help: ## Show help
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
+
+install-dev: ## Install development dependencies
+	pip install -U pip
+	pip install -e .
+
+playwright-install: ## Install Playwright browsers
+	python -m playwright install --with-deps chromium
+
+run-api: ## Run SOS API server locally
+	uvicorn sos.api.main:app --host $${API_HOST:-0.0.0.0} --port $${API_PORT:-8080} --reload
+
+run-worker: ## Run SOS worker locally
+	python -m sos.scheduler.scheduler
+
+run-sos-system: ## Run full SOS system with Docker Compose
+	docker compose -f docker-compose.sos.yml up -d --build
+
+stop-sos-system: ## Stop SOS system
+	docker compose -f docker-compose.sos.yml down
+
+logs-sos: ## Show SOS system logs
+	docker compose -f docker-compose.sos.yml logs -f
+
+db-up: ## Start database only
+	docker compose -f docker-compose.sos.yml up -d db
+
+db-down: ## Stop database
+	docker compose -f docker-compose.sos.yml rm -sfv db
+
+fmt: ## Format code
+	pip install -q ruff black
+	ruff check --fix .
+	black .
+
+lint: ## Lint code
+	ruff check .
+
+test: ## Run tests (placeholder)
+	@echo "Tests not implemented yet"
+
+# SOS CLI shortcuts
+sos-templates: ## List SOS templates
+	python -m sos.cli list-templates
+
+sos-create-demo: ## Create demo templates
+	python -m sos.cli create-template "Demo Listing-Detail" templates/demo-listing-detail.yaml
+	python -m sos.cli create-template "Fordonsdata Demo" templates/fordonsdata-demo.yaml
+
+# Quick development setup
+dev-setup: install-dev playwright-install db-up ## Full development setup
+	@echo "Development environment ready!"
+	@echo "Run 'make run-api' in one terminal and 'make run-worker' in another"

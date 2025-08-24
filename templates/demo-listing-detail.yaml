@@ -1,0 +1,48 @@
+# Demo template för e-handelssida med listing → detail mönster
+name: "E-handel listing-detail demo"
+start_urls:
+  - "https://example-shop.com/products"
+
+# Följ länkar från listing till detaljer  
+follow:
+  - selector: ".product-item a"
+    type: "detail"
+    match: "*/product/*"
+
+# Extrahera data från produktsidor
+extract:
+  - name: "title"
+    selector: "h1.product-title"
+    type: "text"
+  - name: "price"
+    selector: ".price"
+    type: "text"
+    regex: "([0-9,]+)"
+  - name: "description"
+    selector: ".product-description"
+    type: "text"
+  - name: "image"
+    selector: ".product-image img"
+    type: "attr"
+    attr: "src"
+
+# Kräver JavaScript-rendering för dynamiska priser
+render:
+  enabled: true
+
+# Scrolling actions för lazy-loading
+actions:
+  scroll: true
+  scroll_max: 3
+  wait_ms: 2000
+
+# Begränsningar
+limits:
+  max_pages: 100
+  max_depth: 2
+
+# Respektera robots.txt
+respect_robots: true
+
+# Fördröjning mellan requests (1.5s)
+delay_ms: 1500

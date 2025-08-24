@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -17,9 +17,73 @@ import {
   Clock,
   Zap
 } from 'lucide-react';
+import { getProxyMonitoringData, listProxies, testProxy, removeProxy } from '@/api/client';
 
 const ProxyMonitor = () => {
   const [activeTab, setActiveTab] = useState('pools');
+  const [monitoringData, setMonitoringData] = useState<any>(null);
+  const [proxies, setProxies] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadProxyData();
+  }, []);
+
+  const loadProxyData = async () => {
+    try {
+      setLoading(true);
+      const [monitoringResult, proxiesResult] = await Promise.all([
+        getProxyMonitoringData(),
+        listProxies()
+      ]);
+      
+      setMonitoringData(monitoringResult);
+      setProxies(proxiesResult.proxies || []);
+      setError(null);
+    } catch (err) {
+      setError('Failed to load proxy data');
+      console.error('Proxy data loading error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRefreshStatus = () => {
+    loadProxyData();
+  };
+
+  const handleTestProxy = async (proxyId: string) => {
+    try {
+      const result = await testProxy(proxyId);
+      console.log('Proxy test result:', result);
+      // Update proxy status in the UI
+      setProxies(prev => prev.map(proxy => 
+        proxy.id === proxyId 
+          ? { ...proxy, last_test: result.tested_at, response_time: result.response_time }
+          : proxy
+      ));
+    } catch (err) {
+      console.error('Proxy test failed:', err);
+    }
+  };
+
+  const handleRemoveProxy = async (proxyId: string) => {
+    try {
+      await removeProxy(proxyId);
+      setProxies(prev => prev.filter(proxy => proxy.id !== proxyId));
+    } catch (err) {
+      console.error('Failed to remove proxy:', err);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -30,7 +94,7 @@ const ProxyMonitor = () => {
           <p className="text-muted-foreground">Manage and monitor proxy pools for ethical crawling</p>
         </div>
         <div className="flex items-center space-x-3">
-          <Button variant="outline">
+          <Button variant="outline" onClick={handleRefreshStatus}>
             <RefreshCw className="w-4 h-4 mr-2" />
             Refresh Status
           </Button>
@@ -48,10 +112,14 @@ const ProxyMonitor = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total Proxies</p>
-                <p className="text-3xl font-bold text-foreground">1,237</p>
+                <p className="text-3xl font-bold text-foreground">
+                  {monitoringData?.proxy_pools?.reduce((total: number, pool: any) => total + pool.total_proxies, 0) || '1,237'}
+                </p>
                 <div className="flex items-center space-x-2 mt-2">
                   <Activity className="w-4 h-4 text-primary" />
-                  <span className="text-sm text-primary">847 active</span>
+                  <span className="text-sm text-primary">
+                    {monitoringData?.proxy_pools?.reduce((total: number, pool: any) => total + pool.active_proxies, 0) || '847'} active
+                  </span>
                 </div>
               </div>
               <Globe className="w-8 h-8 text-primary" />
@@ -64,7 +132,9 @@ const ProxyMonitor = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Success Rate</p>
-                <p className="text-2xl font-bold text-foreground">94.3%</p>
+                <p className="text-2xl font-bold text-foreground">
+                  {((monitoringData?.health_metrics?.overall_success_rate || 0.943) * 100).toFixed(1)}%
+                </p>
                 <Badge className="bg-success/10 text-success border-success/20 mt-2">
                   Excellent
                 </Badge>
@@ -79,7 +149,9 @@ const ProxyMonitor = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Avg Response</p>
-                <p className="text-2xl font-bold text-foreground">1.2s</p>
+                <p className="text-2xl font-bold text-foreground">
+                  {(monitoringData?.health_metrics?.avg_response_time || 198)}ms
+                </p>
                 <Badge className="bg-success/10 text-success border-success/20 mt-2">
                   Fast
                 </Badge>

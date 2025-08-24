@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,9 +20,114 @@ import {
   AlertTriangle,
   CheckCircle2
 } from 'lucide-react';
+import { 
+  submitJob, 
+  getTemplates, 
+  getJobDetails, 
+  deleteJob, 
+  pauseJob, 
+  resumeJob,
+  createJobProgressWebSocket 
+} from '@/api/client';
 
 const JobLauncher = () => {
   const [activeTab, setActiveTab] = useState('new');
+  const [templates, setTemplates] = useState<any[]>([]);
+  const [runningJobs, setRunningJobs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Form state
+  const [jobName, setJobName] = useState('');
+  const [selectedTemplate, setSelectedTemplate] = useState('');
+  const [startUrls, setStartUrls] = useState('');
+  const [maxPages, setMaxPages] = useState('1000');
+  const [delay, setDelay] = useState('2000');
+  const [concurrent, setConcurrent] = useState('3');
+
+  useEffect(() => {
+    // Load templates when component mounts
+    const loadTemplates = async () => {
+      try {
+        const result = await getTemplates();
+        setTemplates(result.templates || []);
+      } catch (err) {
+        console.error('Failed to load templates:', err);
+        setError('Failed to load templates');
+      }
+    };
+
+    loadTemplates();
+  }, []);
+
+  const handleSubmitJob = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!jobName || !selectedTemplate || !startUrls) {
+      setError('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const jobData = {
+        name: jobName,
+        template_id: selectedTemplate,
+        start_urls: startUrls.split('\n').filter(url => url.trim()),
+        max_pages: parseInt(maxPages),
+        delay: parseInt(delay),
+        concurrent: parseInt(concurrent)
+      };
+
+      const result = await submitJob(jobData.start_urls[0], 'web_crawl' as any);
+      
+      // Add to running jobs
+      setRunningJobs(prev => [...prev, {
+        id: result.id || Date.now().toString(),
+        name: jobName,
+        status: 'running',
+        progress: 0,
+        created_at: new Date().toISOString()
+      }]);
+
+      // Reset form
+      setJobName('');
+      setSelectedTemplate('');
+      setStartUrls('');
+      
+      // Switch to running jobs tab
+      setActiveTab('running');
+    } catch (err) {
+      setError('Failed to submit job');
+      console.error('Job submission error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleJobAction = async (jobId: string, action: 'pause' | 'resume' | 'delete') => {
+    try {
+      switch (action) {
+        case 'pause':
+          await pauseJob(jobId);
+          break;
+        case 'resume':
+          await resumeJob(jobId);
+          break;
+        case 'delete':
+          await deleteJob(jobId);
+          setRunningJobs(prev => prev.filter(job => job.id !== jobId));
+          break;
+      }
+      
+      // Refresh running jobs
+      // In a real implementation, this would fetch updated job status
+    } catch (err) {
+      console.error(`Failed to ${action} job:`, err);
+      setError(`Failed to ${action} job`);
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -54,22 +159,29 @@ const JobLauncher = () => {
                   <CardDescription>Configure your crawling job parameters</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  <form onSubmit={handleSubmitJob} className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="jobName">Job Name</Label>
-                      <Input id="jobName" placeholder="e.g., biluppgifter_vehicles_2024" />
+                      <Input 
+                        id="jobName" 
+                        placeholder="e.g., biluppgifter_vehicles_2024"
+                        value={jobName}
+                        onChange={(e) => setJobName(e.target.value)}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="template">Template</Label>
-                      <Select>
+                      <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select template" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="biluppgifter">biluppgifter.se - Vehicles</SelectItem>
-                          <SelectItem value="carinfo">car.info - Listings</SelectItem>
-                          <SelectItem value="hitta">hitta.se - Business</SelectItem>
-                          <SelectItem value="blocket">Blocket - Marketplace</SelectItem>
+                          {templates.map(template => (
+                            <SelectItem key={template.id} value={template.id}>
+                              {template.name}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
@@ -81,23 +193,76 @@ const JobLauncher = () => {
                       id="startUrl" 
                       placeholder="https://biluppgifter.se/search&#10;https://car.info/listings"
                       rows={3}
+                      value={startUrls}
+                      onChange={(e) => setStartUrls(e.target.value)}
                     />
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="maxPages">Max Pages</Label>
-                      <Input id="maxPages" type="number" placeholder="1000" />
+                      <Input 
+                        id="maxPages" 
+                        type="number" 
+                        placeholder="1000"
+                        value={maxPages}
+                        onChange={(e) => setMaxPages(e.target.value)}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="delay">Delay (ms)</Label>
-                      <Input id="delay" type="number" placeholder="2000" />
+                      <Input 
+                        id="delay" 
+                        type="number" 
+                        placeholder="2000"
+                        value={delay}
+                        onChange={(e) => setDelay(e.target.value)}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="concurrent">Concurrent</Label>
-                      <Input id="concurrent" type="number" placeholder="3" />
+                      <Input 
+                        id="concurrent" 
+                        type="number" 
+                        placeholder="3"
+                        value={concurrent}
+                        onChange={(e) => setConcurrent(e.target.value)}
+                      />
                     </div>
                   </div>
+
+                  {error && (
+                    <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+                      <div className="flex items-center space-x-2">
+                        <AlertTriangle className="w-4 h-4 text-destructive" />
+                        <p className="text-destructive text-sm">{error}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex justify-end space-x-3">
+                    <Button variant="outline" type="button">
+                      Save as Draft
+                    </Button>
+                    <Button 
+                      type="submit" 
+                      className="bg-gradient-primary"
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          Launching...
+                        </>
+                      ) : (
+                        <>
+                          <Play className="w-4 h-4 mr-2" />
+                          Launch Job
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                  </form>
                 </CardContent>
               </Card>
 

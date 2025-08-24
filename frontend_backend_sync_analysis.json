@@ -1,0 +1,1985 @@
+{
+  "timestamp": "2025-08-23T20:40:57.270469",
+  "synchronization_score": 0.0,
+  "frontend_pages": {
+    "ConnectionStatus": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ConnectionStatus.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": true,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "Header": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\Header.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "Layout": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\Layout.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": true,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "Sidebar": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\Sidebar.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": true,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "APIExplorer": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\pages\\APIExplorer.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "delete": true
+      },
+      "has_api_integration": false,
+      "component_type": "api_interface"
+    },
+    "AuditLog": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\pages\\AuditLog.tsx",
+      "api_calls": [],
+      "state_variables": 3,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "BrowserPanel": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\pages\\BrowserPanel.tsx",
+      "api_calls": [],
+      "state_variables": 5,
+      "effects": 0,
+      "form_handlers": [
+        "handleNavigate",
+        "handleElementClick"
+      ],
+      "crud_operations": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "delete": true
+      },
+      "has_api_integration": false,
+      "component_type": "browser_panel"
+    },
+    "CrawlPlanStudio": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\pages\\CrawlPlanStudio.tsx",
+      "api_calls": [],
+      "state_variables": 3,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "delete": true
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "Dashboard-new": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\pages\\Dashboard-new.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "dashboard"
+    },
+    "Dashboard": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\pages\\Dashboard.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "dashboard"
+    },
+    "Dashboard_clean": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\pages\\Dashboard_clean.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "dashboard"
+    },
+    "Dashboard_New": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\pages\\Dashboard_New.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "dashboard"
+    },
+    "DataWarehouse": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\pages\\DataWarehouse.tsx",
+      "api_calls": [],
+      "state_variables": 8,
+      "effects": 0,
+      "form_handlers": [
+        "handleSelectItem",
+        "handleSelectAll"
+      ],
+      "crud_operations": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "DQPanel": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\pages\\DQPanel.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "ErasureAdmin": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\pages\\ErasureAdmin.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": true,
+        "read": false,
+        "update": true,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "Exports": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\pages\\Exports.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": true,
+        "read": true,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "data_export"
+    },
+    "HelpCenter": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\pages\\HelpCenter.tsx",
+      "api_calls": [],
+      "state_variables": 5,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "Index": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\pages\\Index.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": true,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "JobControl": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\pages\\JobControl.tsx",
+      "api_calls": [],
+      "state_variables": 6,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": true,
+        "update": true,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "job_management"
+    },
+    "JobDetailsConsole": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\pages\\JobDetailsConsole.tsx",
+      "api_calls": [],
+      "state_variables": 3,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": true,
+        "update": true,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "job_management"
+    },
+    "JobLauncher": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\pages\\JobLauncher.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "job_management"
+    },
+    "NotFound": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\pages\\NotFound.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "OnboardingWizard": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\pages\\OnboardingWizard.tsx",
+      "api_calls": [],
+      "state_variables": 3,
+      "effects": 1,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "Policies": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\pages\\Policies.tsx",
+      "api_calls": [],
+      "state_variables": 4,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "PrivacyCenter": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\pages\\PrivacyCenter.tsx",
+      "api_calls": [],
+      "state_variables": 5,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "ProjectManagement": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\pages\\ProjectManagement.tsx",
+      "api_calls": [],
+      "state_variables": 5,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": true,
+        "update": true,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "ProxyMonitor": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\pages\\ProxyMonitor.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "monitoring"
+    },
+    "Scheduler": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\pages\\Scheduler.tsx",
+      "api_calls": [],
+      "state_variables": 5,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "Settings": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\pages\\Settings.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "SourcesProjects": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\pages\\SourcesProjects.tsx",
+      "api_calls": [],
+      "state_variables": 5,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "TemplateBuilder": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\pages\\TemplateBuilder.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "template_management"
+    },
+    "TemplateWizard": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\pages\\TemplateWizard.tsx",
+      "api_calls": [],
+      "state_variables": 1,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "delete": true
+      },
+      "has_api_integration": false,
+      "component_type": "template_management"
+    },
+    "accordion": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\accordion.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "alert-dialog": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\alert-dialog.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "alert": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\alert.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "aspect-ratio": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\aspect-ratio.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "avatar": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\avatar.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "badge": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\badge.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "breadcrumb": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\breadcrumb.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": true,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "button": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\button.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": true,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "calendar": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\calendar.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "card": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\card.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "carousel": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\carousel.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 1,
+      "form_handlers": [
+        "handleKeyDown"
+      ],
+      "crud_operations": {
+        "create": true,
+        "read": false,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "chart": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\chart.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": true,
+        "read": true,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "checkbox": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\checkbox.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "collapsible": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\collapsible.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "command": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\command.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": true,
+        "update": true,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "context-menu": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\context-menu.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "dialog": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\dialog.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "drawer": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\drawer.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "dropdown-menu": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\dropdown-menu.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "form": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\form.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": true,
+        "read": true,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "hover-card": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\hover-card.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "input-otp": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\input-otp.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": true,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "input": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\input.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": true,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "label": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\label.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "menubar": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\menubar.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "navigation-menu": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\navigation-menu.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": true,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "pagination": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\pagination.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": true,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "popover": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\popover.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "progress": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\progress.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "radio-group": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\radio-group.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "resizable": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\resizable.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [
+        "ResizableHandle"
+      ],
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "scroll-area": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\scroll-area.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "select": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\select.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": true,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "separator": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\separator.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "sheet": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\sheet.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "sidebar": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\sidebar.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [
+        "handleKeyDown"
+      ],
+      "crud_operations": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "delete": true
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "skeleton": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\skeleton.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "slider": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\slider.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "sonner": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\sonner.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "switch": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\switch.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": true,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "table": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\table.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "tabs": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\tabs.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": true,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "textarea": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\textarea.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": true,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "toast": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\toast.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "toaster": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\toaster.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "toggle-group": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\toggle-group.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": true,
+        "read": false,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "toggle": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\toggle.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": true,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    },
+    "tooltip": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\components\\ui\\tooltip.tsx",
+      "api_calls": [],
+      "state_variables": 0,
+      "effects": 0,
+      "form_handlers": [],
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false
+      },
+      "has_api_integration": false,
+      "component_type": "utility"
+    }
+  },
+  "backend_endpoints": {
+    "crawler": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\api\\crawler.py",
+      "routes": [],
+      "handlers": [
+        "crawler_api_handler"
+      ],
+      "models": [],
+      "http_methods": [],
+      "endpoint_type": "crawling_engine"
+    },
+    "monitoring": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\webapp\\api\\monitoring.py",
+      "routes": [
+        "/monitoring/proxy-stats",
+        "/data-quality-metrics"
+      ],
+      "handlers": [],
+      "models": [],
+      "http_methods": [
+        "GET",
+        "POST"
+      ],
+      "endpoint_type": "monitoring"
+    },
+    "proxy-system": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\api\\proxy-system.py",
+      "routes": [],
+      "handlers": [
+        "report_request_result",
+        "_ban_proxy",
+        "_schedule_unban",
+        "_update_proxy_pools"
+      ],
+      "models": [
+        "ProxyQuality",
+        "GeoLocation"
+      ],
+      "http_methods": [],
+      "endpoint_type": "proxy_management"
+    },
+    "proxy": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\api\\proxy.py",
+      "routes": [],
+      "handlers": [
+        "proxy_api_handler"
+      ],
+      "models": [],
+      "http_methods": [],
+      "endpoint_type": "proxy_management"
+    },
+    "revolutionary-crawler": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\api\\revolutionary-crawler.py",
+      "routes": [],
+      "handlers": [
+        "demo_advanced_crawling"
+      ],
+      "models": [
+        "ExtractionMethod",
+        "ContentType"
+      ],
+      "http_methods": [],
+      "endpoint_type": "crawling_engine"
+    },
+    "auth": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\webapp\\api\\auth.py",
+      "routes": [
+        "/oauth/token",
+        "/api-keys",
+        "/api-keys",
+        "/api-keys/{api_key_id}",
+        "/api-keys/{api_key_id}"
+      ],
+      "handlers": [],
+      "models": [],
+      "http_methods": [
+        "GET",
+        "POST",
+        "DELETE",
+        "PATCH"
+      ],
+      "endpoint_type": "authentication"
+    },
+    "exports": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\webapp\\api\\exports.py",
+      "routes": [
+        "/exports",
+        "/exports/{export_id}",
+        "/exports",
+        "/data/{export_type}"
+      ],
+      "handlers": [],
+      "models": [],
+      "http_methods": [
+        "GET",
+        "POST"
+      ],
+      "endpoint_type": "data_export"
+    },
+    "jobs": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\sos\\api\\routers\\jobs.py",
+      "routes": [
+        "/{job_id}",
+        "/{job_id}/results"
+      ],
+      "handlers": [],
+      "models": [],
+      "http_methods": [
+        "GET",
+        "POST"
+      ],
+      "endpoint_type": "job_management"
+    },
+    "system": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\webapp\\api\\system.py",
+      "routes": [
+        "/status",
+        "/health",
+        "/status/refresh",
+        "/monitoring/metrics",
+        "/monitoring/alerts",
+        "/monitoring/start",
+        "/monitoring/stop",
+        "/notifications/send",
+        "/privacy/requests",
+        "/privacy/requests/{request_id}",
+        "/privacy/requests/{request_id}/process",
+        "/privacy/pii-scan",
+        "/admin/system-info",
+        "/admin/maintenance-mode"
+      ],
+      "handlers": [
+        "health_check"
+      ],
+      "models": [
+        "SystemStatusResponse",
+        "HealthResponse",
+        "NotificationRequest",
+        "PrivacyRequestCreate",
+        "PIIScanRequest"
+      ],
+      "http_methods": [
+        "GET",
+        "POST"
+      ],
+      "endpoint_type": "core_api"
+    },
+    "templates": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\webapp\\api\\templates.py",
+      "routes": [
+        "/templates",
+        "/templates",
+        "/templates/{template_id}",
+        "/templates/{template_id}",
+        "/templates/{template_id}",
+        "/templates/{template_id}/status"
+      ],
+      "handlers": [],
+      "models": [],
+      "http_methods": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE",
+        "PATCH"
+      ],
+      "endpoint_type": "template_management"
+    },
+    "webhooks": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\webapp\\api\\webhooks.py",
+      "routes": [
+        "/webhooks/endpoints",
+        "/webhooks/endpoints",
+        "/webhooks/endpoints/{endpoint_id}",
+        "/webhooks/deliveries"
+      ],
+      "handlers": [],
+      "models": [],
+      "http_methods": [
+        "GET",
+        "POST",
+        "PATCH"
+      ],
+      "endpoint_type": "core_api"
+    },
+    "router": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\webapp\\api\\v1\\router.py",
+      "routes": [],
+      "handlers": [
+        "api_info"
+      ],
+      "models": [],
+      "http_methods": [],
+      "endpoint_type": "core_api"
+    },
+    "main": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\sos\\api\\main.py",
+      "routes": [
+        "/metrics"
+      ],
+      "handlers": [
+        "on_startup"
+      ],
+      "models": [],
+      "http_methods": [
+        "GET"
+      ],
+      "endpoint_type": "core_api"
+    },
+    "health": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\src\\sos\\api\\routers\\health.py",
+      "routes": [
+        "/healthz",
+        "/livez"
+      ],
+      "handlers": [],
+      "models": [],
+      "http_methods": [
+        "GET"
+      ],
+      "endpoint_type": "health_check"
+    }
+  },
+  "api_integrations": {
+    "client": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\frontend\\src\\api\\client.ts",
+      "api_functions": [
+        "submitJob",
+        "submitExport",
+        "job",
+        "getExportStatus",
+        "listExports",
+        "getDirectData",
+        "submitDiagnosticJob"
+      ],
+      "endpoints": [
+        "${API_BASE_URL}/jobs",
+        "${API_BASE_URL}/exports",
+        "${API_BASE_URL}/exports/${exportId}",
+        "${API_BASE_URL}/exports?${params.toString()}",
+        "${API_BASE_URL}/data/${exportType}?${params.toString()}",
+        "${API_BASE_URL}/jobs/diagnostic"
+      ],
+      "interfaces": [],
+      "base_url": "http://localhost:8000/api/v1"
+    },
+    "api-client": {
+      "file_path": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project\\generated\\api-client.ts",
+      "api_functions": [],
+      "endpoints": [
+        "${this.baseUrl}${endpoint}"
+      ],
+      "interfaces": [
+        "ProxyConfig",
+        "CrawlRequest",
+        "ExtractionRule",
+        "AntiDetectionConfig",
+        "ProxyRequirements",
+        "CrawlResult",
+        "DashboardData"
+      ],
+      "base_url": ""
+    }
+  },
+  "missing_integrations": [
+    {
+      "type": "missing_backend_endpoint",
+      "endpoint": "GET /api/jobs/{id}",
+      "severity": "high"
+    },
+    {
+      "type": "missing_backend_endpoint",
+      "endpoint": "DELETE /api/jobs/{id}",
+      "severity": "high"
+    },
+    {
+      "type": "missing_backend_endpoint",
+      "endpoint": "GET /api/exports/{id}/download",
+      "severity": "high"
+    },
+    {
+      "type": "missing_backend_endpoint",
+      "endpoint": "GET /api/monitoring/dashboard",
+      "severity": "high"
+    },
+    {
+      "type": "missing_backend_endpoint",
+      "endpoint": "POST /api/exports",
+      "severity": "high"
+    },
+    {
+      "type": "missing_backend_endpoint",
+      "endpoint": "GET /api/templates",
+      "severity": "high"
+    },
+    {
+      "type": "missing_backend_endpoint",
+      "endpoint": "GET /api/monitoring/proxies",
+      "severity": "high"
+    },
+    {
+      "type": "missing_backend_endpoint",
+      "endpoint": "GET /api/stats/real-time",
+      "severity": "high"
+    },
+    {
+      "type": "missing_backend_endpoint",
+      "endpoint": "GET /api/system/health",
+      "severity": "high"
+    },
+    {
+      "type": "missing_backend_endpoint",
+      "endpoint": "DELETE /api/proxies/{id}",
+      "severity": "high"
+    },
+    {
+      "type": "missing_backend_endpoint",
+      "endpoint": "POST /api/jobs",
+      "severity": "high"
+    },
+    {
+      "type": "missing_backend_endpoint",
+      "endpoint": "POST /api/templates",
+      "severity": "high"
+    },
+    {
+      "type": "missing_backend_endpoint",
+      "endpoint": "PUT /api/templates/{id}",
+      "severity": "high"
+    },
+    {
+      "type": "missing_backend_endpoint",
+      "endpoint": "DELETE /api/templates/{id}",
+      "severity": "high"
+    },
+    {
+      "type": "missing_backend_endpoint",
+      "endpoint": "POST /api/proxies/test",
+      "severity": "high"
+    },
+    {
+      "type": "missing_backend_endpoint",
+      "endpoint": "GET /api/exports",
+      "severity": "high"
+    },
+    {
+      "type": "missing_backend_endpoint",
+      "endpoint": "GET /api/jobs",
+      "severity": "high"
+    },
+    {
+      "type": "missing_backend_endpoint",
+      "endpoint": "GET /api/proxies",
+      "severity": "high"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "POST /webhooks/endpoints",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "DELETE /templates/{template_id}/status",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "POST /templates/{template_id}/status",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "PATCH /oauth/token",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "GET /monitoring/metrics",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "POST /monitoring/stop",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "GET /templates/{template_id}",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "GET /metrics",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "POST /privacy/requests/{request_id}/process",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "GET /privacy/requests/{request_id}/process",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "GET /notifications/send",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "PATCH /api-keys/{api_key_id}",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "DELETE /api-keys/{api_key_id}",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "GET /exports/{export_id}",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "PUT /templates/{template_id}",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "POST /status",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "GET /privacy/requests/{request_id}",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "PUT /templates/{template_id}/status",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "GET /data-quality-metrics",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "PATCH /webhooks/endpoints",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "POST /monitoring/proxy-stats",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "GET /api-keys/{api_key_id}",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "PATCH /templates",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "POST /exports",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "POST /api-keys/{api_key_id}",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "POST /api-keys",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "GET /monitoring/stop",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "POST /notifications/send",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "GET /data/{export_type}",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "POST /webhooks/deliveries",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "GET /monitoring/alerts",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "POST /privacy/requests",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "PATCH /webhooks/deliveries",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "GET /healthz",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "GET /templates",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "POST /{job_id}/results",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "GET /oauth/token",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "GET /webhooks/deliveries",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "POST /admin/maintenance-mode",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "POST /privacy/requests/{request_id}",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "GET /livez",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "POST /monitoring/start",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "GET /monitoring/proxy-stats",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "POST /{job_id}",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "POST /data/{export_type}",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "POST /monitoring/metrics",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "GET /webhooks/endpoints",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "POST /privacy/pii-scan",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "POST /templates",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "GET /api-keys",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "GET /admin/system-info",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "DELETE /templates/{template_id}",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "DELETE /api-keys",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "PUT /templates",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "POST /health",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "POST /oauth/token",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "PATCH /api-keys",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "POST /status/refresh",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "GET /exports",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "POST /data-quality-metrics",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "GET /status/refresh",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "POST /templates/{template_id}",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "GET /health",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "GET /privacy/pii-scan",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "POST /admin/system-info",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "GET /monitoring/start",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "GET /webhooks/endpoints/{endpoint_id}",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "GET /status",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "GET /privacy/requests",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "PATCH /webhooks/endpoints/{endpoint_id}",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "POST /webhooks/endpoints/{endpoint_id}",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "PATCH /templates/{template_id}/status",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "DELETE /templates",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "GET /{job_id}/results",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "DELETE /oauth/token",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "PATCH /templates/{template_id}",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "POST /exports/{export_id}",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "POST /monitoring/alerts",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "GET /templates/{template_id}/status",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "GET /{job_id}",
+      "severity": "medium"
+    },
+    {
+      "type": "unused_backend_endpoint",
+      "endpoint": "GET /admin/maintenance-mode",
+      "severity": "medium"
+    }
+  ],
+  "summary": {
+    "total_frontend_components": 80,
+    "total_backend_endpoints": 14,
+    "total_api_clients": 2,
+    "high_priority_issues": 18
+  }
+}

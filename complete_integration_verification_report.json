@@ -1,0 +1,101 @@
+{
+  "timestamp": "2025-08-23T21:07:30.782237",
+  "final_score": 72.65060240963855,
+  "grade": "B+",
+  "status": "POOR",
+  "detailed_results": {
+    "api_integration": {
+      "score": 100.0,
+      "total_functions": 21,
+      "implemented_functions": 21,
+      "missing_functions": [],
+      "status": "EXCELLENT"
+    },
+    "component_integration": {
+      "score": 100.0,
+      "components": {
+        "Dashboard.tsx": {
+          "score": 100.0,
+          "imported": [
+            "getDashboardData",
+            "getRealTimeStats",
+            "createDashboardWebSocket"
+          ],
+          "missing": []
+        },
+        "JobLauncher.tsx": {
+          "score": 100.0,
+          "imported": [
+            "submitJob",
+            "getTemplates",
+            "getJobDetails",
+            "deleteJob",
+            "pauseJob",
+            "resumeJob"
+          ],
+          "missing": []
+        },
+        "ProxyMonitor.tsx": {
+          "score": 100.0,
+          "imported": [
+            "getProxyMonitoringData",
+            "listProxies",
+            "testProxy",
+            "removeProxy"
+          ],
+          "missing": []
+        },
+        "TemplateBuilder.tsx": {
+          "score": 100.0,
+          "imported": [
+            "getTemplates",
+            "createTemplate",
+            "updateTemplate",
+            "deleteTemplate"
+          ],
+          "missing": []
+        }
+      },
+      "status": "EXCELLENT"
+    },
+    "realtime_features": {
+      "score": 100.0,
+      "websocket_client_score": 100.0,
+      "websocket_backend_score": 100,
+      "status": "EXCELLENT"
+    },
+    "error_handling": {
+      "score": 50.0,
+      "components_with_errors": 14,
+      "total_components": 28,
+      "status": "POOR"
+    },
+    "performance": {
+      "score": 13.253012048192772,
+      "features": {
+        "loading_states": 6.024096385542169,
+        "caching": 3.614457831325301,
+        "lazy_loading": 26.506024096385545,
+        "error_boundaries": 16.867469879518072
+      },
+      "status": "POOR"
+    }
+  },
+  "competitive_analysis": {
+    "our_score": 72.65060240963855,
+    "competitors": {
+      "Octoparse": 65,
+      "Firecrawl": 70,
+      "Browse AI": 68,
+      "Apify": 75,
+      "ScraperAPI": 72,
+      "Webscraper.io": 60,
+      "ParseHub": 65
+    },
+    "market_position": "challenger"
+  },
+  "recommendations": [
+    "Add comprehensive error handling",
+    "Implement advanced performance optimizations"
+  ]
+}
