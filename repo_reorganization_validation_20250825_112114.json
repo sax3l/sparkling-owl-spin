@@ -1,0 +1,267 @@
+{
+  "timestamp": "2025-08-25T11:21:14.664899",
+  "project_root": "C:\\Users\\simon\\dyad-apps\\Main_crawler_project",
+  "validation_status": "FAILED",
+  "vendors_structure": {
+    "exists": true,
+    "expected_vendors": [
+      "flaresolverr",
+      "cloudscraper",
+      "undetected-chromedriver",
+      "proxy_pool",
+      "crawlee",
+      "scrapy",
+      "crewAI",
+      "Adala",
+      "langroid",
+      "tika",
+      "trafilatura",
+      "vanna"
+    ],
+    "found_vendors": [
+      "Adala",
+      "AgentVerse",
+      "aider",
+      "cheerio",
+      "cloudflare-protection",
+      "cloudflare-scrape",
+      "Cloudflare-Solver-",
+      "cloudscraper",
+      "colly",
+      "crawl4ai",
+      "crawlee",
+      "crewAI",
+      "CyberScraper-2077",
+      "EasySpider",
+      "fake-useragent",
+      "fastagency",
+      "flaresolverr",
+      "jsoup",
+      "langroid",
+      "localGPT",
+      "mubeng",
+      "playwright_stealth",
+      "proxy_pool",
+      "PulsarRPA",
+      "react-agent",
+      "requests-ip-rotator",
+      "Scrapegraph-ai",
+      "Scrapling",
+      "scrapy",
+      "scrapy-playwright",
+      "secret-agent",
+      "SeleniumBase",
+      "stealth",
+      "sweep",
+      "tika",
+      "trafilatura",
+      "undetected-chromedriver",
+      "vanna",
+      "zenrows-python-sdk"
+    ],
+    "missing_vendors": [],
+    "extra_vendors": [
+      "AgentVerse",
+      "aider",
+      "cheerio",
+      "cloudflare-protection",
+      "cloudflare-scrape",
+      "Cloudflare-Solver-",
+      "colly",
+      "crawl4ai",
+      "CyberScraper-2077",
+      "EasySpider",
+      "fake-useragent",
+      "fastagency",
+      "jsoup",
+      "localGPT",
+      "mubeng",
+      "playwright_stealth",
+      "PulsarRPA",
+      "react-agent",
+      "requests-ip-rotator",
+      "Scrapegraph-ai",
+      "Scrapling",
+      "scrapy-playwright",
+      "secret-agent",
+      "SeleniumBase",
+      "stealth",
+      "sweep",
+      "zenrows-python-sdk"
+    ]
+  },
+  "engines_structure": {
+    "exists": true,
+    "structure_validation": {
+      "bypass": {
+        "exists": true,
+        "expected_files": [
+          "cloudflare_bypass.py",
+          "captcha_solver.py",
+          "tls_fingerprinting.py",
+          "waf_bypass.py"
+        ],
+        "found_files": [
+          "aws_ip_rotator.py",
+          "captcha_solver.py",
+          "cloudflare_bypass.py",
+          "test_aws_rotator.py",
+          "tls_fingerprinting.py",
+          "undetected_browser.py",
+          "waf_bypass.py",
+          "__init__.py"
+        ],
+        "missing_files": [],
+        "extra_files": [
+          "aws_ip_rotator.py",
+          "test_aws_rotator.py",
+          "undetected_browser.py",
+          "__init__.py"
+        ]
+      },
+      "scraping": {
+        "exists": true,
+        "expected_files": [
+          "crawlee_engine.py",
+          "scrapy_engine.py",
+          "playwright_engine.py",
+          "proxy_manager.py"
+        ],
+        "found_files": [
+          "core_framework.py",
+          "crawlee_engine.py",
+          "playwright_engine.py",
+          "proxy_manager.py",
+          "requests_engine.py",
+          "scraping_framework.py",
+          "selenium_engine.py",
+          "web_scraper.py",
+          "__init__.py"
+        ],
+        "missing_files": [
+          "scrapy_engine.py"
+        ],
+        "extra_files": [
+          "core_framework.py",
+          "requests_engine.py",
+          "scraping_framework.py",
+          "selenium_engine.py",
+          "web_scraper.py",
+          "__init__.py"
+        ]
+      },
+      "pentesting": {
+        "exists": true,
+        "expected_files": [
+          "vulnerability_scanner.py",
+          "exploit_manager.py",
+          "osint_tools.py",
+          "phishing_detector.py"
+        ],
+        "found_files": [
+          "exploit_manager.py",
+          "osint_engine.py",
+          "osint_framework.py",
+          "vulnerability_scanner.py",
+          "__init__.py"
+        ],
+        "missing_files": [
+          "osint_tools.py",
+          "phishing_detector.py"
+        ],
+        "extra_files": [
+          "osint_engine.py",
+          "osint_framework.py",
+          "__init__.py"
+        ]
+      }
+    }
+  },
+  "integrations_structure": {
+    "exists": true,
+    "expected_files": [
+      "blocket_api.py",
+      "vehicle_data.py",
+      "company_data.py",
+      "pii_detector.py"
+    ],
+    "found_files": [
+      "blocket_api.py",
+      "__init__.py"
+    ],
+    "missing_files": [
+      "vehicle_data.py",
+      "company_data.py",
+      "pii_detector.py"
+    ],
+    "extra_files": [
+      "__init__.py"
+    ]
+  },
+  "sandbox_structure": {
+    "exists": true,
+    "expected_subdirs": [
+      "exploit_tools",
+      "osint_tools",
+      "phishing_tools",
+      "research"
+    ],
+    "found_subdirs": [
+      "exploit_tools",
+      "osint_tools",
+      "phishing_tools"
+    ],
+    "missing_subdirs": [
+      "research"
+    ],
+    "extra_subdirs": []
+  },
+  "docs_structure": {
+    "exists": true,
+    "structure_validation": {
+      "pentesting": {
+        "exists": true,
+        "expected_docs": [
+          "PayloadsAllTheThings",
+          "AllAboutBugBounty"
+        ],
+        "found_docs": [
+          "AllAboutBugBounty",
+          "PayloadsAllTheThings",
+          "WebShell-Bypass-Guide"
+        ]
+      },
+      "security": {
+        "exists": true,
+        "expected_docs": [
+          "awesome-api-security"
+        ],
+        "found_docs": [
+          "awesome-api-security",
+          "nginx-ultimate-bad-bot-blocker"
+        ]
+      }
+    }
+  },
+  "requirements_consolidation": {
+    "consolidated_file_exists": true,
+    "old_files_removed": [
+      "requirements.txt",
+      "requirements_backend.txt",
+      "requirements_dev.txt",
+      "requirements_production.txt",
+      "requirements_revolutionary.txt"
+    ],
+    "old_files_remaining": []
+  },
+  "removed_repos": [],
+  "issues": [
+    "Missing scraping engine files: scrapy_engine.py",
+    "Missing pentesting engine files: osint_tools.py, phishing_detector.py",
+    "Missing Swedish integration files: vehicle_data.py, company_data.py, pii_detector.py"
+  ],
+  "recommendations": [
+    "Extra vendors found (consider organizing): AgentVerse, aider, cheerio, cloudflare-protection, cloudflare-scrape, Cloudflare-Solver-, colly, crawl4ai, CyberScraper-2077, EasySpider, fake-useragent, fastagency, jsoup, localGPT, mubeng, playwright_stealth, PulsarRPA, react-agent, requests-ip-rotator, Scrapegraph-ai, Scrapling, scrapy-playwright, secret-agent, SeleniumBase, stealth, sweep, zenrows-python-sdk",
+    "Consider creating sandbox subdirs: research"
+  ]
+}
