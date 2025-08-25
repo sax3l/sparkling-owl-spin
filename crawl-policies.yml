@@ -1,0 +1,153 @@
+# Revolutionary Ultimate Scraping System v4.0 Configuration
+# =========================================================
+# 
+# Den här filen definierar policies och inställningar för hela systemet.
+# Varje domän kan ha sina egna inställningar för optimal prestanda.
+
+# Global system configuration
+global:
+  name: "Revolutionary Ultimate Scraping System"
+  version: "4.0"
+  
+  # External services
+  flaresolverr_url: "http://localhost:8191/v1"
+  tika_server_url: "http://localhost:9998"
+  database_url: "postgresql://localhost/revolutionary_scraper" 
+  redis_url: "redis://localhost:6379/0"
+  
+  # Monitoring & logging
+  log_level: "INFO"
+  metrics_enabled: true
+  sentry_dsn: null  # Set via environment variable
+  
+  # Performance tuning
+  global_rate_limit: 10.0          # Max requests per second globally
+  max_concurrent_domains: 10       # Max domains to process simultaneously
+  memory_limit_mb: 2048           # Memory usage limit
+  
+  # Quality control
+  content_deduplication: true      # Enable content deduplication
+  similarity_threshold: 0.85       # Threshold for duplicate detection
+  
+  # Feature flags
+  features:
+    ai_extraction: true            # AI-powered content understanding
+    entity_recognition: true       # Extract dates, amounts, measurements
+    proxy_rotation: true          # Automatic proxy rotation
+    behavioral_simulation: true    # Simulate human browsing patterns
+    content_quality_scoring: true # Score content quality
+    automatic_retries: true       # Smart retry logic
+    cloudflare_bypass: true       # Cloudflare IUAM/Turnstile bypass
+    captcha_solving: true         # Automatic CAPTCHA solving
+
+# Default policy för alla domäner (om ingen specifik policy finns)
+default_policy:
+  # Anti-bot strategy
+  engine: "requests"               # requests|cloudscraper|playwright|undetected_chrome
+  flare_solverr: false            # Use FlareSolverr for Cloudflare challenges
+  captcha: "none"                 # none|2captcha|nopecha|auto
+  tls_fingerprint: "default"      # default|azuretls|cycle (för TLS spoofing)
+  
+  # Content extraction
+  extract_html: "trafilatura"     # trafilatura|beautifulsoup|tika
+  extract_pdf: "tika"             # tika|pdf-extract-kit|pymupdf
+  extract_entities: true          # Extract dates, amounts, measurements
+  
+  # URL discovery & crawling
+  seed_mode: "sitemap"            # katana|photon|sitemap|manual
+  max_depth: 3                    # Maximum crawling depth
+  follow_links: true              # Follow discovered links
+  
+  # Quality control
+  min_quality: 0.3                # Minimum content quality score (0-1)
+  max_retries: 3                  # Maximum retry attempts
+  retry_delay: 2.0                # Base retry delay in seconds
+  
+  # Performance
+  rate_limit: 1.0                 # Requests per second for this domain
+  timeout: 30                     # Request timeout in seconds
+  concurrent: 5                   # Concurrent requests for this domain
+  
+  # Headers & fingerprinting
+  user_agent: "auto"              # auto|random|specific
+  custom_headers: {}              # Custom headers to add
+  cookies: {}                     # Custom cookies to add
+
+# Domain-specific policies
+domains:
+  
+  # Exempel: Enkel svensk sajt
+  "example.se":
+    engine: "cloudscraper"         # Cloudflare protected, use cloudscraper
+    captcha: "2captcha"           # Enable CAPTCHA solving
+    extract_html: "trafilatura"   # High-quality content extraction
+    rate_limit: 0.5               # Be gentle with this site
+    max_retries: 5                # More retries for important site
+    min_quality: 0.5              # Higher quality threshold
+    custom_headers:
+      "Accept-Language": "sv-SE,sv;q=0.9,en;q=0.8"
+    
+  # Exempel: Cloudflare-skyddad sajt
+  "cloudflare-protected.com":
+    engine: "undetected_chrome"   # Use real browser for heavy protection
+    flare_solverr: true           # Use FlareSolverr as backup
+    captcha: "2captcha"           # Solve CAPTCHAs
+    tls_fingerprint: "azuretls"   # Spoof TLS fingerprint
+    rate_limit: 0.2               # Very slow to avoid detection
+    timeout: 60                   # Longer timeout for challenges
+    max_retries: 5                # More attempts for difficult sites
+    retry_delay: 5.0              # Longer delays between retries
+    
+  # Exempel: News website med många sidor
+  "*.news.com":
+    engine: "playwright"          # Fast browser automation
+    extract_html: "trafilatura"   # Clean article extraction
+    extract_entities: true       # Extract dates, people, amounts
+    seed_mode: "katana"          # Discover URLs with katana
+    max_depth: 5                 # Deep crawling för news archives
+    rate_limit: 2.0              # Faster rate för news sites
+    min_quality: 0.4             # News should have good content
+    follow_links: true           # Follow article links
+    
+  # Exempel: E-handel / produktsidor  
+  "*.shop.com":
+    engine: "requests"           # Simple for most product pages
+    extract_entities: true      # Extract prices, dimensions
+    rate_limit: 1.5             # Moderate speed
+    custom_headers:
+      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+      "Cache-Control": "no-cache"
+    
+  # Exempel: API endpoints
+  "api.*.com":
+    engine: "requests"          # APIs don't need browser
+    extract_html: "none"        # Don't extract HTML från API responses
+    rate_limit: 5.0             # APIs can handle more requests
+    timeout: 15                 # Shorter timeout for APIs
+    max_retries: 2              # APIs should respond quickly
+    
+  # Exempel: PDF-heavy site
+  "documents.*.gov":
+    engine: "requests"          # PDFs don't need browser
+    extract_pdf: "pdf-extract-kit"  # High-quality PDF extraction
+    extract_entities: true     # Extract dates, amounts from documents
+    rate_limit: 0.3             # Government sites - be respectful
+    timeout: 120                # PDFs kan ta lång tid
+    
+  # Exempel: Social media eller forum
+  "forum.*.se":
+    engine: "playwright"        # Need JS för dynamic content
+    extract_entities: true     # Extract usernames, dates
+    seed_mode: "katana"        # Discover thread URLs
+    max_depth: 2               # Don't go too deep in threads
+    rate_limit: 0.8            # Social sites can be rate limited
+    min_quality: 0.2           # Forum posts can be short
+    
+  # Exempel: Proxy-requiring site
+  "restricted.*.com":
+    engine: "undetected_chrome" # Behöver full browser
+    captcha: "auto"            # Auto-solve CAPTCHAs if present
+    rate_limit: 0.1            # Very slow to avoid bans
+    max_retries: 8             # Many attempts för restricted content
+    retry_delay: 10.0          # Long delays to avoid detection
+    timeout: 90                # Long timeout för slow responses

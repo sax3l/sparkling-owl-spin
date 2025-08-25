@@ -1,0 +1,17 @@
+browser:
+  headless: true
+  max_instances: 3
+  stealth_mode: true
+  undetected_chrome: true
+  user_data_dir: ./browser_profiles
+captcha:
+  capmonster_api_key: ${CAPMONSTER_API_KEY}
+  default_service: 2captcha
+  local_ocr_enabled: true
+  nopecha_api_key: ${NOPECHA_API_KEY}
+  twocaptcha_api_key: ${TWOCAPTCHA_API_KEY}
+cloudflare:
+  auto_retry: true
+  cloudscraper_enabled: true
+  flaresolverr_url: http://localhost:8191
+  max_retries: 3

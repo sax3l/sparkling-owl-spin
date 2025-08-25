@@ -1,0 +1,2321 @@
+https://github.com/ag2ai/fastagency
+https://github.com/vanna-ai/vanna
+https://github.com/ag2ai/fastagency
+https://github.com/superagi
+https://github.com/codeintegrity-ai/mutahunter
+https://github.com/sweepai/sweep
+https://github.com/irgolic/AutoPR
+https://github.com/Aider-AI/aider
+https://github.com/Canner/WrenAI
+https://github.com/vanna-ai/vanna
+https://github.com/PromtEngineer/localGPT
+https://www.privatefindr.com/
+https://github.com/HumanSignal/Adala
+https://github.com/langroid/langroid
+https://github.com/crewAIInc/crewAI
+https://github.com/OpenBMB/AgentVerse
+https://github.com/eylonmiz/react-agent
+https://github.com/TaxyAI/browser-extension
+https://github.com/greim/hoxy
+https://github.com/HoShiMin/Kernel-Bridge
+https://github.com/ShulinCao/OpenNRE-PyTorch
+https://github.com/Tencent/wwsearch
+https://github.com/rapidfuzz/RapidFuzz
+https://github.com/shenweichen/DeepMatch
+https://github.com/asyml/texar
+https://github.com/BrikerMan/Kashgari
+https://github.com/lemonhu/open-entity-relation-extraction
+https://github.com/baidu/information-extraction
+https://github.com/Microsoft/Recognizers-Text
+https://github.com/shadoww117/Buy-Parser-Checker-Brute-Autoreg?tab=readme-ov-file#introduction
+https://github.com/alexander-hamme/Automatic_Email_Checker
+https://github.com/RockENZO/Automatic-web-scraper-with-LLM-parsing
+https://gist.github.com/techenthusiast167/76ef6f0e1e3af74045f4d85bc1a7c60e
+https://github.com/yogeshojha/rengine
+https://github.com/XDeadHackerX/The_spy_job
+https://github.com/XDeadHackerX/NetSoc_OSINT
+https://github.com/NanoNets/docstrange
+https://github.com/Trusted-AI/adversarial-robustness-toolbox
+https://github.com/shcherbak-ai/contextgem
+https://github.com/apache/tika
+https://github.com/adbar/trafilatura
+https://github.com/webpack-contrib/mini-css-extract-plugin
+https://github.com/opendatalab/PDF-Extract-Kit
+https://github.com/blue-yonder/tsfresh
+https://github.com/getomni-ai/zerox
+https://github.com/getmaxun/maxun
+https://github.com/sefinek/Sefinek-Blocklist-Collection
+https://github.com/badmojr/1Hosts
+https://github.com/coolaj86/greenlock
+https://github.com/p32929/openai-gemini-api-key-rotator
+https://github.com/animir/node-rate-limiter-flexible
+https://github.com/avast/retry-go
+https://github.com/techenthusiast167/DeepWebHarvester
+https://github.com/nette/http
+https://github.com/n8henrie/pycookiecheat
+https://github.com/dlundquist/sniproxy
+https://github.com/TalhaBruh/OpenAI-RAG-for-Reddit-Comments-QnA-using-Docker
+https://github.com/daily-coding-problem/chatgpt-scraper
+https://github.com/st1vms/unofficial-claude-api
+https://github.com/rhijjawi/ManageBac-API
+https://github.com/hyperdxio/hyperdx
+https://github.com/unbug/codelf
+https://github.com/FlareSolverr/FlareSolverr
+https://github.com/srush/GPU-Puzzles
+https://github.com/Anorov/cloudflare-scrape
+https://github.com/VeNoMouS/cloudscraper
+https://github.com/mitchellkrogza/nginx-ultimate-bad-bot-blocker
+https://github.com/kata198/AdvancedHTMLParser
+https://github.com/jhy/jsoup
+https://github.com/Tencent/rapidjson
+https://github.com/cure53/DOMPurify
+https://github.com/cheeriojs/cheerio
+https://github.com/DigitalPlatDev/FreeDomain
+https://github.com/moonfy/moonfy.github.io
+https://github.com/ariya/phantomjs
+https://github.com/checkly/headless-recorder
+https://github.com/browserless/browserless
+https://github.com/chromedp/chromedp
+https://github.com/NoahCardoza/CaptchaHarvester
+https://github.com/2captcha/2captcha-python
+https://github.com/samc621/SneakerBot
+https://github.com/NopeCHALLC/nopecha-extension
+https://github.com/ecthros/uncaptcha
+https://github.com/niespodd/browser-fingerprinting
+https://github.com/lining0806/PythonSpiderNotes
+https://github.com/chaitin/SafeLine
+https://github.com/sml2h3/ddddocr
+https://github.com/ultrafunkamsterdam/undetected-chromedriver
+https://github.com/ayush5harma/PixelFeatureDrops
+https://github.com/Noooste/azuretls-client
+https://github.com/Danny-Dasilva/CycleTLS
+https://github.com/sleeyax/burp-awesome-tls
+https://github.com/code4craft/webmagic
+https://github.com/s0md3v/Photon
+https://github.com/crawlab-team/crawlab
+https://github.com/projectdiscovery/katana
+https://github.com/binux/pyspider
+https://github.com/apify/crawlee
+https://github.com/BuilderIO/gpt-crawler
+https://github.com/NanmiCoder/MediaCrawler
+https://github.com/gocolly/colly
+https://github.com/firecrawl/firecrawl
+https://github.com/bluebeach/BfsCrawler
+https://github.com/ngryman/tree-crawl
+
+https://github.com/christophetd/CloudFlair
+https://github.com/bhavsec/reconspider
+https://github.com/api0cradle/UltimateAppLockerByPassList
+https://github.com/Ge0rg3/requests-ip-rotator
+https://github.com/amethystnetwork-dev/Incognito
+https://github.com/F0rc3Run/F0rc3Run
+https://github.com/qeeqbox/chameleon
+https://github.com/mauricelambert/WebPayloadsEncodings
+https://github.com/capture0x/XSS-LOADER
+https://github.com/v2ray/v2ray-core
+https://github.com/PSPDFKit-labs/bypass
+https://github.com/Uncodin/bypass
+https://github.com/iamj0ker/bypass-403
+https://github.com/m14r41/PentestingEverything
+https://github.com/PhHitachi/HackBar
+https://github.com/arainho/awesome-api-security
+https://github.com/xemarap/pxstatspy
+https://github.com/NaiboWang/EasySpider
+https://github.com/fsson/vehicle-scraper
+https://github.com/ScrapeGraphAI/Scrapegraph-ai
+https://github.com/ProxyScraper/ProxyScraper
+https://github.com/unclecode/crawl4ai
+https://github.com/n8n-io/n8n
+https://github.com/azizzakiryarov/transport-api
+https://github.com/sch0ld/Biluppgifter-WebScraper
+https://github.com/ulixee/secret-agent
+https://github.com/tholian-network/stealth
+https://github.com/mkock/auto-lookup
+https://github.com/tholian-network/stealthify
+https://github.com/htr-tech/zphisher
+https://github.com/philipgyllhamn/fordonsuppgifter-api-wrapper
+https://github.com/jhao104/proxy_pool
+https://github.com/AtuboDad/playwright_stealth
+https://github.com/TheWebScrapingClub/webscraping-from-0-to-hero
+https://github.com/TheWebScrapingClub/TheScrapingClubFree
+https://github.com/TheWebScrapingClub/AI-Cursor-Scraping-Assistant
+https://github.com/TheWebScrapingClub/ArticleIndex
+https://github.com/TheWebScrapingClub/webscraping-from-0-to-hero?tab=readme-ov-file
+https://github.com/D4Vinci/Scrapling
+https://github.com/BruceDone/awesome-crawler
+https://github.com/getmaxun/maxun
+https://github.com/php-curl-class/php-curl-class
+https://github.com/gosom/google-maps-scraper
+https://github.com/dipu-bd/lightnovel-crawler
+https://github.com/anaskhan96/soup
+https://github.com/itsOwen/CyberScraper-2077
+https://github.com/juancarlospaco/faster-than-requests
+https://github.com/gildas-lormeau/single-file-cli
+https://github.com/platonai/PulsarRPA
+https://github.com/website-scraper/node-website-scraper
+https://github.com/goclone-dev/goclone
+https://thunderbit.com/blog/best-web-scraping-github-projects
+https://github.com/scrapy/scrapy
+https://github.com/mubeng/mubeng
+https://github.com/alpkeskin/rota
+https://github.com/markgacoka/selenium-proxy-rotator
+https://github.com/joewhite86/proxy-rotator
+https://github.com/p0dalirius/ipsourcebypass
+https://gist.github.com/kaimi-/6b3c99538dce9e3d29ad647b325007c1
+https://github.com/Python3WebSpider/ProxyPool
+https://github.com/wzdnzd/aggregator
+https://github.com/constverum/ProxyBroker
+https://github.com/zu1k/proxypool
+https://github.com/cmliu/SubsCheck-Win-GUI
+https://github.com/honmashironeko/ProxyCat
+https://github.com/henson/proxypool
+https://github.com/shimmeris/SCFProxy
+https://github.com/bluet/proxybroker2
+https://github.com/mochazi/Python3Webcrawler
+https://github.com/zu1k/http-proxy-ipv6-pool
+https://github.com/chenerzhu/proxy-pool
+https://github.com/MuRongPIG/Proxy-Master
+https://github.com/liuslnlp/ProxyPool
+https://github.com/ErcinDedeoglu/proxies
+https://github.com/topics/proxypool
+https://github.com/derekhe/ProxyPool
+https://github.com/OxOOo/ProxyPoolWithUI
+https://github.com/cwjokaka/ok_ip_proxy_pool
+https://github.com/Anyyy111/ProxyPoolxSocks
+https://github.com/ErcinDedeoglu/proxies
+https://github.com/derekhe/ProxyPool
+https://github.com/dunderrrrrr/blocket_api
+https://github.com/sax3l/awesome-sweden?tab=readme-ov-file
+https://github.com/okasi/swedish-pii
+https://github.com/jundymek/free-proxy
+https://huggingface.co/datasets/PierreMesure/oppna-bolagsdata-scb
+https://huggingface.co/datasets/PierreMesure/oppna-bolagsdata-bolagsverket
+https://github.com/PierreMesure/oppna-bolagsdata
+https://github.com/mratmeyer/rsslookup
+https://github.com/solve-cloudflare/cloudflare-bypass
+https://github.com/solve-cloudflare
+https://github.com/javapuppteernodejs/cloudflare-captcha-solver
+https://github.com/solve-cloudflare/cloudflare-protection
+https://github.com/javapuppteernodejs/Cloudflare-Solver-
+https://github.com/Theyka/Turnstile-Solver
+https://github.com/swisskyrepo/PayloadsAllTheThings
+https://github.com/LandGrey/webshell-detect-bypass
+https://github.com/v2fly/v2ray-core
+https://github.com/0xlane/BypassUAC
+https://github.com/31b4/Leetcode-Premium-Bypass
+https://github.com/FlareSolverr/FlareSolverr
+https://github.com/bipinkrish/Link-Bypasser-Bot
+https://github.com/sarperavci/GoogleRecaptchaBypass
+https://github.com/aleenzz/MYSQL_SQL_BYPASS_WIKI
+https://github.com/nemesida-waf/waf-bypass
+https://github.com/swisskyrepo/PayloadsAllTheThings
+https://github.com/sarperavci/CloudflareBypassForScraping
+https://github.com/sting8k/BurpSuite_403Bypasser
+https://github.com/sAjibuu/Upload_Bypass
+https://github.com/vincentcox/bypass-firewalls-by-DNS-history
+https://github.com/rootm0s/WinPwnage
+https://github.com/jychp/cloudflare-bypass
+https://github.com/intrudir/BypassFuzzer
+https://github.com/AabyssZG/WebShell-Bypass-Guide
+https://github.com/codewatchorg/bypasswaf
+https://github.com/laluka/bypass-url-parser
+https://github.com/GuallaGang508/SMSBotBypass
+https://github.com/seleniumbase/SeleniumBase
+https://github.com/apkunpacker/AntiFrida_Bypass
+https://github.com/acheong08/ChatGPTProxy
+https://github.com/topics/firewall-bypass
+https://github.com/dovecoteescapee/ByeDPIAndroid
+https://github.com/bin-maker/BYPASS-CDN
+https://github.com/gauravssnl/BypassRootCheckPro
+https://github.com/TheCaduceus/Link-Bypasser
+https://github.com/Edr4/XSS-Bypass-Filters
+https://github.com/KyranRana/cloudflare-bypass
+https://github.com/TheCaduceus/Link-Bypasser
+https://github.com/LSPosed/AndroidHiddenApiBypass
+https://github.com/ChickenHook/RestrictionBypass
+https://github.com/SteamAutoCracks/Steam-API-Check-Bypass
+https://github.com/esrrhs/pingtunnel
+https://github.com/everywall/ladder
+https://github.com/daffainfo/AllAboutBugBounty
+https://github.com/veno7998/AutoBypass403-BurpSuite
+https://github.com/W01fh4cker/CVE-2024-27198-RCE
+https://github.com/chrisjd20/hikvision_CVE-2017-7921_auth_bypass_config_decryptor
+https://github.com/Don-No7/Hack-SQL
+https://github.com/W01fh4cker/ScreenConnect-AuthBypass-RCE
+https://github.com/OGoodness/Minesweeper-Login
+https://github.com/depthsecurity/dahua_dvr_auth_bypass
+https://github.com/blueagler/DeepL-Helper
+https://github.com/LSPosed/AndroidHiddenApiBypass
+https://github.com/LSPosed/AndroidHiddenApiBypass
+https://github.com/wallarm/gotestwaf
+https://github.com/Ge0rg3/requests-ip-rotator
+https://github.com/SadeghHayeri/GreenTunnel
+https://github.com/m14r41/PentestingEverything
+https://github.com/arainho/awesome-api-security
+
+A) Agent‑/orkestrering & utvecklarautomation
+
+ag2ai/fastagency – Grön
+Unikt: Snabb ”flow”‑komposition av LLM‑agenter och verktyg.
+Så kopplar du in i sparkling‑owl‑spin (SOS):
+
+Var i koden: src/scheduler/ och src/plugins/
+
+Gör så här: skapa en ”agent‑runner” plugin (src/plugins/agent_fastagency/) som kan:
+
+ta ett Scrape/Crawl‑Job från kö → 2) orkestrera delsteg (diagnostik → val av HTTP/Browser → extraktion) → 3) skriva status via src/scheduler/job_monitor.py.
+
+Konfig: config/feature_flags.yml → agents.fastagency: true.
+
+superagi – Gul
+Unikt: Hel orkestrering + jobbkedjor + verktygsbryggor.
+Säker användning: kör som intern ”planner” för legitima jobb (inte för bypass).
+
+Adapter: src/plugins/agent_superagi/ som exponerar Plan/Do/Check steg och bara använder våra egna verktyg: HttpClient, BrowserRenderer, template_runtime.
+
+Observability: logga varje beslut till src/utils/lineage.py.
+
+codeintegrity-ai/mutahunter – Grön
+Unikt: DevSecOps/beroende‑hygien.
+
+CI: lägg GitHub Action som kör Mutahunter mot vårt repo; skriv rapport till docs/security.md och öppna PR med fixförslag.
+
+I kod: inga runtime‑beroenden; ren CI‑integration.
+
+sweepai/sweep & irgolic/AutoPR & Aider-AI/aider – Grön
+Unikt: AI‑PR‑agenter (fixar issues, öppnar PRs), kodredigering via chat.
+
+CI: skapa labels (auto-fix, good-first-issue) → låt Sweep/AutoPR föreslå patchar.
+
+Guardrails: kräver gröna tester (pytest) + ruff/mypy innan merge (se våra pyproject.toml/ruff.toml).
+
+Canner/WrenAI & vanna‑ai/vanna – Grön
+Unikt: NL→SQL för analys/BI.
+
+Var: src/webapp/graphql.py + src/analysis/
+
+Gör: skapa endpoint POST /analytics/sqlgen som använder Wren/Vanna mot läs‑only MySQL‑view:er (ex: VW_extractions, VW_jobs).
+
+Säkerhet: whitelista tabeller och SELECT‑endast.
+
+PromtEngineer/localGPT – Gul
+Unikt: Lokal RAG över dina dokument.
+
+Var: src/analysis/ + docs/ som korpus.
+
+Gör: kör som offline help för utvecklare/analytiker (inte mot externa siter), indexera vår egen dokumentation & mallar.
+
+UI: ”Docs‑sök” i src/webapp/views.py.
+
+HumanSignal/Adala – Grön
+Unikt: Autonom datalabeling/curation.
+
+Var: src/analysis/data_quality.py
+
+Gör: pipelines för att auto‑märka fältkvalitet (”saknar VIN”, ”fel format”), skapar golden sets för regressions.
+
+Export: skriv label‑resultat till database.
+
+langroid / crewAI / AgentVerse – Grön
+Unikt: Multi‑agent samspel (robusthet).
+
+Mönster: ”triage‑agent” (väljer HTTP vs Browser), ”template‑agent” (härdar selektorer), ”DQ‑agent” (sänker osäkerhet).
+
+Var: src/plugins/agent_multi/ som strategi‑lager ovanför våra egna fetch/extract‑moduler.
+
+eylonmiz/react-agent – Gul
+Unikt: React‑styrda agenter.
+
+Säkert bruk: UI‑assistent i frontend/ som förklarar extraktionsfel, inte kör okända skript.
+
+TaxyAI/browser-extension – Gul
+Unikt: Browserautomation via extension.
+
+Säkert bruk: använd lokalt för att ta fram selektorer (”Selector Tool”), inte för att kringgå spärrar.
+
+Var: integrera export till docs/templates/examples/.
+
+B) NLP/IE (Entity/Relation/Datum/Belopp)
+
+greim/hoxy – Grön
+Unikt: MITM‑proxy i Node för debug/insikt (inte bypass).
+
+Användning: lokal utvecklingsproxy för att spela in legitima trafikmönster (headers, timings) → förbättra vår HttpClient‑profilering.
+
+Var: dokumentera i docs/observability.md.
+
+OpenNRE‑PyTorch / open‑entity‑relation‑extraction / baidu/information‑extraction / BrikerMan/Kashgari / asyml/texar / shenweichen/DeepMatch – Grön
+Unikt: NER/RE/tekstanalys.
+
+Var: src/analysis/
+
+Gör:
+
+ner_service.py (spaCy/Kashgari) för PERSON/ORG/REG/VIN.
+
+re_service.py (OpenNRE) för relationer (”företag—fordon”).
+
+normalize_service.py (Microsoft/Recognizers‑Text → datum, belopp, adresser).
+
+Anropa efter mall‑extraktion för att komplettera/validera fält.
+
+Microsoft/Recognizers‑Text – Grön
+
+Integrera: i src/scraper/normalizers.py för robust datum/belopp/telefon‑normalisering (svenska kulturer).
+
+RapidFuzz – Grön
+
+Var: src/analysis/similarity_analysis.py
+
+Use‑case: deduplicering av poster, fuzzy‑match mot tidigare extrakt (t.ex. samma bilannons i ny layout).
+
+apache/tika & opendatalab/PDF‑Extract‑Kit & adbar/trafilatura – Grön
+Unikt: Dokument/PDF/HTML→ren text, metadata.
+
+Var: src/scraper/template_extractor.py + src/plugins/
+
+Gör: lägg document‑adapter som: om Content‑Type PDF/Office → kör Tika/PDF‑EK; för artiklar → trafilatura (boilerplate removal).
+
+Tests: lägg fixtures i tests/fixtures/.
+
+blue‑yonder/tsfresh – Grön
+Unikt: Tidsseriefunktioner (feature engineering).
+
+Var: src/proxy_pool/monitor.py
+
+Gör: extrahera features från proxy‑latens/error‑rate över tid → mata en enkel klassificerare för ”degradering” → auto‑deprioritera dåliga noder.
+
+Trusted‑AI/adversarial‑robustness‑toolbox – Grön
+Unikt: Härda ML‑delar (NER/klassificering) mot konstiga inputs.
+
+Var: src/analysis/ som test‑dependency.
+
+shcherbak‑ai/contextgem – Grön
+Unikt: Prompt‑kontextselektion.
+
+Var: src/plugins/ för agent‑promptar för mall‑härdning/analyskommentarer (ingen ”bypass”).
+
+C) Crawling/Parsing/Headless/Automation
+
+scrapy/scrapy • apify/crawlee • gocolly/colly • binux/pyspider • projectdiscovery/katana • firecrawl • webmagic (Java) • chromedp (Go) • crawlab‑team/crawlab – Grön
+Unikt: Mogna crawler‑motorer i olika språk.
+
+Strategi: behåll SOS som primär motor, men lägg adapters för import/export och hybridkörning:
+
+src/plugins/engines/scrapy_adapter.py (kan köra item pipelines och mata vår exporter).
+
+src/plugins/engines/crawlee_adapter.ts (Node‑jobb via sidecar; bra för JS‑tunga siter).
+
+src/plugins/engines/colly_adapter.go (högpresterande Go‑microservice för enkla siter).
+
+Planer: välj motor per domän i config/domain_policies/*.yml.
+
+BuilderIO/gpt‑crawler – Gul
+
+Säkert bruk: för egen sajt/egna dokument (docs/portaler) – bygg index för RAG/help.
+
+Inte för 3‑partssidor med spärrar.
+
+ultrafunkamsterdam/undetected‑chromedriver – Gul
+
+Säkert bruk: fallback‑driver när legitima sajter har strikta webdriver‑detektorer trots normal användning.
+
+Policy: slå av default; kräver manuell enable per domän i config/anti_bot.yml. Ingen ”bypass”‑kod.
+
+browserless/browserless • ariya/phantomjs (ej rekommenderad) • checkly/headless‑recorder – Grön (PhantomJS: avråds)
+
+Browserless: kör Playwright‑sessions server‑side som tjänst.
+
+Headless‑recorder: spela in legitima flöden → generera Playwright‑script till src/scraper/form_flows.py.
+
+PhantomJS: gammalt; håll dig till Playwright.
+
+code4craft/webmagic • jhy/jsoup • cheerio/cheerio • kata198/AdvancedHTMLParser – Grön
+
+Var: src/scraper/parser.py
+
+Gör: kapsla biblioteksspecifika parse‑metoder som ”drivers” (JSoup i JVM‑sidecar för extrem prestanda i bulk‑HTML‑sanering).
+
+Sanering: kör DOMPurify på klient‑/visningssteg (frontend) innan rendering.
+
+cure53/DOMPurify – Grön
+
+Var: frontend/
+
+Gör: sanera HTML‑snuttar i UI (förhandsvisning av extrakt).
+
+adbar/trafilatura – (redan ovan) Grön.
+
+D) Nätverk, rate‑limit, retry, certifikat
+
+animir/node‑rate‑limiter‑flexible – Grön
+
+Var: src/webapp/middlewares/rate_limit.py (server) och frontend/ (UI API‑kall).
+
+Gör: sätt per‑IP/per‑token trösklar för våra egna API:er (skydd mot missbruk).
+
+avast/retry‑go – Grön
+
+För Go‑sidecar (t.ex. colly_adapter.go) – robusta retrier.
+
+coolaj86/greenlock – Grön
+
+Var: om du har Node‑gateway → automatisk Let’s Encrypt TLS.
+
+nette/http – Grön
+
+För PHP‑integrationer (om du bygger en liten mellanlagers‑tjänst).
+
+dlundquist/sniproxy – Gul
+
+SNI‑proxy för laglig routing/lastbalansering. Använd endast för egen infrastruktur (inte för att sminka ursprung).
+
+Var: docker/ kompos.
+
+hyperdxio/hyperdx – Grön
+
+Var: src/utils/otel.py → exportera spår/loggar/metrics till HyperDX.
+
+Dashboard: länka i docs/observability.md.
+
+mitchellkrogza/nginx‑ultimate‑bad‑bot‑blocker – Grön
+
+Server‑side skydd för våra endpoints (inte för att kringgå andras).
+
+Var: docker/nginx/ + ingress.
+
+p32929/openai‑gemini‑api‑key‑rotator – Gul
+
+Endast för vår egen kostnadskontroll (rotating egna nycklar mellan tjänster), respektera ToS.
+
+Var: src/utils/cost_tracker.py + config/api.yml.
+
+E) Export/bygg/verktyg
+
+webpack‑contrib/mini‑css‑extract‑plugin – Grön
+
+Var: frontend/ build → snabbare CSS‑hantering.
+
+Tencent/rapidjson – Grön
+
+Var: om du gör Python C‑ext/Go interop, eller snabb JSON i sidecar.
+
+gildas‑lormeau/single‑file‑cli – Grön
+
+Användning: skapa beviskopior av renderade sidor (rättsligt robust export) → lagra i data/raw_html/.
+
+Var: src/exporters/ + scripts/.
+
+F) Datalager, blocklist, domän, social/OSINT (legitimt)
+
+sefinek/Sefinek‑Blocklist‑Collection • badmojr/1Hosts – Grön
+
+Var: för vår utvecklingsmiljö (blocka trackers/annonser när vi kör egna dashboards).
+
+Inte mot målwebbplatser (kan snedvrida innehåll).
+
+DigitalPlatDev/FreeDomain – osäker relevans (domän‑freebies). Skippa i produktion.
+
+mratmeyer/rsslookup – Grön
+
+Var: src/crawler/sitemap_generator.py – utöka med RSS‑ingest för indexering.
+
+ManageBac‑API – Grön
+
+Exempel på officiell API‑integration. Följ den approachen där det finns API istället för scraping.
+
+G) Captcha/Cloudflare/Bypass/Phishing/Exploits — RÖD (ingen implementeringsguide)
+
+Exempel (ej komplett, men representativt):
+Cloudflare/recaptcha‑bypass (Anorov/cloudflare‑scrape, VeNoMouS/cloudscraper, FlareSolverr, sarperavci/GoogleRecaptchaBypass, KyranRana/cloudflare‑bypass, jychp/cloudflare‑bypass, solve‑cloudflare/*), bypass‑403/iamj0ker, zphisher, WebShell‑Bypass‑Guide, bypasswaf, BypassUAC, WinPwnage, AntiFrida_Bypass, AndroidHiddenApiBypass, RestrictionBypass, Link‑Bypasser, Upload_Bypass, ipsourcebypass, WebPayloadsEncodings, XSS‑LOADER, waf‑bypass, etc.
+
+Varför röd: ändamålen är att kringgå säkerhetskontroller, exploatera system, phishing eller upphovsrätts‑/ToS‑brytande flöden. Jag kan inte hjälpa till med tekniska implementeringar där.
+
+Säker alternativ väg (som vi redan bygger in):
+
+Polite crawling (per‑domän RPS, jitter, session‑cache, korrekt headers/locale).
+
+Standard headless via Playwright + vänta på legitima signaler (”networkidle”, CSS‑selektor).
+
+Fallback HTTP→Browser→Manuell (”human‑in‑the‑loop” i UI) vid spärrar.
+
+Officiella API:er när de finns.
+
+Observability & DQ för att undvika att trigga skydd: sänk hastighet på signal, byt legala region‑proxies, pausa vid felspikar.
+
+Sanering (DOMPurify), säker lagring, loggning och RBAC.
+
+H) Övriga (dual‑use/osäker nytta) — Gul med spärrar
+
+ulixee/secret‑agent, tholian‑network/stealth & stealthify: browser‑automation/fingerprinting‑abstraktion.
+
+Säkert bruk: endast för legitima siter som annars låser out‑of‑date webdriver. Behind a feature flag.
+
+NoahCardoza/CaptchaHarvester, 2captcha‑python, nopecha‑extension, ecthros/uncaptcha: CAPTCHA‑lösare.
+
+Använd inte i vårt system.
+
+niespodd/browser‑fingerprinting: kunskapsbas; bra för förståelse, inte för att imitera andra.
+
+Noooste/azuretls‑client, Danny‑Dasilva/CycleTLS, sleeyax/burp‑awesome‑tls: TLS‑fingerprints.
+
+Säkert bruk: standard TLS‑stacken räcker; lås bort ”custom fingerprinting”.
+
+pycookiecheat: extraherar cookies från lokala browsers.
+
+Avråds (känsligt). Använd normal cookie‑jar i våra egna klienter.
+
+I) Domänspecifika / Sverige‑relaterade (exempel)
+
+philipgyllhamn/fordonsuppgifter‑api‑wrapper, sch0ld/Biluppgifter‑WebScraper, azizzakiryarov/transport‑api, fsson/vehicle‑scraper, NaiboWang/EasySpider – Grön/Gul
+
+Säkert bruk: endast mot siter där åtkomst är tillåten/avtalad eller som exponerar officiellt API.
+
+Adapter: src/plugins/examples/extractor_example.py → gör enkla source adapters som använder våra egna HttpClient/BrowserRenderer (inte repo‑specifika skript).
+
+xemarap/pxstatspy – Grön (statistik‑API‑klient) → integrera i src/analysis/ för referensdata.
+
+Svenska dataset (PierreMesure/*): Grön → importera som seed/reference i database/seed/.
+
+Hur du faktiskt lägger in det i SOS (konkreta tasks)
+
+Plugins & adapters
+
+Skapa mappar:
+
+src/plugins/agent_fastagency/ (och ev. agent_superagi/, agent_multi/)
+
+src/plugins/engines/ (scrapy_adapter.py, crawlee_adapter.ts, colly_adapter.go)
+
+src/plugins/document_ingest/ (tika_adapter.py, pdf_extract_kit.py, trafilatura_adapter.py)
+
+src/analysis/ (ner_service.py, re_service.py, nlp_normalize.py, similarity_service.py)
+
+Lägg till en registreringsfil src/plugins/registry.yaml där varje plugin flaggas per miljö och domänpolicy.
+
+Konfiguration
+
+config/feature_flags.yml
+
+agents:
+  fastagency: true
+  crewai: true
+  langroid: true
+engines:
+  scrapy: false
+  crawlee: true
+  colly: false
+ingest:
+  tika: true
+  trafilatura: true
+  pdf_extract_kit: true
+security:
+  dompurify_frontend: true
+  captcha_solvers: false
+  tls_custom_fingerprints: false
+  undetected_chromedriver: false
+
+
+config/domain_policies/*.yml – välj engine, rendering, rate limits per domän (legitimt bruk).
+
+Beroenden
+
+Python: scrapy, trafilatura, tika (via server/REST), rapidfuzz, spacy/stanza/kashgari, openNRE‑krav, tsfresh.
+
+Node sidecar: crawlee, cheerio, mini-css-extract-plugin (frontend build).
+
+Go sidecar (valfritt): colly, retry-go.
+
+Pipelines
+
+I src/scheduler/job_definitions.py lägg steg: diagnostic → engine_select → fetch (HTTP/Browser) → template_extract → nlp_enrich (NER/RE) → DQ/normalize → export.
+
+I src/scheduler/job_monitor.py rapportera per steg.
+
+Observability & DQ
+
+Exportera traces/metrics till HyperDX (src/utils/otel.py).
+
+Skriv DQT (data quality tests) i src/analysis/data_quality.py (anropa Recognizers‑Text + egna validerare).
+
+Kör tsfresh mot proxyhälsa periodiskt och justera proxy_pool/quality_filter.py.
+
+Frontend (stöd)
+
+DOMPurify i alla HTML‑förhandsvisningar.
+
+”Selector Tool” integrerat via Playwright‑script/Headless‑recorder export → ”klistra in” i Template‑Wizard.
+
+”SQL‑fråga med naturligt språk” → Wren/Vanna‑endpoint.
+
+CI & Governance
+
+Aktivera Mutahunter, Sweep/AutoPR/Aider i .github/workflows/*.
+
+Policy‑check: blockera röda features via tests (”captcha_solvers must be false”).
+
+Snabb bedömning (urval från resterande länkar)
+
+unclecode/crawl4ai – Grön (”AI‑assisted crawling”): använd insikter men håll vår motor; eventuellt prompt‑hjälp i Template‑Wizard.
+
+ProxyScraper/proxyscraper & alla ”proxypool”‑listor – Gul → använd endast för QA/labb; produktion bör använda pålitlig leverantör med avtal.
+
+n8n‑io/n8n – Grön → low‑code orkestrering internt (exportflöden, aviseringar).
+
+ulixee/secret‑agent – Gul (se ovan).
+
+AtuboDad/playwright_stealth – Gul → använd inte default; behind feature flag per domän.
+
+TheWebScrapingClub/ (guider/assistenter)* – Grön → dokumentationsresurs; ingen runtime.
+
+juancarlospaco/faster‑than‑requests – Gul → experimentell; stanna med httpx.
+
+platonai/PulsarRPA – Gul → bra för interna RPA‑flöden; kapsla som manual ops tool, inte som prod‑scraper.
+
+website‑scraper/node‑website‑scraper – Grön → sidecar för att göra fullständiga speglar av egna sidor (beviskopior).
+
+goclone‑dev/goclone – Gul → ok för git‑relaterade arbetsflöden, ej central i vår produkt.
+
+gosom/google‑maps‑scraper – Gul → följ ToS; använd officiell Maps/Places API när möjligt.
+
+dipu‑bd/lightnovel‑crawler – Gul → smal nisch; ej relevant.
+
+anaskhan96/soup – Grön (Go HTML parse; om ni kör Go‑sidecar).
+
+SadeghHayeri/GreenTunnel, esrrhs/pingtunnel, everywall/ladder – Gul (nätverkstunnlar) → undvik i produktion; håll nätet rent.
+
+Slutsats
+
+Massor i listan är trygga, starka byggklossar (grönt): parsing (JSoup/Cheerio/Tika/trafilatura), analys (RapidFuzz/Recognizers‑Text/tsfresh), orkestrering (fastagency/crewai/langroid), crawling‑motorer (scrapy/crawlee/colly), DevEx (Mutahunter/Sweep/Aider/AutoPR), observability (HyperDX).
+
+En del är dual‑use (gult): kan hjälpa robusthet (Playwright‑stealth, undetected‑chromedriver, tls‑klienter, SNI‑proxy, proxypooler) men vi håller dem bakom feature flags, med policy‑styrning, och använder dem restriktivt.
+
+Bypass/exploit (rött) ger jag ingen implementeringsguide för. Där väljer vi säkra alternativ: officiella API:er, standard‑headless, lägre RPS, manuell intervention (“human‑in‑the‑loop”), tydlig observability och DQ.
+
+Vill du att jag tar en av kategorierna ovan (t.ex. document‑ingest eller multi‑engine adapters) och skriver färdiga kodskelett (filer + stubbar) direkt för SOS? Jag kan lägga dem modul‑för‑modul efter våra sökvägar.
+
+Du sade:
+Men som sagt så behöver vi utveckla vår pentestning så därför måste vi ha alla dessa funktioner till alla våra egna sidor: Implementera Polite crawling (per‑domän RPS, jitter, session‑cache, korrekt headers/locale).
+	•	Standard headless via Playwright + vänta på legitima signaler (”networkidle”, CSS‑selektor).
+	•	Fallback HTTP→Browser→Manuell (”human‑in‑the‑loop” i UI) vid spärrar.
+	•	Officiella API:er när de finns.
+	•	Observability & DQ för att undvika att trigga skydd: sänk hastighet på signal, byt legala region‑proxies, pausa vid felspikar.
+	•	Sanering (DOMPurify), säker lagring, loggning och RBAC. 
+
+
+Cloudflare/recaptcha‑bypass (Anorov/cloudflare‑scrape, VeNoMouS/cloudscraper, FlareSolverr, sarperavci/GoogleRecaptchaBypass, KyranRana/cloudflare‑bypass, jychp/cloudflare‑bypass, solve‑cloudflare/*), bypass‑403/iamj0ker, zphisher, WebShell‑Bypass‑Guide, bypasswaf, BypassUAC, WinPwnage, AntiFrida_Bypass, AndroidHiddenApiBypass, RestrictionBypass, Link‑Bypasser, Upload_Bypass, ipsourcebypass, WebPayloadsEncodings, XSS‑LOADER, waf‑bypass, 
+ChatGPT sade:
+Tänkte i 21s
+
+kör! här kommer fortsättningen – samma stil och detaljnivå som för (1) och (2). jag går sida‑för‑sida (3→19). för varje sida får du: enkel förklaring, UI/UX‑detaljer (fält, knappar, states, fel), backend & data (API/SQL/queues), samt DoD + e2e‑testfall. allt är kompatibelt med lokal MySQL som primär datalagring via ett repo/ORM‑lager.
+
+3) Datalager / Katalog
+
+A) enkel förklaring
+Sök, filtrera, förhandsvisa och exportera allt som extraherats. Spårbarhet (job, URL, mallversion) och data‑kvalitet.
+
+B) UI/UX
+
+Globala kontroller: tidsintervall, källa/projekt (multi), mall, status (validerad/karantän), fri text (fulltext i payload_json), taggar.
+
+Resultattabell: id, mall, sammanfattning (konfigurerbart preview‑fält), dq_status, created_at, job_id (länk). Paginering server‑side.
+
+Sidopanel “Proveniens”: job_id, källa, URL, mallversion, policyprofil, hash/unik nyckel.
+
+Sidopanel “DQ”: regler triggade, felorsaker, åtgärdsknappar.
+
+Åtgärder: öppna post, exportera urval, flagga/karantän, radera enligt policy (bekräftelse + audit).
+
+Tomtillstånd: tips att köra ett första jobb.
+
+Tillgänglighet: hela tabellen tangentbordsnavigerbar; ARIA på statuschip.
+
+C) backend & data
+
+API:
+GET /api/data?filters... (server‑paginering, sortering),
+GET /api/data/:id,
+POST /api/data/:id/flag, POST /api/data/:id/quarantine, DELETE /api/data/:id (policy‑vakt),
+POST /api/data/export (skapar exportjobb).
+
+DB (MySQL): tabeller extracted_items(payload_json, template_id, job_id, item_key, dq_status, created_at), index på (created_at), (template_id), FULLTEXT(payload_json) (om MySQL‑version stödjer; alternativt invert‑index i separat tabell).
+
+Kö: exportjobb publiceras till exports_queue.
+
+D) DoD
+
+Filtrering returnerar korrekta rader på <500 ms för vanliga queries (indexerade filter).
+
+Sidpanels‑proveniens matchar alltid bakomliggande jobb.
+
+Karantän ändrar dq_status och gömmer posten i defaultvy.
+
+E) e2e
+
+Sök på text i payload → förväntade rader.
+
+Flagga→Karantän→Radera enligt policy (med audit‑event och återställningsspärr vid fel roll).
+
+4) Källor / Projekt
+
+A) Definiera källor (domäner/start‑URL:er), åtkomst, geo, policys.
+
+B) UI/UX
+
+Form: namn (oblig.), beskrivning, start‑URL:er (lista), inloggningstyp (ingen/sessionscookie/basic), region, robots/ToS‑läge, RPS/burst, crawl‑djup, max‑sidor, renderingspolicy (auto/http/browser), headers‑profil (desktop/mobil, språk), consent‑strategi.
+
+Knappar: Spara, Testa åtkomst (diagnostik: statuskod, titel, renderingsbehov), Generera sitemap (→ 6), Skapa jobb (→ 7).
+
+Lista: alla projekt med snabbstats (senaste körning, felrate).
+
+UX: inline‑validering av URL, varning vid mycket hög RPS.
+
+C) backend & data
+
+API: POST/PUT /api/projects, POST /api/projects/:id/diagnostics.
+
+DB: projects(id, name, config_json, created_at); config_json håller domain‑policy‑överstyrningar och crawlparametrar.
+
+D) DoD
+
+“Testa åtkomst” upptäcker 403/429 och rekommenderar åtgärd (sänk RPS / browserläge).
+
+Spara/uppdatera ändrar aktiva policys för nya jobb (ej retroaktivt på körande).
+
+E) e2e
+
+Skapa projekt → kör diagnostik → skapar jobb från projektet (förifyllt i 7).
+
+5) Template Wizard (Extraktionsmallar)
+
+A) Peka‑och‑plocka fält, definiera schema, transform‑pipelines, validering, versionera.
+
+B) UI/UX
+
+Form: namn, version (auto), måltyp, fält (lista: namn, selector CSS/XPath, attr (text/html/attr), obligatorisk?, transforms [trim, regex, date], validering [regex/enum]), listor, tabeller, unik nyckel (hash av fält), duplicatpolicy.
+
+Förhandsvisning: prov‑URL + renderingsläge → kör → visar extrakt + markeringar.
+
+Selector Overlay: DOM‑hover → genererar robust selektor + fallback.
+
+Knappar: Spara utkast, Publicera (låser version), Regressionstest (sparar prov‑html + förväntade fält).
+
+Fel: varna om obligatoriskt fält saknar träff i preview.
+
+C) backend & data
+
+API: POST /api/templates, POST /api/templates/:id/publish, POST /api/templates/:id/preview.
+
+DB: templates(id, name, version, spec_yaml, published_at) + template_tests.
+
+Runtime: extraktion kör modul som i din backend (parsel/lxml), utan “bypass”.
+
+D) DoD
+
+Publikation skapar oföränderlig version som går att referera i jobb.
+
+Preview visar 1:1 samma som worker skulle extrahera.
+
+E) e2e
+
+Skapa mall → preview på prov‑URL → publicera → kör “Scrape från lista” (7) → fälten finns i extracted_items.
+
+6) Crawl Plan / Sitemap‑studio
+
+A) Bygg hur länkar hittas/följs: regler, djup, paginering, infinite scroll.
+
+B) UI/UX
+
+Inputs: start‑URL:er, inkl/exkl regex, max‑djup, följa interna/externa, pagineringsstrategi (länk‑selektor / query‑param / “scroll:a n gånger”), samtidighet, time‑budget, återbesök (cron).
+
+Simulator: kör mot 1–3 sidor, visar hittade URL:er, grafer över djup och domäner.
+
+Knappar: Simulera, Spara plan, Kör som jobb.
+
+Hints: varning om regler skapar “oändlig” mängd.
+
+C) backend & data
+
+API: POST /api/crawl-plans/simulate, POST /api/crawl-plans.
+
+DB: crawl_plans(id, project_id, rules_json).
+
+D) DoD
+
+Simulering visar deterministiskt urval på testmängd; sparad plan kan återanvändas.
+
+E) e2e
+
+Sätt paginering via “nästa”‑selektor → simulera → se att 2–3 sidor hittas → kör jobb → Jobbdetaljer visar växande kö.
+
+7) Job Launcher
+
+A) Starta körningar: Crawl, Scrape, kombinerat, Export, Analys.
+
+B) UI/UX
+
+Form: jobbtyp, projekt, mall, plan, prioritet, workers, renderingsprofil, proxyprofil (auto/sticky/rotera, geo), outputmål (db/fil/connector), taggar.
+
+Torrkörning: fetchar 5–10 URL:er och visar sample (utan skrivning).
+
+Knappar: Starta jobb, Spara som preset, Torrkörning.
+
+Feedback: bekräftelsedialog med sammanfattning.
+
+C) backend & data
+
+API: POST /api/jobs (skapar + enqueue), POST /api/jobs/dry-run.
+
+DB: jobs(type, project_id, template_id, plan_id, status, cfg_json, started_at...).
+
+Kö: jobs_queue med prioritet; workers skalar via config.
+
+D) DoD
+
+“Starta” skapar jobb i jobs + syns i Dashboard och Jobbdetaljer.
+
+Torrkörning skriver inget till extracted_items.
+
+E) e2e
+
+Starta Crawl+Scrape preset → Jobbdetaljer börjar strömma logg → Datalager visar poster.
+
+8) Jobbdetaljer / Live Run Console
+
+A) Realtidsvy för ett jobb: status, logs, throughput, felklasser.
+
+B) UI/UX
+
+KPI: sidor/min, lyckade %, fel %, p95‑latens.
+
+Live‑logg: stream (websocket/SSE), filtrerbar (nivå, kod).
+
+Köstatus: väntande/bearbetas/klara; gift‑queue (poison).
+
+Felpanel: transient/policy/permanent fördelning, topp‑fel.
+
+Resurser: CPU/RAM/IO om körs i containrar.
+
+Output: antalet inskrivna rader; länk till Datalager.
+
+Åtgärder: Pausa/Återuppta, Skala workers ±, Byt proxyprofil, Avsluta, Öppna prov‑URL i Browserpanel, Exportera logg.
+
+Circuit‑breaker: om fel% > tröskel → auto‑paus + avisering.
+
+C) backend & data
+
+API: GET /api/jobs/:id/stream, POST /api/jobs/:id/pause|resume|scale|terminate, POST /api/jobs/:id/switch-proxy.
+
+DB: job_logs(job_id, ts, level, code, message, meta_json), indexing efter job_id, ts.
+
+D) DoD
+
+Latens och throughput uppdateras ≤3s efter händelse.
+
+Åtgärder effektueras och loggas i audit.
+
+E) e2e
+
+Skala +2 workers → throughput ökar (inom 30–60s).
+
+Tvinga paus → status blir Paused och logg visar orsak.
+
+9) Browserpanel & Selector Tool
+
+A) Headless‑förhandsvisning + visuell selektorplockare.
+
+B) UI/UX
+
+Addressfält + Gå till. Profiler: UA, språk, tidszon. Session‑kontroller: cookies lokalt för panelen.
+
+Paneler: DOM, Network (list), Cookies/Storage, Console (read‑only).
+
+Overlay: hover→ser CSS/XPath; “Koppla till fält” i aktiv mall; förslag på robustiserad selektor (nth‑child→attrib‑baserad etc).
+
+Interaktioner: spela in klick/fyll (formflöde) → kan sparas som sekvens (för mall eller plan).
+
+Resursblockering: toggla bilder/media/annons.
+
+Verktyg: skärmdump (PNG), kör begränsad “custom JS” sandboxad.
+
+Säkerhet: inga förbikopplings‑plugins; all automations‑telemetri loggas.
+
+C) backend & data
+
+API: POST /api/browser/render (returnerar HTML + snapshot), POST /api/browser/recording (sparar steg).
+
+Lagring: sparade selektorer i WIP‑mall (draft).
+
+D) DoD
+
+Overlay genererar selektor som träffar samma element vid upprepade render.
+
+Inspelat formflöde reproducerbart i preview.
+
+E) e2e
+
+Markera 3 fält på testsida → preview visar korrekt mapping.
+
+Spela in input+click → resultat‑selector väntar in nytt element.
+
+10) Proxy & Nätverk
+
+A) Hantera pooler, geo, healthcheck, sticky/rotation.
+
+B) UI/UX
+
+Översikt: pooler (residential/datacenter/mobile), geo fördelning, konsumtion.
+
+Hälsa: p50/p95, fail‑rate, senaste feltyper; top N sämsta noder.
+
+Policy: sticky fönster (min), per‑job profil, kvalitétsfilter (min latens/uptime).
+
+Åtgärder: lägg till källa, validera nu, svartlista/vitlista, tvinga rotation.
+
+Export: hälsorapport (CSV/JSON).
+
+C) backend & data
+
+API: POST /api/proxies/sources, POST /api/proxies/validate, POST /api/proxies/:id/blacklist|whitelist.
+
+DB: proxies(endpoint, pool, geo, health_state, last_checked, stats_json).
+
+Validator: bakgrundsjobb som testar endpoints (HTTP HEAD till kända endpoints).
+
+D) DoD
+
+Svarta noder används inte i nya arbeten; vitlista reaktiverar.
+
+Geo‑bias respekteras vid tilldelning.
+
+E) e2e
+
+Lägg till källa → validering körs → hälsa uppdateras → nytt jobb visar rätt geo i logg.
+
+11) Exporter
+
+A) Packa urval till fil/connector (CSV/JSON/Excel/Sheets/Elastic/BQ/Snowflake m.fl.).
+
+B) UI/UX
+
+Urval: query‑builder (källa, mall, tid, dq_status), provräkning.
+
+Schema‑mappning: alias, fältordning, typning (str/int/date), nullpolicy.
+
+Partition: max rader/fil, filnamnsmall.
+
+Destination: lokal fil (nedladdning), moln‑bucket, DB‑tabell, webhook.
+
+Validering: schema‑check on/off, empty‑result varning.
+
+Åtgärder: Kör export, Spara profil, Ladda ned senaste, Skicka webhook vid klart.
+
+C) backend & data
+
+API: POST /api/exports (skapa jobb), GET /api/exports/:id.
+
+DB: exports(id, query_json, target, status, file_path, created_at).
+
+Kö: exports_queue; arbetare skriver fil och checksumma.
+
+D) DoD
+
+Exportstatus→Completed och filstorlek matchar radantal × snittbytes ~±10%.
+
+CSV BOM/UTF‑8 korrekt; datumformat ISO‑8601.
+
+E) e2e
+
+Exportera 1d av mall X → ladda ned → räkna rader = UI:s provräkning.
+
+12) Privacy Center
+
+A) PII‑regler, retention, radering på begäran, audit.
+
+B) UI/UX
+
+PII‑scanner: regex/heuristik per fält/mall; “kör nu”.
+
+Retention: per mall (dagar), åtgärd: hard delete / soft delete.
+
+Radering: sök på nyckel/id → bekräfta → kör; visar påverkan.
+
+Åtkomstlogg: vem läste/eksporterade vad, när.
+
+Karantän: isolera poster tills godkända.
+
+C) backend & data
+
+API: POST /api/privacy/scan, POST /api/privacy/retention/apply, POST /api/privacy/erase.
+
+DB: dq_violations, audit_events.
+
+Jobb: batch‑retention nattetid.
+
+D) DoD
+
+Radering skapar audit‑event med korrelation; poster försvinner från sök.
+
+E) e2e
+
+Skapa PII‑regel → kör scan → karantänmarkering → retention‑jobb raderar äldre än N dagar.
+
+13) Policies (Policystudion)
+
+A) Centralt bibliotek för domänspecifika beteenden: hastighet, headers, referer, consent, robots/ToS.
+
+B) UI/UX
+
+Form per domän: RPS/jitter, renderingsstrategi, header‑profil, referer‑policy, consent‑cookie, robots‑läge, felbeteende (CB‑trösklar), geo‑bias.
+
+Simulera mot URL: visar vilka regler som skulle gälla.
+
+Applicera på arbeten: välj preset för nya jobb.
+
+C) backend & data
+
+API: POST /api/policies, POST /api/policies/simulate.
+
+DB: domain_policies(domain, policy_json).
+
+D) DoD
+
+Simulering korrelerar med faktisk worker‑beteende (loggar visar policy id).
+
+E) e2e
+
+Höj jitter för domän A → nytt jobb visar längre medelväntetid i logg.
+
+14) DQ & Analys
+
+A) Mät kvalitet: fältfyllnad, valideringsfel, selektor‑drift.
+
+B) UI/UX
+
+Fyllnadsgrad per fält/mall: heatmap.
+
+Fel per regel: top lista, trend.
+
+Selector drift‑score: ändring över tid (fler missar ⇒ hög drift).
+
+Åtgärder: skapa varningsregel, öppna felposter, lägg till regressionstest.
+
+C) backend & data
+
+API: GET /api/dq/metrics?range=..., POST /api/dq/alerts.
+
+DB: materialiserad vy dq_metrics_mv uppdateras per batch.
+
+D) DoD
+
+Drift‑score predikterar selektorbrott (≥80% precision på syntetiska testsajter).
+
+E) e2e
+
+Medvetet ändra testsidans DOM → drift‑score upp; avisering skickas.
+
+15) Scheduler & Aviseringar
+
+A) Planera körningar och hur man blir notifierad.
+
+B) UI/UX
+
+Kalender: kommande/ historik; drag‑drop flytta körning (bekräftelsesnäpp).
+
+Skapa schema: cron eller “var 6:e timme”; blackout‑fönster; prioritet.
+
+Aviseringar: kanaler (e‑post/webhook/slack), villkor (fel%>X, ban‑rate>Y, job stuck>10m).
+
+Åtgärder: pausa fönster, testa avisering.
+
+C) backend & data
+
+API: POST /api/schedule, POST /api/alerts/channels.
+
+DB: schedules, alert_channels, alert_rules.
+
+D) DoD
+
+Schemalagda körningar skapas i tid ±1 min; testavisering levererar.
+
+E) e2e
+
+Skapa daglig 03:00 → se “Kommande scheman” (2) → efter körning syns jobb i historik.
+
+16) Användare & Roller
+
+A) RBAC: Admin, Operatör, Läsare, Integrations‑konto.
+
+B) UI/UX
+
+Lista användare: namn, e‑post, roll, status.
+
+Roll‑matris: checkbox per modul (finkornigt).
+
+API‑nycklar: generera, scope, giltighet, rotera.
+
+Åtgärder: lägg till, inaktivera, reset lösen/2FA, skapa API key.
+
+C) backend & data
+
+API: POST /api/users, POST /api/api-keys.
+
+DB: users, roles, api_keys(hashed_key, scopes).
+
+D) DoD
+
+Åtkomst till sidor/åtgärder följer roll; API‑nyckel fungerar enligt scope.
+
+E) e2e
+
+Operatör kan starta jobb men inte radera data; Läsare får 403 på åtgärdsknappar.
+
+17) Inställningar (System)
+
+A) Globala inställningar, databaser (MySQL!), fil‑lagring, connectorer, observability.
+
+B) UI/UX
+
+Databaser: primär (Postgres/MySQL), MySQL‑fält (host/port/db/user/pass/SSL), testanslutning, kör migrationer. “Skriv som primär” toggle + “läsreplika”.
+
+Filer: lokal/moln‑bucket; accessnycklar säkert.
+
+Connectorer: Elastic/BQ/Snowflake/Sheets; testkoppling.
+
+Logg/Obs: endpoints (Prometheus scrape path, webhook).
+
+Säkerhet: CORS, default rate‑limits.
+
+C) backend & data
+
+API: POST /api/settings/db/test, POST /api/settings/db/migrate, POST /api/settings/connectors/test.
+
+MySQL‑garanti: DSN mysql+mysqlclient://…; migrationer via Alembic; read/write routing i repo‑lagret.
+
+D) DoD
+
+“Testa” visar version; “Migrate” till “head” utan blocker; växling till MySQL sätter repo primär.
+
+E) e2e
+
+Peka om till lokal MySQL → kör migration → starta jobb → data skrivs/läses från MySQL (verifiera med SELECT COUNT).
+
+18) Audit & Händelseloggar
+
+A) Full spårbarhet: vem gjorde vad, när, före/efter.
+
+B) UI/UX
+
+Filter: typ (jobb/policy/mall/data), användare, tidsintervall, resurs‑id.
+
+Visa: tid, användare, åtgärd, diff (mall/policy) i trekolumn‑diff.
+
+Åtgärd: exportera JSON, kopiera korrelations‑ID.
+
+C) backend & data
+
+API: GET /api/audit?filters...
+
+DB: audit_events(id, who, what, ts, before_json, after_json, correlation_id).
+
+D) DoD
+
+Alla muterande åtgärder på UI genererar audit‑event med correlation id.
+
+E) e2e
+
+Ändra policy → se audit med diff; exportera logg.
+
+19) Hjälp & Runbooks
+
+A) Snabbhjälp + incident‑guider.
+
+B) UI/UX
+
+Sök: i runbooks + FAQ.
+
+Lista: kategorier (403‑storm, 429‑spike, layout‑drift, proxy‑drought, restore‑drill).
+
+Visa guide: markdown‑render, kopierbara kommandon, checklista.
+
+Åtgärder: “Skicka länk via e‑post”, “Öppna relaterade dashboards”.
+
+C) backend & data
+
+API: GET /api/help/runbooks, POST /api/help/send.
+
+Lagring: markdown i repo eller CMS.
+
+D) DoD
+
+Alla runbooks renderas korrekt; länkar till relaterade vyer fungerar.
+
+E) e2e
+
+Öppna “429‑spike” → följ CTA till Policies (öka jitter) → felkurva sjunker i Dashboard.
+
+systemomspännande garantier (MySQL‑koppling)
+
+All skriv/läsning går via ett repo‑lager som stödjer MySQL som primär.
+
+“Inställningar → Databaser” (17) testar och migrerar; när MySQL är aktiv som primär:
+
+nya jobs, job_logs, extracted_items, exports, audit_events skrivs till MySQL.
+
+Datalager (3) och Dashboard (2) läser från MySQL (ev. materialiserade vyer för hastighet).
+
+SQL‑index föreslagna ovan garanterar interaktiva svarstider.
+
+Alla sidor som gör muterande operationer producerar audit‑events (18).
+
+vill du att jag nu packar detta till en skrivbar kravspec (t.ex. MD/PDF) och/eller genererar FastAPI‑stubs + React/Tailwind‑sidor för (3–7) så ni kan börja bygga direkt?
+
+Du sade:
+Ja
+ChatGPT sade:
+Tänkte i 38s
+
+Kör! Här är resten av sidorna — i samma “max‑detalj + UX‑optimerad” stil. För varje sida får du: syfte, exakt UI (rutor/fält/knappar), vad som händer när man agerar, fel/edge‑cases, behörigheter, API‑kontrakt, datamodell/MySQL‑tabeller samt acceptanskriterier. (Allt är designat för parkoppling med lokal MySQL som primär lagring.)
+
+3) Datalager / Katalog
+
+Syfte: Bläddra, sök och granska extraherade poster; se härkomst/DQ; agera (export, karantän, radering enligt policy).
+
+UI
+
+Sökfält (fri text mot payload_json, item_key, url, job_id).
+
+Filterpanel: Källa/Projekt, Mall, Datumintervall, DQ‑status (OK/Karantän), “Endast med varningar”.
+
+Resultattabell (server‑paginering): id, mall, 3 fältpreview, DQ‑status, skapad_tid, job_id.
+
+Sidofält: Linage/Proveniens (job_id, url, policy, proxy‑geo), DQ (regler, felorsaker, fält med miss).
+
+Bulk‑åtgärder: Markera rader → Exportera, Flagga karantän, Radera (policy).
+
+Postdetalj (modal/sida): full payload_json, valideringsspår, versionsdiff om uppdaterad.
+
+Knappar
+
+Exportera urval → öppnar Export‑profil (förifylld).
+
+Flagga/karantän → sätter dq_status='quarantine'.
+
+Radera enligt policy → lägger “erasure request”.
+
+Vad händer
+
+Alla filter skickas till servern → SQL med index/FTS.
+
+Karantän uppdaterar posten + skriver dq_violations.
+
+Radering skapar erasure‑jobb (asynkront), audit‑loggas.
+
+Fel/edge
+
+För stora urval för Export → UI föreslår “skapa exportjobb”.
+
+Radering stoppas om retention inte tillåter → visa policyorsak.
+
+Behörighet
+
+Läsare: se/filtrera.
+
+Operatör: export/karantän.
+
+Admin: radera (policy).
+
+API (exempel)
+
+GET /api/data/items?query=&project_id=&template_id=&from=&to=&dq_status=&page=&size=
+
+GET /api/data/items/{id}
+
+PATCH /api/data/items/{id} body {dq_status}
+
+POST /api/data/erasure-requests body {item_ids:[]}
+
+MySQL‑tabeller
+
+extracted_items(id, job_id, template_id, item_key, payload_json, dq_status, url, created_at)
+
+dq_violations(id, item_id, rule, details_json, created_at)
+
+Index: (template_id,created_at), FTS på payload_json (via JSON->text col), b‑tree på dq_status.
+
+Acceptans
+
+Filter returnerar rätt radantal < 1s för 100k poster (indexerade kolumner).
+
+Karantän syns omedelbart utan reload.
+
+Radering skapar ett erasure‑jobb och tar bort inom policyfönster.
+
+4) Källor / Projekt
+
+Syfte: Definiera datakällor, åtkomst, region, headless‑policy, robots/ToS‑läge, rate‑limits.
+
+UI
+
+Fält: Namn, Beskrivning, Start‑URL:er (lista), Region/Geo (land), Renderingspolicy (Auto/HTTP/Browser), Robots/ToS (checkbox), RPS/Burst per domän, Headers‑profil (Desktop/Mobil, språk), Consent‑strategi.
+
+Testa åtkomst (diagnostik) → visar statuskod, laddtid, titel, “kräver render?”.
+
+Generera sitemap → öppnar Crawl Plan (förifyllt).
+
+Knappar
+
+Spara, Testa åtkomst, Generera sitemap, Skapa jobb.
+
+Vad händer
+
+Spara→ uppdaterar projects + default domain‑policy.
+
+Diagnostik kör snabbhämtning + heuristik.
+
+Behörighet
+
+Operatör kan skapa/ändra.
+
+Läsare kan se.
+
+API
+
+POST /api/projects
+
+POST /api/projects/{id}/diagnose body {url}
+
+MySQL
+
+projects(id, name, config_json, created_at)
+
+domain_policies(id, project_id, domain, policy_json)
+
+Acceptans
+
+Diagnostik visar tydliga signaler (HTTP/Timing/JS‑behov).
+
+“Generera sitemap” skapar plan med 1 klick.
+
+5) Template Wizard (Extraktionsmallar)
+
+Syfte: Skapa versionerade mallar med fält/listor/tabeller, transforms, validering och förhandsvisning.
+
+UI
+
+Metadata: Mallnamn, Version (auto + “Publicera”), Måltyp.
+
+Fältlista: Namn, Selector (CSS/XPath), Typ (text/html/attr), Required, Transforms (chips: trim/upper/date/regex), Validering (regex/enum/custom).
+
+Listor/Tabeller‑sektion.
+
+Post‑unik nyckel (hash av fält), dublettpolicy.
+
+Prov‑URL + Renderingsläge + Förhandsvisa (tabell med fynd/miss).
+
+Selector Overlay (från Browserpanel) → injicerar selektorer.
+
+Knappar
+
+Förhandsvisa, Spara utkast, Publicera (låser version), Regeltest (DQT), Exportera mall (YAML).
+
+Vad händer
+
+Preview hämtar (HTTP/Browser) → kör selektorer → visar values/missar.
+
+Publicera skapar immutabel templates(versioned).
+
+Fel/edge
+
+Missande required → blockerar publicering med lista på saknade selektorer.
+
+Behörighet
+
+Operatör: skapa/publicera.
+
+Läsare: se.
+
+API
+
+POST /api/templates (draft)
+
+POST /api/templates/{id}/publish
+
+POST /api/templates/preview body {url, template_spec}
+
+MySQL
+
+templates(id, name, version, spec_yaml, status, created_at, published_at)
+
+template_tests(id, template_id, url, result_json, created_at)
+
+Acceptans
+
+Preview inom 3s (med cache); required‑fält valideras.
+
+Versionslåsning: jobb kan referera version stabilt.
+
+6) Crawl Plan / Sitemap‑studio
+
+Syfte: Definiera start‑URL:er, uppföljningsregler, paginering, maxdjup och återbesök.
+
+UI
+
+Start‑URL:er (textarea/lista).
+
+Länkregler: inkl/exkl regex, in‑domain only, maxdjup, “följ endast rel=next”.
+
+Paginering: nästa‑selector, query‑parammönster, infinite‑scroll‑regler (antal “ladda fler”).
+
+Samtidighet & per‑värd‑gränser, max sidor, tidsbudget, återbesök (cron).
+
+Simulera → visar antal funna URL:er (sample), graf (nod/edge), varningar (loop/honeypot).
+
+Knappar
+
+Simulera, Spara plan, Kör som jobb.
+
+API
+
+POST /api/crawl-plans
+
+POST /api/crawl-plans/simulate body {start_urls, rules}
+
+MySQL
+
+crawl_plans(id, project_id, rules_json, created_at)
+
+Acceptans
+
+Simulering RETURNERAR sample‑URL:er + orsak till exkludering.
+
+Sparad plan fungerar som underlag i Job Launcher.
+
+7) Job Launcher (Starta)
+
+Syfte: Starta Crawl, Scrape, Crawl+Scrape, Export, Analys.
+
+UI
+
+Jobbtyp, Projekt, Mall, Crawl‑plan, Prioritet, Samtidighet, Renderingsprofil, Proxyprofil, Output‑mål, Taggar.
+
+Torrkörning (begränsat urval).
+
+Knappar
+
+Starta jobb, Spara som förinställning, Torrkörning.
+
+Vad händer
+
+Skapar jobs + köar till worker‑pool, loggar via websocket.
+
+API
+
+POST /api/jobs body {type, project_id, ...}
+
+POST /api/jobs/dry-run
+
+MySQL
+
+jobs(id, type, project_id, template_id, plan_id, status, cfg_json, started_at, finished_at)
+
+Acceptans
+
+Start → redirect till Jobbdetaljer; “pending→running”.
+
+Torrkörning visar provlogg + 5–10 URL:er.
+
+8) Jobbdetaljer / Live Run Console
+
+Syfte: Realtid: status, KPI, loggar, köstatus, åtgärder.
+
+UI
+
+Statuschip, KPI (sidor/min, fel%, p95), live‑logg (strömmad), köstatistik, senaste fel (klass), resurser, outputcount.
+
+Åtgärder: Pausa/Återuppta, Skala workers ±, Byt proxyprofil, Avsluta jobb, Öppna prov‑URL i Browserpanel, Exportera logg.
+
+Realtime
+
+WebSocket /ws/jobs/{id} events: status, kpi, log, queue, alert.
+
+API
+
+GET /api/jobs/{id}
+
+POST /api/jobs/{id}/control body {action: pause|resume|scale|terminate|switch_proxy}
+
+MySQL
+
+job_logs(id, job_id, ts, level, code, message, meta_json)
+
+Acceptans
+
+Genomsnittlig logglatens < 2s; åtgärd appliceras direkt.
+
+9) Browserpanel & Selector Tool
+
+Syfte: Inbyggd renderad vy + overlay för säkra selektorer; interaktionsinspelning för legitima formulärflöden.
+
+UI
+
+URL‑fält, UA‑profil, språk/tidszon, DOM‑inspekt, nätverk, cookies.
+
+Overlay: pek‑och‑klicka → föreslår CSS/XPath (+ fallback).
+
+Knapp: Spela in interaktion (fyll/klick), Spara cookies för session, Blockera resurser (bilder/media/annons), Skärmdump, Kör (ofarligt) JS‑snippet.
+
+API
+
+POST /api/browser/open body {url, profile}
+
+POST /api/browser/screenshot -> fil
+
+POST /api/browser/selectors/suggest body {html, point}
+
+Acceptans
+
+Selector‑förslag ger stabila selektorer (klass/id‑agnostiska när möjligt).
+
+Skärmdump inom 1.5s efter “klar”.
+
+(Obs: inga instruktioner för att kringgå säkerhetsskydd; fokus på legitima renderings-/inspektionsflöden.)
+
+10) Proxy & Nätverk
+
+Syfte: Hantera källor/pooler, geo, hälsa, sticky‑fönster, svart/vitlistning.
+
+UI
+
+Pooler (Residential/Datacenter/Mobile), leverantörer (API‑nycklar), geo‑fördelning, sticky‑fönster (min), hälsa (p50/p95/fail‑rate), top problemnoder, kvalitetsfilter.
+
+Åtgärder: Lägg till källa, Validera nu, Svartlista/Vitlista, Tvinga rotation, Exportera rapport.
+
+API
+
+GET /api/proxies/health
+
+POST /api/proxies/validate
+
+PATCH /api/proxies/{id} body {state: blacklist|whitelist}
+
+MySQL
+
+proxies(id, pool, endpoint, geo, auth_json, created_at)
+
+proxy_health(id, proxy_id, ts, latency_ms, success, details_json)
+
+Acceptans
+
+Validering uppdaterar hälsa; nya jobb använder friskare noder automatiskt.
+
+11) Exporter
+
+Syfte: Skapa exportjobb (CSV/JSON/Excel/DB/SaaS), historik, mappning.
+
+UI
+
+Exporttyp, källdata (query‑builder), fältmappning/alias, filsplit (max rader), destination, schema‑validering.
+
+Historik med status och “ladda ner”.
+
+API
+
+POST /api/exports body {query, target, options}
+
+GET /api/exports/{id}/download
+
+MySQL
+
+exports(id, query_json, target, status, file_path, row_count, created_at)
+
+Acceptans
+
+CSV genereras strömmande; checksumma; nedladdning fungerar för stora dataset.
+
+12) Privacy Center (Integritet & Radering)
+
+Syfte: PII‑regler, retention, radering on demand, audit.
+
+UI
+
+PII‑regler (regex, fält), Retention per mall (dagar), Raderingsflöde (ID/nyckel), Åtkomstlogg.
+
+Åtgärder: Kör PII‑skanning, Planera rensning, Starta radering.
+
+API
+
+POST /api/privacy/pii-scan
+
+POST /api/privacy/retention body {template_id, days}
+
+POST /api/privacy/erase body {item_ids}
+
+MySQL
+
+privacy_policies(id, template_id, retention_days, pii_rules_json)
+
+erasure_requests(id, requester, item_ids_json, status, created_at)
+
+Acceptans
+
+PII‑flaggar poster och sätter karantän; retention‑jobb tar bort utgångna data.
+
+13) Policies (Policystudion)
+
+Syfte: Centrala profilregler per domän: hastighet, rendering, headers, referer, consent, robots/ToS, circuit‑breaker.
+
+UI
+
+Domän, RPS/jitter, Renderingsstrategi, Headerprofil, Referer‑policy, Consent‑cookie, Robots/ToS, Felbeteende‑trösklar.
+
+Åtgärder: Spara, Simulera mot URL, Applicera på jobb.
+
+API
+
+POST /api/policies/domain body {domain, policy_json}
+
+POST /api/policies/simulate body {url, policy}
+
+MySQL
+
+domain_policies (se ovan)
+
+Acceptans
+
+Aktiva jobb uppdaterar profil inom 60s via pub/sub.
+
+14) DQ & Analys (Data Quality)
+
+Syfte: Övervaka fältfyllnadsgrad, valideringsfel, selektordrift.
+
+UI
+
+Fyllnadsgrad per fält (heatmap), Valideringsfel (top‑regler), Drift‑score (ändringsgrad i DOM/selektors träff), Jämförelse över tid.
+
+Åtgärder: Skapa varningsregel, Öppna felposter, Lägg regressionstest.
+
+API
+
+GET /api/dq/coverage?template_id=...
+
+GET /api/dq/errors?rule=...
+
+POST /api/dq/alerts body {rule, threshold}
+
+MySQL
+
+dq_metrics(id, template_id, ts, coverage_json, errors_json, drift_score)
+
+Acceptans
+
+Varningar triggas när trösklar passeras och syns i Aviseringar.
+
+15) Scheduler & Aviseringar
+
+Syfte: Tidsplanera jobb, prioritera, pausfönster; notifiera via e‑post/webhook/slack.
+
+UI
+
+Kalender/Lista, Prioritetsregler, Off‑peak fönster, Kanaler (SMTP/Webhook/Slack).
+
+Åtgärder: Schemalägg (cron), Pausa fönster, Testa avisering.
+
+API
+
+POST /api/schedule body {job_preset_id, cron}
+
+POST /api/alerts/channel body {type, config}
+
+MySQL
+
+schedules(id, job_preset_id, cron, enabled)
+
+notifications(id, channel, payload_json, sent_at, status)
+
+Acceptans
+
+Nästa körning syns i Dashboard “Kommande scheman”; testnotis levereras.
+
+16) Användare & Roller
+
+Syfte: RBAC; API‑nycklar.
+
+UI
+
+Användarlista, Roller (Admin/Operatör/Läsare), API‑nycklar (scope, utgång).
+
+Åtgärder: Lägg till användare, Skapa API‑nyckel, Inaktivera.
+
+API
+
+POST /api/users
+
+POST /api/api-keys body {scopes, expires_at}
+
+MySQL
+
+users(id, email, name, role, created_at)
+
+api_keys(id, user_id, key_hash, scopes_json, expires_at, revoked)
+
+Acceptans
+
+Roller styr synlighet/åtkomst till knappar/åtgärder end‑to‑end.
+
+17) Inställningar (System)
+
+Syfte: Globala inställningar; MySQL‑koppling; connectorer; logg/observability.
+
+UI
+
+Databaser: Primär (PostgreSQL/MySQL). För MySQL: host/port/db/user/pass/SSL, “Skriv som primär”, “Läsreplika”. Testa anslutning. Kör migrationer.
+
+Fil‑lagring (lokal/moln), Connectorer (Elastic/BQ/Snowflake/Sheets), Logg‑endpoints, CORS, default rate‑limits.
+
+API
+
+POST /api/settings/db/test
+
+POST /api/settings/db/migrate
+
+POST /api/settings/connectors
+
+MySQL
+
+settings(id, key, value_json) — inkl. krypterad DB‑cred.
+
+Acceptans
+
+“Ansluten: MySQL …” + Migration “head”; skriv/läs‑runda OK.
+
+18) Audit & Händelseloggar
+
+Syfte: Spårbarhet (vem gjorde vad, när, före/efter).
+
+UI
+
+Filter: typ (jobb/policy/mall/data), användare, tid, text.
+
+Resultatlista, diff‑vy (mall/policy), export (JSON).
+
+API
+
+GET /api/audit?type=&user=&from=&to=&q=
+
+MySQL
+
+audit_events(id, who, what, ts, before_json, after_json, correlation_id)
+
+Acceptans
+
+Alla kritiska åtgärder i andra sidor syns här med korrelation.
+
+19) Hjälp & Runbooks
+
+Syfte: Operativa guider, etik/checklista; snabbsvar på incidenter.
+
+UI
+
+Sök i runbooks, lista guider (markdownvy), “Skicka till mig e‑post”.
+
+API
+
+GET /api/help/runbooks
+
+POST /api/help/email body {runbook_id}
+
+Lagring
+
+Markdown‑filer i repo eller DB‑tabell runbooks.
+
+Acceptans
+
+Guider renderas korrekt; e‑post länk levereras; spår i audit.
+
+Gemensamma krav (gäller alla sidor)
+
+Realtid: WebSocket/SSE där det ger värde; annars polling med jitter.
+
+Prestanda: första laddning ≤ 2.5s (desktop), ≤ 3.5s (mobil). Aggregeringar server‑side med cache.
+
+Tillgänglighet: tangentbord, aria‑live för status, kontrast WCAG AA, tydlig feltext nära fält.
+
+I18n: alla strängar via sv-SE.yml m. fallback en-US.
+
+Säkerhet: RBAC, maskning av hemligheter, audit på alla muterande åtgärder.
+
+MySQL‑garanti: alla listor/paneler använder indexerade kolumner; migrationer körbara på MySQL (utf8mb4); SELECT 1 och version testas i Inställningar; alla skrivningar transaktionella.
+
+Vill du att jag tar API‑scheman (OpenAPI‑skisser) eller React‑komponenter (Tailwind + shadcn/ui) för någon av sidorna först? Jag kan börja med Dashboard (widgets) eller Template Wizard (overlay + preview), helt körbart mot mockade endpoints.
+
+Du sade:
+Nej fortsätt förklara hur jag implementerar andra funktioner från listan
+
+ChatGPT sade:
+Tänkte i 14s
+
+Toppen — jag fortsätter med resten av funktionslistan och visar hur du implementerar dem steg‑för‑steg i samma anda som tidigare (lagligt/säkert). Jag täcker:
+
+Polite crawling (per‑domän RPS, jitter, session‑cache, headers/locale)
+
+Standard headless via Playwright + väntesignaler
+
+Fallback: HTTP → Browser → Manuell “human‑in‑the‑loop”
+
+Officiella API:er (när de finns)
+
+Observability & DQ för att undvika skydd (sänk hastighet, regionskifte, paus vid felspikar)
+
+Sanering, säker lagring, loggning och RBAC
+
+Viktigt: Jag kan inte guida kring att kringgå säkerhetsmekanismer (CAPTCHA‑brytning, Cloudflare‑bypass, WAF‑bypass osv.). Nedan bygger ett robust, “polite” system som minskar att skydd triggas.
+
+1) Polite crawling
+1.1 Per‑domän RPS + jitter (token‑bucket)
+
+Du har redan en RateLimiter. Lägg till per‑domän policy + burst/jitter (gjort) och global concurrency‑gate.
+
+# src/utils/rate_limiter.py
+import asyncio, time, random
+class TokenBucket:
+    def __init__(self, rps, burst, min_delay_ms, jitter_ms):
+        self.rps, self.capacity = rps, burst
+        self.tokens, self.last = burst, time.monotonic()
+        self.min_delay_ms, self.jitter_ms = min_delay_ms, jitter_ms
+
+    async def acquire(self):
+        now = time.monotonic()
+        self.tokens = min(self.capacity, self.tokens + (now-self.last)*self.rps)
+        self.last = now
+        if self.tokens < 1:
+            await asyncio.sleep((1 - self.tokens) / self.rps)
+            self.tokens = 0
+        else:
+            self.tokens -= 1
+        await asyncio.sleep((self.min_delay_ms + random.randint(0,self.jitter_ms))/1000)
+
+
+Lägg en global semaphore i din scheduler:
+
+# src/scheduler/scheduler.py
+GLOBAL_CONCURRENCY = 8
+sema = asyncio.Semaphore(GLOBAL_CONCURRENCY)
+async def guarded(coro):
+    async with sema:
+        return await coro
+
+1.2 Session‑cache (cookies, headers, locale)
+
+Behåll kortlivade sessioner per domän + proxy, så du liknar en “riktig” användare.
+
+# src/anti_bot/session_manager.py
+from collections import defaultdict
+import httpx, random, asyncio
+
+class SessionPool:
+    def __init__(self, app_cfg, ttl_s=600):
+        self.app_cfg = app_cfg; self.ttl_s = ttl_s
+        self.pool = defaultdict(list)  # key=(domain, proxy_id) -> List[(client, expires_at)]
+
+    async def get(self, domain, proxy=None):
+        now = asyncio.get_event_loop().time()
+        # städa gamla
+        self.pool[domain] = [(c,t) for (c,t) in self.pool[domain] if t>now]
+        if self.pool[domain]:
+            return random.choice(self.pool[domain])[0]
+        # skapa ny
+        headers = dict(self.app_cfg['app']['default_headers'])
+        headers['User-Agent'] = random.choice(self.app_cfg['app']['user_agent_pool'])
+        client = httpx.AsyncClient(
+            follow_redirects=True, http2=True, headers=headers,
+            proxies=proxy, timeout=self.app_cfg['app']['http']['timeout_seconds']
+        )
+        self.pool[domain].append((client, now + self.ttl_s))
+        return client
+
+    async def close_all(self):
+        for lst in self.pool.values():
+            for c,_ in lst: await c.aclose()
+
+
+Använd Accept-Language: sv-SE och ev. X-Forwarded-For endast om du sitter bakom egen infrastruktur som sätter den korrekt; annars låt proxyn göra jobbet.
+
+2) Standard headless via Playwright + väntesignaler
+2.1 Väntestrategier (konfigstyrt)
+
+Stöd både wait_until: "networkidle" och “vänta på selektor”.
+
+# src/scraper/browser.py (utdrag)
+await page.goto(url, wait_until=self.cfg['rendering']['default_wait'], timeout=nav_timeout)
+if wait_for:
+    await page.wait_for_selector(wait_for, timeout=nav_timeout)
+
+# Extra: domContentLoaded‑fallback
+if self.cfg['rendering'].get('secondary_wait') == 'domcontent':
+    await page.wait_for_load_state('domcontentloaded')
+
+2.2 Resursblockering (prestanda)
+
+Du har det på plats. Gör den per domän via policy:
+
+# src/crawler/policy.py
+class DomainPolicy(BaseModel):
+    block_resources: list[str] = ['image','media','font']
+
+
+I browser.py:
+
+if block_non_essential:
+    async def route_intercept(route):
+        if route.request.resource_type in self.policy.block_resources:
+            return await route.abort()
+        return await route.continue_()
+
+3) Fallback: HTTP → Browser → Manuell (HITL)
+3.1 Automatisk fallback‑kedja
+
+Du har needs_js_render. Bygg en state‑machine:
+
+# src/anti_bot/fallback_strategy.py
+from enum import Enum
+class Mode(Enum): HTTP='http'; BROWSER='browser'; MANUAL='manual'
+
+async def fetch_with_fallback(url, http_get, browser_render, wait_sel=None):
+    try:
+        html = await http_get(url)
+        need, _ = needs_js_render(html)
+        if not need: return Mode.HTTP, html
+    except Exception:
+        pass
+    try:
+        return Mode.BROWSER, await browser_render(url, wait_sel)
+    except Exception:
+        return Mode.MANUAL, ""
+
+3.2 Human‑in‑the‑loop UI
+
+När Mode.MANUAL returneras:
+
+Lägg URL i en ”Manual queue” (DB‑tabell manual_tasks: id, url, reason, created_at, assigned_to, status).
+
+I webappen: visa panel “Manuella steg” med ”Öppna i Browserpanel”, “Spara HTML‑snapshot” och ”Markera klar”.
+
+Worker pollar manual_tasks för status “done” och fortsätter extraktion.
+
+4) Officiella API:er när de finns
+4.1 Connector‑registry
+
+Beskriv API:er i YAML och generera klienter (requests/httpx).
+
+# config/api.yml
+providers:
+  example_api:
+    base_url: "https://api.example.com/v1"
+    auth: bearer
+    token_env: EXAMPLE_API_TOKEN
+    endpoints:
+      vehicle: { path: "/vehicle/{plate}", method: "GET", params: ["plate"] }
+
+
+Runtime:
+
+# src/connectors/registry.py
+import os, httpx, yaml
+class ApiRegistry:
+    def __init__(self, path="config/api.yml"):
+        self.cfg = yaml.safe_load(open(path))
+    async def call(self, provider, endpoint, **kwargs):
+        p = self.cfg['providers'][provider]
+        url = p['base_url'] + p['endpoints'][endpoint]['path'].format(**kwargs)
+        headers = {}
+        if p['auth']=='bearer': headers['Authorization'] = f"Bearer {os.getenv(p['token_env'],'')}"
+        async with httpx.AsyncClient() as c:
+            r = await c.get(url, headers=headers)
+            r.raise_for_status(); return r.json()
+
+4.2 Policy‑switch: “API‑first”
+
+I domän‑policyn: prefer_official_api: true. I extractor: försök API → om inte tillgängligt, fallback till HTML.
+
+5) Observability & DQ (adaptiv: sänk hastighet, byt region, paus vid spike)
+5.1 Mätpunkter
+
+Logga per request: status, latency, domain, proxy_id, mode (http/browser), template_id.
+
+# src/utils/otel.py (enkelt)
+def metric(event:str, **kv): print(json.dumps({"event":event, **kv}))
+
+
+Kalla t.ex. metric("http_ok", domain=host, ms=ms, proxy_id=pid).
+
+5.2 Adaptiv controller (per domän)
+
+Fönster: 1–5 min glidande.
+
+Regler:
+
+Om error_rate > X% → halvera RPS (min 0.2).
+
+Om 429/403 stiger → rotera region (om policy tillåter).
+
+Om p95_latency > T → sänk concurrency.
+
+Om error_rate > Y% i N fönster → circuit‑break: pausa domänen i M minuter.
+
+# src/analysis/adaptive_controller.py
+class AdaptiveController:
+    def __init__(self, policy_store):
+        self.state = {}
+    def tick(self, domain, stats):
+        pol = self._load(domain)
+        if stats.error_rate > pol.err_threshold:
+            pol.rps = max(0.2, pol.rps*0.5)
+        if stats.cf_403_429_rate > pol.block_threshold and pol.allow_region_switch:
+            pol.region = pol.fallback_region or pol.region
+        if stats.p95_ms > pol.latency_budget_ms:
+            pol.max_concurrency = max(1, pol.max_concurrency-1)
+        if stats.error_rate > pol.break_threshold for _ in range(pol.break_windows):
+            pol.paused_until = now()+pol.break_minutes*60
+        self._save(domain, pol)
+
+
+Workers läser uppdaterad policy via pub/sub (Redis) och tillämpas omedelbart.
+
+5.3 DQ‑regler (enkla)
+
+Fältfyllnadsgrad (min %).
+
+Format (regnr/orgnr).
+
+Outlier‑detektion (längd, numeriska intervall).
+
+Markera poster som dq_status = "quarantine" → visas i Datalager med filter.
+
+6) Sanering, säker lagring, loggning och RBAC
+6.1 Sanering (frontend + backend)
+
+Frontend: DOMPurify när du visar HTML‑fragment (t.ex. excerpts).
+
+Backend (Python): använd bleach om du sparar och återrenderar HTML; annars lagra rå HTML men rendera den aldrig utan sanering.
+
+pip install bleach
+
+# src/utils/sanitize.py
+import bleach
+def sanitize_html(s: str) -> str:
+    return bleach.clean(s, tags=['b','i','em','strong','a','p','ul','li','table','tr','td'], attributes={'a':['href','title']}, strip=True)
+
+6.2 Säker lagring
+
+Känsliga hemligheter: .env + OS‑secret store/KMS.
+
+At rest‑kryptering för t.ex. cookie‑burkar/token: AES‑GCM med roterande nycklar.
+
+# src/utils/crypto.py
+from cryptography.fernet import Fernet
+KEY = os.getenv("APP_DATA_KEY").encode()
+f = Fernet(KEY)
+def enc(b:bytes)->bytes: return f.encrypt(b)
+def dec(b:bytes)->bytes: return f.decrypt(b)
+
+6.3 Strukturerad loggning
+
+JSON‑loggar (du har logging.yml). Lägg redaction:
+
+# src/utils/logger.py
+SENSITIVE = {"password","token","cookie"}
+def redact(d:dict): 
+    return {k:("[REDACTED]" if k.lower() in SENSITIVE else v) for k,v in d.items()}
+
+6.4 RBAC
+
+Roller: admin, operator, viewer, integration.
+
+Policy per route/åtgärd:
+
+# src/webapp/middlewares/rbac.py
+from fastapi import HTTPException
+def require(*roles):
+    def deco(fn):
+        def wrapper(user, *a, **kw):
+            if user.role not in roles: raise HTTPException(403)
+            return fn(user,*a,**kw)
+        return wrapper
+    return deco
+
+
+UI döljer åtgärder när roll saknas.
+
+Audit‑logg (vem gjorde vad).
+CloudFlair
+
+Funktionalitet och teknisk implementation: CloudFlair är ett verktyg för att hitta “bakre” origin-servrar för webbplatser skyddade av Cloudflare eller CloudFront
+GitHub
+. Det använder sig av Internet-skanningsdata från Censys (ett SSL-certifikatindex) för att hitta offentligt exponerade IPv4-adresser som presenterar ett certifikat för målwebbplatsens domän
+GitHub
+. Därefter filtreras bort kända Cloudflare-/CloudFront-IP-områden (via hämtning av CDN:ernas IP-listor och kontroll), och verktyget testar kvarvarande kandidater genom att skicka HTTP(S)-förfrågningar med måldomänens värdhuvud (“Host”). Slutligen används ett HTML-likhetsmått (via html_similarity) för att jämföra svarens innehåll med originalwebbplatsen och identifiera de IP-adresser vars svar överensstämmer (troliga origin-servrar). Verktyget hanterar också roulettliknande user-agenter för att efterlikna webbläsare vid hämtning av original- och testadresser.
+
+Vad som särskiljer projektet: CloudFlair är unikt genom att det utnyttjar certifikatdata från Internet-skanning (Censys) för bypass av CDN-skydd – en metod som få andra verktyg använder. Genom att matcha SSL-certifikatfingraturer kan det hitta ”hosttränade” servrar bakom Cloudflare/CloudFront. Andra liknande verktyg (t.ex. infoga eller brute-forca origin-IP) är ofta mer begränsade eller manuella. CloudFlair är automatiserat, omfattar både Cloudflare- och CloudFront-kontroll, och använder intelligent filtrering och content-similaritetskontroll för hög precision
+GitHub
+. Prestandamässigt är det beroende av Censys API-hastighet och nätverkstester, och är inriktat på säkerhetstestning snarare än datainsamling.
+
+Integration i sparkling-owl-spin: För att integrera CloudFlairs funktioner skulle man behöva implementera en modul som kan detektera om ett mål ligger bakom Cloudflare/CloudFront och sedan initiera en Censys-sökning efter certifikat. Det saknas troligen motsvarande modul i det befintliga systemet, så detta blir en ny pipeline. Man skulle kunna lägga till en submodul i crawl-motorn som vidnga target-domäner, kontrollerar uses_cloudflare(domain)/uses_cloudfront(domain) (som CloudFlair gör) och – om så – anropas “Cloudflare-bypass”-logik. Modulen skulle använda Censys Python SDK (som i CloudFlair) för att söka certifikat (kräver Censys API-nycklar). Därefter skulle återfådda IP-adresser testas via systemets befintliga HTTP-klient (t.ex. requests) med rätt headers, och HTML-responser jämföras mot originalet (kan använda t.ex. html_similarity eller liknande).
+
+Saknas i sparkling-owl-spin: I nuläget finns sannolikt ingen Censys-integration eller specifik logik för att hitta ursprungsserver bakom en CDN. Även funktioner som hämtning av Cloudflare/CloudFront-IP-områden, samt content-likhetskoll, saknas förmodligen. Det finns heller inget gränssnitt för att hantera Censys-nycklar eller liknande i systemets konfiguration.
+
+Förslag till implementation: Man bör lägga till beroenden för Censys (t.ex. censys-biblioteket) och html_similarity. Skapa en ny modul, t.ex. cdnbypass.py, som exponerar funktioner som find_origin_servers(domain). Denna modul använder Censys-certifikatsökning (eller alternativt Shodan), filtrerar IP-adresser, och gör jämförande HTTP-förfrågningar (bygg gärna vidare på kod från CloudFlair). Modulen kan integreras i web-scannern: om en crawl upptäcker Cloudflare-skydd (genom DNS-uppslagning eller CAPTCHA), kan systemet automatiskt aktivera “origin detection” och i förekommande fall omkonfigurera host-header eller direkt göra requests mot origin-IP. Konfigurationsmöjligheter (t.ex. aktivera/deaktivera CDN-bypass, ange API-nycklar) bör finnas i sparkling-owl-spin konfigurationsfiler.
+
+ReconSpider
+
+Funktionalitet och teknisk implementation: ReconSpider är ett omfattande OSINT-ramverk för informationsinsamling kring IP-adresser, domäner, e-postadresser, användarnamn med mera
+github.com
+. Det är CLI-baserat och kombinerar en mängd funktioner: IP- och domänsökning via externa API:er (ex. Shodan, IPStack), genomsökning av telefonnummer och e-post, kartläggning av DNS-ytor, metadatautvinning från filer, omvänd bildsökning, honeypot-identifiering (med “honeyscore”), MAC-adressuppslagning, IP-heatmaps, torrentspårning, användarinfo från sociala medier, proxy/VPN-detektion (IP2Proxy) samt sökningar efter läckta mail adresser
+github.com
+github.com
+. Verktyget samlar in data från olika källor, korrelerar resultaten och kan visa dem i en dashboard (från readme). Teknikerna innefattar användning av befintliga verktyg och API:er (t.ex. Wave, Photon, ReconDog för subdomän/attackytor) samt egna skript för t.ex. XSS-dork-sökning.
+
+Vad som särskiljer projektet: ReconSpider är enormt brett, en “allt-i-ett”-OSINT-pipeline vilket få andra enskilda verktyg är. Unika inslag är till exempel integrering av IP2Proxy-databaser för att avgöra om en given IP är ett känt VPN/proxy
+github.com
+, och en inbyggd honeypot-kontroll som ger en “honeyscore” för IPs
+github.com
+. Den är GPL-licensierad och batch-orienterad (styrs via val i CLI-menyn). Prestandamässigt är ReconSpider begränsad av externa API-nycklar (ex. Shodan, NumVerify) och är inte optimerad för storskalig crawling, utan för penetrationstestning och insamling kring ett specifikt “target”.
+
+Integration i sparkling-owl-spin: Eftersom ReconSpider täcker bred OSINT som går utanför traditionell webbskrapning finns ingen direkt motsvarighet i det befintliga systemet. Däremot finns relevanta delar: t.ex. proxy-/VPN-detektion och honeypot-kontroll är potentiellt användbara. Att integrera ReconSpider-moduler skulle kräva att systemet kan anropa t.ex. “check_honeypot(ip)” (som utnyttjar T-Pot eller IPQualityScore) och IP2Proxy för att flagga misstänkta proxies. I kodmodulerna skulle detta kunna ligga under en “AntiBot”- eller “Proxypool”-komponent för att filtrera eller varna för farliga IPs. Vid domänkartläggning nämns att ReconSpider även använder verktyg som Wave, Photon, ReconDog för attackyta-utforskning
+github.com
+; om sparkling-owl-spin inte har fullskalig attackyta-skanning, kan dessa verktyg övervägas för att förbättra subdomänsökning och länkupptäckt vid kryptering av crawl-riktlinjer.
+
+Saknas i sparkling-owl-spin: Systemet saknar troligen funktioner för avancerad OSINT-analys utöver grundläggande crawling. Till exempel finns ingen inbyggd honeypot-identifiering eller “proxy-check” mot IP2Proxy-databaser. Eventuella API-nycklar för Shodan eller andra tjänster är inte konfigurerade i den standardiserade konfigurationen. Däremot finns funktioner för att crawla och hämta data; saknas gör däremot nätverks- och metadata-sök som ReconSpider erbjuder (t.ex. reverse image-sökning, telefonnummeruppslagningar etc.) – funktionalitet som kanske inte är prioriterad för webbskrapning.
+
+Förslag till implementation: För nytta i en crawler/scraper kan man fokusera på de OSINT-inslag som stärker robusthet och stealth. Ett förslag är att implementera ett API-stöd mot t.ex. IP2Proxy (man kan installera deras databaser eller API) för att flagga om en given proxyadresse är av VPS/Datacenter-typ. Honeypot-kontroll kan eventuellt utnyttjas genom externa tjänster (t.ex. T-Pot honeyscore). Teknisk integration innebär att lägga in sådana kontroller i proxyhanteraren: t.ex. verifiera nya proxies mot en “is_honeypot(ip)” eller “is_proxy(ip)”-funktion. För subdomänkryptering kan befintliga Python-verktyg som Photon eller ReconDog importeras (de är fristående CTF-verktyg) för att utöka domänupptäckt. Dessa kan köras som externa processer eller bibliotek. Konfigurationsmässigt skulle man kunna lägga till inställningar för Shodan/IP2Proxy-nycklar om man vill använda sådana API:er. Men eftersom ReconSpider är så omfattande är det inte realistiskt att implementera allt; fokusera på att tillföra de delar som direkt ökar crawlers relevans (t.ex. förbättrad länk-upptäckt eller proxykvalitetskontroll) och integrera dessa på lämpliga ställen i den modulariserade arkitekturen.
+
+UltimateAppLockerByPassList
+
+Funktionalitet och teknisk implementation: Detta är egentligen inte ett körbart verktyg utan ett dokumentationsbibliotek för att beskriva olika tekniker för att kringgå Microsoft Windows AppLocker-regler
+github.com
+. AppLocker är en säkerhetsmekanism som styr vilka program/processer som får köras på Windows. Repot samlar “Generic”, “Verified” och “Unverified” listor med metoder (t.ex. användning av certifierade Windows-program, kommandon via certifierade DLL:er, speciella filformat osv.) som kan kringgå AppLockers restriktioner. Det innehåller inte exekverbara script eller kodlogik för nätverksåtkomst utan är en referensguide över exempelkommandon och leverantörers signaturer.
+
+Vad som särskiljer projektet: Det är unikt i sitt syfte att fokusera på AppLocker-bypass, något som normalt tillhör lokal host-säkerhet snarare än web scraping. Det är en omfattande samling av Windows-baserade “LOLBas” (living-off-the-land binaries) och andra tricks. För vår frågeställning är detta i stort sett irrelevant, eftersom det inte tillför funktionalitet för webb- eller proxyhantering.
+
+Integration i sparkling-owl-spin: I princip finns inget direkt att integrera – detta är dokumentation, inte ett modulärt bibliotek. Det skulle endast vara relevant i en situation där själva data-insamlingsprogrammen begränsas av AppLocker (t.ex. om crawling-API-verktygen körs i en Windows-miljö med restriktioner). Om så är fallet kunde man konsultera listan för att säkerställa att verktyg man använder är vitaListade eller att kringgå begränsningar. Men i en typisk Linux- eller molnmiljö är det inte aktuellt.
+
+Saknas i sparkling-owl-spin: Inget – repot innehåller ingen funktionalitet att återskapa, och sparkling-owl-spin behöver inte hantera AppLocker-scenerier.
+
+Förslag till implementation: Eftersom detta bara är en uppsättning tekniker/kommandon, finns ingen kod att implementera direkt. Man kan nämna att om systemet skall distribueras på Windows kan man se över vilka binärfiler som används (och undvika de som AppLocker ofta blockerar). Men det ligger utanför scope för scrapersystemet.
+
+requests-ip-rotator
+
+Funktionalitet och teknisk implementation: Detta är en Python-klient för att utnyttja Amazons API Gateway som ett gigantiskt, roterande proxynätverk
+github.com
+. Principen är att man skapar API-gateways i flera AWS-regioner; när en HTTP-förfrågan skickas genom gatewayn kommer Amazon att anropa målsidan från en AWS-server (med ett AWS-specifikt header), och varje gång kan käll-IP:n variera eftersom Amazons infrastruktur “flyttar” källnoder. Verktyget randomiserar också X-Forwarded-For-headern för att dölja klientens verkliga IP. På så sätt får man “nästan obegränsat” många IP:er tillgängliga för webbskrapning och brute-forcing
+github.com
+. Användning sker genom att instansiera ett ApiGateway-objekt (initierar gateways i valda regioner), starta det, och sedan montera det på en requests.Session mot specifik domän. Verktyget hanterar att ta ned gateways vid avslut (annars kan kostnader uppstå). Notera dock att trafiken kan spåras via AWS-specific headers (“X-Amzn-Trace-Id”), så det är inte ett perfekt anonymitetsmått.
+
+Vad som särskiljer projektet: Requests-IP-Rotator är speciellt genom sin användning av AWS API Gateway som proxy – de flesta proxy-bibliotek baserar sig på öppna proxyservrar eller egna VPS:ar, medan detta utnyttjar AWS mycket stora publik IP-bas. Detta ger teoretiskt en “pseudo-oändlig” pool av IP-adresser
+github.com
+. Jämfört med många proxylösningar har den relativt låg driftkostnad (gratis första miljonen förfrågningar per region) men potentiellt hög latens och hög upptäckbarhet (p.g.a. AWS headers). Prestandamässigt kräver det ofta creation/takedown av AWS-resurser och gör att varje förfrågan går via AWS:s API.
+
+Integration i sparkling-owl-spin: Det finns ingen motsvarande AWS-integration i sparkling-owl-spin, så detta skulle innebära en ny proxy-strategi. Man kan implementera en adapter för requests.Session liknande den i biblioteket. I praktiken behöver man lägga in stöd för AWS-nycklar i konfigurationen, samt metoder för att skapa och hantera gateways. Ett praktiskt tillvägagångssätt är att behandla detta som en specialproxy: använd ApiGateway-objektet när man vill skicka förfrågningar till en mål-domän, i stället för de vanliga proxyservrarna. Eftersom systemet redan har moduler för HTTP-begäran, kan man tillåta att vissa domäner hanteras genom AWS-gateways: t.ex. en flagga i konfigurationen “use_aws_rotator: true” eller en särskild proxy-profil som man kan montera på en session.
+
+Saknas i sparkling-owl-spin: För att matcha denna funktionalitet saknas främst själva biblioteket requests-ip-rotator samt de AWS-behörigheter som krävs. Ingen kod för att lägga upp API Gateways och rotera via dem finns idag. Däremot behövs ingen signifikant databas eller systemarkitektur för detta utöver befintlig proxyhantering – det är mer en tilläggsstrategi.
+
+Förslag till implementation: Installera paketet via pip eller som en modul i projektet. Lägg till konfigurationsmöjligheter för AWS (t.ex. att läsa AWS_ACCESS_KEY_ID och AWS_SECRET_ACCESS_KEY, samt regionval). Implementera en start/stop-flöde: t.ex. vid init av scraping för en domän med AWS-rotator, skapa ApiGateway(domain) och kör gateway.start(), använd sedan session.mount(domain, gateway) som i biblioteksexemplet
+github.com
+. Efter crawlingen, anropa gateway.shutdown(). För användbarhet bör detta hanteras av frameworket: kanske en proxy-typ “aws-gateway” med parametrar (domän, regionslista) som automatiskt utför start/mount/shutdown. Var noga med att logga kostnader och fel från AWS. Eftersom denna teknik är ganska avvikande (och AWS-servertrafiken är synlig), bör den användas som sista utväg eller under hög sekretess.
+
+Incognito (av amethystnetwork-dev)
+
+Funktionalitet och teknisk implementation: Incognito är huvudsakligen en webbproxy/tjänst (NodeJS-baserad) designad för att undvika censur och botdetektering. Repositoriet i fråga är en oficiell deployment-variant som inkluderar en så kallad “wisp server” (en http-proxying server) och UI, vilket gör det enkelt att distribuera Incognito på molntjänster
+github.com
+. Källkoden är JavaScript/HTML-baserad, inte Python. Enligt README använder denna Incognito-implementation en proxy-motor kallad Ultraviolet som sin enda proxykälla
+github.com
+. Den erbjuder bland annat funktioner som “tab cloaks” (små trick i webbläsaren) och andra webbläsarliknande tekniker för att efterlikna en vanlig användare.
+
+Vad som särskiljer projektet: Incognito/Ultraviolet är designat som en klientvänlig webbtjänst för att bläddra anonymt, ofta från en webbläsare. Det är inte ett API eller bibliotek för programmatisk åtkomst, utan en hel lösning med frontend och serverkomponenter. Det som sticker ut är att proxy-motorn Ultraviolet är specialbyggd för att kringgå blockeringar (men den har begränsningar, t.ex. buggar vid nedladdning och egen HTTP-huvudssekvens)
+github.com
+.
+
+Integration i sparkling-owl-spin: Eftersom detta är en separat webbproxylösning, är direkt integration komplicerad. Det skulle teoretiskt kunna användas som extern proxy: man skulle behöva kunna anropa Ultraviolet-servern via HTTP från crawlern. Om Ultraviolet exponerar ett API eller om man kan köra den som container, kan man kanske konfigurera crawlingbiblioteket (t.ex. Selenium eller requests) att använda Incognito som en HTTP-proxy (t.ex. instanserar Selenium med det som proxy). I praktiken är det troligt mer arbete än nytta; man kan istället se Ultraviolet som en inspirationskälla eller valmöjlighet.
+
+Saknas i sparkling-owl-spin: För att återskapa Incognitos funktionalitet behövs i så fall en webbläsarproxfunktion som stöder Ultraviolet-format. Inga sådana komponenter finns i grundkoden. Oavsett saknas implementerade styrningsmöjligheter för “tab cloaks” eller användning av Incognito-domäner.
+
+Förslag till implementation: Om man vill inkludera Incognito-tjänster kan man överväga att köra Incognito/Ultraviolet som en extern proxyserver (kanske i en Docker-container) och sedan lägga till den som en proxy i proxy-poolen. Detta kräver dock att Ultraviolet har ett publik API eller proxyport att kontakta. Då skulle sparkling-owl-spin behöva stöd för att dirigera vissa crawling-requests genom denna proxy (tekniskt: ange proxies={‘http’: 'http://ultraviolet:port', ...} i HTTP-klient eller i WebDriver-inställningar). Eftersom detta är JavaScript/CSS/UI-baserat (inte ett Python-API) kan även säkerhetsbedömning krävas. Kort sagt är Incognito mer ett alternativt verktyg för slutbrukare än en modul att koda in i backend; det är sannolikt tillräckligt att känna till dess existens som extraverktyg.
+
+F0rc3Run
+
+Funktionalitet och teknisk implementation: F0rc3Run är i praktiken en samling fria VPN-konfigurationslänkar (subscription-länkar) för protokoll som V2Ray (VMess, VLESS), Shadowsocks, SSTP och Trojan
+github.com
+github.com
+. Repot håller kontinuerligt uppdaterade listor över servrar hämtade från offentliga källor och testar dem automatiskt var sjätte timme
+github.com
+. Filstrukturen innehåller t.ex. kataloger “splitted-by-protocol” med textfiler som listor av konfig-data. Tanken är att en användare kan ladda ner en “subscription” och använda dessa med en kompatibel VPN-klient för att skydda anonymitet och kringgå blockering. Inget Python-skript eller API exekverar här – det är i huvudsak en datakälla.
+
+Vad som särskiljer projektet: Det som är unikt är att man erbjuder många protokollstyper samlade och att länkarna uppdateras och testas ofta – praktiskt för användare som vill ha gratis VPN. Eftersom det bygger på V2Ray-ekosystemet kan det inte direkt användas som HTTP/HTTPS-proxy i traditionell mening. Prestandamässigt beror anslutningen på VPN-servrarnas kapacitet; det kan ge höga hastigheter men kräver externa klienter som förstår protokollen.
+
+Integration i sparkling-owl-spin: Indirekt kan detta användas för att utöka proxybasen. Om systemet kan hantera V2Ray/Shadowsocks-proxyer (t.ex. via integration med v2rayN eller Python-bibliotek för V2Ray/SS), skulle man kunna skriva kod som laddar ner dessa listor och konfigurerar en proxy-tunnel. Mer praktiskt skulle man kunna skrapa textfilerna i F0rc3Run och konvertera dem till respektive proxyobjekt. Exempel: hämta splitted-by-protocol/shadowsocks.txt, extrahera IP/port/passphras/algoritm, och sedan anropa en Shadowsocks-klient (via CLI eller bib) för att skapa en lokal proxy (samma för V2Ray). Sedan kan sparkling-owl-spin använda dessa lokala proxies i sin pool. Om detta är komplext kan man åtminstone tillåta proxy-vyer från V2Ray/Sub-nätverket genom att lägga in dessa konfigurerade proxies i proxy-poolen med högre prioritet (för att få fräsch IP via V2Ray).
+
+Saknas i sparkling-owl-spin: Systemet har troligen ingen färdig hantering av V2Ray- eller Shadowsocks-proxyer (om inte dessa lagts till separat). Det saknas kod för att hämta och tolka textfiler eller Sub-länkar från externa källor. Det saknas också eventuellt klientbibliotek för att initiera dessa avancerade proxyer från Python.
+
+Förslag till implementation: Ett förslag är att lägga till ett skript eller modul som kan uppdatera en lista av proxies från F0rc3Run. Exempel: periodiskt klona eller curl repositoriets råfiler (eller använda GitHub-API) för att hämta protokollinställningarna. Sedan parse:a t.ex. Shadowsocks-URL:er och initiera en Shadowsocks-anslutning (t.ex. med sslocal som systemkommando) på en slumpad port, och registrera http://127.0.0.1:denna_port som proxy i proxy-poolen. För V2Ray (VMess/VLESS), använd v2ray med en JSON-konfig som byggs från sub-länkar. För SSTP kan sttps/ config användas via OpenVPN-tools. Allt detta kräver nya beroenden (v2ray, shadowsocks) och konfiguration (exempelvis att ha dem installerade). Ett enklare alternativ är att använda en färdig Python-VPN-client-bibliotek (om sådant finns) eller att låta användaren manuellt lägga in valda F0rc3Run-länkar i en konfiguration och sedan skapa proxies utifrån dem.
+
+Chameleon
+
+Funktionalitet och teknisk implementation: Chameleon är en omfattande honeypot-samling som emulerar 19 olika nätverks- och applikationstjänster (DNS, HTTP proxy, HTTP(S), SSH, POP3, IMAP, SMTP, RDP, VNC, SMB, SOCKS5, Redis, TELNET, PostgreSQL, MySQL, MSSQL, Elasticsearch, LDAP)
+github.com
+. Varje honeypot är anpassningsbar och kan konfigureras för att registrera all trafik och t.ex. stjäla credentials eller uppmärksamma intrångsförsök. Projektet inkluderar Docker-filer och konfigurationsmallar för att enkelt starta upp dessa honeypots och analysera loggar (t.ex. med Grafana). Syftet är att upptäcka botar eller angripare som söker öppna tjänster och fälla dem med “skräpfällor”.
+
+Vad som särskiljer projektet: Det är unikt i sin bredd och modularitet: 19 olika protokoll i samma ramverk är ovanligt. Många honeypotprojekt fokuserar på en eller några protokoll, medan Chameleon gör allt i en container-stack. Licensen är AGPL-3.0. Prestandamässigt är det en utmaning att köra alla honeypots, men eftersom de mestadels endast ska logga försök är det inte tungt för CPU (men kan exponera portar, och kräver att dessa portar är tillåtna i nätverket).
+
+Integration i sparkling-owl-spin: För en avancerad crawler kan honeypots utnyttjas som fällor eller analyseringsverktyg. Ett potentiellt integrationsscenario är att sätta upp ett Chameleon-honeypot-nätverk på samma server eller nätverkssegment som crawlersystemet, för att locka botar/proxyer till att ansluta mot dessa identifierbara tjänster. Data från honeypots (t.ex. databas av fångade IPs) kan sedan matas tillbaka för att förbättra proxyfiltrering (om en proxy försöker göra SSH i våra honeypots, kanske det är en skräpproxy). Implementationsmässigt skulle man behöva köra Chameleon i Docker eller Kubernetes och sedan läsa av loggar (det finns t.ex. en run.sh och Docker-konfig) för att extrahera information. Denna information kan sedan importeras till systemets datalager. Man kan också tänka sig att låta honeypot-analysen styra trafik: om en proxy är “interaktiv” med honeypots, kan den svartlistas.
+
+Saknas i sparkling-owl-spin: Sannolikt finns inga honeypots idag. För att matcha Chameleon skulle man behöva både infrastrukturen (containrar med olika tjänster exponerade) och analysverktyget (som identifierar bot-aktiviteter). Detta är helt utanför standard web-crawling och skulle kräva betydande nya komponenter (loggsamlare, dashboards, alert-system).
+
+Förslag till implementation: Om målet är att öka stealth och upptäcktsriskhantering kan man lägga till en modul “honeypot-övervakning”. Detta innebär att man lanserar Chameleon (kanske i en sandlåda) och sedan bygger en egen process som regelbundet kontrollerar dess loggar. Den processen skulle markera och kanske delvis blockera IPs som Chameleon-fällor loggat. Man kan använda t.ex. ELK/Grafana-stack (som medföljer Chameleon) för att visualisera attacker, men enklare är att i Python-parsa loggkatalogerna. Den tekniska utmaningen är deployment: Chameleon kräver Docker och flera konfigureringar. En enklare variant är att endast använda ett eller några få av dess honeypots (t.ex. en enkel HTTP-proxy-honeypot) som microtjänst. Men att integrera hela Chameleon som en del av en crawlerarkitektur är komplext. Alternativt notera projektet som inspirationskälla för avancerad återkoppling snarare än direkt plugin-kod.
+
+WebPayloadsEncodings
+
+Funktionalitet och teknisk implementation: Detta är ett Python-paket för att enkoda webb-payloads i olika format
+github.com
+. Det kan köra från CLI eller som importerat bibliotek. Verktyget stöder flera typer av enkodning för ett givet textpayload: HTML-entitetskodning, URL-kodning, Unicode/UTF-16/32, hexa-escaping, base64, slutna/öppna taggar och olika former av splitting/bypass-mönster (t.ex. dela skript-taggar med avslutsvänster), m.fl. I README visas exempelkommandon: t.ex. WebPayloadsEncodings 'url' 'payload' '...
+github.com
+. Syftet är att hjälpa penetrationstestare att skapa varianter av XSS/SQL/Injektion-payloads för att kringgå WAF-regler och filter.
+
+Vad som särskiljer projektet: Det är relativt enkelt och fokuserat – den största fördelen är att det samlar många enkodningsalgoritmer i ett paket. Det är open source, GPL-licens, och verkar underhållas av en enskild utvecklare. Det finns liknande verktyg (t.ex. urllib.parse.quote, olika Python-bibliotek för URL-enkod), men detta ger ett enhetligt gränssnitt för flera koder samtidigt. Projektets prestanda är inte kritisk då det bara utför texttransformationer (snabbt i Python för korta strängar).
+
+Integration i sparkling-owl-spin: För en web crawler är detta primärt relevant som en potentiell hjälp för att generera ”polite” varianter av indata vid test av formulär eller insättningar, speciellt om systemet gör penetrationstest eller vill kringgå enkel WAF-blockering. Om sparkling-owl-spin inkluderar moduler för att posta data eller skicka dynamiska förfrågningar (t.ex. populera ett sökformulär för att hämta nya länkar), kan WebPayloadsEncodings användas för att automatiskt anpassa payloads. Integrationsmässigt kan man erbjuda detta som ett hjälppaket för “Stealth”- eller “Bypass”-verktyg. Koden kan anropas t.ex. via import WebPayloadsEncodings; WebPayloadsEncodings.payloads_encodings('url', payload) i en datainsamlingspipeline.
+
+Saknas i sparkling-owl-spin: Troligen finns inget dedikerat verktyg för att generera obfuskerad eller kodad indata. Om systemet ska ha avancerad formhantering saknas således en modul för payload-encoding. Däremot är detta kanske sekundärt, eftersom sys. huvudfokus är insamling snarare än aktiv omproduktion av attacker.
+
+Förslag till implementation: Lägga till paketet som ett beroende (t.ex. via pip install WebPayloadsEncodings). Skapa en wrapper eller util-funktion som kan användas där lämpligt: till exempel i en modul som hanterar XHR-sökfrågor kan man randomisera mellan rå text eller URL-kodad text baserat på målserverns känslighet. För konfiguration kan man erbjuda nivåval (“ingen kodning”, “URL-kodad”, “HTML-enkodad” etc) i template-DSL så att operatörer kan välja om de vill försöka avancera sin form-data. Funktionellt sett är det enkelt att använda – man behöver bara skicka in sin payload-sträng och välja kodningstyper.
+
+XSS-LOADER
+
+Funktionalitet och teknisk implementation: XSS-LOADER är ett verktyg som kombinerar XSS-payloadgenerator, scanner och Google Dork-sökare i ett
+github.com
+. I korthet hjälper det användaren att skapa XSS-injektion-payloads (för standard <script>-taggar och variationer med <div>, <img> osv.), automatiskt koda dem (många encoding-alternativ listas, från stora/små bokstäver till Base64, Unicode, html-entiteter, mutant-filer etc.)
+github.com
+github.com
+. Det har även en skannerdel (som troligen injicerar dessa payloads i givna URL-parametrar för att testa om de körs), samt en “dork finder” som kan hitta potentiellt sårbara URL:er via Google-sökningar. Projektet är Python-baserat (skiljer sig från WebPayloadsEncodings som bara kodar; XSS-LOADER är ett större CLI-verktyg byggt för penetrationstester). Exempel i readme visar hur olika taggbaserade payloads sätts upp och kodas i olika format.
+
+Vad som särskiljer projektet: Det är “allt-i-ett” för XSS-skapande och -upptäckt. Jämfört med enklare payload-genererare innehåller den inbyggd scanning och sökning (dorkning) samt ett omfattande antal kodningsexempel. Licensen är CC0 (public domain) för själva koden. Projektet passar för säkerhetstestare snarare än dataextraktion: det har inga avancerade crawlalgoritmer utan fokuserar på attackparametrar.
+
+Integration i sparkling-owl-spin: För en ren webbskrapare är XSS-LOADER:s kärnfunktioner i princip utanför kärnområdet. Emellertid kan en avancerad crawlersystem använda vissa delar: exempelvis för att kontrollera att indata (som skickas i forms) inte triggar XSS-filtrering. Men detta är mer en “pentest”-funktion. Om man ändå vill erbjuda den här kapaciteten kan man importera eller anropa verktygets delar (eller mer troligt en intern implementering). Tekniken kan användas som en “stealth”-teknik genom att skapa omvägskodade representationer av vanliga scripts för att undvika filter i exempelvis körda formulär.
+
+Saknas i sparkling-owl-spin: Det finns troligen inget liknande XSS-genereringsverktyg i plattformen. För att matcha denna funktionalitet skulle man behöva utveckla eller integrera ett modulärt system för att generera olika injektionspayloads (inklusive kodningstyper) och eventuellt automatisera scanning. Detta är en hel pentest-funktionalitet som ligger utanför standardgränssnittet, så det saknas mest som ett “specialverktyg”.
+
+Förslag till implementation: Om man ändå vill ha något sådant kan man antingen integrera XSS-LOADER som ett externt verktyg (kalla det via CLI med subprocess när man vill testa URL:er), eller lägga in enkla enkodare liknande WebPayloadsEncodings i systemet. En modul “XSSGenerator” skulle kunna erbjuda några vanliga payload-mallar (från README) och funktionen att koda dem (t.ex. via Python:s urllib.parse för URL-kodning, etc.). För scanning/dorking är detta mer komplext – skulle kräva att systemet kallar Google eller andra sökmotorer och analyserar, vilket riskerar crawlblockering. Troligtvis räcker det att nämna möjligheten som framtida funktion för penetrationstestning, alternativt kräva att en “security”-modul aktiveras om man vill använda denna typ av avancerade attacker.
+
+Källor: Officiella GitHub-sidor och README för respektive projekt har använts för att beskriva funktioner och implementation
+GitHub
+github.com
+github.com
+github.com
+github.com
+github.com
+github.com
+github.com
+github.com
+github.com
+github.com
+github.com
+. Dessa källor ger detaljer om vad varje verktyg gör och hur de skiljer sig, vilket ligger till grund för jämförelsen och integrationsförslagen ovan.

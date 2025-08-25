@@ -1,0 +1,10 @@
+crew_max_execution_time: 1800
+default_model: gpt-4
+enable_memory: true
+max_agents: 5
+openai:
+  api_key: ${OPENAI_API_KEY}
+  max_tokens: 2000
+  model: gpt-4
+  temperature: 0.7
+verbose: true

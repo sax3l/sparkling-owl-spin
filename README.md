@@ -1,53 +1,55 @@
-# ECaDP Platform - Ethical Crawler & Data Platform
+# 🦉 Sparkling-Owl-Spin - Swedish Intelligence Platform
 
-A comprehensive, production-ready platform for ethical web crawling, data extraction, and management. Built with React, TypeScript, Python, FastAPI, and MySQL.
+A revolutionary pyramid-architecture system for ethical web intelligence, Swedish data extraction, and comprehensive business intelligence. Now consolidated and optimized for maximum efficiency.
 
 ## 🎯 Overview
 
-ECaDP (Ethical Crawler & Data Platform) is a modular, ethical, and robust platform for web crawling and scraping. It addresses the challenge of collecting, normalizing, and storing scattered public data from complex sources while strictly adhering to ethical guidelines.
+**Sparkling-Owl-Spin** is a comprehensive Swedish business intelligence platform built with a modern pyramid architecture. After extensive consolidation and optimization, this system provides unified access to Swedish data sources, advanced scraping capabilities, and AI-powered analysis.
 
 ### ✨ Key Features
 
-- **🔍 Intelligent Crawling** - Systematic discovery and mapping of complex websites
-- **🎯 Advanced Scraping** - Reliable data extraction from dynamic JavaScript-driven sites
-- **🛡️ Anti-Bot Protection** - Sophisticated proxy pool with IP rotation and stealth capabilities
-- **📊 Data Management** - Comprehensive database models for people, companies, and vehicles
-- **🎨 Modern UI** - React-based frontend with 20+ pages and comprehensive functionality
-- **🔐 Security-First** - Authentication, authorization, and privacy compliance built-in
-- **📈 Monitoring** - Built-in observability, metrics, and health checks
-- **🐳 Cloud-Ready** - Docker, Kubernetes, and infrastructure-as-code support
+- **🏛️ Pyramid Architecture** - Clean 6-layer architecture for maximum maintainability
+- **🇸🇪 Swedish Data Focus** - Deep integration with Bolagsverket, Blocket, vehicle registries
+- **🤖 AI-Powered** - CrewAI integration for intelligent data processing  
+- **🛡️ Advanced Bypass** - FlareSolverr, CloudScraper, undetected Chrome integration
+- **� Security-First** - Domain authorization, penetration testing capabilities
+- **� Comprehensive Export** - Multiple formats with Swedish locale support
+- **🕷️ 15+ Scrapers** - From basic HTTP to advanced browser automation
+- **🌟 Consolidated Codebase** - Single entry point, organized structure
 
-## 🏗️ Architecture
+### 🏗️ Pyramid Architecture Layers
 
-### Frontend (React + TypeScript)
-- **20+ Pages** including Dashboard, Projects, Templates, Jobs, Data Management
-- **Modern UI** with Tailwind CSS and responsive design
-- **Real-time Updates** via WebSocket connections
-- **Component Library** with reusable UI components
-
-### Backend (Python + FastAPI)
-- **RESTful API** with auto-generated OpenAPI documentation
-- **GraphQL Endpoint** for flexible data querying
-- **Job Queue System** with background task processing
-- **Proxy Pool Management** with automatic validation
-
-### Database (MySQL)
-- **Comprehensive Schema** for persons, companies, vehicles, and jobs
-- **Data Quality Metrics** with validation and monitoring
-- **Audit Logging** with complete change tracking
-- **Performance Optimized** with proper indexing and views
+```
+┌─────────────────────────────────────────────┐
+│                    MAIN                     │ ← main_pyramid.py (SINGLE ENTRY)
+├─────────────────────────────────────────────┤
+│           Configuration & Deployment         │ ← /config/, /k8s/, /docker/
+├─────────────────────────────────────────────┤  
+│              API & Interfaces               │ ← /api/, /interfaces/
+├─────────────────────────────────────────────┤
+│              Data Processing                │ ← /data_processing/
+├─────────────────────────────────────────────┤
+│                AI Agents                    │ ← /ai_agents/
+├─────────────────────────────────────────────┤
+│                 Engines                     │ ← /engines/
+└─────────────────────────────────────────────┘
+│                  Core                       │ ← /core/ (Foundation)
+└─────────────────────────────────────────────┘
+```
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
 - **Python 3.11+**
-- **Node.js 18+**
-- **MySQL 8.0+**
-- **Redis 6.0+**
-- **Docker** (optional)
+- **Redis 6.0+** (for task queues)
+- **PostgreSQL 13+** (recommended) or SQLite
+- **Chrome/Chromium** (for browser automation)
 
-### 1. Clone Repository
+### 1. Clone & Setup
+```bash
+git clone <repository>
+cd Main_crawler_project
 
 ```bash
 git clone <repository-url>

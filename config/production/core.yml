@@ -1,0 +1,6 @@
+debug: false
+environment: production
+log_level: INFO
+max_workers: 8
+metrics_enabled: true
+timeout: 300

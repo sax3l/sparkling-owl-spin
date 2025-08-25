@@ -1,0 +1,460 @@
+# Revolutionary Ultimate System v4.0 - Advanced Configuration
+# Complete configuration for all integrated components and systems
+
+# ===== URL DISCOVERY & DEEP CRAWLING =====
+url_discovery:
+  enabled: true
+  
+  # Katana CLI crawler integration
+  katana:
+    enabled: true
+    path: "katana"  # Path to katana binary
+    headless: true
+    timeout: 300
+    rate_limit: 100
+    max_depth: 5
+    headers:
+      - "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+      - "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+    
+  # Photon OSINT crawler
+  photon:
+    enabled: true
+    path: "/opt/Photon/photon.py"
+    timeout: 300
+    use_wayback: true
+    dns_enumeration: true
+    
+  # Sitemap and robots.txt parsing
+  sitemap:
+    enabled: true
+    timeout: 30
+    respect_robots: true
+    follow_sitemaps: true
+    parse_nested: true
+    
+  # Selenium-based discovery
+  selenium:
+    enabled: true
+    headless: true
+    page_timeout: 30
+    max_scrolls: 10
+    infinite_scroll: false
+    user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+    
+  # Default crawl policies
+  default_policy:
+    max_depth: 3
+    max_urls_per_domain: 1000
+    extract_forms: true
+    extract_api_endpoints: true
+    extract_js_urls: true
+    custom_selectors:
+      - "a[data-href]"
+      - "[onclick*='location']"
+      - ".load-more[data-url]"
+    exclude_patterns:
+      - "\\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf)$"
+      - "mailto:"
+      - "javascript:"
+      - "#"
+    include_patterns: []
+    discovery_engines:
+      - "sitemap"
+      - "selenium"
+      - "katana"
+
+# ===== ADVANCED PROXY MANAGEMENT =====
+proxy_management:
+  enabled: true
+  
+  # AWS API Gateway rotation
+  aws:
+    enabled: false  # Set to true and configure API keys
+    regions:
+      - "us-east-1"
+      - "us-west-2" 
+      - "eu-west-1"
+      - "ap-southeast-1"
+    # aws_access_key_id: "your-access-key"
+    # aws_secret_access_key: "your-secret-key"
+    
+  # Proxy discovery settings
+  discovery:
+    timeout: 10
+    max_tries: 3
+    sources:
+      - name: "free-proxy-list"
+        type: "url_list"
+        url: "https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list-raw.txt"
+      - name: "proxy-list-plus"
+        type: "url_list"  
+        url: "https://raw.githubusercontent.com/TheSpeedX/SOCKS-List/master/http.txt"
+      # Add API sources:
+      # - name: "proxyrotator-api"
+      #   type: "api"
+      #   url: "https://api.proxyrotator.com/proxies"
+      #   headers:
+      #     Authorization: "Bearer YOUR_API_KEY"
+    
+  # ProxyBroker configuration (if available)
+  proxybroker:
+    enabled: true
+    timeout: 10
+    max_tries: 3
+    judges:
+      - "httpbin.org/ip"
+      - "icanhazip.com"
+    providers:
+      - "freeproxy-list"
+      - "proxylist-plus"
+      - "xroxy"
+      
+  # Proxy validation settings
+  validation:
+    timeout: 10
+    max_workers: 50
+    test_urls:
+      - "http://httpbin.org/ip"
+      - "https://httpbin.org/headers"
+      - "http://icanhazip.com/"
+      
+  # Rotation strategies
+  rotation:
+    strategy: "round_robin"  # round_robin, random, best_quality, fastest
+    health_check_interval: 300  # 5 minutes
+    min_quality_score: 0.5
+    max_fail_count: 5
+    failure_threshold: 0.2  # Remove proxy if success rate < 20%
+    
+# ===== OSINT & THREAT INTELLIGENCE =====
+osint_analytics:
+  enabled: true
+  
+  # CloudFlair origin server discovery  
+  cloudflair:
+    enabled: true
+    # Censys API for certificate transparency
+    # censys_api_key: "your-censys-api-key"
+    # censys_api_secret: "your-censys-secret"
+    
+    # Shodan API for infrastructure search
+    # shodan_api_key: "your-shodan-api-key"
+    
+    # SecurityTrails API for DNS history
+    # securitytrails_api_key: "your-securitytrails-key"
+    
+    # Content similarity threshold for validation
+    similarity_threshold: 0.8
+    validation_timeout: 10
+    
+  # Threat intelligence analysis
+  threat_intel:
+    enabled: true
+    
+    # VirusTotal integration
+    # virustotal_api_key: "your-virustotal-key"
+    
+    # MaxMind GeoIP database path (optional)
+    # maxmind_db_path: "/usr/local/share/GeoLite2-City.mmdb"
+    
+    # IP analysis settings
+    port_scan_timeout: 2
+    common_ports:
+      - 21    # FTP
+      - 22    # SSH  
+      - 23    # Telnet
+      - 25    # SMTP
+      - 53    # DNS
+      - 80    # HTTP
+      - 110   # POP3
+      - 443   # HTTPS
+      - 993   # IMAPS
+      - 995   # POP3S
+      - 3389  # RDP
+      - 3306  # MySQL
+      - 5432  # PostgreSQL
+      
+    # Domain analysis settings
+    dns_timeout: 10
+    ssl_timeout: 10
+    whois_timeout: 15
+    
+    # Risk scoring weights
+    risk_weights:
+      recently_registered: 2
+      self_signed_certificate: 1
+      missing_hsts: 1
+      missing_csp: 1
+      malicious_reports: 5
+      
+# ===== ENHANCED ANTI-BOT SYSTEM =====
+enhanced_anti_bot:
+  # CloudFlare bypass strategies
+  cloudflare:
+    primary_method: "cloudscraper"  # cloudscraper, flaresolverr, undetected_chrome
+    fallback_methods:
+      - "flaresolverr"
+      - "undetected_chrome"
+      - "playwright"
+    challenge_timeout: 30
+    retry_attempts: 3
+    
+  # CAPTCHA solving configuration  
+  captcha:
+    enabled: true
+    primary_service: "2captcha"  # 2captcha, anticaptcha, nopecha
+    # api_key: "your-2captcha-key"
+    timeout: 120
+    max_attempts: 3
+    services:
+      "2captcha":
+        api_key: null
+        soft_id: 4782  # Optional affiliate ID
+      "anticaptcha":  
+        api_key: null
+      "nopecha":
+        api_key: null
+        
+  # TLS fingerprinting evasion
+  tls_fingerprint:
+    enabled: true
+    client: "azuretls"  # azuretls, cycletls
+    ja3_spoofing: true
+    h2_fingerprint: true
+    user_agent_matching: true
+    
+  # Browser fingerprinting evasion
+  fingerprint_evasion:
+    enabled: true
+    randomize_viewport: true
+    randomize_timezone: true
+    randomize_language: true
+    disable_webgl: false
+    disable_webrtc: true
+    block_images: false
+    
+# ===== ENHANCED CONTENT EXTRACTION =====
+enhanced_extraction:
+  # HTML content extraction
+  html:
+    primary_extractor: "trafilatura"  # trafilatura, newspaper, readability
+    fallback_extractors:
+      - "newspaper3k"
+      - "readability-lxml" 
+      - "goose3"
+    quality_threshold: 0.6
+    
+  # PDF processing
+  pdf:
+    primary_extractor: "pymupdf"  # pymupdf, pdfplumber, tika
+    extract_tables: true
+    extract_images: false
+    ocr_enabled: false
+    # tesseract_path: "/usr/bin/tesseract"
+    
+  # Document processing
+  documents:
+    docx_extraction: true
+    xlsx_extraction: true
+    pptx_extraction: true
+    
+  # Entity recognition
+  entity_recognition:
+    enabled: true
+    languages:
+      - "en"
+      - "sv"  # Swedish
+    recognizers:
+      - "number"
+      - "currency" 
+      - "datetime"
+      - "phone_number"
+      - "email"
+      - "url"
+      
+  # Content quality scoring
+  quality_scoring:
+    enabled: true
+    min_text_length: 100
+    max_boilerplate_ratio: 0.3
+    min_sentence_count: 3
+    language_detection: true
+    
+# ===== SYSTEM MONITORING =====
+monitoring:
+  # Prometheus metrics
+  prometheus:
+    enabled: true
+    port: 8000
+    path: "/metrics"
+    
+  # Structured logging
+  logging:
+    level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+    format: "json"  # json, text
+    file_logging: true
+    log_rotation: true
+    max_log_size: "100MB"
+    backup_count: 5
+    
+  # Performance monitoring
+  performance:
+    enabled: true
+    memory_profiling: false
+    cpu_profiling: false
+    profile_output_dir: "./profiles"
+    
+  # Health checks
+  health_checks:
+    enabled: true
+    interval: 60  # seconds
+    endpoints:
+      - name: "database"
+        type: "postgresql"
+        # connection_string: "postgresql://user:pass@host/db"
+      - name: "redis"
+        type: "redis"  
+        # connection_string: "redis://localhost:6379/0"
+      - name: "proxy_pool"
+        type: "custom"
+        min_working_proxies: 10
+        
+# ===== SECURITY CONFIGURATION =====
+security:
+  # API key management
+  api_keys:
+    encryption_enabled: true
+    # encryption_key: "your-32-byte-encryption-key"
+    key_rotation_days: 90
+    
+  # Rate limiting
+  rate_limiting:
+    enabled: true
+    requests_per_minute: 60
+    burst_size: 10
+    
+  # Request filtering
+  request_filtering:
+    max_request_size: "10MB"
+    allowed_domains: []  # Empty = allow all
+    blocked_ips: []
+    blocked_user_agents: []
+    
+  # Data sanitization
+  data_sanitization:
+    remove_sensitive_headers: true
+    mask_credentials: true
+    sanitize_urls: true
+    
+# ===== DEPLOYMENT SETTINGS =====
+deployment:
+  # Environment
+  environment: "development"  # development, staging, production
+  debug: true
+  
+  # Worker configuration
+  workers:
+    count: 4
+    type: "async"  # sync, async, gevent
+    max_requests: 1000
+    max_requests_jitter: 100
+    timeout: 120
+    
+  # Resource limits
+  resources:
+    max_memory: "2GB"
+    max_cpu: "80%"
+    max_connections: 1000
+    connection_timeout: 30
+    
+  # Backup and recovery
+  backup:
+    enabled: true
+    interval: "daily"  # hourly, daily, weekly
+    retention_days: 30
+    storage_location: "./backups"
+    
+# ===== INTEGRATION SETTINGS =====
+integrations:
+  # Docker services
+  docker:
+    flaresolverr:
+      enabled: false
+      port: 8191
+      image: "flaresolverr/flaresolverr:latest"
+      
+    tika:
+      enabled: false
+      port: 9998
+      image: "apache/tika:latest"
+      
+    browserless:
+      enabled: false
+      port: 3000
+      image: "browserless/chrome:latest"
+      max_concurrent_sessions: 10
+      
+    # Grafana monitoring
+    grafana:
+      enabled: false
+      port: 3001
+      image: "grafana/grafana:latest"
+      
+    # Prometheus metrics
+    prometheus:
+      enabled: false
+      port: 9090
+      image: "prom/prometheus:latest"
+      
+  # External APIs
+  external_apis:
+    timeout: 30
+    retry_attempts: 3
+    retry_delay: 1
+    
+# ===== DOMAIN-SPECIFIC POLICIES =====
+domain_policies:
+  # Default policy for all domains
+  default:
+    anti_bot_level: "medium"  # low, medium, high, maximum
+    proxy_rotation: true
+    discovery_engines: ["sitemap", "selenium"]
+    extraction_method: "trafilatura"
+    respect_robots: true
+    rate_limit: 1.0  # requests per second
+    
+  # High-security domains
+  high_security:
+    domains:
+      - "*.cloudflare.com"
+      - "*.amazonaws.com"
+    anti_bot_level: "maximum"
+    proxy_rotation: true
+    captcha_solving: true
+    tls_fingerprint: true
+    rate_limit: 0.5
+    
+  # Social media domains
+  social_media:
+    domains:
+      - "*.facebook.com"
+      - "*.twitter.com"
+      - "*.linkedin.com"
+    anti_bot_level: "high"
+    discovery_engines: ["selenium"]
+    infinite_scroll: true
+    extract_forms: true
+    rate_limit: 0.3
+    
+  # News and content sites
+  content_sites:
+    domains:
+      - "*.news.com"
+      - "*.blog.*"
+      - "*.medium.com"
+    anti_bot_level: "low"
+    extraction_method: "trafilatura"
+    quality_threshold: 0.7
+    entity_recognition: true
+    rate_limit: 2.0

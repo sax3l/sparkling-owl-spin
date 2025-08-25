@@ -1,0 +1,222 @@
+# Sparkling-Owl-Spin Plugin Registry
+# Systematisk integration av GitHub repositories enligt implementationsplan
+
+# Plugin kategorier enligt plan:
+# A) Agent-/orkestrering & utvecklarautomation
+# B) NLP/IE (Entity/Relation/Datum/Belopp) 
+# C) Crawling/Parsing/Headless/Automation
+# D) Nätverk, rate-limit, retry, certifikat
+# E) Export/bygg/verktyg
+# F) Datalager, blocklist, domän, social/OSINT (legitimt)
+
+plugins:
+  # === A) AGENT/ORKESTRERING ===
+  agent_fastagency:
+    enabled: true
+    category: "orchestration"
+    description: "FastAgency flow-komposition av LLM-agenter"
+    github: "ag2ai/fastagency"
+    security_level: "green"
+    location: "src/plugins/agent_fastagency/"
+    dependencies: ["fastapi", "langchain"]
+    
+  agent_superagi:
+    enabled: false  # Gul - kräver säkerhetsgranskning
+    category: "orchestration" 
+    description: "SuperAGI orkestrering + jobbkedjor"
+    github: "superagi"
+    security_level: "yellow"
+    location: "src/plugins/agent_superagi/"
+    
+  crewai_integration:
+    enabled: true
+    category: "orchestration"
+    description: "CrewAI multi-agent samspel"
+    github: "crewAIInc/crewAI"
+    security_level: "green"
+    location: "src/plugins/agent_multi/"
+    
+  # === B) NLP/IE ===
+  ner_service:
+    enabled: true
+    category: "nlp"
+    description: "Named Entity Recognition med OpenNRE/Kashgari"
+    github: "ShulinCao/OpenNRE-PyTorch"
+    security_level: "green"
+    location: "src/analysis/ner_service.py"
+    dependencies: ["spacy", "transformers"]
+    
+  relation_extraction:
+    enabled: true
+    category: "nlp"
+    description: "Relationsextraktion för företag-fordon kopplingar"
+    github: "lemonhu/open-entity-relation-extraction"
+    security_level: "green"
+    location: "src/analysis/re_service.py"
+    
+  microsoft_recognizers:
+    enabled: true
+    category: "nlp"
+    description: "Datum/belopp/telefon normalisering (svenska)"
+    github: "Microsoft/Recognizers-Text"
+    security_level: "green"
+    location: "src/scraper/normalizers.py"
+    dependencies: ["recognizers-text"]
+    
+  rapidfuzz_similarity:
+    enabled: true
+    category: "analysis"
+    description: "Fuzzy matching för deduplicering"
+    github: "rapidfuzz/RapidFuzz"
+    security_level: "green"
+    location: "src/analysis/similarity_analysis.py"
+    dependencies: ["rapidfuzz"]
+    
+  # === C) CRAWLING/ENGINES ===
+  scrapy_adapter:
+    enabled: true
+    category: "engines"
+    description: "Scrapy engine adapter för SOS"
+    github: "scrapy/scrapy"
+    security_level: "green"
+    location: "src/plugins/engines/scrapy_adapter.py"
+    dependencies: ["scrapy"]
+    
+  crawlee_adapter:
+    enabled: true
+    category: "engines"
+    description: "Crawlee (Apify) Node.js adapter"
+    github: "apify/crawlee"
+    security_level: "green"
+    location: "src/plugins/engines/crawlee_adapter.ts"
+    dependencies: ["@crawlee/puppeteer", "@crawlee/playwright"]
+    
+  colly_adapter:
+    enabled: false  # Kräver Go sidecar
+    category: "engines"
+    description: "Colly Go high-performance adapter"
+    github: "gocolly/colly"
+    security_level: "green"
+    location: "src/plugins/engines/colly_adapter.go"
+    
+  katana_integration:
+    enabled: true
+    category: "engines"
+    description: "ProjectDiscovery Katana crawler"
+    github: "projectdiscovery/katana"
+    security_level: "green"
+    location: "src/plugins/engines/katana_adapter.py"
+    
+  # === D) DOCUMENT PROCESSING ===
+  tika_adapter:
+    enabled: true
+    category: "document"
+    description: "Apache Tika för PDF/Office dokument"
+    github: "apache/tika"
+    security_level: "green"
+    location: "src/plugins/document_ingest/tika_adapter.py"
+    dependencies: ["tika"]
+    
+  trafilatura_adapter:
+    enabled: true
+    category: "document"
+    description: "Trafilatura för boilerplate removal"
+    github: "adbar/trafilatura"
+    security_level: "green"
+    location: "src/plugins/document_ingest/trafilatura_adapter.py"
+    dependencies: ["trafilatura"]
+    
+  pdf_extract_kit:
+    enabled: true
+    category: "document"
+    description: "OpenDataLab PDF extraction"
+    github: "opendatalab/PDF-Extract-Kit"
+    security_level: "green"
+    location: "src/plugins/document_ingest/pdf_extract_kit.py"
+    
+  # === E) NETWORK/RATE LIMITING ===
+  rate_limiter:
+    enabled: true
+    category: "network"
+    description: "Node rate limiter flexible"
+    github: "animir/node-rate-limiter-flexible"
+    security_level: "green"
+    location: "src/webapp/middlewares/rate_limit.py"
+    
+  proxy_pool_jhao:
+    enabled: true
+    category: "network"
+    description: "Proxy pool management"
+    github: "jhao104/proxy_pool"
+    security_level: "green"
+    location: "src/proxy_pool/"
+    dependencies: ["requests", "redis"]
+    
+  # === F) SECURITY/PAYLOADS ===
+  payloads_all_things:
+    enabled: true
+    category: "security"
+    description: "PayloadsAllTheThings integration"
+    github: "swisskyrepo/PayloadsAllTheThings"
+    security_level: "green"
+    location: "src/security/payloads/"
+    note: "Endast för legitim penetrationstestning"
+    
+  # === SVENSKA DATASET ===
+  swedish_vehicle_data:
+    enabled: true
+    category: "data"
+    description: "Svenska fordonsdata integration"
+    github: "PierreMesure/oppna-bolagsdata"
+    security_level: "green"
+    location: "database/seed/swedish_data/"
+    
+  # === BYPASS/CLOUDFLARE - DISABLED ===
+  flaresolverr:
+    enabled: false  # Röd kategori - ej implementerad
+    category: "bypass"
+    description: "FlareSolverr Cloudflare bypass"
+    github: "FlareSolverr/FlareSolverr"
+    security_level: "red"
+    reason: "Bypass-verktyg - ej tillåtet enligt policy"
+    
+  cloudflare_bypass:
+    enabled: false
+    category: "bypass"
+    description: "Diverse Cloudflare bypass verktyg"
+    security_level: "red"
+    reason: "Strider mot ToS och etiska riktlinjer"
+
+# Feature flags per miljö
+environments:
+  development:
+    enable_all_green: true
+    enable_yellow_with_review: false
+    enable_red: false
+    
+  staging:
+    enable_all_green: true
+    enable_yellow_with_review: true
+    enable_red: false
+    
+  production:
+    enable_all_green: true
+    enable_yellow_with_review: false
+    enable_red: false
+
+# Domänspecifika policys
+domain_policies:
+  default:
+    max_rps: 1
+    enable_stealth: false
+    require_manual_review: false
+    
+  high_traffic_allowed:
+    max_rps: 10
+    enable_stealth: false
+    require_manual_review: false
+    
+  restricted:
+    max_rps: 0.1
+    enable_stealth: false
+    require_manual_review: true

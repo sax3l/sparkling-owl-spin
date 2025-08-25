@@ -1,0 +1,6 @@
+debug: false
+environment: testing
+log_level: DEBUG
+max_workers: 8
+metrics_enabled: true
+timeout: 300

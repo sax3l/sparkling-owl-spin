@@ -1,85 +1,83 @@
 {
-  "total_tests": 13,
-  "passed_tests": 13,
-  "failed_tests": 0,
-  "test_details": [
-    {
-      "test_name": "_test_analyzer_initialization",
-      "success": true,
-      "message": "Analyzer initialiserad framgångsrikt",
-      "timestamp": "2025-08-24T16:42:01.659421"
+  "summary": {
+    "total_tests": 14,
+    "successful_tests": 0,
+    "failed_tests": 0,
+    "error_tests": 14,
+    "success_rate": 0.0,
+    "test_duration": 0.7062101364135742,
+    "timestamp": 1756072039.081799
+  },
+  "results": {
+    "content_extraction": {
+      "apache_tika": {
+        "status": "error",
+        "error": "cannot import name 'stealth_async' from 'playwright_stealth' (C:\\Python313\\Lib\\site-packages\\playwright_stealth\\__init__.py)"
+      },
+      "trafilatura": {
+        "status": "error",
+        "error": "cannot import name 'stealth_async' from 'playwright_stealth' (C:\\Python313\\Lib\\site-packages\\playwright_stealth\\__init__.py)"
+      },
+      "pdf_extract_kit": {
+        "status": "error",
+        "error": "cannot import name 'stealth_async' from 'playwright_stealth' (C:\\Python313\\Lib\\site-packages\\playwright_stealth\\__init__.py)"
+      }
     },
-    {
-      "test_name": "_test_repository_cloning",
-      "success": true,
-      "message": "Repository-kloning fungerar",
-      "timestamp": "2025-08-24T16:42:01.663067"
+    "proxy_management": {
+      "proxy_broker": {
+        "status": "error",
+        "error": "cannot import name 'stealth_async' from 'playwright_stealth' (C:\\Python313\\Lib\\site-packages\\playwright_stealth\\__init__.py)"
+      },
+      "proxy_pool": {
+        "status": "error",
+        "error": "cannot import name 'stealth_async' from 'playwright_stealth' (C:\\Python313\\Lib\\site-packages\\playwright_stealth\\__init__.py)"
+      }
     },
-    {
-      "test_name": "_test_code_analysis",
-      "success": true,
-      "message": "Kod-analys fungerar - Hittade 1 klasser och 2 funktioner",
-      "timestamp": "2025-08-24T16:42:01.676015"
+    "url_discovery": {
+      "katana": {
+        "status": "error",
+        "error": "cannot import name 'stealth_async' from 'playwright_stealth' (C:\\Python313\\Lib\\site-packages\\playwright_stealth\\__init__.py)"
+      },
+      "photon": {
+        "status": "error",
+        "error": "cannot import name 'stealth_async' from 'playwright_stealth' (C:\\Python313\\Lib\\site-packages\\playwright_stealth\\__init__.py)"
+      }
     },
-    {
-      "test_name": "_test_feature_identification",
-      "success": true,
-      "message": "Funktionsidentifiering fungerar korrekt",
-      "timestamp": "2025-08-24T16:42:01.679169"
+    "anti_bot_defense": {
+      "cloudscraper": {
+        "status": "error",
+        "error": "cannot import name 'stealth_async' from 'playwright_stealth' (C:\\Python313\\Lib\\site-packages\\playwright_stealth\\__init__.py)"
+      },
+      "flaresolverr": {
+        "status": "error",
+        "error": "cannot import name 'stealth_async' from 'playwright_stealth' (C:\\Python313\\Lib\\site-packages\\playwright_stealth\\__init__.py)"
+      }
     },
-    {
-      "test_name": "_test_integration_strategies",
-      "success": true,
-      "message": "Integrationsstrategier fungerar",
-      "timestamp": "2025-08-24T16:42:01.682427"
+    "browser_automation": {
+      "playwright": {
+        "status": "error",
+        "error": "cannot import name 'stealth_async' from 'playwright_stealth' (C:\\Python313\\Lib\\site-packages\\playwright_stealth\\__init__.py)"
+      },
+      "drission_page": {
+        "status": "error",
+        "error": "cannot import name 'stealth_async' from 'playwright_stealth' (C:\\Python313\\Lib\\site-packages\\playwright_stealth\\__init__.py)"
+      }
     },
-    {
-      "test_name": "_test_code_adaptation",
-      "success": true,
-      "message": "Kodanpassning fungerar",
-      "timestamp": "2025-08-24T16:42:01.695474"
+    "crawling_frameworks": {
+      "crawlee": {
+        "status": "error",
+        "error": "cannot import name 'stealth_async' from 'playwright_stealth' (C:\\Python313\\Lib\\site-packages\\playwright_stealth\\__init__.py)"
+      },
+      "colly": {
+        "status": "error",
+        "error": "cannot import name 'stealth_async' from 'playwright_stealth' (C:\\Python313\\Lib\\site-packages\\playwright_stealth\\__init__.py)"
+      }
     },
-    {
-      "test_name": "_test_module_writing",
-      "success": true,
-      "message": "Modul-skrivning fungerar",
-      "timestamp": "2025-08-24T16:42:01.710353"
-    },
-    {
-      "test_name": "_test_integration_testing",
-      "success": true,
-      "message": "Integration-test fungerar - Körde 1 tester",
-      "timestamp": "2025-08-24T16:42:01.727896"
-    },
-    {
-      "test_name": "_test_cleanup_process",
-      "success": true,
-      "message": "Cleanup-process fungerar",
-      "timestamp": "2025-08-24T16:42:01.746143"
-    },
-    {
-      "test_name": "_test_report_generation",
-      "success": true,
-      "message": "Rapportgenerering fungerar",
-      "timestamp": "2025-08-24T16:42:01.750114"
-    },
-    {
-      "test_name": "_test_complete_workflow",
-      "success": true,
-      "message": "Komplett workflow fungerar - Bearbetade 2 repositories",
-      "timestamp": "2025-08-24T16:42:01.754849"
-    },
-    {
-      "test_name": "_test_error_handling",
-      "success": true,
-      "message": "Error handling fungerar",
-      "timestamp": "2025-08-24T16:42:01.895393"
-    },
-    {
-      "test_name": "_test_performance_characteristics",
-      "success": true,
-      "message": "Prestanda OK - Signatur-generering tog 0.00s",
-      "timestamp": "2025-08-24T16:42:01.901173"
+    "integration_registry": {
+      "registry": {
+        "status": "error",
+        "error": "cannot import name 'stealth_async' from 'playwright_stealth' (C:\\Python313\\Lib\\site-packages\\playwright_stealth\\__init__.py)"
+      }
     }
-  ]
+  }
 }

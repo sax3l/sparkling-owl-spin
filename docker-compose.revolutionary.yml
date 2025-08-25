@@ -1,0 +1,242 @@
+# Revolutionary Ultimate Scraping System v4.0 - Docker Services
+# =============================================================
+# 
+# Denna fil startar alla nödvändiga tjänster för systemet:
+# - FlareSolverr (Cloudflare bypass)
+# - Apache Tika (Content extraction)
+# - PostgreSQL (Database)
+# - Redis (Caching & queues)
+# - Prometheus (Metrics)
+# - Grafana (Monitoring)
+
+version: '3.8'
+
+services:
+  
+  # FlareSolverr - Cloudflare IUAM/Turnstile bypass
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: revolutionary_flaresolverr
+    environment:
+      - LOG_LEVEL=info
+      - LOG_HTML=false
+      - CAPTCHA_SOLVER=none
+    ports:
+      - "8191:8191"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8191/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - revolutionary_network
+    volumes:
+      - /tmp:/tmp  # Temp files for Chrome
+    
+  # Apache Tika - Universal content extraction
+  tika:
+    image: apache/tika:latest
+    container_name: revolutionary_tika
+    ports:
+      - "9998:9998"
+    restart: unless-stopped
+    command: java -jar /opt/tika/tika-server-standard.jar --host=0.0.0.0 --port=9998
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9998/tika"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - revolutionary_network
+    environment:
+      - TIKA_CONFIG=/opt/tika/config/tika-config.xml
+      - JAVA_OPTS=-Xmx2g -Xms1g
+    
+  # PostgreSQL - Main database
+  postgresql:
+    image: postgres:15-alpine
+    container_name: revolutionary_postgres
+    environment:
+      - POSTGRES_DB=revolutionary_scraper
+      - POSTGRES_USER=scraper_user
+      - POSTGRES_PASSWORD=scraper_password
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=sv_SE.UTF-8 --lc-ctype=sv_SE.UTF-8
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    volumes:
+      - postgresql_data:/var/lib/postgresql/data
+      - ./sql/init:/docker-entrypoint-initdb.d  # Initialization scripts
+    networks:
+      - revolutionary_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U scraper_user -d revolutionary_scraper"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    
+  # Redis - Caching and task queues
+  redis:
+    image: redis:7-alpine
+    container_name: revolutionary_redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+      - ./config/redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      - revolutionary_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    
+  # Prometheus - Metrics collection
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: revolutionary_prometheus
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.enable-lifecycle'
+    networks:
+      - revolutionary_network
+    depends_on:
+      - scraper_app
+      
+  # Grafana - Monitoring dashboards
+  grafana:
+    image: grafana/grafana:latest
+    container_name: revolutionary_grafana
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=http://localhost:3000
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./config/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./config/grafana/datasources:/etc/grafana/provisioning/datasources
+    networks:
+      - revolutionary_network
+    depends_on:
+      - prometheus
+      
+  # Selenium Grid Hub (optional - för distributed browser automation)
+  selenium-hub:
+    image: selenium/hub:latest
+    container_name: revolutionary_selenium_hub
+    ports:
+      - "4444:4444"
+    environment:
+      - GRID_MAX_SESSION=10
+      - GRID_BROWSER_TIMEOUT=30
+      - GRID_TIMEOUT=30
+    restart: unless-stopped
+    networks:
+      - revolutionary_network
+    profiles:
+      - selenium  # Only start with --profile selenium
+      
+  # Chrome Node för Selenium Grid
+  chrome-node:
+    image: selenium/node-chrome:latest
+    container_name: revolutionary_chrome_node
+    environment:
+      - HUB_HOST=selenium-hub
+      - HUB_PORT=4444
+      - NODE_MAX_INSTANCES=3
+      - NODE_MAX_SESSION=3
+    volumes:
+      - /dev/shm:/dev/shm  # Shared memory för Chrome stability
+    restart: unless-stopped
+    networks:
+      - revolutionary_network
+    depends_on:
+      - selenium-hub
+    profiles:
+      - selenium
+      
+  # Main scraper application
+  scraper_app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: revolutionary_scraper_app
+    environment:
+      - DATABASE_URL=postgresql://scraper_user:scraper_password@postgresql:5432/revolutionary_scraper
+      - REDIS_URL=redis://redis:6379/0
+      - FLARESOLVERR_URL=http://flaresolverr:8191/v1
+      - TIKA_SERVER_URL=http://tika:9998
+      - TWOCAPTCHA_API_KEY=${TWOCAPTCHA_API_KEY}
+      - NOPECHA_API_KEY=${NOPECHA_API_KEY}
+      - SENTRY_DSN=${SENTRY_DSN}
+      - LOG_LEVEL=INFO
+    ports:
+      - "8000:8000"  # API port
+    restart: unless-stopped
+    volumes:
+      - ./config:/app/config
+      - ./data:/app/data
+      - ./logs:/app/logs
+    networks:
+      - revolutionary_network
+    depends_on:
+      - postgresql
+      - redis
+      - flaresolverr
+      - tika
+    profiles:
+      - app  # Only start with --profile app
+    
+  # Nginx reverse proxy (optional)
+  nginx:
+    image: nginx:alpine
+    container_name: revolutionary_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    restart: unless-stopped
+    volumes:
+      - ./config/nginx.conf:/etc/nginx/nginx.conf
+      - ./config/ssl:/etc/nginx/ssl  # SSL certificates
+      - ./static:/var/www/html
+    networks:
+      - revolutionary_network
+    depends_on:
+      - scraper_app
+      - grafana
+    profiles:
+      - nginx
+
+volumes:
+  postgresql_data:
+    driver: local
+  redis_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+networks:
+  revolutionary_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

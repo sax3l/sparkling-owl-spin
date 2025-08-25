@@ -1,0 +1,11 @@
+swedish:
+  blocket_api_key: ${BLOCKET_API_KEY}
+  bytbil_enabled: true
+  cache_ttl: 3600
+  categories:
+  - cars
+  - motorcycles
+  - boats
+  max_results: 1000
+  regions:
+  - all

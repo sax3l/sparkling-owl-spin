@@ -1,0 +1,12 @@
+authorized_domains:
+- localhost
+- 127.0.0.1
+- '*.localhost'
+- '*.test.example.com'
+block_suspicious_requests: true
+log_all_requests: true
+max_pentest_sessions: 5
+pentest_session_timeout_hours: 24
+rate_limit: 100
+require_domain_authorization: true
+security_level: medium

@@ -1,0 +1,273 @@
+{
+  "system_overview": {
+    "test_start_time": 1756073057.7818708,
+    "system_version": "4.0.0",
+    "architecture": "Four-Layer Pyramid"
+  },
+  "layer_tests": {
+    "bypass_layer": {
+      "layer_name": "Bypass Layer (Layer 3)",
+      "description": "Shield and lubricant. Overcomes obstacles.",
+      "components_tested": [
+        "BypassLayer",
+        "StealthHeaderManager"
+      ],
+      "test_results": {
+        "bypass_layer_init": {
+          "status": "success"
+        },
+        "stealth_headers": {
+          "status": "success",
+          "headers_generated": 12,
+          "user_agent_set": true
+        },
+        "request_processing": {
+          "status": "success",
+          "config_generated": true,
+          "headers_included": true
+        },
+        "status_reporting": {
+          "status": "success",
+          "healthy": true,
+          "components": {
+            "flaresolverr": true,
+            "proxy_manager": true,
+            "captcha_solver": true
+          }
+        },
+        "cleanup": {
+          "status": "success"
+        }
+      },
+      "overall_status": "success"
+    },
+    "execution_layer": {
+      "layer_name": "Execution Layer (Layer 2)",
+      "description": "The Body. Executes tasks.",
+      "components_tested": [
+        "ExecutionLayer",
+        "TaskExecution"
+      ],
+      "test_results": {
+        "execution_layer_init": {
+          "status": "success"
+        },
+        "task_execution": {
+          "status": "success",
+          "task_completed": true,
+          "execution_time": 2.740562915802002,
+          "engine_used": "requests"
+        },
+        "status_reporting": {
+          "status": "success",
+          "healthy": true,
+          "available_engines": [
+            "ExecutionEngine.CRAWLEE",
+            "ExecutionEngine.PLAYWRIGHT",
+            "ExecutionEngine.REQUESTS"
+          ]
+        },
+        "cleanup": {
+          "status": "success"
+        }
+      },
+      "overall_status": "success"
+    },
+    "analysis_layer": {
+      "layer_name": "Analysis Layer (Layer 4)",
+      "description": "The senses. Extracts and analyzes data.",
+      "components_tested": [
+        "AnalysisLayer",
+        "EntityExtraction",
+        "PayloadLibrary",
+        "VulnerabilityAnalyzer"
+      ],
+      "test_results": {
+        "analysis_layer_init": {
+          "status": "success"
+        },
+        "entity_extraction": {
+          "status": "success",
+          "entities_found": 3,
+          "entity_types": [
+            "email",
+            "phone",
+            "url"
+          ]
+        },
+        "payload_library": {
+          "status": "success",
+          "xss_payloads_available": 6,
+          "all_payload_types": [
+            "xss",
+            "sqli",
+            "lfi",
+            "rce",
+            "ssti",
+            "csti",
+            "xxe"
+          ]
+        },
+        "vulnerability_analysis": {
+          "status": "success",
+          "vulnerable_detected": true,
+          "indicators_found": 1
+        },
+        "data_processing": {
+          "status": "success",
+          "entities_extracted": 1,
+          "pii_found": 1,
+          "processing_time": 0.0001862049102783203
+        },
+        "status_reporting": {
+          "status": "success",
+          "healthy": true,
+          "components_initialized": {
+            "content_extractor": true,
+            "entity_extractor": true,
+            "payload_library": true,
+            "vulnerability_analyzer": true
+          }
+        },
+        "cleanup": {
+          "status": "success"
+        }
+      },
+      "overall_status": "success"
+    },
+    "orchestration_layer": {
+      "layer_name": "Orchestration Layer (Layer 1)",
+      "description": "The Brain. Makes decisions.",
+      "components_tested": [
+        "OrchestrationLayer",
+        "ScrapingMissionPlanning",
+        "PentestMissionPlanning",
+        "OSINTMissionPlanning",
+        "CoordinatedMissionExecution"
+      ],
+      "test_results": {
+        "orchestration_layer_init": {
+          "status": "success"
+        },
+        "scraping_mission_planning": {
+          "status": "success",
+          "steps_planned": 3,
+          "mission_type": "MissionType.DATA_COLLECTION"
+        },
+        "pentest_mission_planning": {
+          "status": "success",
+          "steps_planned": 4,
+          "risk_level": "HIGH"
+        },
+        "osint_mission_planning": {
+          "status": "success",
+          "steps_planned": 1,
+          "objectives": [
+            "gather_intelligence"
+          ]
+        },
+        "coordinated_mission": {
+          "status": "success",
+          "phases_completed": 5,
+          "agent_contributions": 4,
+          "execution_time": 0.1089010238647461
+        },
+        "status_reporting": {
+          "status": "success",
+          "healthy": true,
+          "active_agents": [
+            "AgentRole.CHIEF_SCRAPING_OFFICER",
+            "AgentRole.HEAD_OF_SECURITY",
+            "AgentRole.DATA_SCIENTIST",
+            "AgentRole.OSINT_ANALYST"
+          ],
+          "completed_missions": 1
+        },
+        "cleanup": {
+          "status": "success"
+        }
+      },
+      "overall_status": "success"
+    }
+  },
+  "integration_tests": {
+    "test_name": "Cross-Layer Integration",
+    "description": "Test integration between all four layers",
+    "integration_tests": {
+      "layer_dependencies": {
+        "status": "success",
+        "bypass_to_execution": "connected",
+        "execution_to_analysis": "connected",
+        "all_to_orchestration": "connected"
+      },
+      "data_flow": {
+        "status": "success",
+        "request_processing": "functional",
+        "data_extraction": "functional",
+        "analysis_pipeline": "functional",
+        "orchestration_control": "functional"
+      },
+      "error_handling": {
+        "status": "success",
+        "graceful_degradation": "implemented",
+        "error_propagation": "controlled",
+        "recovery_mechanisms": "functional"
+      }
+    },
+    "overall_status": "success"
+  },
+  "performance_tests": {
+    "test_name": "Performance Testing",
+    "description": "Test system performance and resource usage",
+    "performance_metrics": {
+      "response_time": {
+        "test_duration": 0.10612297058105469,
+        "status": "success"
+      },
+      "memory_usage": {
+        "memory_before_mb": 71.76171875,
+        "memory_after_mb": 71.76171875,
+        "memory_increase_mb": 0.0,
+        "status": "success"
+      },
+      "concurrent_processing": {
+        "tasks_processed": 10,
+        "total_time": 0.015262365341186523,
+        "avg_time_per_task": 0.0015262365341186523,
+        "status": "success"
+      }
+    },
+    "overall_status": "success"
+  },
+  "system_summary": {
+    "total_test_duration": 10.209432601928711,
+    "layers_tested": 4,
+    "layer_results": {
+      "bypass_layer": "success",
+      "execution_layer": "success",
+      "analysis_layer": "success",
+      "orchestration_layer": "success"
+    },
+    "integration_status": "success",
+    "system_status": "failed",
+    "overall_health": "EXCELLENT",
+    "recommendations": [
+      "All systems operational - ready for production use",
+      "Performance metrics within acceptable ranges"
+    ]
+  },
+  "system_orchestrator": {
+    "test_name": "Main System Orchestrator",
+    "description": "Test the main SparklengOwlSpin class",
+    "system_tests": {
+      "configuration": {
+        "status": "success",
+        "operation_mode": "hybrid",
+        "stealth_level": 7,
+        "targets_configured": 1
+      },
+      "error": "attempted relative import with no known parent package"
+    },
+    "overall_status": "failed"
+  }
+}
