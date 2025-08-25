@@ -1,0 +1,150 @@
+name: Nightly Build
+
+on:
+  schedule:
+    # Runs at 00:00 UTC every day
+    - cron: '0 0 * * *'
+  # Allow manual workflow runs
+  workflow_dispatch:
+
+env:
+  IMAGE_NAME: pulsar-rpa
+  NETWORK_NAME: 'pulsarrpa_backend'
+  CONTAINER_NAME: 'pulsar-rpa-test'
+
+jobs:
+  nightly-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        id: setup
+        if: success()
+        uses: ./.github/actions/setup-environment
+        with:
+          java_version: '17'
+
+      - name: Verify Dependencies
+        id: deps
+        if: success()
+        uses: ./.github/actions/verify-dependencies
+        with:
+          network_name: ${{ env.NETWORK_NAME }}
+          services_to_start: 'mongodb'  # ✅ Only start MongoDB
+          startup_timeout: '120'
+          verify_network_connectivity: 'true'
+
+      - name: Maven Build
+        id: build-maven
+        if: success()
+        uses: ./.github/actions/maven-build
+        with:
+          maven_profiles: 'all-modules'
+          skip_tests: ${{ inputs.skip_tests || 'true' }}
+          timeout_minutes: '15'
+
+      - name: Run Tests
+        id: run-tests
+        if: success() && inputs.skip_tests != true
+        uses: ./.github/actions/run-tests
+        with:
+          maven_profiles: 'all-modules'
+          test_excludes: '**integration**'
+          timeout_minutes: '35'
+
+      - name: Check Test Status
+        if: always()
+        run: |
+          if [ "${{ steps.run-tests.outputs.test_status }}" != "success" ]; then
+            echo "❌ Tests failed with status: ${{ steps.run-tests.outputs.test_status }}"
+            echo "📊 Test Results:"
+            echo "  - Total Tests: ${{ steps.run-tests.outputs.test_count }}"
+            echo "  - Failed Tests: ${{ steps.run-tests.outputs.failed_count }}"
+            exit 1
+          else
+            echo "✅ All tests passed successfully"
+            echo "📊 Test Results: ${{ steps.run-tests.outputs.test_count }} tests passed"
+          fi
+
+      - name: Build Docker Image
+        id: build
+        if: success()
+        uses: ./.github/actions/docker-build
+        with:
+          image_name: 'pulsar-rpa'
+          version: ${{ github.sha }}
+          timeout_minutes: '20'
+
+      - name: Start Application
+        id: app
+        if: success()
+        uses: ./.github/actions/start-application
+        with:
+          image_name: 'pulsar-rpa'
+          version: ${{ github.sha }}
+          container_name: ${{ env.CONTAINER_NAME }}
+          network_name: ${{ env.NETWORK_NAME }}
+          deepseek_api_key: ${{ secrets.DEEPSEEK_API_KEY }}
+          proxy_rotation_url: ${{ secrets.PROXY_ROTATION_URL }}
+
+      - name: Health Check
+        id: health
+        if: success()
+        uses: ./.github/actions/health-check
+        with:
+          service_port: '8182'
+          timeout_minutes: '5'
+          container_name: ${{ env.CONTAINER_NAME }}
+
+      - name: Run Integration Tests
+        id: integration-tests
+        if: success()
+        uses: ./.github/actions/run-integration-tests
+        with:
+          script_path: './bin/tests/run-integration-test.sh'
+          application_url: 'http://localhost:8182'
+          network_name: ${{ env.NETWORK_NAME }}
+          container_name: ${{ env.CONTAINER_NAME }}
+          timeout_seconds: '1200'
+
+      - name: Pipeline Summary
+        if: always()
+        shell: bash
+        run: |
+          echo "::group::📊 Pipeline Summary"
+          
+          echo "🎯 Pipeline Results:"
+          echo "  - Setup: ${{ steps.setup.outcome }}"
+          echo "  - Dependencies: ${{ steps.deps.outcome }}"
+          echo "  - Maven Build: ${{ steps.build-maven.outcome }}"
+          echo "  - Tests: ${{ steps.tests.outcome || 'skipped' }}"
+          echo "  - Docker Build: ${{ steps.build.outcome }}"
+          echo "  - Application: ${{ steps.app.outcome }}"
+          echo "  - Health Check: ${{ steps.health.outcome }}"
+          echo "  - Integration Tests: ${{ steps.integration-tests.outcome || 'skipped' }}"
+          
+          echo ""
+          echo "🌐 Infrastructure:"
+          echo "  - Network: ${{ env.NETWORK_NAME }}"
+          echo "  - Container: ${{ env.CONTAINER_NAME }}"
+          echo "  - Image: pulsar-rpa:${{ github.sha }}"
+          echo "  - MongoDB: ${{ steps.deps.outputs.mongodb_status }}"
+          echo "  - Redis: ${{ steps.deps.outputs.redis_status }}"
+          
+          echo ""
+          echo "📅 Completed at: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+          echo "👤 Triggered by: ${{ github.actor }}"
+          echo "🌟 Commit: ${{ github.sha }}"
+          
+          echo "::endgroup::"
+
+      - name: Cleanup Resources
+        if: always()
+        uses: ./.github/actions/cleanup-resources
+        with:
+          container_name: ${{ env.CONTAINER_NAME }}
+          cleanup_compose: 'true'
+          cleanup_volumes: 'true'

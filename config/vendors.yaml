@@ -1,0 +1,369 @@
+# 🦉 Sparkling-Owl-Spin Vendor Configuration
+# ===========================================
+# Enhetlig konfiguration för alla vendor-integrations
+
+vendor_config:
+  # KRITISKA CORE VENDORS
+  critical_core:
+    flaresolverr:
+      enabled: true
+      type: "cloudflare_bypass" 
+      priority: "critical"
+      init_on_startup: true
+      config:
+        host: "localhost"
+        port: 8191
+        timeout: 60
+        
+    undetected-chromedriver:
+      enabled: true
+      type: "stealth_browser"
+      priority: "critical" 
+      init_on_startup: true
+      config:
+        headless: true
+        stealth_mode: true
+        user_data_dir: null
+        
+    proxy_pool:
+      enabled: true
+      type: "proxy_management"
+      priority: "critical"
+      init_on_startup: true
+      config:
+        pool_size: 100
+        rotation_strategy: "round_robin"
+        health_check_interval: 300
+        
+    crewAI:
+      enabled: true
+      type: "ai_orchestration" 
+      priority: "critical"
+      init_on_startup: true
+      config:
+        max_agents: 10
+        execution_timeout: 300
+        memory_backend: "redis"
+
+  # HIGH PRIORITY VENDORS  
+  high_priority:
+    crawlee:
+      enabled: true
+      type: "crawling_engine"
+      priority: "high"
+      init_on_startup: false
+      config:
+        concurrency: 5
+        request_timeout: 30
+        retry_attempts: 3
+        
+    scrapy:
+      enabled: true
+      type: "scraping_framework"
+      priority: "high" 
+      init_on_startup: false
+      config:
+        concurrent_requests: 16
+        download_timeout: 180
+        autothrottle_enabled: true
+        
+    playwright_stealth:
+      enabled: true
+      type: "stealth_browser"
+      priority: "high"
+      init_on_startup: false
+      config:
+        browser: "chromium"
+        headless: true
+        stealth: true
+        
+    crawl4ai:
+      enabled: true
+      type: "ai_crawling"
+      priority: "high"
+      init_on_startup: false
+      config:
+        llm_provider: "openai"
+        extraction_model: "gpt-4"
+        
+    secret-agent:
+      enabled: true
+      type: "stealth_browser"
+      priority: "high"
+      init_on_startup: false
+      config:
+        human_like: true
+        fingerprint_randomization: true
+        
+    Scrapegraph-ai:
+      enabled: true
+      type: "ai_scraping"
+      priority: "high" 
+      init_on_startup: false
+      config:
+        graph_model: "openai"
+        extraction_chains: true
+        
+    requests-ip-rotator:
+      enabled: true
+      type: "ip_rotation"
+      priority: "high"
+      init_on_startup: false
+      config:
+        aws_access_key: "${AWS_ACCESS_KEY}"
+        aws_secret: "${AWS_SECRET_KEY}"
+        regions: ["us-east-1", "eu-west-1"]
+
+  # MEDIUM PRIORITY VENDORS
+  medium_priority:
+    SeleniumBase:
+      enabled: true
+      type: "browser_automation"
+      priority: "medium"
+      init_on_startup: false
+      config:
+        browser: "chrome"
+        headless: true
+        page_load_strategy: "eager"
+        
+    langroid:
+      enabled: true
+      type: "llm_framework"
+      priority: "medium"
+      init_on_startup: false
+      config:
+        default_llm: "openai-gpt4"
+        conversation_memory: true
+        
+    tika:
+      enabled: true
+      type: "document_processing"
+      priority: "medium"
+      init_on_startup: false
+      config:
+        server_url: "http://localhost:9998"
+        timeout: 120
+        
+    trafilatura:
+      enabled: true
+      type: "content_extraction" 
+      priority: "medium"
+      init_on_startup: false
+      config:
+        include_comments: false
+        include_tables: true
+        deduplicate: true
+        
+    Adala:
+      enabled: true
+      type: "ai_agents"
+      priority: "medium"
+      init_on_startup: false
+      config:
+        agent_runtime: "openai"
+        skill_library: true
+        
+    fake-useragent:
+      enabled: true
+      type: "anti_detection"
+      priority: "medium"
+      init_on_startup: false
+      config:
+        cache: true
+        fallback: "chrome"
+        
+    mubeng:
+      enabled: true
+      type: "proxy_checker"
+      priority: "medium"
+      init_on_startup: false
+      config:
+        timeout: 10
+        concurrent_checks: 200
+        
+    Scrapling:
+      enabled: true
+      type: "scraping_library"
+      priority: "medium"
+      init_on_startup: false
+      config:
+        auto_match: true
+        fetch_mode: "playwright"
+        
+    scrapy-playwright:
+      enabled: true
+      type: "scrapy_extension"
+      priority: "medium"
+      init_on_startup: false
+      config:
+        browser_type: "chromium"
+        launch_options:
+          headless: true
+        
+    stealth:
+      enabled: true
+      type: "stealth_library"
+      priority: "medium" 
+      init_on_startup: false
+      config:
+        mode: "advanced"
+        randomize_viewport: true
+        
+    localGPT:
+      enabled: false  # Resource intensive
+      type: "local_llm"
+      priority: "medium"
+      init_on_startup: false
+      config:
+        model_path: "./models/llama2"
+        device: "auto"
+        
+    Cloudflare-Solver-:
+      enabled: true
+      type: "cloudflare_bypass"
+      priority: "medium"
+      init_on_startup: false
+      config:
+        solver_timeout: 30
+        retry_attempts: 3
+
+  # LOW PRIORITY / SPECIALIZED VENDORS
+  low_priority:
+    vanna:
+      enabled: false
+      type: "sql_ai"
+      priority: "low"
+      init_on_startup: false
+      config:
+        database_type: "postgresql"
+        
+    zenrows-python-sdk:
+      enabled: false  # Commercial
+      type: "commercial_api"
+      priority: "low"
+      init_on_startup: false
+      config:
+        api_key: "${ZENROWS_API_KEY}"
+        
+    react-agent:
+      enabled: false
+      type: "ai_automation"
+      priority: "low"
+      init_on_startup: false
+      
+    AgentVerse:
+      enabled: false
+      type: "multi_agent"
+      priority: "low"
+      init_on_startup: false
+      
+    fastagency:
+      enabled: false
+      type: "fast_agents" 
+      priority: "low"
+      init_on_startup: false
+      
+    cloudflare-protection:
+      enabled: false
+      type: "cloudflare_analysis"
+      priority: "low"
+      init_on_startup: false
+      
+    CyberScraper-2077:
+      enabled: false
+      type: "advanced_scraper"
+      priority: "low"
+      init_on_startup: false
+      
+    EasySpider:
+      enabled: false
+      type: "visual_scraper"
+      priority: "low"
+      init_on_startup: false
+      
+    PulsarRPA:
+      enabled: false
+      type: "rpa_automation"
+      priority: "low"
+      init_on_startup: false
+
+  # DEVELOPMENT TOOLS (disabled by default)
+  dev_tools:
+    aider:
+      enabled: false
+      type: "development_tool"
+      priority: "dev"
+      init_on_startup: false
+      
+    sweep:
+      enabled: false
+      type: "code_assistant"
+      priority: "dev" 
+      init_on_startup: false
+
+  # CROSS-LANGUAGE VENDORS (specialized use cases)
+  cross_language:
+    jsoup:
+      enabled: false
+      type: "java_html_parser"
+      priority: "low"
+      init_on_startup: false
+      
+    colly:
+      enabled: false
+      type: "go_scraper"
+      priority: "low"
+      init_on_startup: false
+      
+    cheerio:
+      enabled: false
+      type: "nodejs_parser"
+      priority: "low"
+      init_on_startup: false
+
+# VENDOR INITIALIZATION SETTINGS
+initialization:
+  startup_order:
+    1: ["flaresolverr", "proxy_pool"]  # Infrastructure first
+    2: ["undetected-chromedriver", "crewAI"]  # Core engines
+    3: ["crawlee", "scrapy", "playwright_stealth"]  # Scraping engines
+    4: ["crawl4ai", "secret-agent", "Scrapegraph-ai"]  # AI engines
+    
+  health_checks:
+    enabled: true
+    timeout: 30
+    retry_attempts: 3
+    check_interval: 300  # 5 minutes
+    
+  lazy_loading:
+    enabled: true
+    load_on_demand: true
+    unload_unused: true
+    idle_timeout: 1800  # 30 minutes
+    
+  resource_management:
+    max_memory_usage: "2GB"
+    max_concurrent_vendors: 10
+    cleanup_interval: 3600  # 1 hour
+
+# VENDOR CATEGORIES FOR ORGANIZATION  
+categories:
+  core:
+    description: "Critical vendors required for basic functionality"
+    vendors: ["flaresolverr", "undetected-chromedriver", "proxy_pool", "crewAI"]
+    
+  ai_enhanced:
+    description: "AI-powered scraping and automation"
+    vendors: ["crawl4ai", "secret-agent", "Scrapegraph-ai", "langroid", "Adala"]
+    
+  browser_automation:
+    description: "Browser control and stealth"
+    vendors: ["playwright_stealth", "SeleniumBase", "stealth", "scrapy-playwright"]
+    
+  utility:
+    description: "Supporting utilities and helpers"
+    vendors: ["fake-useragent", "requests-ip-rotator", "mubeng", "tika", "trafilatura"]
+    
+  specialized:
+    description: "Specialized tools for specific use cases"
+    vendors: ["Scrapling", "Cloudflare-Solver-", "localGPT"]

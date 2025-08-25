@@ -1,0 +1,4410 @@
+﻿# 
+# â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆ
+# â–ˆâ–ˆ                                                                                    â–ˆâ–ˆ
+# â–ˆâ–ˆ   ðŸ¦‰ SPARKLING-OWL-SPIN - CONSOLIDATED PYPROJECT FILES                           â–ˆâ–ˆ
+# â–ˆâ–ˆ   All pyproject.toml files from vendors and subdirectories                       â–ˆâ–ˆ
+# â–ˆâ–ˆ                                                                                    â–ˆâ–ˆ
+# â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆ
+#
+
+# PyProject.toml Consolidation
+# Total files: 42
+# Generated: 2025-08-25 13:11:10
+
+# ===== FROM: engines\bypass\adversarial-robustness-toolbox\pyproject.toml =====
+[tool.black]
+line-length=120
+
+[tool.ruff]
+exclude = [".venv", "contrib"]
+lint.ignore = ["F401"]
+
+[tool.ruff.lint.per-file-ignores]
+ "examples/*" = ["E402"]
+
+[tool.pytest.ini_options]
+markers = [
+    'skip_framework(*frameworks): marks a test to be skipped for specific framework values. Valid values are ("tensorflow", "keras", "pytorch", "scikitlearn")',
+    'only_with_platform(*frameworks): DEPRECATED only used for legacy tests. Use skip_framework instead. marks a test to be performed only for a specific framework value',
+    'framework_agnostic: marks a test to be agnostic to frameworks and run only for one default framework',
+    'skip_module(*frameworks): Skip this test for specified frameworks'
+]
+
+[tool.mypy]
+ignore_missing_imports = true
+
+# ===== FROM: engines\bypass\bypass-url-parser\pyproject.toml =====
+[project]
+name = "bypass-url-parser"
+dynamic = ["version"]
+description = "Default template for PDM package"
+authors = [
+    { name = "Laluka", email = "loukajc@gmail.com" },
+    { name = "jtof_fap", email = "jtof_fap@insecurity.fr" },
+    { name = "Gabriel Dugny", email = "pypi@dugny.me" },
+]
+dependencies = ["coloredlogs==15.0.1", "docopt==0.6.2"]
+requires-python = ">=3.8"
+keywords = ["security"]
+readme = "README.md"
+license = { text = "AGPL-3.0-or-later" }
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Information Technology",
+    "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Typing :: Typed",
+    "Topic :: Security",
+    "Operating System :: OS Independent",
+    "Environment :: Console",
+]
+
+[project.urls]
+Repository = "https://github.com/laluka/bypass-url-parser"
+Changelog = "https://github.com/laluka/bypass-url-parser/releases"
+
+[project.scripts]
+"bypass-url-parser" = "bypass_url_parser:main"
+"bup" = "bypass_url_parser:main"
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[tool.pdm]
+distribution = true
+plugins = ["sync-pre-commit-lock", "pdm-autoexport"]
+
+[tool.pdm.scripts]
+"lint-ruff" = "ruff check ."
+
+[tool.pdm.version]
+source = "scm"
+write_to = "bypass_url_parser/_version.py"
+write_template = "__version__ = \"{}\"\n"
+
+
+[tool.pdm.dev-dependencies]
+dev = [
+    "coloredlogs==15.0.1",
+    "docopt==0.6.2",
+    "ipdb==0.13.9",
+    "ipython>=8.10.0",
+    "pre-commit==3.2.2",
+    "rich==13.3.4",
+    "isort>=5.13.2",
+    "mypy>=1.8.0",
+    "types-docopt>=0.6.11.4",
+    "autopep8>=2.0.4",
+    "ruff>=0.3.0",
+    "tox-pdm>=0.7.2",
+    "tox>=4.13.0",
+    "pytest>=8.0.2",
+]
+
+[[tool.pdm.autoexport]]
+filename = "requirements.txt"
+groups = ["default"]
+
+[[tool.pdm.autoexport]]
+filename = "requirements-dev.txt"
+groups = ["dev"]
+
+[tool.autopep8]
+max_line_length = 120
+in-place = true
+recursive = true
+aggresive = 1
+
+[tool.mypy]
+files = ["src"]
+python_version = "3.8"
+
+[[tool.mypy.overrides]]
+module = "coloredlogs"
+ignore_missing_imports = true
+
+# ===== FROM: engines\bypass\CloudflareBypassForScraping\pyproject.toml =====
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["CloudflareBypasser"]
+
+[project]
+name = "CloudflareBypassForScraping"
+description = "A cloudflare verification bypass script for webscraping"
+readme = "README.md"
+requires-python = ">=3.12"
+
+# This field adds keywords for your project which will appear on the
+# project page. What does your project relate to?
+#
+# Note that this is a list of additional keywords, separated
+# by commas, to be used to assist searching for the distribution in a
+# larger catalog.
+keywords = [
+    "python",
+    "recaptcha",
+    "solver",
+    "cloudflare",
+    "bypass",
+    "cloudflare-bypass",
+    "cloudflare-bypass-script",
+    "cloudflare-bypasser",
+    "drissionpage",
+]
+
+dynamic = ["version"]
+
+# This should be your name or the name of the organization who originally
+# authored the project, and a valid email address corresponding to the name
+# listed.
+authors = [{ name = "Sarper AVCI" }]
+
+# Classifiers help users find your project by categorizing it.
+#
+# For a list of valid classifiers, see https://pypi.org/classifiers/
+classifiers = [
+    # How mature is this project? Common values are
+    #   3 - Alpha
+    #   4 - Beta
+    #   5 - Production/Stable
+    "Development Status :: 4 - Beta",
+
+    # Indicate who your project is intended for
+    "Intended Audience :: Developers",
+
+    # Specify the Python versions you support here. In particular, ensure
+    # that you indicate you support Python 3. These classifiers are *not*
+    # checked by "pip install". See instead "requires-python" key in this file.
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3 :: Only",
+]
+
+dependencies = ["DrissionPage==4.0.5.6"]
+
+# ===== FROM: engines\bypass\cloudscraper\pyproject.toml =====
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cloudscraper"
+version = "3.0.0"
+description = "Enhanced Python module to bypass Cloudflare's anti-bot page with support for v2 challenges, proxy rotation, and stealth mode."
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "VeNoMouS", email = "venom@cloudscraper.io"},
+    {name = "Zied Boughdir", email = "ziedboughdir@gmail.com"}
+]
+maintainers = [
+    {name = "Zied Boughdir", email = "venom@cloudscraper.io"},
+    {name = "Zied Boughdir", email = "ziedboughdir@gmail.com"}
+]
+keywords = [
+    "cloudflare",
+    "scraping",
+    "ddos",
+    "scrape",
+    "webscraper",
+    "anti-bot",
+    "waf",
+    "iuam",
+    "bypass",
+    "challenge"
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Natural Language :: English",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
+    "Topic :: Software Development :: Libraries :: Python Modules"
+]
+requires-python = ">=3.8"
+dependencies = [
+    "requests>=2.31.0",
+    "requests-toolbelt>=1.0.0",
+    "pyparsing>=3.1.0",
+    "pyOpenSSL>=24.0.0",
+    "pycryptodome>=3.20.0",
+    "websocket-client>=1.7.0",
+    "js2py>=0.74",
+    "brotli>=1.1.0",
+    "certifi>=2024.2.2"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-xdist>=3.0.0",
+    "pytest-asyncio>=0.23.0",
+    "black>=24.0.0",
+    "isort>=5.13.0",
+    "flake8>=7.0.0",
+    "mypy>=1.8.0",
+    "pre-commit>=3.6.0"
+]
+test = [
+    "pytest>=8.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-xdist>=3.0.0",
+    "pytest-asyncio>=0.23.0",
+    "responses>=0.24.0"
+]
+
+[project.urls]
+Homepage = "https://github.com/venomous/cloudscraper"
+Repository = "https://github.com/venomous/cloudscraper.git"
+Issues = "https://github.com/venomous/cloudscraper/issues"
+Changelog = "https://github.com/venomous/cloudscraper/blob/master/CHANGELOG.md"
+
+[tool.setuptools.packages.find]
+include = ["cloudscraper*"]
+
+[tool.setuptools.package-data]
+cloudscraper = ["user_agent/browsers.json"]
+
+[tool.black]
+line-length = 88
+target-version = ['py38', 'py39', 'py310', 'py311', 'py312']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+known_first_party = ["cloudscraper"]
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+check_untyped_defs = true
+disallow_untyped_decorators = false
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+addopts = "-ra -q --strict-markers --strict-config"
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests"
+]
+
+[tool.coverage.run]
+source = ["cloudscraper"]
+omit = [
+    "tests/*",
+    "cloudscraper/interpreters/jsfuck.py"
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:"
+]
+
+# ===== FROM: engines\bypass\fake-useragent\pyproject.toml =====
+[build-system]
+build-backend = "setuptools.build_meta"
+
+requires = [ "setuptools>=77.0" ]
+
+[project]
+name = "fake-useragent"
+version = "2.2.0"
+license = "Apache-2.0"
+description = "Up-to-date simple useragent faker with real world database"
+readme.content-type = "text/markdown"
+readme.file = "README.md"
+keywords = [
+  "agent",
+  "fake",
+  "fake user agent",
+  "fake useragent",
+  "user",
+  "user agent",
+  "useragent",
+]
+authors = [
+  { name = "Melroy van den Berg", email = "melroy@melroy.org" },
+  { name = "Victor Kovtun", email = "hellysmile@gmail.com" },
+]
+requires-python = ">=3.9"
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Developers",
+  "Operating System :: MacOS :: MacOS X",
+  "Operating System :: Microsoft :: Windows",
+  "Operating System :: OS Independent",
+  "Operating System :: POSIX",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Internet :: WWW/HTTP",
+  "Topic :: Software Development",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Topic :: Utilities",
+]
+
+dependencies = [ "importlib-resources>=6; python_version<'3.10'" ]
+urls.Homepage = "https://github.com/fake-useragent/fake-useragent"
+
+[tool.setuptools]
+zip-safe = false
+
+[tool.setuptools.package-data]
+"fake_useragent.data" = [ "*.jsonl" ]
+"fake_useragent" = [ "py.typed" ]
+
+[tool.ruff]
+target-version = "py39"
+line-length = 142
+
+lint.select = [
+  "B",
+  "C4",
+  "C9",
+  "D",   # Check compliance with Python docstring conventions.
+  "DOC", # Ensure docstrings are consistent with signatures.
+  "E",
+  "F",
+  "I",
+  "PL",
+  "S",
+  "SIM",
+  "W",
+  "YTT",
+]
+lint.ignore = [
+  "B904",
+  "C408",
+  "D107",    # Allow no docstring in __init__, we document it in the class docstring.
+  "PLW2901",
+  "SIM105",
+  "SIM108",
+]
+lint.per-file-ignores."docs/**/*" = [ "D", "DOC" ]
+lint.per-file-ignores."src/fake_useragent/__init__.py" = [ "F401" ]
+lint.per-file-ignores."tests/**/*" = [ "D", "DOC", "S", "SIM", "UP015" ]
+lint.isort.known-first-party = [ "fake_useragent" ]
+lint.mccabe.max-complexity = 13
+lint.pydocstyle.convention = "google"
+lint.pylint.max-args = 7
+lint.pylint.max-branches = 13
+
+# ===== FROM: frontend\pyproject.toml =====
+[tool.poetry]
+name = "ecadp"
+version = "0.1.0"
+description = "Ethical Crawler & Data Platform - Etisk och regelefterlevande plattform fÃ¶r webb-crawling och scraping"
+authors = ["ECaDP Team <team@ecadp.se>"]
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/sax3l/sparkling-owl-spin"
+repository = "https://github.com/sax3l/sparkling-owl-spin"
+documentation = "https://ecadp.readthedocs.io"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.104.1"
+uvicorn = {extras = ["standard"], version = "^0.24.0"}
+pydantic = "^2.5.0"
+pydantic-settings = "^2.1.0"
+sqlalchemy = "^2.0.23"
+alembic = "^1.13.1"
+asyncpg = "^0.29.0"
+psycopg2-binary = "^2.9.9"
+redis = {extras = ["hiredis"], version = "^5.0.1"}
+aioredis = "^2.0.1"
+httpx = "^0.25.2"
+aiohttp = "^3.9.1"
+playwright = "^1.40.0"
+selenium = "^4.16.0"
+beautifulsoup4 = "^4.12.2"
+lxml = "^4.9.3"
+pyyaml = "^6.0.1"
+jinja2 = "^3.1.2"
+celery = {extras = ["redis"], version = "^5.3.4"}
+apscheduler = "^3.10.4"
+great-expectations = "^0.18.5"
+pandas = "^2.1.4"
+numpy = "^1.25.2"
+openpyxl = "^3.1.2"
+xlsxwriter = "^3.1.9"
+google-auth = "^2.25.2"
+google-auth-oauthlib = "^1.2.0"
+google-auth-httplib2 = "^0.2.0"
+google-api-python-client = "^2.111.0"
+snowflake-connector-python = "^3.6.0"
+elasticsearch = "^8.11.1"
+prometheus-client = "^0.19.0"
+structlog = "^23.2.0"
+click = "^8.1.7"
+typer = "^0.9.0"
+cryptography = "^41.0.8"
+passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+python-jose = {extras = ["cryptography"], version = "^3.3.0"}
+python-multipart = "^0.0.6"
+supabase = "^2.3.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.3"
+pytest-asyncio = "^0.21.1"
+pytest-cov = "^4.1.0"
+pytest-mock = "^3.12.0"
+pytest-xdist = "^3.5.0"
+black = "^23.11.0"
+isort = "^5.12.0"
+ruff = "^0.1.6"
+mypy = "^1.7.1"
+bandit = "^1.7.5"
+safety = "^2.3.5"
+pre-commit = "^3.6.0"
+mkdocs = "^1.5.3"
+mkdocs-material = "^9.4.10"
+httpx-mock = "^0.10.1"
+fakeredis = "^2.20.1"
+factory-boy = "^3.3.0"
+freezegun = "^1.2.2"
+
+[tool.poetry.scripts]
+ecadp = "src.main:main"
+ecadp-crawler = "scripts.run_crawler:main"
+ecadp-scraper = "scripts.run_scraper:main"
+ecadp-scheduler = "scripts.start_scheduler:main"
+ecadp-init-db = "scripts.init_db:main"
+ecadp-seed = "scripts.seed_data:main"
+ecadp-diagnose = "scripts.diagnostic_tool:main"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 88
+target-version = ['py311']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+line_length = 88
+skip_glob = ["*/migrations/*"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
+    "C4", # flake8-comprehensions
+    "UP", # pyupgrade
+    "N",  # pep8-naming
+]
+ignore = [
+    "E501",  # line too long, handled by black
+    "B008",  # do not perform function calls in argument defaults
+    "C901",  # too complex
+    "N818",  # exception name should be named with an Error suffix
+]
+
+[tool.ruff.per-file-ignores]
+"__init__.py" = ["F401"]
+"tests/**/*" = ["B018", "B011"]
+
+[tool.mypy]
+python_version = "3.11"
+check_untyped_defs = true
+disallow_any_generics = true
+disallow_incomplete_defs = true
+disallow_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_return_any = true
+strict_equality = true
+show_error_codes = true
+
+[[tool.mypy.overrides]]
+module = [
+    "celery.*",
+    "great_expectations.*",
+    "selenium.*",
+    "playwright.*",
+    "redis.*",
+    "aioredis.*",
+]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q --strict-markers --strict-config"
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*", "*Test"]
+python_functions = ["test_*"]
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests", 
+    "e2e: End-to-end tests",
+    "slow: Slow tests",
+    "selenium: Tests requiring Selenium",
+    "playwright: Tests requiring Playwright",
+]
+asyncio_mode = "auto"
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "*/migrations/*",
+    "*/venv/*",
+    "*/.venv/*",
+    "*/node_modules/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
+
+[tool.bandit]
+exclude_dirs = ["tests", "venv", ".venv"]
+skips = ["B101", "B601"]
+
+# ===== FROM: integrations\swedish\blocket_api\pyproject.toml =====
+[project]
+name = "blocket_api"
+version = "0.2.8"
+description = "A python API wrapper for blocket.se"
+authors = [{name = "dunderrrrrr", email = "emil.bjorkroth@gmail.com"}]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "httpx>=0.27.0",
+    "pre-commit>=3.7.1",
+    "pytest>=8.2.2",
+    "respx>=0.21.1",
+    "mypy>=1.15.0",
+]
+
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests/*",
+]
+
+# ===== FROM: integrations\swedish\oppna-bolagsdata\pyproject.toml =====
+[project]
+name = "oppna-bolagsdata"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "datasets>=3.6.0",
+    "pandas>=2.3.0",
+]
+
+# ===== FROM: processing\analyzers\temp_analysis\ProxyBroker\pyproject.toml =====
+[tool.black]
+py36 = true
+line-length = 80
+skip-string-normalization = true
+include = '\.pyi?$'
+exclude = '''
+(
+  /(
+      \.eggs         # exclude a few common directories in the
+    | \.git          # root of the project
+    | build
+    | dist
+  )
+)
+'''
+
+# https://github.com/pytest-dev/pytest/issues/1556
+# https://github.com/pytest-dev/pytest/pull/3686
+# [tool.poetry.plugins.pytest]
+# addopts = --verbose
+# testpaths = tests
+# qt_api = pyqt5
+
+# https://gitlab.com/pycqa/flake8/issues/428
+# https://gitlab.com/pycqa/flake8/merge_requests/245
+# [tool.flake8]
+# max-line-length = 80
+
+# https://github.com/timothycrosley/isort/issues/760
+# [tool.isort]
+# line_length = 80
+# multi_line_output = 3
+# include_trailing_comma = true
+# sections = "FUTURE,STDLIB,THIRDPARTY,FIRSTPARTY,LOCALFOLDER"
+# default_section = "FIRSTPARTY"
+
+# ===== FROM: processing\extractors\PDF-Extract-Kit\pyproject.toml =====
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pdf-extract-kit"
+version = "0.1.0"
+authors = [
+    { name="Bin Wang", email="ictwangbin@gmail.com" }
+]
+description = "A Comprehensive Toolkit for High-Quality PDF Content Extraction."
+readme = "README.md"
+license = { file="LICENSE" }
+requires-python = ">=3.10"
+dependencies = [
+    "PyPDF2",
+    "matplotlib",
+    "pyyaml",
+    "frontend",
+    "pymupdf",
+    opencv-python = "^4.6.0"
+    # Add other common dependencies
+]
+
+[project.optional-dependencies]
+layout_detection = [
+    "transformers",  # for layoutlmv3
+    # Add other dependencies for layout detection
+]
+formula_detection = [
+    "ultralytics",  # for yolov8
+    # Add other dependencies for formula detection
+]
+# Add additional dependencies for other models
+
+# ===== FROM: sandbox\exploit_tools\bypass-url-parser\pyproject.toml =====
+[project]
+name = "bypass-url-parser"
+dynamic = ["version"]
+description = "Default template for PDM package"
+authors = [
+    { name = "Laluka", email = "loukajc@gmail.com" },
+    { name = "jtof_fap", email = "jtof_fap@insecurity.fr" },
+    { name = "Gabriel Dugny", email = "pypi@dugny.me" },
+]
+dependencies = ["coloredlogs==15.0.1", "docopt==0.6.2"]
+requires-python = ">=3.8"
+keywords = ["security"]
+readme = "README.md"
+license = { text = "AGPL-3.0-or-later" }
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Information Technology",
+    "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Typing :: Typed",
+    "Topic :: Security",
+    "Operating System :: OS Independent",
+    "Environment :: Console",
+]
+
+[project.urls]
+Repository = "https://github.com/laluka/bypass-url-parser"
+Changelog = "https://github.com/laluka/bypass-url-parser/releases"
+
+[project.scripts]
+"bypass-url-parser" = "bypass_url_parser:main"
+"bup" = "bypass_url_parser:main"
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[tool.pdm]
+distribution = true
+plugins = ["sync-pre-commit-lock", "pdm-autoexport"]
+
+[tool.pdm.scripts]
+"lint-ruff" = "ruff check ."
+
+[tool.pdm.version]
+source = "scm"
+write_to = "bypass_url_parser/_version.py"
+write_template = "__version__ = \"{}\"\n"
+
+
+[tool.pdm.dev-dependencies]
+dev = [
+    "coloredlogs==15.0.1",
+    "docopt==0.6.2",
+    "ipdb==0.13.9",
+    "ipython>=8.10.0",
+    "pre-commit==3.2.2",
+    "rich==13.3.4",
+    "isort>=5.13.2",
+    "mypy>=1.8.0",
+    "types-docopt>=0.6.11.4",
+    "autopep8>=2.0.4",
+    "ruff>=0.3.0",
+    "tox-pdm>=0.7.2",
+    "tox>=4.13.0",
+    "pytest>=8.0.2",
+]
+
+[[tool.pdm.autoexport]]
+filename = "requirements.txt"
+groups = ["default"]
+
+[[tool.pdm.autoexport]]
+filename = "requirements-dev.txt"
+groups = ["dev"]
+
+[tool.autopep8]
+max_line_length = 120
+in-place = true
+recursive = true
+aggresive = 1
+
+[tool.mypy]
+files = ["src"]
+python_version = "3.8"
+
+[[tool.mypy.overrides]]
+module = "coloredlogs"
+ignore_missing_imports = true
+
+# ===== FROM: sandbox\exploit_tools\CloudflareBypassForScraping\pyproject.toml =====
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["CloudflareBypasser"]
+
+[project]
+name = "CloudflareBypassForScraping"
+description = "A cloudflare verification bypass script for webscraping"
+readme = "README.md"
+requires-python = ">=3.12"
+
+# This field adds keywords for your project which will appear on the
+# project page. What does your project relate to?
+#
+# Note that this is a list of additional keywords, separated
+# by commas, to be used to assist searching for the distribution in a
+# larger catalog.
+keywords = [
+    "python",
+    "recaptcha",
+    "solver",
+    "cloudflare",
+    "bypass",
+    "cloudflare-bypass",
+    "cloudflare-bypass-script",
+    "cloudflare-bypasser",
+    "drissionpage",
+]
+
+dynamic = ["version"]
+
+# This should be your name or the name of the organization who originally
+# authored the project, and a valid email address corresponding to the name
+# listed.
+authors = [{ name = "Sarper AVCI" }]
+
+# Classifiers help users find your project by categorizing it.
+#
+# For a list of valid classifiers, see https://pypi.org/classifiers/
+classifiers = [
+    # How mature is this project? Common values are
+    #   3 - Alpha
+    #   4 - Beta
+    #   5 - Production/Stable
+    "Development Status :: 4 - Beta",
+
+    # Indicate who your project is intended for
+    "Intended Audience :: Developers",
+
+    # Specify the Python versions you support here. In particular, ensure
+    # that you indicate you support Python 3. These classifiers are *not*
+    # checked by "pip install". See instead "requires-python" key in this file.
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3 :: Only",
+]
+
+dependencies = ["DrissionPage==4.0.5.6"]
+
+# ===== FROM: sdk\python\pyproject.toml =====
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ecadp-sdk"
+version = "0.1.0"
+dependencies = [
+    "httpx",
+]
+
+# ===== FROM: vendors\Adala\pyproject.toml =====
+[project]
+name = "adala"
+version = "0.0.4dev"
+description = "Adala: Autonomous Data Labeling Agent"
+authors = [
+    { name = "HumanSignal", email = "support@humansignal.com" },
+]
+readme = "README.md"
+license = "Apache-2.0"
+classifiers = [
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+]
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "pandas (==2.2.3)",
+    "openai (>=1.60.2,<2.0.0)",
+    "guidance (==0.0.64)",
+    "pydantic (>=2,<3)",
+    "rich (>=13,<14)",
+    "aiosqlite (>=0.19.0,<0.20.0)",
+    "chromadb (>=0.5.7,<0.6.0)",
+    "durationpy (>=0.9,<0.10)",
+    "tenacity (>=8.2.3,<9.0.0)",
+    "gspread (>=5.12.3,<6.0.0)",
+    "datasets (>=2.16.1,<3.0.0)",
+    "aiohttp (>=3.9.3,<4.0.0)",
+    "boto3 (>=1.34.38,<2.0.0)",
+    "aiokafka (>=0.11.0,<0.12.0)",
+    # these are for the server
+    # they would be installed as `extras` if poetry supported version strings for extras, but it doesn't
+    # https://github.com/python-poetry/poetry/issues/834
+    # they also can't be installed as a `group`, because those are for dev dependencies only and could not be included if this package was pip-installed
+    "redis-om",
+    "fastapi",
+    "celery[redis] (>=5.3.6,<6.0.0)",
+    "kombu (>=5.4.0rc2)",
+    "uvicorn",
+    "pydantic-settings (>=2.9.0,<3.0.0)",
+    "label-studio-sdk @ https://github.com/HumanSignal/label-studio-sdk/archive/a5a68445b9d09489cbdd62b05406ab9f78702700.zip",
+    "requests (>=2.32.0,<3.0.0)",
+    # Using litellm from forked repo until vertex fix is released: https://github.com/BerriAI/litellm/issues/7904
+    #litellm = "^1.47.2"
+    "litellm @ https://github.com/HumanSignal/litellm/archive/9deadf35b9b2ff351388abc3a2ea144ed93ca013.zip",
+    "pandarallel (>=1.6.5,<2.0.0)",
+    "instructor (==1.4.3)",
+    "async-lru (>=2.0.5,<3.0.0)",
+    "jinja2 (>=3.1.6,<4.0)"
+]
+
+[project.urls]
+Repository = "https://github.com/HumanSignal/Adala"
+
+[project.scripts]
+adala = "adala.cli:main"
+[tool.poetry]
+requires-poetry = '>=2.0.0,<3.0.0'
+[tool.poetry.dependencies]
+python = ">=3.10,<3.13"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.5"
+pytest-cov = "^4.1.0"
+black = "^24.8.0"
+pytest-black = "^0.3.12"
+mkdocs = "^1.5.3"
+mkdocs-jupyter = "^0.24.3"
+mkdocs-material = "^9.4.7"
+mkdocstrings-python = "^1.7.3"
+ipykernel = "^6.28.0"
+jupyter = "^1.0.0"
+jupyterlab = "^4.2.5"
+jupyter-client = "8.4.0"
+matplotlib = "^3.7.4"
+fakeredis = "^2.23.2"
+flower = "^2.0.1"
+pytest-asyncio = "0.23.8"
+celery = {extras = ["pytest"], version = "^5.4.0"}
+pytest-recording = "0.13.2"
+mypy = "^1.15.0"
+pytest-benchmark = "^5.1.0"
+pytest-profiling = "^1.8.1"
+openai-responses = "^0.12.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+addopts = "-m 'not (use_openai or use_azure or use_server)'"
+testpaths = [
+    "tests",
+]
+
+#[tool.poetry.extras]
+#label-studio = ["label-studio-sdk @ git+https://github.com/HumanSignal/label-studio-sdk.git@pd-support"]
+#docs = ["sphinx>=7.1.2", "sphinx-rtd-theme>=1.3.0", "myst-parser>=2.0.0"]
+
+# ===== FROM: vendors\aider\pyproject.toml =====
+
+[project]
+name = "aider-chat"
+description = "Aider is AI pair programming in your terminal"
+readme = "README.md"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python",
+    "Topic :: Software Development",
+]
+requires-python = ">=3.10,<3.13"
+dynamic = ["dependencies", "optional-dependencies", "version"]
+
+[project.urls]
+Homepage = "https://github.com/Aider-AI/aider"
+
+[project.scripts]
+aider = "aider.main:main"
+
+[tool.setuptools.dynamic]
+dependencies = { file = "requirements.txt" }
+
+[tool.setuptools.dynamic.optional-dependencies]
+dev = { file = "requirements/requirements-dev.txt" }
+help = { file = "requirements/requirements-help.txt" }
+browser = { file = "requirements/requirements-browser.txt" }
+playwright = { file = "requirements/requirements-playwright.txt" }
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["aider"]
+
+[build-system]
+requires = ["setuptools>=68", "setuptools_scm[toml]>=8"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+write_to = "aider/_version.py"
+
+[tool.codespell]
+skip = "*.svg,Gemfile.lock,tests/fixtures/*,aider/website/assets/*"
+write-changes = true
+
+# ===== FROM: vendors\crawl4ai\pyproject.toml =====
+[build-system]
+requires = ["setuptools>=64.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "Crawl4AI"
+dynamic = ["version"]
+description = "ðŸš€ðŸ¤– Crawl4AI: Open-source LLM Friendly Web Crawler & scraper"
+readme = "README.md"
+requires-python = ">=3.9"
+license = "Apache-2.0"
+authors = [
+    {name = "Unclecode", email = "unclecode@kidocode.com"}
+]
+dependencies = [
+    "aiofiles>=24.1.0",
+    "aiohttp>=3.11.11",
+    "aiosqlite~=0.20",
+    "anyio>=4.0.0",
+    "lxml~=5.3",
+    "litellm>=1.53.1",
+    "numpy>=1.26.0,<3",
+    "pillow>=10.4",
+    "playwright>=1.49.0",
+    "patchright>=1.49.0",
+    "python-dotenv~=1.0",
+    "requests~=2.26",
+    "beautifulsoup4~=4.12",
+    "tf-playwright-stealth>=1.1.0",
+    "xxhash~=3.4",
+    "rank-bm25~=0.2",
+    "snowballstemmer~=2.2",
+    "pydantic>=2.10",
+    "pyOpenSSL>=24.3.0",
+    "psutil>=6.1.1",
+    "PyYAML>=6.0",
+    "nltk>=3.9.1",
+    "rich>=13.9.4",
+    "httpx>=0.27.2",
+    "httpx[http2]>=0.27.2",
+    "fake-useragent>=2.0.3",
+    "click>=8.1.7",
+    "chardet>=5.2.0",
+    "brotli>=1.1.0",
+    "humanize>=4.10.0",
+    "lark>=1.2.2",
+    "alphashape>=1.3.1",
+    "shapely>=2.0.0"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+
+[project.optional-dependencies]
+pdf = ["PyPDF2"]  
+torch = ["torch", "nltk", "scikit-learn"]
+transformer = ["transformers", "tokenizers", "sentence-transformers"]
+cosine = ["torch", "transformers", "nltk", "sentence-transformers"]
+sync = ["selenium"]
+all = [
+    "PyPDF2",
+    "torch",
+    "nltk",
+    "scikit-learn",
+    "transformers",
+    "tokenizers",
+    "sentence-transformers",
+    "selenium"
+]
+
+[project.scripts]
+crawl4ai-download-models = "crawl4ai.model_loader:main"
+crawl4ai-migrate = "crawl4ai.migrations:main"
+crawl4ai-setup = "crawl4ai.install:post_install"
+crawl4ai-doctor = "crawl4ai.install:doctor"
+crwl = "crawl4ai.cli:main"
+
+[tool.setuptools]
+packages = {find = {where = ["."], include = ["crawl4ai*"]}}
+
+[tool.setuptools.package-data]
+crawl4ai = ["js_snippet/*.js"]
+
+[tool.setuptools.dynamic]
+version = {attr = "crawl4ai.__version__.__version__"}
+
+[tool.uv.sources]
+crawl4ai = { workspace = true }
+
+[dependency-groups]
+dev = [
+    "crawl4ai",
+]
+
+# ===== FROM: vendors\crewAI\pyproject.toml =====
+[project]
+name = "crewai"
+dynamic = ["version"]
+description = "Cutting-edge framework for orchestrating role-playing, autonomous AI agents. By fostering collaborative intelligence, CrewAI empowers agents to work together seamlessly, tackling complex tasks."
+readme = "README.md"
+requires-python = ">=3.10,<3.14"
+authors = [
+    { name = "Joao Moura", email = "joao@crewai.com" }
+]
+dependencies = [
+    # Core Dependencies
+    "pydantic>=2.4.2",
+    "openai>=1.13.3",
+    "litellm==1.74.9",
+    "instructor>=1.3.3",
+    # Text Processing
+    "pdfplumber>=0.11.4",
+    "regex>=2024.9.11",
+    # Telemetry and Monitoring
+    "opentelemetry-api>=1.30.0",
+    "opentelemetry-sdk>=1.30.0",
+    "opentelemetry-exporter-otlp-proto-http>=1.30.0",
+    # Data Handling
+    "chromadb>=0.5.23",
+    "tokenizers>=0.20.3",
+    "onnxruntime==1.22.0",
+    "openpyxl>=3.1.5",
+    "pyvis>=0.3.2",
+    # Authentication and Security
+    "python-dotenv>=1.0.0",
+    "pyjwt>=2.9.0",
+    # Configuration and Utils
+    "click>=8.1.7",
+    "appdirs>=1.4.4",
+    "jsonref>=1.1.0",
+    "json-repair==0.25.2",
+    "uv>=0.4.25",
+    "tomli-w>=1.1.0",
+    "tomli>=2.0.2",
+    "blinker>=1.9.0",
+    "json5>=0.10.0",
+    "portalocker==2.7.0",
+]
+
+[project.urls]
+Homepage = "https://crewai.com"
+Documentation = "https://docs.crewai.com"
+Repository = "https://github.com/crewAIInc/crewAI"
+
+[project.optional-dependencies]
+tools = ["crewai-tools~=0.62.1"]
+embeddings = [
+    "tiktoken~=0.8.0"
+]
+pdfplumber = [
+    "pdfplumber>=0.11.4",
+]
+pandas = [
+    "pandas>=2.2.3",
+]
+openpyxl = [
+    "openpyxl>=3.1.5",
+]
+mem0 = ["mem0ai>=0.1.94"]
+docling = [
+    "docling>=2.12.0",
+]
+aisuite = [
+    "aisuite>=0.1.10",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "ruff>=0.8.2",
+    "mypy>=1.10.0",
+    "pre-commit>=3.6.0",
+    "pillow>=10.2.0",
+    "cairosvg>=2.7.1",
+    "pytest>=8.0.0",
+    "python-dotenv>=1.0.0",
+    "pytest-asyncio>=0.23.7",
+    "pytest-subprocess>=1.5.2",
+    "pytest-recording>=0.13.2",
+    "pytest-randomly>=3.16.0",
+    "pytest-timeout>=2.3.1",
+    "pytest-xdist>=3.6.1",
+    "pytest-split>=0.9.0",
+]
+
+[project.scripts]
+crewai = "crewai.cli.cli:crewai"
+
+[tool.mypy]
+ignore_missing_imports = true
+disable_error_code = 'import-untyped'
+exclude = ["cli/templates"]
+
+[tool.bandit]
+exclude_dirs = ["src/crewai/cli/templates"]
+
+[tool.pytest.ini_options]
+markers = [
+    "telemetry: mark test as a telemetry test (don't mock telemetry)",
+]
+
+# PyTorch index configuration, since torch 2.5.0 is not compatible with python 3.13
+[[tool.uv.index]]
+name = "pytorch-nightly"
+url = "https://download.pytorch.org/whl/nightly/cpu"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = [
+  { index = "pytorch-nightly", marker = "python_version >= '3.13'" },
+  { index = "pytorch", marker = "python_version < '3.13'" },
+]
+torchvision = [
+  { index = "pytorch-nightly", marker = "python_version >= '3.13'" },
+  { index = "pytorch", marker = "python_version < '3.13'" },
+]
+
+[tool.hatch.version]
+path = "src/crewai/__init__.py"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+exclude = [
+"docs/**",
+"docs/",
+]
+
+[tool.hatch.build.targets.sdist]
+exclude = [
+"docs/**",
+"docs/",
+]
+
+# ===== FROM: vendors\crewAI\src\crewai\cli\templates\crew\pyproject.toml =====
+[project]
+name = "{{folder_name}}"
+version = "0.1.0"
+description = "{{name}} using crewAI"
+authors = [{ name = "Your Name", email = "you@example.com" }]
+requires-python = ">=3.10,<3.14"
+dependencies = [
+    "crewai[tools]>=0.165.1,<1.0.0"
+]
+
+[project.scripts]
+{{folder_name}} = "{{folder_name}}.main:run"
+run_crew = "{{folder_name}}.main:run"
+train = "{{folder_name}}.main:train"
+replay = "{{folder_name}}.main:replay"
+test = "{{folder_name}}.main:test"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.crewai]
+type = "crew"
+
+# ===== FROM: vendors\crewAI\src\crewai\cli\templates\flow\pyproject.toml =====
+[project]
+name = "{{folder_name}}"
+version = "0.1.0"
+description = "{{name}} using crewAI"
+authors = [{ name = "Your Name", email = "you@example.com" }]
+requires-python = ">=3.10,<3.14"
+dependencies = [
+    "crewai[tools]>=0.165.1,<1.0.0",
+]
+
+[project.scripts]
+kickoff = "{{folder_name}}.main:kickoff"
+run_crew = "{{folder_name}}.main:kickoff"
+plot = "{{folder_name}}.main:plot"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.crewai]
+type = "flow"
+
+# ===== FROM: vendors\crewAI\src\crewai\cli\templates\tool\pyproject.toml =====
+[project]
+name = "{{folder_name}}"
+version = "0.1.0"
+description = "Power up your crews with {{folder_name}}"
+readme = "README.md"
+requires-python = ">=3.10,<3.14"
+dependencies = [
+    "crewai[tools]>=0.165.1"
+]
+
+[tool.crewai]
+type = "tool"
+
+# ===== FROM: vendors\fake-useragent\pyproject.toml =====
+[build-system]
+build-backend = "setuptools.build_meta"
+
+requires = [ "setuptools>=77.0" ]
+
+[project]
+name = "fake-useragent"
+version = "2.2.0"
+license = "Apache-2.0"
+description = "Up-to-date simple useragent faker with real world database"
+readme.content-type = "text/markdown"
+readme.file = "README.md"
+keywords = [
+  "agent",
+  "fake",
+  "fake user agent",
+  "fake useragent",
+  "user",
+  "user agent",
+  "useragent",
+]
+authors = [
+  { name = "Melroy van den Berg", email = "melroy@melroy.org" },
+  { name = "Victor Kovtun", email = "hellysmile@gmail.com" },
+]
+requires-python = ">=3.9"
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Developers",
+  "Operating System :: MacOS :: MacOS X",
+  "Operating System :: Microsoft :: Windows",
+  "Operating System :: OS Independent",
+  "Operating System :: POSIX",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Internet :: WWW/HTTP",
+  "Topic :: Software Development",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Topic :: Utilities",
+]
+
+dependencies = [ "importlib-resources>=6; python_version<'3.10'" ]
+urls.Homepage = "https://github.com/fake-useragent/fake-useragent"
+
+[tool.setuptools]
+zip-safe = false
+
+[tool.setuptools.package-data]
+"fake_useragent.data" = [ "*.jsonl" ]
+"fake_useragent" = [ "py.typed" ]
+
+[tool.ruff]
+target-version = "py39"
+line-length = 142
+
+lint.select = [
+  "B",
+  "C4",
+  "C9",
+  "D",   # Check compliance with Python docstring conventions.
+  "DOC", # Ensure docstrings are consistent with signatures.
+  "E",
+  "F",
+  "I",
+  "PL",
+  "S",
+  "SIM",
+  "W",
+  "YTT",
+]
+lint.ignore = [
+  "B904",
+  "C408",
+  "D107",    # Allow no docstring in __init__, we document it in the class docstring.
+  "PLW2901",
+  "SIM105",
+  "SIM108",
+]
+lint.per-file-ignores."docs/**/*" = [ "D", "DOC" ]
+lint.per-file-ignores."src/fake_useragent/__init__.py" = [ "F401" ]
+lint.per-file-ignores."tests/**/*" = [ "D", "DOC", "S", "SIM", "UP015" ]
+lint.isort.known-first-party = [ "fake_useragent" ]
+lint.mccabe.max-complexity = 13
+lint.pydocstyle.convention = "google"
+lint.pylint.max-args = 7
+lint.pylint.max-branches = 13
+
+# ===== FROM: vendors\fastagency\pyproject.toml =====
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "fastagency"
+description = "The fastest way to bring multi-agent workflows to production"
+readme = "README.md"
+authors = [
+    { name = "ag2ai", email = "support@ag2.ai" },
+]
+
+keywords = ["ag2", "autogen", "multi-agent", "LLM", "AI", "autonomous agents"]
+
+requires-python = ">=3.9"
+
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+    "Topic :: Internet",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development",
+    "Typing :: Typed",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: System Administrators",
+    "Environment :: Web Environment",
+    "Framework :: AsyncIO",
+    "Framework :: Pydantic",
+    "Framework :: Pydantic :: 2",
+]
+
+dynamic = ["version"]
+
+dependencies = [
+    "ag2==0.9.7",
+#    "ag2[anthropic,together]==0.8.1",
+#    "together>=1.2.11,<1.3", # ToDo: together 1.3.0 has issues with our dev dependencies
+    "markdownify==0.14.1", # Needed by autogen.WebSurferAgent but not included
+    "typer>=0.12.5,!=0.15.3",
+    "typing-extensions>=4.8.0,<5",
+    "pydantic>=2.2.0,<3",
+    "click==8.1.3",
+]
+
+[project.optional-dependencies]
+# public distributions
+
+openai = [
+    "ag2[openai]",
+]
+
+mesop = [
+    "mesop>=0.12.7, <1; python_version >= '3.10'"
+]
+
+copilotkit = [
+    "agentwire==0.1.4"
+]
+
+openapi = [
+    "fastapi-code-generator==0.5.2",
+    "fastapi>=0.112,<1",
+    "requests",  # do not pin it
+]
+
+fastapi = [
+    "asyncer==0.0.8",
+    "fastapi>=0.112,<1",
+    "websockets>=13,<14",
+]
+
+nats = [
+    "fastagency[fastapi]",
+    "faststream[nats]>=0.5.27,<0.6",
+]
+
+server = [
+    "uvicorn>=0.31.0",
+    "gunicorn>=23.0.0 ; platform_system != 'Windows'",
+    "waitress>=3.0.0 ; platform_system == 'Windows'",
+]
+
+basic_auth = [
+    "bcrypt>=4.2.0"
+]
+
+firebase = [
+    "firebase-admin>=6.5.0"
+]
+
+submodules = [
+    "fastagency[openai,mesop,copilotkit,openapi,fastapi,nats,server,firebase,basic_auth]"
+]
+
+# dev dependencies
+devdocs = [
+    "mkdocs==1.6.1",
+    "mkdocs-autorefs==1.2.0",  # mkdocs build fails if upgraded
+    "mkdocs-material==9.5.48",
+    "mkdocs-static-i18n==1.2.3",
+    "mdx-include==1.4.2",
+    "mkdocstrings[python]==0.27.0",
+    "mkdocs-literate-nav==0.6.1",
+    "mkdocs-git-revision-date-localized-plugin==1.3.0",
+    "mike==2.1.3",  # versioning
+    "mkdocs-minify-plugin==0.8.0",
+    "mkdocs-macros-plugin==1.3.7",  # includes with variables
+    "mkdocs-glightbox==0.4.0",  # img zoom
+    "pillow==10.4.0,<11",  # ToDo: together 1.12 needs pillow <11
+    "cairosvg==2.7.1",
+    "cookiecutter==2.6.0",
+    # __all__ = ["me"] line not working in fastagency/ui/mesop/main.py, if griffe>=1.6.0 is used
+    "griffe<1.6.0",
+]
+
+lint = [
+    "types-PyYAML",
+    "types-setuptools",
+    "types-ujson",
+    "types-Pygments",
+    "types-docutils",
+    "mypy==1.15.0",
+    "ruff==0.11.0",
+#    "pyupgrade-directories==0.3.0",
+    "bandit==1.8.3",
+    "semgrep==1.112.0",
+    "codespell==2.4.1",
+    "pytest-mypy-plugins==3.2.0",
+]
+
+test-core = [
+    "coverage[toml]==7.7.0",
+    "pytest==8.3.5",
+    "pytest-asyncio==0.25.3",
+    "dirty-equals==0.9.0",
+    "pytest-rerunfailures==15.0",
+    "jsondiff==2.2.1",
+]
+
+testing = [
+    "ag2[openai,websurfer]",
+    "fastagency[submodules]",
+    "fastagency[test-core]",
+    "fastagency[server]", # Uvicorn is needed for testing
+    "pydantic-settings==2.8.1",
+    "PyYAML==6.0.2",
+    "watchfiles==1.0.4",
+    "email-validator==2.2.0",
+    "python-multipart>=0.0.20",
+    "PyJWT==2.10.0",
+    "passlib[bcrypt]==1.7.4",
+    "pillow==10.4.0,<11",  # MultimodalConversableAgent internally needs pillow
+]
+
+dev = [
+    "fastagency[submodules,lint,testing,devdocs]",
+    "pre-commit==4.1.0",
+    "detect-secrets==1.5.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/ag2ai/fastagency"
+Documentation = "https://fastagency.ai/latest/"
+Tracker = "https://github.com/ag2ai/fastagency/issues"
+Source = "https://github.com/ag2ai/fastagency"
+Discord = "https://discord.gg/kJjSGWrknU"
+
+[project.scripts]
+fastagency = "fastagency.__main__:cli"
+
+[tool.hatch.version]
+path = "fastagency/__about__.py"
+
+[tool.hatch.build]
+skip-excluded-dirs = true
+exclude = [
+    "/tests",
+    "/docs",
+]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+only-include = ["fastagency", "templates", "javascript"]
+
+[tool.hatch.build.targets.wheel.sources]
+# "src" = ""
+# "scripts" = "fastagency/scripts"
+
+[tool.mypy]
+
+files = ["fastagency", "tests", "docs/docs_src"]
+
+strict = true
+python_version = "3.9"
+ignore_missing_imports = true
+install_types = true
+non_interactive = true
+plugins = [
+    "pydantic.mypy",
+]
+
+# from https://blog.wolt.com/engineering/2021/09/30/professional-grade-mypy-configuration/
+disallow_untyped_defs = true
+no_implicit_optional = true
+check_untyped_defs = true
+warn_return_any = true
+show_error_codes = true
+warn_unused_ignores = false
+
+disallow_incomplete_defs = true
+disallow_untyped_decorators = true
+disallow_any_unimported = false
+
+[tool.ruff]
+fix = true
+line-length = 88
+# target-version = 'py39'
+include = ["fastagency/**/*.py", "fastagency/**/*.pyi", "tests/**/*.py", "docs/**/*.py", "examples/**/*.py", "pyproject.toml"]
+exclude = ["docs/docs_src", "tests/openapi/security/expected_*.py"]
+
+[tool.ruff.lint]
+select = [
+    "E",     # pycodestyle errors     https://docs.astral.sh/ruff/rules/#error-e
+    "W",     # pycodestyle warnings   https://docs.astral.sh/ruff/rules/#warning-w
+    "C90",   # mccabe                 https://docs.astral.sh/ruff/rules/#mccabe-c90
+    "N",     # pep8-naming            https://docs.astral.sh/ruff/rules/#pep8-naming-n
+    "D",     # pydocstyle             https://docs.astral.sh/ruff/rules/#pydocstyle-d
+    "I",     # isort                  https://docs.astral.sh/ruff/rules/#isort-i
+    "F",     # pyflakes               https://docs.astral.sh/ruff/rules/#pyflakes-f
+    "ASYNC", # flake8-async           https://docs.astral.sh/ruff/rules/#flake8-async-async
+    "C4",    # flake8-comprehensions  https://docs.astral.sh/ruff/rules/#flake8-comprehensions-c4
+    "B",     # flake8-bugbear         https://docs.astral.sh/ruff/rules/#flake8-bugbear-b
+    "Q",     # flake8-quotes          https://docs.astral.sh/ruff/rules/#flake8-quotes-q
+    "T20",   # flake8-print           https://docs.astral.sh/ruff/rules/#flake8-print-t20
+    "SIM",   # flake8-simplify        https://docs.astral.sh/ruff/rules/#flake8-simplify-sim
+    "PT",    # flake8-pytest-style    https://docs.astral.sh/ruff/rules/#flake8-pytest-style-pt
+    "PTH",   # flake8-use-pathlib     https://docs.astral.sh/ruff/rules/#flake8-use-pathlib-pth
+    "TCH",   # flake8-type-checking   https://docs.astral.sh/ruff/rules/#flake8-type-checking-tch
+    "RUF",   # Ruff-specific rules    https://docs.astral.sh/ruff/rules/#ruff-specific-rules-ruf
+    "PERF",  # Perflint               https://docs.astral.sh/ruff/rules/#perflint-perf
+]
+
+ignore = [
+    "E501",  # line too long, handled by formatter later
+    "D100", "D101", "D102", "D103", "D104",
+#     "C901",  # too complex
+]
+
+[tool.ruff.lint.isort]
+case-sensitive = true
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.flake8-bugbear]
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-q -m 'not slow and not external'"
+testpaths = [
+    "tests",
+]
+markers = [
+    "slow",
+    "all",
+    "anthropic",
+    "azure_oai",
+    "openai",
+    "togetherai",
+    "llm: mark test for use with LLMs",
+    "flaky: mark test as flaky",
+    "external: mark test as requiring external services",
+]
+
+# Add filterwarnings to suppress the specific UserWarning
+filterwarnings = "ignore:.*custom validator is returning a value other than `self`.*:UserWarning"
+
+[tool.coverage.run]
+parallel = true
+branch = true
+concurrency = [
+    "multiprocessing",
+    "thread"
+]
+source = [
+    "docs/docs_src",
+    "examples",
+    "fastagency",
+#    "tests",
+]
+context = '${CONTEXT}'
+omit = [
+    "**/__init__.py",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
+sort = "miss"
+
+exclude_also = [
+    "if __name__ == .__main__.:",
+    "self.logger",
+    "def __repr__",
+    "lambda: None",
+    "from .*",
+    "import .*",
+    '@(abc\.)?abstractmethod',
+    "raise NotImplementedError",
+    'raise AssertionError',
+    'logger\..*',
+    "pass",
+    '\.\.\.',
+]
+omit = [
+    '*/__about__.py',
+    '*/__main__.py',
+    '*/__init__.py',
+]
+
+[tool.bandit]
+
+[tool.black]
+
+line-length = 88
+
+extend-exclude = """
+/(
+    docs/docs_src
+    | some_other_dir
+)/
+"""
+
+[tool.codespell]
+skip = "./venv*,./docs/site/*,./htmlcov,./examples/openapi/whatsapp_openapi_complete.json"
+ignore-words = ".codespell-whitelist.txt"
+
+# ===== FROM: vendors\fastagency\docs\docs_src\getting_started\basic_auth\fastapi\my_fastagency_app\pyproject.toml =====
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+
+version = "0.1.0"
+name = "my_fastagency_app"
+
+dependencies = [
+    "fastagency[openai,mesop,server,fastapi,basic_auth]>=0.9.0",
+]
+
+[project.optional-dependencies]
+testing = [
+    "pytest==8.3.3",
+    "pytest-asyncio==0.24.0",
+]
+
+# dev dependencies
+lint = [
+    "types-PyYAML",
+    "types-setuptools",
+    "types-ujson",
+    "types-Pygments",
+    "types-docutils",
+    "mypy==1.12.1",
+    "ruff==0.7.2",
+    "pyupgrade-directories==0.3.0",
+    "bandit==1.7.10",
+    "semgrep==1.95.0",
+    "codespell==2.3.0",
+    "pytest-mypy-plugins==3.1.2",
+]
+
+dev = [
+    "my_fastagency_app[testing,lint]",
+    "pre-commit==4.0.1",
+    "detect-secrets==1.5.0",
+]
+
+[tool.hatch.build.targets.wheel]
+only-include = ["my_fastagency_app"]
+
+[tool.pytest.ini_options]
+filterwarnings =["ignore::DeprecationWarning"]
+asyncio_default_fixture_loop_scope = "function"
+testpaths = [
+    "tests",
+]
+
+[tool.mypy]
+
+files = ["my_fastagency_app", "tests"]
+
+strict = true
+python_version = "3.12"
+ignore_missing_imports = true
+install_types = true
+non_interactive = true
+plugins = [
+    "pydantic.mypy",
+]
+
+# from https://blog.wolt.com/engineering/2021/09/30/professional-grade-mypy-configuration/
+disallow_untyped_defs = true
+no_implicit_optional = true
+check_untyped_defs = true
+warn_return_any = true
+show_error_codes = true
+warn_unused_ignores = false
+
+disallow_incomplete_defs = true
+disallow_untyped_decorators = true
+disallow_any_unimported = false
+
+[tool.ruff]
+fix = true
+line-length = 88
+include = ["my_fastagency_app/**/*.py", "my_fastagency_app/**/*.pyi", "pyproject.toml"]
+exclude = []
+
+[tool.ruff.lint]
+select = [
+    "E",     # pycodestyle errors     https://docs.astral.sh/ruff/rules/#error-e
+    "W",     # pycodestyle warnings   https://docs.astral.sh/ruff/rules/#warning-w
+    "C90",   # mccabe                 https://docs.astral.sh/ruff/rules/#mccabe-c90
+    "N",     # pep8-naming            https://docs.astral.sh/ruff/rules/#pep8-naming-n
+    "D",     # pydocstyle             https://docs.astral.sh/ruff/rules/#pydocstyle-d
+    "I",     # isort                  https://docs.astral.sh/ruff/rules/#isort-i
+    "F",     # pyflakes               https://docs.astral.sh/ruff/rules/#pyflakes-f
+    "ASYNC", # flake8-async           https://docs.astral.sh/ruff/rules/#flake8-async-async
+    "C4",    # flake8-comprehensions  https://docs.astral.sh/ruff/rules/#flake8-comprehensions-c4
+    "B",     # flake8-bugbear         https://docs.astral.sh/ruff/rules/#flake8-bugbear-b
+    "Q",     # flake8-quotes          https://docs.astral.sh/ruff/rules/#flake8-quotes-q
+    "T20",   # flake8-print           https://docs.astral.sh/ruff/rules/#flake8-print-t20
+    "SIM",   # flake8-simplify        https://docs.astral.sh/ruff/rules/#flake8-simplify-sim
+    "PT",    # flake8-pytest-style    https://docs.astral.sh/ruff/rules/#flake8-pytest-style-pt
+    "PTH",   # flake8-use-pathlib     https://docs.astral.sh/ruff/rules/#flake8-use-pathlib-pth
+    "TCH",   # flake8-type-checking   https://docs.astral.sh/ruff/rules/#flake8-type-checking-tch
+    "RUF",   # Ruff-specific rules    https://docs.astral.sh/ruff/rules/#ruff-specific-rules-ruf
+    "PERF",  # Perflint               https://docs.astral.sh/ruff/rules/#perflint-perf
+]
+
+ignore = [
+    "E501",  # line too long, handled by formatter later
+    "D100", "D101", "D102", "D103", "D104",
+#     "C901",  # too complex
+]
+
+[tool.ruff.lint.isort]
+case-sensitive = true
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.flake8-bugbear]
+
+[tool.bandit]
+
+[tool.black]
+
+line-length = 88
+
+[tool.codespell]
+skip = "./venv*"
+ignore-words = ".codespell-whitelist.txt"
+
+# ===== FROM: vendors\fastagency\docs\docs_src\getting_started\basic_auth\mesop\my_fastagency_app\pyproject.toml =====
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+
+version = "0.1.0"
+name = "my_fastagency_app"
+
+dependencies = [
+    "fastagency[openai,mesop,server,basic_auth]>=0.9.0",
+]
+
+[project.optional-dependencies]
+testing = [
+    "pytest==8.3.3",
+    "pytest-asyncio==0.24.0",
+]
+
+# dev dependencies
+lint = [
+    "types-PyYAML",
+    "types-setuptools",
+    "types-ujson",
+    "types-Pygments",
+    "types-docutils",
+    "mypy==1.12.1",
+    "ruff==0.7.2",
+    "pyupgrade-directories==0.3.0",
+    "bandit==1.7.10",
+    "semgrep==1.95.0",
+    "codespell==2.3.0",
+    "pytest-mypy-plugins==3.1.2",
+]
+
+dev = [
+    "my_fastagency_app[testing,lint]",
+    "pre-commit==4.0.1",
+    "detect-secrets==1.5.0",
+]
+
+[tool.hatch.build.targets.wheel]
+only-include = ["my_fastagency_app"]
+
+[tool.pytest.ini_options]
+filterwarnings =["ignore::DeprecationWarning"]
+asyncio_default_fixture_loop_scope = "function"
+testpaths = [
+    "tests",
+]
+
+[tool.mypy]
+
+files = ["my_fastagency_app", "tests"]
+
+strict = true
+python_version = "3.12"
+ignore_missing_imports = true
+install_types = true
+non_interactive = true
+plugins = [
+    "pydantic.mypy",
+]
+
+# from https://blog.wolt.com/engineering/2021/09/30/professional-grade-mypy-configuration/
+disallow_untyped_defs = true
+no_implicit_optional = true
+check_untyped_defs = true
+warn_return_any = true
+show_error_codes = true
+warn_unused_ignores = false
+
+disallow_incomplete_defs = true
+disallow_untyped_decorators = true
+disallow_any_unimported = false
+
+[tool.ruff]
+fix = true
+line-length = 88
+include = ["my_fastagency_app/**/*.py", "my_fastagency_app/**/*.pyi", "pyproject.toml"]
+exclude = []
+
+[tool.ruff.lint]
+select = [
+    "E",     # pycodestyle errors     https://docs.astral.sh/ruff/rules/#error-e
+    "W",     # pycodestyle warnings   https://docs.astral.sh/ruff/rules/#warning-w
+    "C90",   # mccabe                 https://docs.astral.sh/ruff/rules/#mccabe-c90
+    "N",     # pep8-naming            https://docs.astral.sh/ruff/rules/#pep8-naming-n
+    "D",     # pydocstyle             https://docs.astral.sh/ruff/rules/#pydocstyle-d
+    "I",     # isort                  https://docs.astral.sh/ruff/rules/#isort-i
+    "F",     # pyflakes               https://docs.astral.sh/ruff/rules/#pyflakes-f
+    "ASYNC", # flake8-async           https://docs.astral.sh/ruff/rules/#flake8-async-async
+    "C4",    # flake8-comprehensions  https://docs.astral.sh/ruff/rules/#flake8-comprehensions-c4
+    "B",     # flake8-bugbear         https://docs.astral.sh/ruff/rules/#flake8-bugbear-b
+    "Q",     # flake8-quotes          https://docs.astral.sh/ruff/rules/#flake8-quotes-q
+    "T20",   # flake8-print           https://docs.astral.sh/ruff/rules/#flake8-print-t20
+    "SIM",   # flake8-simplify        https://docs.astral.sh/ruff/rules/#flake8-simplify-sim
+    "PT",    # flake8-pytest-style    https://docs.astral.sh/ruff/rules/#flake8-pytest-style-pt
+    "PTH",   # flake8-use-pathlib     https://docs.astral.sh/ruff/rules/#flake8-use-pathlib-pth
+    "TCH",   # flake8-type-checking   https://docs.astral.sh/ruff/rules/#flake8-type-checking-tch
+    "RUF",   # Ruff-specific rules    https://docs.astral.sh/ruff/rules/#ruff-specific-rules-ruf
+    "PERF",  # Perflint               https://docs.astral.sh/ruff/rules/#perflint-perf
+]
+
+ignore = [
+    "E501",  # line too long, handled by formatter later
+    "D100", "D101", "D102", "D103", "D104",
+#     "C901",  # too complex
+]
+
+[tool.ruff.lint.isort]
+case-sensitive = true
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.flake8-bugbear]
+
+[tool.bandit]
+
+[tool.black]
+
+line-length = 88
+
+[tool.codespell]
+skip = "./venv*"
+ignore-words = ".codespell-whitelist.txt"
+
+# ===== FROM: vendors\fastagency\docs\docs_src\getting_started\basic_auth\nats_n_fastapi\my_fastagency_app\pyproject.toml =====
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+
+version = "0.1.0"
+name = "my_fastagency_app"
+
+dependencies = [
+    "fastagency[openai,mesop,server,fastapi,nats,basic_auth]>=0.9.0",
+]
+
+[project.optional-dependencies]
+testing = [
+    "pytest==8.3.3",
+    "pytest-asyncio==0.24.0",
+]
+
+# dev dependencies
+lint = [
+    "types-PyYAML",
+    "types-setuptools",
+    "types-ujson",
+    "types-Pygments",
+    "types-docutils",
+    "mypy==1.12.1",
+    "ruff==0.7.2",
+    "pyupgrade-directories==0.3.0",
+    "bandit==1.7.10",
+    "semgrep==1.95.0",
+    "codespell==2.3.0",
+    "pytest-mypy-plugins==3.1.2",
+]
+
+dev = [
+    "my_fastagency_app[testing,lint]",
+    "pre-commit==4.0.1",
+    "detect-secrets==1.5.0",
+]
+
+[tool.hatch.build.targets.wheel]
+only-include = ["my_fastagency_app"]
+
+[tool.pytest.ini_options]
+filterwarnings =["ignore::DeprecationWarning"]
+asyncio_default_fixture_loop_scope = "function"
+testpaths = [
+    "tests",
+]
+
+[tool.mypy]
+
+files = ["my_fastagency_app", "tests"]
+
+strict = true
+python_version = "3.12"
+ignore_missing_imports = true
+install_types = true
+non_interactive = true
+plugins = [
+    "pydantic.mypy",
+]
+
+# from https://blog.wolt.com/engineering/2021/09/30/professional-grade-mypy-configuration/
+disallow_untyped_defs = true
+no_implicit_optional = true
+check_untyped_defs = true
+warn_return_any = true
+show_error_codes = true
+warn_unused_ignores = false
+
+disallow_incomplete_defs = true
+disallow_untyped_decorators = true
+disallow_any_unimported = false
+
+[tool.ruff]
+fix = true
+line-length = 88
+include = ["my_fastagency_app/**/*.py", "my_fastagency_app/**/*.pyi", "pyproject.toml"]
+exclude = []
+
+[tool.ruff.lint]
+select = [
+    "E",     # pycodestyle errors     https://docs.astral.sh/ruff/rules/#error-e
+    "W",     # pycodestyle warnings   https://docs.astral.sh/ruff/rules/#warning-w
+    "C90",   # mccabe                 https://docs.astral.sh/ruff/rules/#mccabe-c90
+    "N",     # pep8-naming            https://docs.astral.sh/ruff/rules/#pep8-naming-n
+    "D",     # pydocstyle             https://docs.astral.sh/ruff/rules/#pydocstyle-d
+    "I",     # isort                  https://docs.astral.sh/ruff/rules/#isort-i
+    "F",     # pyflakes               https://docs.astral.sh/ruff/rules/#pyflakes-f
+    "ASYNC", # flake8-async           https://docs.astral.sh/ruff/rules/#flake8-async-async
+    "C4",    # flake8-comprehensions  https://docs.astral.sh/ruff/rules/#flake8-comprehensions-c4
+    "B",     # flake8-bugbear         https://docs.astral.sh/ruff/rules/#flake8-bugbear-b
+    "Q",     # flake8-quotes          https://docs.astral.sh/ruff/rules/#flake8-quotes-q
+    "T20",   # flake8-print           https://docs.astral.sh/ruff/rules/#flake8-print-t20
+    "SIM",   # flake8-simplify        https://docs.astral.sh/ruff/rules/#flake8-simplify-sim
+    "PT",    # flake8-pytest-style    https://docs.astral.sh/ruff/rules/#flake8-pytest-style-pt
+    "PTH",   # flake8-use-pathlib     https://docs.astral.sh/ruff/rules/#flake8-use-pathlib-pth
+    "TCH",   # flake8-type-checking   https://docs.astral.sh/ruff/rules/#flake8-type-checking-tch
+    "RUF",   # Ruff-specific rules    https://docs.astral.sh/ruff/rules/#ruff-specific-rules-ruf
+    "PERF",  # Perflint               https://docs.astral.sh/ruff/rules/#perflint-perf
+]
+
+ignore = [
+    "E501",  # line too long, handled by formatter later
+    "D100", "D101", "D102", "D103", "D104",
+#     "C901",  # too complex
+]
+
+[tool.ruff.lint.isort]
+case-sensitive = true
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.flake8-bugbear]
+
+[tool.bandit]
+
+[tool.black]
+
+line-length = 88
+
+[tool.codespell]
+skip = "./venv*"
+ignore-words = ".codespell-whitelist.txt"
+
+# ===== FROM: vendors\fastagency\docs\docs_src\getting_started\no_auth\fastapi\my_fastagency_app\pyproject.toml =====
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+
+version = "0.1.0"
+name = "my_fastagency_app"
+
+dependencies = [
+    "fastagency[openai,mesop,server,fastapi]>=0.9.0",
+]
+
+[project.optional-dependencies]
+testing = [
+    "pytest==8.3.3",
+    "pytest-asyncio==0.24.0",
+]
+
+# dev dependencies
+lint = [
+    "types-PyYAML",
+    "types-setuptools",
+    "types-ujson",
+    "types-Pygments",
+    "types-docutils",
+    "mypy==1.12.1",
+    "ruff==0.7.2",
+    "pyupgrade-directories==0.3.0",
+    "bandit==1.7.10",
+    "semgrep==1.95.0",
+    "codespell==2.3.0",
+    "pytest-mypy-plugins==3.1.2",
+]
+
+dev = [
+    "my_fastagency_app[testing,lint]",
+    "pre-commit==4.0.1",
+    "detect-secrets==1.5.0",
+]
+
+[tool.hatch.build.targets.wheel]
+only-include = ["my_fastagency_app"]
+
+[tool.pytest.ini_options]
+filterwarnings =["ignore::DeprecationWarning"]
+asyncio_default_fixture_loop_scope = "function"
+testpaths = [
+    "tests",
+]
+
+[tool.mypy]
+
+files = ["my_fastagency_app", "tests"]
+
+strict = true
+python_version = "3.12"
+ignore_missing_imports = true
+install_types = true
+non_interactive = true
+plugins = [
+    "pydantic.mypy",
+]
+
+# from https://blog.wolt.com/engineering/2021/09/30/professional-grade-mypy-configuration/
+disallow_untyped_defs = true
+no_implicit_optional = true
+check_untyped_defs = true
+warn_return_any = true
+show_error_codes = true
+warn_unused_ignores = false
+
+disallow_incomplete_defs = true
+disallow_untyped_decorators = true
+disallow_any_unimported = false
+
+[tool.ruff]
+fix = true
+line-length = 88
+include = ["my_fastagency_app/**/*.py", "my_fastagency_app/**/*.pyi", "pyproject.toml"]
+exclude = []
+
+[tool.ruff.lint]
+select = [
+    "E",     # pycodestyle errors     https://docs.astral.sh/ruff/rules/#error-e
+    "W",     # pycodestyle warnings   https://docs.astral.sh/ruff/rules/#warning-w
+    "C90",   # mccabe                 https://docs.astral.sh/ruff/rules/#mccabe-c90
+    "N",     # pep8-naming            https://docs.astral.sh/ruff/rules/#pep8-naming-n
+    "D",     # pydocstyle             https://docs.astral.sh/ruff/rules/#pydocstyle-d
+    "I",     # isort                  https://docs.astral.sh/ruff/rules/#isort-i
+    "F",     # pyflakes               https://docs.astral.sh/ruff/rules/#pyflakes-f
+    "ASYNC", # flake8-async           https://docs.astral.sh/ruff/rules/#flake8-async-async
+    "C4",    # flake8-comprehensions  https://docs.astral.sh/ruff/rules/#flake8-comprehensions-c4
+    "B",     # flake8-bugbear         https://docs.astral.sh/ruff/rules/#flake8-bugbear-b
+    "Q",     # flake8-quotes          https://docs.astral.sh/ruff/rules/#flake8-quotes-q
+    "T20",   # flake8-print           https://docs.astral.sh/ruff/rules/#flake8-print-t20
+    "SIM",   # flake8-simplify        https://docs.astral.sh/ruff/rules/#flake8-simplify-sim
+    "PT",    # flake8-pytest-style    https://docs.astral.sh/ruff/rules/#flake8-pytest-style-pt
+    "PTH",   # flake8-use-pathlib     https://docs.astral.sh/ruff/rules/#flake8-use-pathlib-pth
+    "TCH",   # flake8-type-checking   https://docs.astral.sh/ruff/rules/#flake8-type-checking-tch
+    "RUF",   # Ruff-specific rules    https://docs.astral.sh/ruff/rules/#ruff-specific-rules-ruf
+    "PERF",  # Perflint               https://docs.astral.sh/ruff/rules/#perflint-perf
+]
+
+ignore = [
+    "E501",  # line too long, handled by formatter later
+    "D100", "D101", "D102", "D103", "D104",
+#     "C901",  # too complex
+]
+
+[tool.ruff.lint.isort]
+case-sensitive = true
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.flake8-bugbear]
+
+[tool.bandit]
+
+[tool.black]
+
+line-length = 88
+
+[tool.codespell]
+skip = "./venv*"
+ignore-words = ".codespell-whitelist.txt"
+
+# ===== FROM: vendors\fastagency\docs\docs_src\getting_started\no_auth\mesop\my_fastagency_app\pyproject.toml =====
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+
+version = "0.1.0"
+name = "my_fastagency_app"
+
+dependencies = [
+    "fastagency[openai,mesop,server]>=0.9.0",
+]
+
+[project.optional-dependencies]
+testing = [
+    "pytest==8.3.3",
+    "pytest-asyncio==0.24.0",
+]
+
+# dev dependencies
+lint = [
+    "types-PyYAML",
+    "types-setuptools",
+    "types-ujson",
+    "types-Pygments",
+    "types-docutils",
+    "mypy==1.12.1",
+    "ruff==0.7.2",
+    "pyupgrade-directories==0.3.0",
+    "bandit==1.7.10",
+    "semgrep==1.95.0",
+    "codespell==2.3.0",
+    "pytest-mypy-plugins==3.1.2",
+]
+
+dev = [
+    "my_fastagency_app[testing,lint]",
+    "pre-commit==4.0.1",
+    "detect-secrets==1.5.0",
+]
+
+[tool.hatch.build.targets.wheel]
+only-include = ["my_fastagency_app"]
+
+[tool.pytest.ini_options]
+filterwarnings =["ignore::DeprecationWarning"]
+asyncio_default_fixture_loop_scope = "function"
+testpaths = [
+    "tests",
+]
+
+[tool.mypy]
+
+files = ["my_fastagency_app", "tests"]
+
+strict = true
+python_version = "3.12"
+ignore_missing_imports = true
+install_types = true
+non_interactive = true
+plugins = [
+    "pydantic.mypy",
+]
+
+# from https://blog.wolt.com/engineering/2021/09/30/professional-grade-mypy-configuration/
+disallow_untyped_defs = true
+no_implicit_optional = true
+check_untyped_defs = true
+warn_return_any = true
+show_error_codes = true
+warn_unused_ignores = false
+
+disallow_incomplete_defs = true
+disallow_untyped_decorators = true
+disallow_any_unimported = false
+
+[tool.ruff]
+fix = true
+line-length = 88
+include = ["my_fastagency_app/**/*.py", "my_fastagency_app/**/*.pyi", "pyproject.toml"]
+exclude = []
+
+[tool.ruff.lint]
+select = [
+    "E",     # pycodestyle errors     https://docs.astral.sh/ruff/rules/#error-e
+    "W",     # pycodestyle warnings   https://docs.astral.sh/ruff/rules/#warning-w
+    "C90",   # mccabe                 https://docs.astral.sh/ruff/rules/#mccabe-c90
+    "N",     # pep8-naming            https://docs.astral.sh/ruff/rules/#pep8-naming-n
+    "D",     # pydocstyle             https://docs.astral.sh/ruff/rules/#pydocstyle-d
+    "I",     # isort                  https://docs.astral.sh/ruff/rules/#isort-i
+    "F",     # pyflakes               https://docs.astral.sh/ruff/rules/#pyflakes-f
+    "ASYNC", # flake8-async           https://docs.astral.sh/ruff/rules/#flake8-async-async
+    "C4",    # flake8-comprehensions  https://docs.astral.sh/ruff/rules/#flake8-comprehensions-c4
+    "B",     # flake8-bugbear         https://docs.astral.sh/ruff/rules/#flake8-bugbear-b
+    "Q",     # flake8-quotes          https://docs.astral.sh/ruff/rules/#flake8-quotes-q
+    "T20",   # flake8-print           https://docs.astral.sh/ruff/rules/#flake8-print-t20
+    "SIM",   # flake8-simplify        https://docs.astral.sh/ruff/rules/#flake8-simplify-sim
+    "PT",    # flake8-pytest-style    https://docs.astral.sh/ruff/rules/#flake8-pytest-style-pt
+    "PTH",   # flake8-use-pathlib     https://docs.astral.sh/ruff/rules/#flake8-use-pathlib-pth
+    "TCH",   # flake8-type-checking   https://docs.astral.sh/ruff/rules/#flake8-type-checking-tch
+    "RUF",   # Ruff-specific rules    https://docs.astral.sh/ruff/rules/#ruff-specific-rules-ruf
+    "PERF",  # Perflint               https://docs.astral.sh/ruff/rules/#perflint-perf
+]
+
+ignore = [
+    "E501",  # line too long, handled by formatter later
+    "D100", "D101", "D102", "D103", "D104",
+#     "C901",  # too complex
+]
+
+[tool.ruff.lint.isort]
+case-sensitive = true
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.flake8-bugbear]
+
+[tool.bandit]
+
+[tool.black]
+
+line-length = 88
+
+[tool.codespell]
+skip = "./venv*"
+ignore-words = ".codespell-whitelist.txt"
+
+# ===== FROM: vendors\fastagency\docs\docs_src\getting_started\no_auth\nats_n_fastapi\my_fastagency_app\pyproject.toml =====
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+
+version = "0.1.0"
+name = "my_fastagency_app"
+
+dependencies = [
+    "fastagency[openai,mesop,server,fastapi,nats]>=0.9.0",
+]
+
+[project.optional-dependencies]
+testing = [
+    "pytest==8.3.3",
+    "pytest-asyncio==0.24.0",
+]
+
+# dev dependencies
+lint = [
+    "types-PyYAML",
+    "types-setuptools",
+    "types-ujson",
+    "types-Pygments",
+    "types-docutils",
+    "mypy==1.12.1",
+    "ruff==0.7.2",
+    "pyupgrade-directories==0.3.0",
+    "bandit==1.7.10",
+    "semgrep==1.95.0",
+    "codespell==2.3.0",
+    "pytest-mypy-plugins==3.1.2",
+]
+
+dev = [
+    "my_fastagency_app[testing,lint]",
+    "pre-commit==4.0.1",
+    "detect-secrets==1.5.0",
+]
+
+[tool.hatch.build.targets.wheel]
+only-include = ["my_fastagency_app"]
+
+[tool.pytest.ini_options]
+filterwarnings =["ignore::DeprecationWarning"]
+asyncio_default_fixture_loop_scope = "function"
+testpaths = [
+    "tests",
+]
+
+[tool.mypy]
+
+files = ["my_fastagency_app", "tests"]
+
+strict = true
+python_version = "3.12"
+ignore_missing_imports = true
+install_types = true
+non_interactive = true
+plugins = [
+    "pydantic.mypy",
+]
+
+# from https://blog.wolt.com/engineering/2021/09/30/professional-grade-mypy-configuration/
+disallow_untyped_defs = true
+no_implicit_optional = true
+check_untyped_defs = true
+warn_return_any = true
+show_error_codes = true
+warn_unused_ignores = false
+
+disallow_incomplete_defs = true
+disallow_untyped_decorators = true
+disallow_any_unimported = false
+
+[tool.ruff]
+fix = true
+line-length = 88
+include = ["my_fastagency_app/**/*.py", "my_fastagency_app/**/*.pyi", "pyproject.toml"]
+exclude = []
+
+[tool.ruff.lint]
+select = [
+    "E",     # pycodestyle errors     https://docs.astral.sh/ruff/rules/#error-e
+    "W",     # pycodestyle warnings   https://docs.astral.sh/ruff/rules/#warning-w
+    "C90",   # mccabe                 https://docs.astral.sh/ruff/rules/#mccabe-c90
+    "N",     # pep8-naming            https://docs.astral.sh/ruff/rules/#pep8-naming-n
+    "D",     # pydocstyle             https://docs.astral.sh/ruff/rules/#pydocstyle-d
+    "I",     # isort                  https://docs.astral.sh/ruff/rules/#isort-i
+    "F",     # pyflakes               https://docs.astral.sh/ruff/rules/#pyflakes-f
+    "ASYNC", # flake8-async           https://docs.astral.sh/ruff/rules/#flake8-async-async
+    "C4",    # flake8-comprehensions  https://docs.astral.sh/ruff/rules/#flake8-comprehensions-c4
+    "B",     # flake8-bugbear         https://docs.astral.sh/ruff/rules/#flake8-bugbear-b
+    "Q",     # flake8-quotes          https://docs.astral.sh/ruff/rules/#flake8-quotes-q
+    "T20",   # flake8-print           https://docs.astral.sh/ruff/rules/#flake8-print-t20
+    "SIM",   # flake8-simplify        https://docs.astral.sh/ruff/rules/#flake8-simplify-sim
+    "PT",    # flake8-pytest-style    https://docs.astral.sh/ruff/rules/#flake8-pytest-style-pt
+    "PTH",   # flake8-use-pathlib     https://docs.astral.sh/ruff/rules/#flake8-use-pathlib-pth
+    "TCH",   # flake8-type-checking   https://docs.astral.sh/ruff/rules/#flake8-type-checking-tch
+    "RUF",   # Ruff-specific rules    https://docs.astral.sh/ruff/rules/#ruff-specific-rules-ruf
+    "PERF",  # Perflint               https://docs.astral.sh/ruff/rules/#perflint-perf
+]
+
+ignore = [
+    "E501",  # line too long, handled by formatter later
+    "D100", "D101", "D102", "D103", "D104",
+#     "C901",  # too complex
+]
+
+[tool.ruff.lint.isort]
+case-sensitive = true
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.flake8-bugbear]
+
+[tool.bandit]
+
+[tool.black]
+
+line-length = 88
+
+[tool.codespell]
+skip = "./venv*"
+ignore-words = ".codespell-whitelist.txt"
+
+# ===== FROM: vendors\fastagency\docs\docs_src\user_guide\dependency_injection\mesop\my_bank_app\pyproject.toml =====
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+
+version = "0.1.0"
+name = "my_bank_app"
+
+dependencies = [
+    "fastagency[openai,mesop,server]>=0.9.0",
+]
+
+[project.optional-dependencies]
+testing = [
+    "pytest==8.3.3",
+    "pytest-asyncio==0.24.0",
+]
+
+# dev dependencies
+lint = [
+    "types-PyYAML",
+    "types-setuptools",
+    "types-ujson",
+    "types-Pygments",
+    "types-docutils",
+    "mypy==1.12.1",
+    "ruff==0.7.2",
+    "pyupgrade-directories==0.3.0",
+    "bandit==1.7.10",
+    "semgrep==1.95.0",
+    "codespell==2.3.0",
+    "pytest-mypy-plugins==3.1.2",
+]
+
+dev = [
+    "my_bank_app[testing,lint]",
+    "pre-commit==4.0.1",
+    "detect-secrets==1.5.0",
+]
+
+[tool.hatch.build.targets.wheel]
+only-include = ["my_bank_app"]
+
+[tool.pytest.ini_options]
+filterwarnings =["ignore::DeprecationWarning"]
+asyncio_default_fixture_loop_scope = "function"
+testpaths = [
+    "tests",
+]
+
+[tool.mypy]
+
+files = ["my_bank_app", "tests"]
+
+strict = true
+python_version = "3.12"
+ignore_missing_imports = true
+install_types = true
+non_interactive = true
+plugins = [
+    "pydantic.mypy",
+]
+
+# from https://blog.wolt.com/engineering/2021/09/30/professional-grade-mypy-configuration/
+disallow_untyped_defs = true
+no_implicit_optional = true
+check_untyped_defs = true
+warn_return_any = true
+show_error_codes = true
+warn_unused_ignores = false
+
+disallow_incomplete_defs = true
+disallow_untyped_decorators = true
+disallow_any_unimported = false
+
+[tool.ruff]
+fix = true
+line-length = 88
+include = ["my_bank_app/**/*.py", "my_bank_app/**/*.pyi", "pyproject.toml"]
+exclude = []
+
+[tool.ruff.lint]
+select = [
+    "E",     # pycodestyle errors     https://docs.astral.sh/ruff/rules/#error-e
+    "W",     # pycodestyle warnings   https://docs.astral.sh/ruff/rules/#warning-w
+    "C90",   # mccabe                 https://docs.astral.sh/ruff/rules/#mccabe-c90
+    "N",     # pep8-naming            https://docs.astral.sh/ruff/rules/#pep8-naming-n
+    "D",     # pydocstyle             https://docs.astral.sh/ruff/rules/#pydocstyle-d
+    "I",     # isort                  https://docs.astral.sh/ruff/rules/#isort-i
+    "F",     # pyflakes               https://docs.astral.sh/ruff/rules/#pyflakes-f
+    "ASYNC", # flake8-async           https://docs.astral.sh/ruff/rules/#flake8-async-async
+    "C4",    # flake8-comprehensions  https://docs.astral.sh/ruff/rules/#flake8-comprehensions-c4
+    "B",     # flake8-bugbear         https://docs.astral.sh/ruff/rules/#flake8-bugbear-b
+    "Q",     # flake8-quotes          https://docs.astral.sh/ruff/rules/#flake8-quotes-q
+    "T20",   # flake8-print           https://docs.astral.sh/ruff/rules/#flake8-print-t20
+    "SIM",   # flake8-simplify        https://docs.astral.sh/ruff/rules/#flake8-simplify-sim
+    "PT",    # flake8-pytest-style    https://docs.astral.sh/ruff/rules/#flake8-pytest-style-pt
+    "PTH",   # flake8-use-pathlib     https://docs.astral.sh/ruff/rules/#flake8-use-pathlib-pth
+    "TCH",   # flake8-type-checking   https://docs.astral.sh/ruff/rules/#flake8-type-checking-tch
+    "RUF",   # Ruff-specific rules    https://docs.astral.sh/ruff/rules/#ruff-specific-rules-ruf
+    "PERF",  # Perflint               https://docs.astral.sh/ruff/rules/#perflint-perf
+]
+
+ignore = [
+    "E501",  # line too long, handled by formatter later
+    "D100", "D101", "D102", "D103", "D104",
+#     "C901",  # too complex
+]
+
+[tool.ruff.lint.isort]
+case-sensitive = true
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.flake8-bugbear]
+
+[tool.bandit]
+
+[tool.black]
+
+line-length = 88
+
+[tool.codespell]
+skip = "./venv*"
+ignore-words = ".codespell-whitelist.txt"
+
+# ===== FROM: vendors\langroid\pyproject.toml =====
+[project]
+name = "langroid"
+version = "0.59.2"
+authors = [
+    {name = "Prasad Chalasani", email = "pchalasani@gmail.com"},
+]
+description = "Harness LLMs with Multi-Agent Programming"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = "<3.13,>=3.10"
+dependencies = [
+    "adb-cloud-connector<2.0.0,>=1.0.2",
+    "aiohttp<4.0.0,>=3.9.1",
+    "async-generator<2.0,>=1.10",
+    "bs4<1.0.0,>=0.0.1",
+    "cerebras-cloud-sdk<2.0.0,>=1.1.0",
+    "colorlog<7.0.0,>=6.7.0",
+    "docstring-parser<1.0,>=0.16",
+    "duckduckgo-search<7.0.0,>=6.0.0",
+    "exa-py>=1.8.7",
+    "faker<19.0.0,>=18.9.0",
+    "fakeredis<3.0.0,>=2.12.1",
+    "fastmcp>=2.2.5",
+    "fire<1.0.0,>=0.5.0",
+    "gitpython<4.0.0,>=3.1.43",
+    "google-api-python-client<3.0.0,>=2.95.0",
+    "google-genai>=1.0.0",
+    "groq<1.0.0,>=0.13.0",
+    "grpcio<2.0.0,>=1.62.1",
+    "halo<1.0.0,>=0.0.31",
+    "jinja2<4.0.0,>=3.1.2",
+    "json-repair<1.0.0,>=0.29.9",
+    "lxml<6.0.0,>=5.4.0",
+    "markdownify>=0.13.1",
+    "nest-asyncio<2.0.0,>=1.6.0",
+    "nltk<4.0.0,>=3.8.2",
+    "onnxruntime<2.0.0,>=1.16.1",
+    "openai<2.0.0,>=1.61.1",
+    "pandas<3.0.0,>=2.0.3",
+    "prettytable<4.0.0,>=3.8.0",
+    "pydantic<3.0.0,>=2.0.0",
+    "pydantic-settings<3.0.0,>=2.0.0",
+    "pygithub<2.0.0,>=1.58.1",
+    "pygments<3.0.0,>=2.15.1",
+    "pymupdf4llm<0.1.0,>=0.0.17",
+    "pyparsing<4.0.0,>=3.0.9",
+    "pytest-rerunfailures<16.0,>=15.0",
+    "python-dotenv>=1.0.0,<2.0.0",
+    "python-magic<1.0.0,>=0.4.27",
+    "pyyaml<7.0.0,>=6.0.1",
+    "qdrant-client<2.0.0,>=1.8.0",
+    "rank-bm25<1.0.0,>=0.2.2",
+    "redis<6.0.0,>=5.0.1",
+    "requests<3.0.0,>=2.31.0",
+    "requests-oauthlib<2.0.0,>=1.3.1",
+    "rich<14.0.0,>=13.3.4",
+    "thefuzz<1.0.0,>=0.20.0",
+    "tiktoken<1.0.0,>=0.7.0",
+    "trafilatura<2.0.0,>=1.5.0",
+    "typer<1.0.0,>=0.9.0",
+    "wget<4.0,>=3.2",
+]
+
+[project.optional-dependencies]
+doc-chat = [
+    "docling<3.0.0,>=2.20.0",
+    "pdf2image<2.0.0,>=1.17.0",
+    "pymupdf4llm<0.1.0,>=0.0.17",
+    "pymupdf<2.0.0,>=1.23.3",
+    "pypdf>=5.1.0",
+    "pytesseract<0.4.0,>=0.3.10",
+    "python-docx<2.0.0,>=1.1.0",
+    "unstructured[docx,pdf,pptx]<1.0.0,>=0.16.15",
+    "marker-pdf"
+]
+
+hf-transformers = [
+    "sentence-transformers<3.0.0,>=2.2.2",
+    "torch<3.0.0,>=2.0.0",
+    "transformers<5.0.0,>=4.40.1",
+    "huggingface-hub<1.0.0,>=0.21.2",    
+]
+
+vecdbs = [
+    "lancedb<0.9.0,>=0.8.2",
+    "tantivy<0.22.0,>=0.21.0",
+    "pyarrow<16.0.0,>=15.0.0",
+    "chromadb<=0.4.23,>=0.4.21",
+    "weaviate-client>=4.9.6",
+    "pinecone-client>=5.0.1",
+]
+
+db = [
+    "sqlalchemy<3.0.0,>=2.0.19",
+    "psycopg2<3.0.0,>=2.9.7",
+    "psycopg2-binary>=2.9.10",
+    "pymysql<2.0.0,>=1.1.0",
+]
+
+all = [
+    "pdf2image<2.0.0,>=1.17.0",
+    "pymupdf<2.0.0,>=1.23.3",
+    "pymupdf4llm<0.1.0,>=0.0.17",
+    "docling<3.0.0,>=2.16.0",
+    "pypdf>=5.1.0",
+    "pytesseract<0.4.0,>=0.3.10",
+    "python-docx<2.0.0,>=1.1.0",
+    "unstructured[docx,pdf,pptx]<1.0.0,>=0.16.15",
+    "sqlalchemy<3.0.0,>=2.0.19",
+    "psycopg2<3.0.0,>=2.9.7",
+    "pymysql<2.0.0,>=1.1.0",
+    "sentence-transformers<3.0.0,>=2.2.2",
+    "torch<3.0.0,>=2.0.0",
+    "transformers<5.0.0,>=4.40.1",
+    "huggingface-hub<1.0.0,>=0.21.2",
+    "chromadb<=0.4.23,>=0.4.21",
+    "weaviate-client>=4.9.6",
+    "metaphor-python<0.2.0,>=0.1.23",
+    "neo4j<6.0.0,>=5.14.1",
+    "python-arango<9.0.0,>=8.1.2",
+    "arango-datasets<2.0.0,>=1.2.2",
+    "litellm<2.0.0,>=1.30.1",
+    "chainlit<3.0.0,>=2.0.1",
+    "python-socketio<6.0.0,>=5.11.0",
+    "fastembed<0.4.0,>=0.3.1",
+    "pgvector>=0.3.6",
+    "psycopg2-binary>=2.9.10",
+    "marker-pdf",
+]
+
+# More granular groupings
+lancedb = [
+    "lancedb<0.9.0,>=0.8.2",
+    "tantivy<0.22.0,>=0.21.0",
+    "pyarrow<16.0.0,>=15.0.0",
+]
+
+docling = [
+    "docling<3.0.0,>=2.16.0",
+]
+
+pymupdf4llm = [
+    "pymupdf4llm<0.1.0,>=0.0.17",
+]
+
+pdf-parsers = [
+    "docling<3.0.0,>=2.16.0",
+    "pypdf>=5.1.0",
+    "pymupdf<2.0.0,>=1.23.3",
+    "pymupdf4llm<0.1.0,>=0.0.17",
+    "pdf2image<2.0.0,>=1.17.0",
+    "pytesseract<0.4.0,>=0.3.10",
+    "markitdown[docx,xlsx,pptx]>=0.0.1a3",
+    "marker-pdf",
+]
+
+docx = [
+    "python-docx<2.0.0,>=1.1.0",
+]
+
+markitdown = [
+    "markitdown[docx,xlsx,pptx]>=0.0.1a3",
+]
+
+marker-pdf = [
+    "marker-pdf[full]>=1.6.0; sys_platform != 'darwin' or platform_machine != 'x86_64'",
+    "opencv-python>=4.11.0.86",
+]
+
+scrapy = [
+    "scrapy<3.0.0,>=2.11.0",
+]
+
+hf-embeddings = [
+    "sentence-transformers<3.0.0,>=2.2.2",
+    "torch<3.0.0,>=2.0.0",
+]
+
+transformers = [
+    "transformers<5.0.0,>=4.40.1",
+    "huggingface-hub<1.0.0,>=0.21.2",
+    "torch<3.0.0,>=2.0.0",
+]
+
+unstructured = [
+    "unstructured[docx,pdf,pptx]<1.0.0,>=0.16.15",
+]
+
+postgres = [
+    "pgvector>=0.3.6",
+    "psycopg2<3.0.0,>=2.9.7",
+    "psycopg2-binary>=2.9.10",
+    "sqlalchemy<3.0.0,>=2.0.19",
+]
+
+mysql = [
+    "pymysql<2.0.0,>=1.1.0",
+]
+
+sql = [
+    "sqlalchemy<3.0.0,>=2.0.19",
+    "pymysql<2.0.0,>=1.1.0",
+    "psycopg2<3.0.0,>=2.9.7",
+]
+
+litellm = [
+    "litellm<2.0.0,>=1.30.1",
+]
+
+neo4j = [
+    "neo4j<6.0.0,>=5.14.1",
+]
+
+arango = [
+    "python-arango<9.0.0,>=8.1.2",
+    "arango-datasets<2.0.0,>=1.2.2",
+]
+
+metaphor = [
+    "metaphor-python<0.2.0,>=0.1.23",
+]
+
+exa = [
+    "exa-py>=1.8.7",
+]
+
+tavily = [
+    "tavily-python>=0.5.0",
+]
+
+chainlit = [
+    "chainlit<3.0.0,>=2.0.1",    
+    "python-socketio<6.0.0,>=5.11.0",
+]
+
+chromadb = [
+    "chromadb<=0.4.23,>=0.4.21",
+]
+weaviate = [
+    "weaviate-client>=4.9.6",
+]
+
+meilisearch = [
+    "meilisearch-python-sdk<3.0.0,>=2.2.3",
+]
+
+fastembed = [
+    "fastembed<0.4.0,>=0.3.1",
+]
+google-genai = [
+    "google-genai>=1.0.0",
+]
+
+google-generativeai = [
+    "google-genai>=1.0.0",
+]
+doc-parsers = [
+    "markitdown[docx,xlsx,pptx]>=0.0.1a3",
+    "openpyxl>=3.1.5",
+    "python-docx>=1.1.2",
+    "python-pptx>=1.0.2",
+    "xlrd>=2.0.1",
+]
+
+pinecone = [
+    "pinecone-client>=5.0.1"
+]
+asyncio = [
+    "asyncio>=3.4.3",
+]
+firecrawl = [
+    "firecrawl-py>=1.13.5",
+]
+crawl4ai = [
+    "crawl4ai>=0.6.3",
+]
+
+
+[dependency-groups]
+dev = [
+    "black[jupyter]>=24.3.0,<25.0.0",
+    "flake8<7.0.0,>=6.0.0",
+    "mypy<2.0.0,>=1.11.2",
+    "ruff<1.0.0,>=0.8.4",
+    "pre-commit<4.0.0,>=3.3.2",
+    "autopep8<3.0.0,>=2.0.2",
+    "types-python-dateutil>=2.8.0",
+    "types-redis<5.0.0.0,>=4.5.5.2",
+    "types-requests<3.0.0.0,>=2.31.0.1",
+    "types-pyyaml<7.0.0.0,>=6.0.12.20240311",
+    "types-pillow<11.0.0.0,>=10.2.0.20240406",
+    "pytest<8.0.0,>=7.3.1",
+    "pytest-redis<4.0.0,>=3.0.2",
+    "pytest-asyncio<1.0.0,>=0.21.1",
+    "pytest-postgresql<6.0.0,>=5.0.0",
+    "coverage<8.0.0,>=7.2.5",
+    "pytest-xdist<4.0.0,>=3.6.1",
+    "pytest-timeout<3.0.0,>=2.3.1",
+    "pytest-cov<6.0.0,>=5.0.0",
+    "docker<8.0.0,>=7.1.0",
+    "commitizen>=4.1.0",
+    "pytest-mysql>=3.1.0",
+]
+docs = [
+    "mkdocs<2.0.0,>=1.4.2",
+    "mkdocs-material<10.0.0,>=9.1.5",
+    "mkdocstrings[python]<1.0.0,>=0.25.2",
+    "mkdocs-awesome-pages-plugin<3.0.0,>=2.8.0",
+    "mkdocs-rss-plugin<2.0.0,>=1.8.0",
+    "mkdocs-gen-files<1.0.0,>=0.4.0",
+    "mkdocs-literate-nav<1.0.0,>=0.6.0",
+    "mkdocs-section-index<1.0.0,>=0.3.5",
+    "mkdocs-jupyter<1.0.0,>=0.24.1",
+    "griffe<1.0.0",
+]
+
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+
+[tool.hatch.build]
+only-packages = true
+include = ["langroid/py.typed", "langroid/"]
+exclude = [
+    "tests/",
+    "examples/",
+    "**/__pycache__",
+    "**/*.pyc",
+    "**/node_modules/**",
+]
+
+[tool.black]
+line-length = 88
+include = '\.pyi?$'
+# extend-exclude = '.*pyi$'
+# exclude = '^stubs/'
+
+[tool.pytype]
+inputs = ["langroid"]
+
+[tool.mypy]
+python_version = "3.11"
+#mypy_path = ["stubs"]
+
+#follow_imports = "skip"
+#check_untyped_defs = true
+disallow_untyped_defs = true
+ignore_missing_imports = true
+warn_unused_ignores = false
+strict = true
+exclude = [
+    "docs", ".venv", "venv", "examples", "examples_dev", "langroid/utils/web",
+    "notebooks",
+    "langroid/parsing/repo_loader.py",
+    "langroid/embedding_models/clustering.py",
+    "langroid/agent/callbacks/chainlit.py",
+    "langroid/vector_store/chromadb.py",
+    "langroid/embedding_models/protoc" # ignore generated files
+]
+files=["langroid/*"]
+plugins = [
+    "pydantic.mypy"
+]
+
+[tool.ruff]
+line-length = 88
+# Allow unused variables when underscore-prefixed.
+lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+lint.select = [
+    "E",  # pycodestyle
+    "F",  # pyflakes
+    "I",  # isort
+]
+lint.exclude = ["docs/**", ".venv", "venv", "examples/**", "examples_dev", "langroid/utils/web", "notebooks", "__init__.py", "langroid/embedding_models/protoc/*"]
+lint.fixable = ["A", "B", "C", "D", "E", "F", "G", "I", "N", "Q", "S", "T", "W", "ANN", "ARG", "BLE", "COM", "DJ", "DTZ", "EM", "ERA", "EXE", "FBT", "ICN", "INP", "ISC", "NPY", "PD", "PGH", "PIE", "PL", "PT", "PTH", "PYI", "RET", "RSE", "RUF", "SIM", "SLF", "TCH", "TID", "TRY", "UP", "YTT"]
+lint.unfixable = []
+lint.extend-ignore = ["F821"]
+# Assume Python 3.11.
+target-version = "py311"
+
+[tool.pytest.ini_options]
+filterwarnings = ["ignore::DeprecationWarning"]
+
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+tag_format = "$version"
+version_scheme = "semver"
+version_provider = "pep621"
+major_version_zero = true
+
+# ===== FROM: vendors\langroid\tests\main\mcp\weather-server-python\pyproject.toml =====
+[project]
+name = "weather"
+version = "0.1.0"
+description = "A simple MCP weather server"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "httpx>=0.28.1",
+    "mcp[cli]>=1.2.0",
+]
+
+[build-system]
+requires = [ "hatchling",]
+build-backend = "hatchling.build"
+
+[project.scripts]
+weather = "weather:main"
+
+# ===== FROM: vendors\Scrapegraph-ai\pyproject.toml =====
+[project]
+name = "scrapegraphai"
+
+version = "1.62.0"
+
+description = "A web scraping library based on LangChain which uses LLM and direct graph logic to create scraping pipelines."
+authors = [
+    { name = "Marco Vinciguerra", email = "mvincig11@gmail.com" },
+    { name = "Lorenzo Padoan", email = "lorenzo.padoan977@gmail.com" }
+]
+
+dependencies = [
+    "langchain>=0.3.0",
+    "langchain-openai>=0.1.22",
+    "langchain-mistralai>=0.1.12",
+    "langchain_community>=0.2.9",
+    "langchain-aws>=0.1.3",
+    "langchain-ollama>=0.1.3",
+    "html2text>=2024.2.26",
+    "beautifulsoup4>=4.12.3",
+    "python-dotenv>=1.0.1",
+    "tiktoken>=0.7",
+    "tqdm>=4.66.4",
+    "minify-html>=0.15.0",
+    "free-proxy>=1.1.1",
+    "playwright>=1.43.0",
+    "undetected-playwright>=0.3.0",
+    "semchunk>=2.2.0",
+    "async-timeout>=4.0.3",
+    "simpleeval>=1.0.0",
+    "jsonschema>=4.23.0",
+    "duckduckgo-search>=7.2.1",
+    "pydantic>=2.10.2",
+    "scrapegraph-py>=0.1.0",
+]
+
+readme = "README.md"
+homepage = "https://scrapegraphai.com/"
+repository = "https://github.com/ScrapeGraphAI/Scrapegraph-ai"
+documentation = "https://scrapegraph-ai.readthedocs.io/en/latest/"
+keywords = [
+    "scrapegraph",
+    "scrapegraphai",
+    "langchain",
+    "ai",
+    "artificial intelligence",
+    "gpt",
+    "machine learning",
+    "rag",
+    "nlp",
+    "natural language processing",
+    "openai",
+    "scraping",
+    "web scraping",
+    "web scraping library",
+    "web scraping tool",
+    "webscraping",
+    "graph",
+    "llm"
+]
+classifiers = [
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+requires-python = ">=3.10,<4.0"
+
+[project.optional-dependencies]
+burr = ["burr[start]==0.22.1"]
+docs = ["sphinx==6.0", "furo==2024.5.6"]
+ocr = [
+    "surya-ocr>=0.5.0",
+    "matplotlib>=3.7.2",
+    "ipywidgets>=8.1.0",
+    "pillow>=10.4.0",
+]
+
+[build-system]
+requires = ["hatchling==1.26.3"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.0.0",
+    "pytest-mock>=3.14.0",
+    "pytest-asyncio>=0.25.0",
+    "pytest-sugar>=1.0.0",
+    "pytest-cov>=4.1.0",
+    "pylint>=3.2.5",
+    "poethepoet>=0.32.0",
+    "black>=24.2.0",
+    "ruff>=0.2.0",
+    "isort>=5.13.2",
+    "pre-commit>=3.6.0",
+    "mypy>=1.8.0",
+    "types-setuptools>=75.1.0"
+]
+
+[tool.black]
+line-length = 88
+target-version = ["py310"]
+
+[tool.isort]
+profile = "black"
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+select = ["F", "E", "W", "C"]
+ignore = ["E203", "E501", "C901"]  # Ignore conflicts with Black
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+disallow_untyped_calls = true
+ignore_missing_imports = true
+
+[tool.poe.tasks]
+pylint-local = "pylint scraperaphai/**/*.py"
+pylint-ci = "pylint --disable=C0114,C0115,C0116 --exit-zero scrapegraphai/**/*.py"
+
+# ===== FROM: vendors\scrapy\pyproject.toml =====
+[build-system]
+requires = ["hatchling>=1.27.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "Scrapy"
+dynamic = ["version"]
+description = "A high-level Web Crawling and Web Scraping framework"
+dependencies = [
+    "Twisted>=21.7.0",
+    "cryptography>=37.0.0",
+    "cssselect>=0.9.1",
+    "defusedxml>=0.7.1",
+    "itemadapter>=0.1.0",
+    "itemloaders>=1.0.1",
+    "lxml>=4.6.0",
+    "packaging",
+    "parsel>=1.5.0",
+    "protego>=0.1.15",
+    "pyOpenSSL>=22.0.0",
+    "queuelib>=1.4.2",
+    "service_identity>=18.1.0",
+    "tldextract",
+    "w3lib>=1.17.0",
+    "zope.interface>=5.1.0",
+    # Platform-specific dependencies
+    'PyDispatcher>=2.0.5; platform_python_implementation == "CPython"',
+    'PyPyDispatcher>=2.1.0; platform_python_implementation == "PyPy"',
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Framework :: Scrapy",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+license = "BSD-3-Clause"
+license-files = ["LICENSE", "AUTHORS"]
+readme = "README.rst"
+requires-python = ">=3.9"
+authors = [{ name = "Scrapy developers", email = "pablo@pablohoffman.com" }]
+maintainers = [{ name = "Pablo Hoffman", email = "pablo@pablohoffman.com" }]
+
+[project.urls]
+Homepage = "https://scrapy.org/"
+Documentation = "https://docs.scrapy.org/"
+Source = "https://github.com/scrapy/scrapy"
+Tracker = "https://github.com/scrapy/scrapy/issues"
+"Release notes" = "https://docs.scrapy.org/en/latest/news.html"
+
+[project.scripts]
+scrapy = "scrapy.cmdline:execute"
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "/docs",
+  "/extras",
+  "/scrapy",
+  "/tests",
+  "/tests_typing",
+  "/CODE_OF_CONDUCT.md",
+  "/CONTRIBUTING.md",
+  "/INSTALL.md",
+  "/NEWS",
+  "/SECURITY.md",
+  "/codecov.yml",
+  "/conftest.py",
+  "/tox.ini",
+]
+
+[tool.hatch.version]
+path = "scrapy/VERSION"
+pattern = "^(?P<version>.+)$"
+
+[tool.mypy]
+ignore_missing_imports = true
+implicit_reexport = false
+
+# Interface classes are hard to support
+[[tool.mypy.overrides]]
+module = "twisted.internet.interfaces"
+follow_imports = "skip"
+
+[[tool.mypy.overrides]]
+module = "scrapy.interfaces"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "twisted.internet.reactor"
+follow_imports = "skip"
+
+# FIXME: remove the following section once the issues are solved
+[[tool.mypy.overrides]]
+module = "scrapy.settings.default_settings"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "twisted"
+implicit_reexport = true
+
+[tool.bumpversion]
+current_version = "2.13.3"
+commit = true
+tag = true
+tag_name = "{new_version}"
+
+[[tool.bumpversion.files]]
+filename = "docs/news.rst"
+search = "\\(unreleased\\)$"
+replace = "({now:%Y-%m-%d})"
+regex = true
+
+[[tool.bumpversion.files]]
+filename = "scrapy/VERSION"
+
+[[tool.bumpversion.files]]
+filename = "SECURITY.md"
+parse = """(?P<major>0|[1-9]\\d*)\\.(?P<minor>0|[1-9]\\d*)"""
+serialize = ["{major}.{minor}"]
+
+[tool.coverage.run]
+branch = true
+include = ["scrapy/*"]
+omit = ["tests/*"]
+disable_warnings = ["include-ignored"]
+
+[tool.coverage.paths]
+source = [
+    "scrapy",
+    ".tox/**/site-packages/scrapy"
+]
+
+[tool.coverage.report]
+exclude_also = [
+    "if TYPE_CHECKING:",
+    "@(abc\\.)?abstractmethod",
+]
+
+[tool.pylint.MASTER]
+persistent = "no"
+jobs = 1          # >1 hides results
+extension-pkg-allow-list=[
+    "lxml",
+]
+
+[tool.pylint."MESSAGES CONTROL"]
+enable = [
+    "useless-suppression",
+]
+# Make INFO checks like useless-suppression also cause pylint to return a
+# non-zero exit code.
+fail-on = "I"
+disable = [
+    # Ones we want to ignore
+    "attribute-defined-outside-init",
+    "broad-exception-caught",
+    "consider-using-with",
+    "cyclic-import",
+    "disallowed-name",
+    "duplicate-code",  # https://github.com/pylint-dev/pylint/issues/214
+    "fixme",
+    "import-outside-toplevel",
+    "inherit-non-class",  # false positives with create_deprecated_class()
+    "invalid-name",
+    "invalid-overridden-method",
+    "isinstance-second-argument-not-valid-type",  # false positives with create_deprecated_class()
+    "line-too-long",
+    "logging-format-interpolation",
+    "logging-fstring-interpolation",
+    "logging-not-lazy",
+    "missing-docstring",
+    "no-member",
+    "no-value-for-parameter",  # https://github.com/pylint-dev/pylint/issues/3268
+    "not-callable",
+    "protected-access",
+    "redefined-builtin",
+    "redefined-outer-name",
+    "too-few-public-methods",
+    "too-many-ancestors",
+    "too-many-arguments",
+    "too-many-branches",
+    "too-many-function-args",
+    "too-many-instance-attributes",
+    "too-many-lines",
+    "too-many-locals",
+    "too-many-positional-arguments",
+    "too-many-public-methods",
+    "too-many-return-statements",
+    "unused-argument",
+    "unused-import",
+    "unused-variable",
+    "useless-import-alias",  # used as a hint to mypy
+    "useless-return",  # https://github.com/pylint-dev/pylint/issues/6530
+    "wrong-import-position",
+
+    # Ones that we may want to address (fix, ignore per-line or move to "don't want to fix")
+    "abstract-method",
+    "arguments-differ",
+    "arguments-renamed",
+    "dangerous-default-value",
+    "keyword-arg-before-vararg",
+    "pointless-statement",
+    "raise-missing-from",
+    "unnecessary-dunder-call",
+    "used-before-assignment",
+]
+
+[tool.pytest.ini_options]
+addopts = [
+    "--reactor=asyncio",
+]
+xfail_strict = true
+python_files = ["test_*.py", "test_*/__init__.py"]
+markers = [
+    "only_asyncio: marks tests as only enabled when --reactor=asyncio is passed",
+    "only_not_asyncio: marks tests as only enabled when --reactor=asyncio is not passed",
+    "requires_uvloop: marks tests as only enabled when uvloop is known to be working",
+    "requires_botocore: marks tests that need botocore (but not boto3)",
+    "requires_boto3: marks tests that need botocore and boto3",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning:twisted.web.static"
+]
+
+[tool.ruff.lint]
+extend-select = [
+    # flake8-builtins
+    "A",
+    # flake8-async
+    "ASYNC",
+    # flake8-bugbear
+    "B",
+    # flake8-comprehensions
+    "C4",
+    # flake8-commas
+    "COM",
+    # pydocstyle
+    "D",
+    # flake8-future-annotations
+    "FA",
+    # flynt
+    "FLY",
+    # refurb
+    "FURB",
+    # isort
+    "I",
+    # flake8-implicit-str-concat
+    "ISC",
+    # flake8-logging
+    "LOG",
+    # Perflint
+    "PERF",
+    # pygrep-hooks
+    "PGH",
+    # flake8-pie
+    "PIE",
+    # pylint
+    "PL",
+    # flake8-pytest-style
+    "PT",
+    # flake8-use-pathlib
+    "PTH",
+    # flake8-pyi
+    "PYI",
+    # flake8-quotes
+    "Q",
+    # flake8-return
+    "RET",
+    # flake8-raise
+    "RSE",
+    # Ruff-specific rules
+    "RUF",
+    # flake8-bandit
+    "S",
+    # flake8-simplify
+    "SIM",
+    # flake8-slots
+    "SLOT",
+    # flake8-debugger
+    "T10",
+    # flake8-type-checking
+    "TC",
+    # flake8-tidy-imports
+    "TID",
+    # pyupgrade
+    "UP",
+    # pycodestyle warnings
+    "W",
+    # flake8-2020
+    "YTT",
+]
+ignore = [
+    # Ones we want to ignore
+
+    # Trailing comma missing
+    "COM812",
+    # Missing docstring in public module
+    "D100",
+    # Missing docstring in public class
+    "D101",
+    # Missing docstring in public method
+    "D102",
+    # Missing docstring in public function
+    "D103",
+    # Missing docstring in public package
+    "D104",
+    # Missing docstring in magic method
+    "D105",
+    # Missing docstring in public nested class
+    "D106",
+    # Missing docstring in __init__
+    "D107",
+    # One-line docstring should fit on one line with quotes
+    "D200",
+    # No blank lines allowed after function docstring
+    "D202",
+    # 1 blank line required between summary line and description
+    "D205",
+    # Multi-line docstring closing quotes should be on a separate line
+    "D209",
+    # First line should end with a period
+    "D400",
+    # First line should be in imperative mood; try rephrasing
+    "D401",
+    # First line should not be the function's "signature"
+    "D402",
+    # First word of the first line should be properly capitalized
+    "D403",
+    # `try`-`except` within a loop incurs performance overhead
+    "PERF203",
+    # Import alias does not rename original package
+    "PLC0414",
+    # Too many return statements
+    "PLR0911",
+    # Too many branches
+    "PLR0912",
+    # Too many arguments in function definition
+    "PLR0913",
+    # Too many statements
+    "PLR0915",
+    # Magic value used in comparison
+    "PLR2004",
+    # `for` loop variable overwritten by assignment target
+    "PLW2901",
+    # String contains ambiguous {}.
+    "RUF001",
+    # Docstring contains ambiguous {}.
+    "RUF002",
+    # Comment contains ambiguous {}.
+    "RUF003",
+    # Mutable class attributes should be annotated with `typing.ClassVar`
+    "RUF012",
+    # Use of `assert` detected; needed for mypy
+    "S101",
+    # FTP-related functions are being called; https://github.com/scrapy/scrapy/issues/4180
+    "S321",
+    # Argument default set to insecure SSL protocol
+    "S503",
+    # Use a context manager for opening files
+    "SIM115",
+    # Yoda condition detected
+    "SIM300",
+
+    # Ones that we may want to address (fix, ignore per-line or move to "don't want to fix")
+
+    # Assigning to `os.environ` doesn't clear the environment.
+    "B003",
+    # Do not use mutable data structures for argument defaults.
+    "B006",
+    # Loop control variable not used within the loop body.
+    "B007",
+    # Do not perform function calls in argument defaults.
+    "B008",
+    # Found useless expression.
+    "B018",
+    # Star-arg unpacking after a keyword argument is strongly discouraged.
+    "B026",
+    # No explicit stacklevel argument found.
+    "B028",
+    # Within an `except` clause, raise exceptions with `raise ... from`
+    "B904",
+    # Use capitalized environment variable
+    "SIM112",
+]
+
+[tool.ruff.lint.flake8-tidy-imports]
+banned-module-level-imports = [
+    "twisted.internet.reactor",
+    # indirectly imports twisted.conch.insults.helper which imports twisted.internet.reactor
+    "twisted.conch.manhole",
+    # directly imports twisted.internet.reactor
+    "twisted.protocols.ftp",
+]
+
+[tool.ruff.lint.isort]
+split-on-trailing-comma = false
+
+[tool.ruff.lint.per-file-ignores]
+# Circular import workarounds
+"scrapy/linkextractors/__init__.py" = ["E402"]
+"scrapy/spiders/__init__.py" = ["E402"]
+
+# Skip bandit in tests
+"tests/**" = ["S"]
+
+# Issues pending a review:
+"docs/conf.py" = ["E402"]
+"scrapy/utils/url.py" = ["F403", "F405"]
+"tests/test_loader.py" = ["E741"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "pep257"
+
+# ===== FROM: vendors\scrapy-playwright\pyproject.toml =====
+[tool.black]
+line-length = 99
+
+# ===== FROM: vendors\SeleniumBase\pyproject.toml =====
+[build-system]
+requires = ["setuptools>=70.2.0", "wheel>=0.44.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "seleniumbase"
+readme = "README.md"
+dynamic = [
+    "version",
+    "license",
+    "authors",
+    "scripts",
+    "keywords",
+    "classifiers",
+    "description",
+    "maintainers",
+    "entry-points",
+    "dependencies",
+    "requires-python",
+    "optional-dependencies",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/seleniumbase/SeleniumBase"
+"Changelog" = "https://github.com/seleniumbase/SeleniumBase/releases"
+"Download" = "https://pypi.org/project/seleniumbase/#files"
+"Blog" = "https://seleniumbase.com/"
+"Discord" = "https://discord.gg/EdhQTn3EyE"
+"PyPI" = "https://pypi.org/project/seleniumbase/"
+"Source" = "https://github.com/seleniumbase/SeleniumBase"
+"Repository" = "https://github.com/seleniumbase/SeleniumBase"
+"Documentation" = "https://seleniumbase.io/"
+
+[tool.setuptools]
+packages = [
+    "seleniumbase",
+    "sbase",
+    "seleniumbase.behave",
+    "seleniumbase.common",
+    "seleniumbase.config",
+    "seleniumbase.console_scripts",
+    "seleniumbase.core",
+    "seleniumbase.drivers",
+    "seleniumbase.drivers.cft_drivers",
+    "seleniumbase.drivers.chs_drivers",
+    "seleniumbase.extensions",
+    "seleniumbase.fixtures",
+    "seleniumbase.js_code",
+    "seleniumbase.masterqa",
+    "seleniumbase.plugins",
+    "seleniumbase.resources",
+    "seleniumbase.translate",
+    "seleniumbase.undetected",
+    "seleniumbase.undetected.cdp_driver",
+    "seleniumbase.utilities",
+    "seleniumbase.utilities.selenium_grid",
+    "seleniumbase.utilities.selenium_ide",
+]
+
+[tool.pytest.ini_options]
+addopts = ["--capture=tee-sys", "-p no:cacheprovider"]
+norecursedirs = [".*", "build", "dist", "recordings", "temp", "assets"]
+filterwarnings = [
+    "ignore::pytest.PytestWarning",
+    "ignore:.*U.*mode is deprecated:DeprecationWarning",
+]
+junit_family = ["legacy"]
+python_files = ["test_*.py", "*_test.py", "*_tests.py", "*_suite.py"]
+python_classes = ["Test*", "*Test*", "*Test", "*Tests", "*Suite"]
+python_functions = ["test_*"]
+markers = [
+    "marker1", "marker2", "marker3", "marker_test_suite",
+    "local", "remote", "offline", "expected_failure",
+    "qa", "ci", "e2e", "smoke", "ready", "master", "deploy",
+    "develop", "staging", "production", "release", "active",
+]
+
+# ===== FROM: vendors\spyder\pyproject.toml =====
+[build-system]
+requires = [
+    "setuptools>=42",
+    "packaging",
+]
+
+# We're not ready yet to build Spyder with the setuptools backend, but we're
+# leaving this for the future.
+# build-backend = "setuptools.build_meta"
+
+# ===== FROM: vendors\spyder\external-deps\python-lsp-server\pyproject.toml =====
+# Copyright 2017-2020 Palantir Technologies, Inc.
+# Copyright 2021- Python Language Server Contributors.
+
+[build-system]
+requires = ["setuptools>=69.0.0", "setuptools_scm[toml]>=3.4.3"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "python-lsp-server"
+authors = [{name = "Python Language Server Contributors"}]
+description = "Python Language Server for the Language Server Protocol"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.9"
+dependencies = [
+    "docstring-to-markdown",
+    "importlib_metadata>=4.8.3;python_version<\"3.10\"",
+    "jedi>=0.17.2,<0.20.0",
+    "pluggy>=1.0.0",
+    "python-lsp-jsonrpc>=1.1.0,<2.0.0",
+    "ujson>=3.0.0",
+    "black"
+]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/python-lsp/python-lsp-server"
+
+[project.optional-dependencies]
+all = [
+    "autopep8>=2.0.4,<2.1.0",
+    "flake8>=7.1,<8",
+    "mccabe>=0.7.0,<0.8.0",
+    "pycodestyle>=2.12.0,<2.13.0",
+    "pydocstyle>=6.3.0,<6.4.0",
+    "pyflakes>=3.2.0,<3.3.0",
+    "pylint>=3.1,<4",
+    "rope>=1.11.0",
+    "yapf>=0.33.0",
+    "whatthepatch>=1.0.2,<2.0.0"
+]
+autopep8 = ["autopep8>=2.0.4,<2.1.0"]
+flake8 = ["flake8>=7.1,<8"]
+mccabe = ["mccabe>=0.7.0,<0.8.0"]
+pycodestyle = ["pycodestyle>=2.12.0,<2.13.0"]
+pydocstyle = ["pydocstyle>=6.3.0,<6.4.0"]
+pyflakes = ["pyflakes>=3.2.0,<3.3.0"]
+pylint = ["pylint>=3.1,<4"]
+rope = ["rope>=1.11.0"]
+yapf = ["yapf>=0.33.0", "whatthepatch>=1.0.2,<2.0.0"]
+websockets = ["websockets>=10.3"]
+test = [
+    "pylint>=3.1,<4",
+    "pytest",
+    "pytest-cov",
+    "coverage",
+    "numpy",
+    "pandas",
+    "matplotlib",
+    "pyqt5",
+    "flaky",
+    "websockets>=10.3",
+]
+
+[project.entry-points.pylsp]
+autopep8 = "pylsp.plugins.autopep8_format"
+folding = "pylsp.plugins.folding"
+flake8 = "pylsp.plugins.flake8_lint"
+jedi_completion = "pylsp.plugins.jedi_completion"
+jedi_definition = "pylsp.plugins.definition"
+jedi_type_definition = "pylsp.plugins.type_definition"
+jedi_hover = "pylsp.plugins.hover"
+jedi_highlight = "pylsp.plugins.highlight"
+jedi_references = "pylsp.plugins.references"
+jedi_rename = "pylsp.plugins.jedi_rename"
+jedi_signature_help = "pylsp.plugins.signature"
+jedi_symbols = "pylsp.plugins.symbols"
+mccabe = "pylsp.plugins.mccabe_lint"
+preload = "pylsp.plugins.preload_imports"
+pycodestyle = "pylsp.plugins.pycodestyle_lint"
+pydocstyle = "pylsp.plugins.pydocstyle_lint"
+pyflakes = "pylsp.plugins.pyflakes_lint"
+pylint = "pylsp.plugins.pylint_lint"
+rope_completion = "pylsp.plugins.rope_completion"
+rope_autoimport = "pylsp.plugins.rope_autoimport"
+yapf = "pylsp.plugins.yapf_format"
+
+[project.scripts]
+pylsp = "pylsp.__main__:main"
+
+[tool.ruff]
+# Exclude a variety of commonly ignored directories.
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pyenv",
+    ".pytest_cache",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    ".vscode",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "site-packages",
+    "venv",
+]
+
+# Same as Black.
+line-length = 88
+indent-width = 4
+
+# Assume Python 3.9
+target-version = "py39"
+
+[tool.ruff.lint]
+# https://docs.astral.sh/ruff/rules/
+select = ["E", "F", "W", "C", "I"]
+ignore = [
+    "C901",  # McCabe complexity warning
+    "E501",  # Line too long
+    "E722",  # Do not use bare `except`
+]
+
+# Allow fix for all enabled rules (when `--fix`) is provided.
+fixable = ["ALL"]
+unfixable = []
+
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.format]
+# Like Black, use double quotes for strings.
+quote-style = "double"
+
+# Like Black, indent with spaces, rather than tabs.
+indent-style = "space"
+
+# Like Black, respect magic trailing commas.
+skip-magic-trailing-comma = false
+
+# Like Black, automatically detect the appropriate line ending.
+line-ending = "auto"
+
+# Enable auto-formatting of code examples in docstrings. Markdown,
+# reStructuredText code/literal blocks and doctests are all supported.
+#
+# This is currently disabled by default, but it is planned for this
+# to be opt-out in the future.
+docstring-code-format = false
+
+# Set the line length limit used when formatting code snippets in
+# docstrings.
+#
+# This only has an effect when the `docstring-code-format` setting is
+# enabled.
+docstring-code-line-length = "dynamic"
+
+[tool.setuptools]
+license-files = ["LICENSE"]
+include-package-data = false
+
+[tool.setuptools.packages.find]
+exclude = ["contrib", "docs", "test", "test.*", "test.plugins", "test.plugins.*"]
+namespaces = false
+
+[tool.setuptools_scm]
+write_to = "pylsp/_version.py"
+write_to_template = "__version__ = \"{version}\"\n"  # VERSION_INFO is populated in __main__
+
+[tool.pytest.ini_options]
+testpaths = ["test"]
+addopts = "--cov-report html --cov-report term --junitxml=pytest.xml --cov pylsp --cov test"
+
+[tool.coverage.run]
+concurrency = ["multiprocessing", "thread"]
+
+# ===== FROM: vendors\spyder\external-deps\spyder-remote-services\pyproject.toml =====
+[build-system]
+requires = ["hatchling>=1.5"]
+build-backend = "hatchling.build"
+
+[project]
+name = "spyder-remote-services"
+readme = "README.md"
+dynamic = ["version"]
+description = "A Jupyter Server Extension Providing Support for Spyder Remote Services"
+keywords = ["jupyter", "spyder"]
+classifiers = [
+  "Intended Audience :: Developers",
+  "Intended Audience :: System Administrators",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: BSD License",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11"
+]
+requires-python = ">=3.8"
+dependencies = [
+  "jupyter_server >=2.14.2,<3.0",
+  "jupyter_client >=8.6.2,<9.0",
+  "envs-manager <1.0.0",
+  "orjson >=3.10.12,<4.0",
+]
+
+[[project.authors]]
+name = "Hendrik Louzada"
+email = "hendriklouzada@gmail.com"
+
+
+[project.optional-dependencies]
+test = [
+  "pytest >= 7.3.1",
+  "ruff >= 0.4.1",
+]
+
+[project.scripts]
+"spyder-server" = "spyder_remote_services.app:main"
+
+[tool.hatch.version]
+path = "spyder_remote_services/__init__.py"
+
+[tool.hatch.build.targets.wheel.shared-data]
+"jupyter-config" = "etc/jupyter/jupyter_server_config.d"
+
+# ===== FROM: vendors\sweep\pyproject.toml =====
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = { find = { where = ["."], exclude = ["tests", "sdk", "benchmark", "docs", "tests.*", "sdk.*", "benchmark.*", "docs.*"] } }
+
+
+[project.scripts]
+sweep = "sweepai.cli:main"
+sweepai = "sweepai.cli:main"
+
+[project.urls]
+Repository = "https://github.com/sweepai/sweep"
+Community = "https://community.sweep.dev/"
+Documentation = "https://docs.sweep.dev"
+Homepage = "https://sweep.dev"
+"Bug Tracker" = "https://github.com/sweepai/sweep/issues"
+
+[project]
+name = "sweepai"
+version = "2.1.4"
+description = "Sweep fixes GitHub issues"
+authors = [
+    {name = "Kevin Lu", email = "kevin@sweep.dev"},
+    {name = "William Zeng", email = "william@sweep.dev"},
+    {name = "Martin Ye", email = "martin@sweep.dev"},
+]
+readme = "README.md"
+license = {file = "LICENSE"}
+classifiers = [
+    "Programming Language :: Python :: 3.10"
+]
+dependencies = [
+  "diskcache==5.6.3",
+  "anthropic==0.21.3",
+  "chardet==5.2.0",
+  "beautifulsoup4==4.12.3",
+  "cohere==5.2.5",
+  "typer==0.10.0",
+  "pygithub==2.2.0",
+  "loguru==0.7.2",
+  "rich==13.7.1",
+  "fastapi==0.110.0",
+  "prometheus-fastapi-instrumentator==7.0.0",
+  "pyyaml==6.0.1",
+  "python-dotenv==1.0.1",
+  "openai==1.13.3",
+  "backoff==2.2.1",
+  "pymongo==4.6.3",
+  "gitpython==3.1.42",
+  "stringzilla==3.8.4",
+  "tantivy==0.22.0",
+  "tree-sitter==0.21.0",
+  "tree-sitter-python==0.21.0",
+  "tree-sitter-javascript==0.21.0",
+  "tree-sitter-languages==1.10.2",
+  "rapidfuzz==3.6.2",
+  "importmagic==0.1.7",
+  "pyflakes==3.2.0",
+  "beautifulsoup4==4.12.3",
+  "networkx==3.2.1",
+  "attrs==23.2.0",
+  "pytest==8.1.1",
+  "redis==5.0.3",
+  "numpy==1.26.4",
+  "markdown==3.5.2",
+  "yamllint==1.35.1",
+  "logtail==1.0.1",
+  "tabulate==0.9.0",
+  "rapidfuzz==3.6.2",
+  "resend==0.8.0",
+  "psutil==5.9.8",
+  "jinja2==3.1.4",
+  "tiktoken==0.6.0",
+  "uvicorn==0.29.0",
+  "pylint==3.1.0",
+  "parea-ai==0.2.114",
+  "voyageai==0.2.1",
+  "boto3==1.34.70",
+  "scipy==1.12.0",
+  "jira==3.8.0",
+  "slack-sdk==3.27.1",
+  "jsonpatch==1.33",
+  "scikit-learn==1.4.2",
+  "sentry-sdk==2.2.0",
+]
+
+[tool.isort]
+profile = "black"
+
+[tool.black]
+string-normalization = false
+
+[tool.pylint.'MESSAGES CONTROL']
+
+disable=[
+  'no-name-in-module'
+]
+
+[tool.ruff]
+lint.select = ["T100"]
+
+# ===== FROM: vendors\sweep\docs\sdk\pyproject.toml =====
+[tool.poetry]
+name = "sweep-sdk"
+version = "0.0.0"
+description = "Python library for building LLM agents"
+authors = ["Kevin Lu", "William Zeng"]
+packages = [{include = "src" }]
+classifiers = ["Programming Language :: Python :: 3.10"]
+readme = "README.md"
+
+[tool.poetry.urls]
+Repository = "https://github.com/sweepai/sweep"
+"Community" = "https://community.sweep.dev/"
+Documentation = "https://docs.sweep.dev"
+Homepage = "https://sweep.dev"
+"Bug Tracker" = "https://github.com/sweepai/sweep/issues"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+backoff = "^2.2.1"
+tiktoken = "^0.3.2"
+openai = "0.28.1"
+loguru = "^0.6.0"
+
+[tool.black]
+string-normalization = false
+
+[mypy]
+check_untyped_defs = true
+
+[tool.pylint.'MESSAGES CONTROL']
+
+disable=[
+  'no-name-in-module'
+]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+# ===== FROM: vendors\trafilatura\pyproject.toml =====
+# https://pip.pypa.io/en/stable/reference/build-system/pyproject-toml/
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "trafilatura"
+description = "Python & Command-line tool to gather text and metadata on the Web: Crawling, scraping, extraction, output as CSV, JSON, HTML, MD, TXT, XML."
+readme = "README.md"
+license = { text = "Apache 2.0" }
+dynamic = ["version"]
+requires-python = ">=3.8"
+authors = [
+  {name = "Adrien Barbaresi", email = "barbaresi@bbaw.de"}
+]
+keywords=[
+    "corpus",
+    "html2text",
+    "news-crawler",
+    "natural-language-processing",
+    "scraper",
+    "tei-xml",
+    "text-extraction",
+    "webscraping",
+    "web-scraping",
+]
+classifiers = [
+    # https://pypi.python.org/pypi?%3Aaction=list_classifiers
+    "Development Status :: 5 - Production/Stable",
+    #'Development Status :: 6 - Mature',
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Education",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft",
+    "Operating System :: POSIX",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: Security",
+    "Topic :: Text Editors :: Text Processing",
+    "Topic :: Text Processing :: Linguistic",
+    "Topic :: Text Processing :: Markup :: HTML",
+    "Topic :: Text Processing :: Markup :: Markdown",
+    "Topic :: Text Processing :: Markup :: XML",
+    "Topic :: Utilities",
+]
+dependencies = [
+    "certifi",
+    "charset_normalizer >= 3.4.0",
+    "courlan >= 1.3.2",
+    "htmldate >= 1.9.2",
+    "justext >= 3.0.1",
+    # see tests on Github Actions
+    "lxml == 4.9.2 ; platform_system == 'Darwin' and python_version <= '3.8'",
+    "lxml >= 5.3.0 ; platform_system != 'Darwin' or python_version > '3.8'",
+    "urllib3 >= 1.26, < 3",
+]
+
+# https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html
+[tool.setuptools]
+packages = ["trafilatura"]
+
+# https://packaging.python.org/en/latest/guides/single-sourcing-package-version/
+[tool.setuptools.dynamic]
+version = {attr = "trafilatura.__version__"}
+
+# https://setuptools.pypa.io/en/stable/userguide/datafiles.html
+[tool.setuptools.package-data]
+trafilatura = [
+    "data/tei_corpus.dtd",
+    "settings.cfg",
+]
+
+[project.scripts]
+trafilatura = "trafilatura.cli:main"
+
+[project.urls]
+"Homepage" = "https://trafilatura.readthedocs.io"
+"Source" = "https://github.com/adbar/trafilatura"
+"Blog" = "https://adrien.barbaresi.eu/blog/tag/trafilatura.html"
+"Tracker" = "https://github.com/adbar/trafilatura/issues"
+
+# Development extras
+[project.optional-dependencies]
+dev = [
+    "flake8",
+    "mypy",
+    "pytest",
+    "pytest-cov",
+    "types-lxml",
+    "types-urllib3",
+]
+all = [
+    "brotli",
+    "cchardet >= 2.1.7; python_version < '3.11'",  # build issue
+    "faust-cchardet >= 2.1.19; python_version >= '3.11'",
+    "htmldate[speed] >= 1.9.2",
+    "py3langid >= 0.3.0",
+    "pycurl >= 7.45.3",
+    "urllib3[socks]",
+    "zstandard >= 0.23.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = "tests/*test*.py"
+
+# ===== FROM: vendors\vanna\pyproject.toml =====
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "vanna"
+version = "0.7.9"
+authors = [
+  { name="Zain Hoda", email="zain@vanna.ai" },
+]
+
+description = "Generate SQL queries from natural language"
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "requests", "tabulate", "plotly", "pandas", "sqlparse", "kaleido", "flask", "flask-sock", "flasgger", "sqlalchemy"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/vanna-ai/vanna"
+"Bug Tracker" = "https://github.com/vanna-ai/vanna/issues"
+
+[project.optional-dependencies]
+postgres = ["psycopg2-binary", "db-dtypes"]
+mysql = ["PyMySQL"]
+clickhouse = ["clickhouse_connect"]
+bigquery = ["google-cloud-bigquery"]
+snowflake = ["snowflake-connector-python"]
+duckdb = ["duckdb"]
+google = ["google-generativeai", "google-cloud-aiplatform"]
+all = ["psycopg2-binary", "db-dtypes", "PyMySQL", "google-cloud-bigquery", "snowflake-connector-python", "duckdb", "openai", "qianfan", "mistralai>=1.0.0", "chromadb<1.0.0", "anthropic", "zhipuai", "marqo", "google-generativeai", "google-cloud-aiplatform", "qdrant-client", "fastembed", "ollama", "httpx", "opensearch-py", "opensearch-dsl", "transformers", "pinecone", "pymilvus[model]","weaviate-client", "azure-search-documents", "azure-identity", "azure-common", "faiss-cpu", "boto", "boto3", "botocore", "langchain_core", "langchain_postgres", "langchain-community", "langchain-huggingface", "xinference-client"]
+test = ["tox"]
+chromadb = ["chromadb<1.0.0"]
+openai = ["openai"]
+qianfan = ["qianfan"]
+mistralai = ["mistralai>=1.0.0"]
+anthropic = ["anthropic"]
+gemini = ["google-generativeai"]
+marqo = ["marqo"]
+zhipuai = ["zhipuai"]
+ollama = ["ollama", "httpx"]
+qdrant = ["qdrant-client", "fastembed"]
+vllm = ["vllm"]
+pinecone = ["pinecone", "fastembed"]
+opensearch = ["opensearch-py", "opensearch-dsl", "langchain-community", "langchain-huggingface"]
+hf = ["transformers"]
+milvus = ["pymilvus[model]"]
+bedrock = ["boto3", "botocore"]
+weaviate = ["weaviate-client"]
+azuresearch = ["azure-search-documents", "azure-identity", "azure-common", "fastembed"]
+pgvector = ["langchain-postgres>=0.0.12"]
+faiss-cpu = ["faiss-cpu"]
+faiss-gpu = ["faiss-gpu"]
+xinference-client = ["xinference-client"]
+oracle = ["oracledb", "chromadb<1.0.0"]
+
+# END OF PYPROJECT CONSOLIDATION - 42 files processed
+

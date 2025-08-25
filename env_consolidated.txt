@@ -1,0 +1,612 @@
+﻿# ========================================================================
+# SPARKLING-OWL-SPIN - ENV CONSOLIDATION
+# ========================================================================
+
+# From: .env
+# ========================================================================
+# Database Configuration
+MYSQL_HOST=localhost
+MYSQL_PORT=3306
+MYSQL_USER=root
+MYSQL_PASSWORD=test123
+MYSQL_DATABASE=ecadp_db
+
+# Supabase Configuration
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-key
+
+# API Configuration
+API_SECRET_KEY=your-secret-key-here
+ENVIRONMENT=development
+
+# Redis Configuration
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=
+
+# External APIs
+AZURE_OPENAI_ENDPOINT=your-azure-endpoint
+AZURE_OPENAI_API_KEY=your-api-key
+AZURE_OPENAI_API_VERSION=2023-05-15
+
+# Observability
+OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
+LOG_LEVEL=INFO
+
+
+# From: .env.docker
+# ========================================================================
+# Environment variables for Docker Compose
+
+# Database Configuration
+DATABASE_URL=postgresql://lovable:lovable123@postgres:5432/lovable_db
+POSTGRES_DB=lovable_db
+POSTGRES_USER=lovable
+POSTGRES_PASSWORD=lovable123
+
+# Redis Configuration
+REDIS_URL=redis://redis:6379
+
+# JWT Configuration
+JWT_SECRET_KEY=your-secret-key-here-change-in-production-use-random-string
+JWT_ALGORITHM=HS256
+JWT_EXPIRATION_HOURS=24
+
+# API Configuration
+API_PREFIX=/api/v1
+MAX_REQUEST_SIZE=10485760
+
+# Application Configuration
+ENVIRONMENT=development
+DEBUG=true
+LOG_LEVEL=info
+
+# PGAdmin Configuration
+PGADMIN_DEFAULT_EMAIL=admin@lovable.com
+PGADMIN_DEFAULT_PASSWORD=admin123
+
+# Server Configuration
+HOST=0.0.0.0
+PORT=8000
+
+
+# From: .env.example
+# ========================================================================
+# Sparkling-Owl-Spin Environment Variables
+
+# Core system
+SPARKLING_ENV=development
+LOG_LEVEL=INFO
+
+# External APIs
+OPENAI_API_KEY=your_openai_api_key_here
+TWOCAPTCHA_API_KEY=your_2captcha_api_key_here
+CAPMONSTER_API_KEY=your_capmonster_api_key_here
+NOPECHA_API_KEY=your_nopecha_api_key_here
+BLOCKET_API_KEY=your_blocket_api_key_here
+
+# Security
+SECURITY_LEVEL=medium
+REQUIRE_DOMAIN_AUTHORIZATION=true
+
+# Database (if needed)
+DATABASE_URL=sqlite:///sparkling_owl_spin.db
+
+# Monitoring
+METRICS_ENABLED=true
+
+
+# From: .envrc
+# ========================================================================
+# direnv configuration for automatic environment setup
+# This file automatically loads environment variables when entering the project directory
+
+# Load .env file if it exists
+if [[ -f .env ]]; then
+    dotenv
+fi
+
+# Set up Python environment
+export PYTHONPATH="${PWD}/src:${PYTHONPATH}"
+
+# Set up project-specific environment variables
+export PROJECT_ROOT="${PWD}"
+export PROJECT_NAME="Main_crawler_project"
+export ENVIRONMENT="${ENVIRONMENT:-development}"
+
+# Development tools paths
+export PATH="${PWD}/bin:${PWD}/scripts:${PATH}"
+
+# Python virtual environment activation (if using venv instead of poetry)
+# Uncomment if using traditional venv
+# if [[ -d venv ]]; then
+#     source venv/bin/activate
+# fi
+
+# Poetry environment activation (recommended)
+if command -v poetry &> /dev/null; then
+    if [[ -f pyproject.toml ]]; then
+        export VIRTUAL_ENV=$(poetry env info --path 2>/dev/null || echo "")
+        if [[ -n "$VIRTUAL_ENV" && -d "$VIRTUAL_ENV" ]]; then
+            export PATH="${VIRTUAL_ENV}/bin:${PATH}"
+        fi
+    fi
+fi
+
+# Database configuration
+export DATABASE_URL="${DATABASE_URL:-postgresql://localhost:5432/crawler_db}"
+export REDIS_URL="${REDIS_URL:-redis://localhost:6379/0}"
+
+# Docker and Kubernetes configuration
+export COMPOSE_PROJECT_NAME="${PROJECT_NAME}"
+export KUBECONFIG="${KUBECONFIG:-${HOME}/.kube/config}"
+
+# Observability
+export PROMETHEUS_URL="${PROMETHEUS_URL:-http://localhost:9090}"
+export GRAFANA_URL="${GRAFANA_URL:-http://localhost:3000}"
+
+# Development configuration
+export DEBUG="${DEBUG:-true}"
+export LOG_LEVEL="${LOG_LEVEL:-DEBUG}"
+
+# Testing configuration
+export PYTEST_CURRENT_TEST="${PYTEST_CURRENT_TEST:-}"
+export TESTING="${TESTING:-false}"
+
+# Cloud configuration (examples - set in .env for actual values)
+# export AWS_PROFILE="${AWS_PROFILE:-default}"
+# export GOOGLE_APPLICATION_CREDENTIALS="${GOOGLE_APPLICATION_CREDENTIALS:-}"
+
+echo "ðŸš€ Environment loaded for ${PROJECT_NAME} (${ENVIRONMENT})"
+echo "ðŸ“ Project root: ${PROJECT_ROOT}"
+echo "ðŸ Python path: ${PYTHONPATH}"
+
+# Show active Python environment
+if command -v python &> /dev/null; then
+    echo "ðŸ Python: $(python --version) at $(which python)"
+fi
+
+# Show active virtual environment
+if [[ -n "$VIRTUAL_ENV" ]]; then
+    echo "ðŸ“¦ Virtual env: ${VIRTUAL_ENV}"
+fi
+
+
+# From: agents\langroid\.env-template
+# ========================================================================
+OPENAI_API_KEY=your-key-here-without-quotes
+GITHUB_ACCESS_TOKEN=your-personal-access-token-no-quotes
+CACHE_TYPE=redis # or momento
+REDIS_PASSWORD=your-redis-password-no-quotes
+REDIS_HOST=your-redis-hostname-no-quotes
+REDIS_PORT=your-redis-port-no-quotes
+MOMENTO_AUTH_TOKEN=your-momento-auth-token-no-quotes
+QDRANT_API_KEY=your-key
+QDRANT_API_URL=https://your.url.here:6333 # note port number must be included
+AZURE_OPENAI_API_KEY=your-azure-openai-key-here-without-quotes
+AZURE_OPENAI_API_BASE=https://endpoint.openai.azure.com/
+AZURE_OPENAI_API_VERSION=2023-05-15
+AZURE_OPENAI_DEPLOYMENT_NAME=deployment-name-of-your-model
+AZURE_OPENAI_MODEL_NAME=gpt-35-turbo-16k # change according to your setup, remove this comment
+AZURE_OPENAI_MODEL_VERSION=1106-Preview # is needed if the model name is `gpt-4`
+NEO4J_USERNAME=typically neo4j
+NEO4J_PASSWORD=your-neo4j-password
+NEO4J_URI=uri-to-access-neo4j-dayabase
+NEO4J_DATABASE=typically neo4j
+EXA_API_KEY=your-exa-search-key
+LANGDB_API_KEY=your-langdb-api-key
+LANGDB_PROJECT_ID=your-langdb-project-id
+
+
+
+
+
+# From: agents\react-agent\backend\main\.env.example
+# ========================================================================
+# REQUIRED
+OPENAI_SECRET_KEY='YOUR_API_KEY'
+
+# OPTIONAL
+
+# OPENAI_LOG='true'
+UI_COMPONENTS_DIR ='{{INSERT_PROJECT_ROOT_DIR}}/frontend/shadcn-ui/src/components/ui'
+DEMO_COMPONENTS_DIR ='{{INSERT_PROJECT_ROOT_DIR}}/frontend/shadcn-ui/src/components/examples'
+LOCAL_COMPONENTS_DIR ='{{INSERT_PROJECT_ROOT_DIR}}/frontend/main/src/react-agent'
+
+
+
+# From: agents\react-agent\node_modules\psl\.env
+# ========================================================================
+
+# From: agents\sweep\sweep_chat\.env
+# ========================================================================
+BACKEND_URL=http://127.0.0.1:8000
+NEXTAUTH_URL=http://localhost:3000
+NEXT_PUBLIC_POSTHOG_KEY="abc"
+NEXT_PUBLIC_SENTRY_DSN="https://e6e043ea4f5d0218c35d9066b91fb509@o4507289806635008.ingest.us.sentry.io/4507291374977024"
+
+
+# From: engines\bypass\bypass-url-parser\.envrc
+# ========================================================================
+layout python
+
+
+# From: engines\bypass\rengine\.env
+# ========================================================================
+#
+# General
+#
+COMPOSE_PROJECT_NAME=rengine
+
+#
+# SSL specific configuration
+#
+AUTHORITY_NAME=reNgine
+AUTHORITY_PASSWORD=nSrmNkwT
+COMPANY=reNgine
+DOMAIN_NAME=rengine.example.com
+COUNTRY_CODE=US
+STATE=Georgia
+CITY=Atlanta
+
+#
+# Database configurations
+#
+POSTGRES_DB=rengine
+POSTGRES_USER=rengine
+POSTGRES_PASSWORD=hE2a5@K&9nEY1fzgA6X
+POSTGRES_PORT=5432
+POSTGRES_HOST=db
+
+#
+# Celery Scaling Configurations
+#
+MAX_CONCURRENCY=80
+MIN_CONCURRENCY=10
+
+#
+# Rengine web interface super user (for non-interactive install)
+#
+DJANGO_SUPERUSER_USERNAME=rengine
+DJANGO_SUPERUSER_EMAIL=rengine@example.com
+DJANGO_SUPERUSER_PASSWORD=Sm7IJG.IfHAFw9snSKv
+
+
+# From: engines\scraping\crawl4ai\.env.txt
+# ========================================================================
+GROQ_API_KEY = "YOUR_GROQ_API"
+OPENAI_API_KEY = "YOUR_OPENAI_API"
+ANTHROPIC_API_KEY = "YOUR_ANTHROPIC_API"
+# You can add more API keys here
+
+# From: engines\scraping\Scrapegraph-ai\examples\code_generator_graph\.env.example
+# ========================================================================
+# OpenAI API Configuration
+OPENAI_API_KEY=your-openai-api-key-here
+
+# Optional Configurations
+MAX_TOKENS=4000
+MODEL_NAME=gpt-4-1106-preview
+TEMPERATURE=0.7
+
+# Code Generator Settings
+DEFAULT_LANGUAGE=python
+GENERATE_TESTS=true
+ADD_DOCUMENTATION=true
+CODE_STYLE=pep8
+TYPE_CHECKING=true
+
+
+# From: engines\scraping\Scrapegraph-ai\examples\csv_scraper_graph\.env.example
+# ========================================================================
+# OpenAI API Configuration
+OPENAI_API_KEY=your-openai-api-key-here
+
+# Optional Configurations
+MAX_TOKENS=4000
+MODEL_NAME=gpt-4-1106-preview
+TEMPERATURE=0.7
+
+# CSV Scraper Settings
+CSV_DELIMITER=,
+MAX_ROWS=1000
+
+
+# From: engines\scraping\Scrapegraph-ai\examples\custom_graph\.env.example
+# ========================================================================
+# OpenAI API Configuration
+OPENAI_API_KEY=your-openai-api-key-here
+
+# Optional Configurations
+MAX_TOKENS=4000
+MODEL_NAME=gpt-4-1106-preview
+TEMPERATURE=0.7
+
+# Custom Graph Settings
+CUSTOM_NODE_TIMEOUT=30
+MAX_NODES=10
+DEBUG_MODE=false
+LOG_LEVEL=info
+
+
+# From: engines\scraping\Scrapegraph-ai\examples\depth_search_graph\.env.example
+# ========================================================================
+# OpenAI API Configuration
+OPENAI_API_KEY=your-openai-api-key-here
+
+# Optional Configurations
+MAX_TOKENS=4000
+MODEL_NAME=gpt-4-1106-preview
+TEMPERATURE=0.7
+
+# Depth Search Settings
+MAX_DEPTH=5
+CRAWL_DELAY=1
+RESPECT_ROBOTS_TXT=true
+MAX_PAGES_PER_DOMAIN=100
+USER_AGENT=Mozilla/5.0
+
+
+# From: engines\scraping\Scrapegraph-ai\examples\document_scraper_graph\.env.example
+# ========================================================================
+# OpenAI API Configuration
+OPENAI_API_KEY=your-openai-api-key-here
+
+# Optional Configurations
+MAX_TOKENS=4000
+MODEL_NAME=gpt-4-1106-preview
+TEMPERATURE=0.7
+
+# Document Scraper Settings
+OCR_ENABLED=true
+EXTRACT_METADATA=true
+MAX_FILE_SIZE=10485760  # 10MB
+SUPPORTED_FORMATS=pdf,doc,docx,txt
+
+
+# From: engines\scraping\Scrapegraph-ai\examples\extras\.env.example
+# ========================================================================
+OPENAI_API_KEY="YOUR_OPENAI_API_KEY"
+BROWSER_BASE_PROJECT_ID="YOUR_BROWSER_BASE_PROJECT_ID"
+BROWSER_BASE_API_KEY="YOUR_BROWSERBASE_API_KEY"
+SCRAPE_DO_API_KEY="YOUR_SCRAPE_DO_API_KEY"
+
+
+# From: engines\scraping\Scrapegraph-ai\examples\json_scraper_graph\.env.example
+# ========================================================================
+# OpenAI API Configuration
+OPENAI_API_KEY=your-openai-api-key-here
+
+# Optional Configurations
+MAX_TOKENS=4000
+MODEL_NAME=gpt-4-1106-preview
+TEMPERATURE=0.7
+
+# JSON Scraper Settings
+MAX_DEPTH=3
+TIMEOUT=30
+
+
+# From: engines\scraping\Scrapegraph-ai\examples\markdownify\.env.example
+# ========================================================================
+SCRAPEGRAPH_API_KEY=your SCRAPEGRAPH_API_KEY
+
+# From: engines\scraping\Scrapegraph-ai\examples\omni_scraper_graph\.env.example
+# ========================================================================
+# OpenAI API Configuration
+OPENAI_API_KEY=your-openai-api-key-here
+
+# Optional Configurations
+MAX_TOKENS=4000
+MODEL_NAME=gpt-4-1106-preview
+TEMPERATURE=0.7
+
+# Omni Scraper Settings
+DEFAULT_FORMAT=auto
+TIMEOUT=60
+MAX_RETRIES=3
+USER_AGENT=Mozilla/5.0
+
+
+# From: engines\scraping\Scrapegraph-ai\examples\script_generator_graph\.env.example
+# ========================================================================
+# OpenAI API Configuration
+OPENAI_API_KEY=your-openai-api-key-here
+
+# Optional Configurations
+MAX_TOKENS=4000
+MODEL_NAME=gpt-4-1106-preview
+TEMPERATURE=0.7
+
+# Script Generator Settings
+DEFAULT_LANGUAGE=python
+INCLUDE_COMMENTS=true
+ADD_TYPE_HINTS=true
+CODE_STYLE=pep8
+
+
+# From: engines\scraping\Scrapegraph-ai\examples\search_graph\.env.example
+# ========================================================================
+# OpenAI API Configuration
+OPENAI_API_KEY=your-openai-api-key-here
+
+# Search API Configuration
+SERP_API_KEY=your-serp-api-key-here
+
+# Optional Configurations
+MAX_SEARCH_RESULTS=10
+MAX_TOKENS=4000
+MODEL_NAME=gpt-4-1106-preview
+TEMPERATURE=0.7
+
+
+# From: engines\scraping\Scrapegraph-ai\examples\search_graph\scrapegraphai\.env.example
+# ========================================================================
+SCRAPEGRAPH_API_KEY=your SCRAPEGRAPH_API_KEY
+
+# From: engines\scraping\Scrapegraph-ai\examples\smart_scraper_graph\.env.example
+# ========================================================================
+# OpenAI API Configuration
+OPENAI_API_KEY=your-openai-api-key-here
+
+# Optional Configurations
+MAX_TOKENS=4000
+MODEL_NAME=gpt-4-1106-preview
+TEMPERATURE=0.7
+
+
+# From: engines\scraping\Scrapegraph-ai\examples\smart_scraper_graph\scrapegraphai\.env.example
+# ========================================================================
+SCRAPEGRAPH_API_KEY=your SCRAPEGRAPH_API_KEY
+
+# From: engines\scraping\Scrapegraph-ai\examples\speech_graph\.env.example
+# ========================================================================
+# OpenAI API Configuration
+OPENAI_API_KEY=your-openai-api-key-here
+
+# Whisper API Configuration (Optional)
+WHISPER_API_KEY=your-whisper-api-key-here
+
+# Optional Configurations
+MAX_TOKENS=4000
+MODEL_NAME=gpt-4-1106-preview
+TEMPERATURE=0.7
+
+# Speech Settings
+AUDIO_FORMAT=mp3
+SAMPLE_RATE=16000
+
+
+# From: engines\scraping\Scrapegraph-ai\examples\xml_scraper_graph\.env.example
+# ========================================================================
+# OpenAI API Configuration
+OPENAI_API_KEY=your-openai-api-key-here
+
+# Optional Configurations
+MAX_TOKENS=4000
+MODEL_NAME=gpt-4-1106-preview
+TEMPERATURE=0.7
+
+# XML Scraper Settings
+XPATH_TIMEOUT=30
+VALIDATE_XML=true
+
+
+# From: engines\scraping\Scrapegraph-ai\tests\graphs\.env.example
+# ========================================================================
+OPENAI_API_KEY="YOUR OPENAI API KEY"
+FIREWORKS_APIKEY="YOOUR FIREWORK KEY"
+CLOD_API_KEY="YOUR CLOD API KEY"
+
+
+# From: engines\scraping\secret-agent\website\.env
+# ========================================================================
+
+# From: extension\browser-extension\.env.example
+# ========================================================================
+DEBUG_MODE=false
+
+
+# From: frontend\.env
+# ========================================================================
+VITE_SUPABASE_PROJECT_ID="kvinyqtypnyagcpqutog"
+VITE_SUPABASE_PUBLISHABLE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt2aW55cXR5cG55YWdjcHF1dG9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ1MDU5MDksImV4cCI6MjA3MDA4MTkwOX0.6eDShz2J6uSf1_ECxDlo2ZqcCAIEVp3cxrmw7JdlOVU"
+VITE_SUPABASE_URL="https://kvinyqtypnyagcpqutog.supabase.co"
+
+
+# From: frontend\.env.example
+# ========================================================================
+# Example environment variables for frontend
+VITE_API_URL=http://localhost:8000
+
+
+# From: frontend-nextjs\.env.example
+# ========================================================================
+# ECaDP Frontend Environment Variables
+# Copy this file to .env.local and fill in your values
+
+# API Configuration
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
+NEXT_PUBLIC_GRAPHQL_URL=http://localhost:8000/graphql
+
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key_here
+
+# Application Configuration
+NEXT_PUBLIC_APP_NAME=ECaDP
+NEXT_PUBLIC_APP_VERSION=1.0.0
+NEXT_PUBLIC_ENVIRONMENT=development
+
+# External Services (if needed)
+NEXT_PUBLIC_SENTRY_DSN=
+NEXT_PUBLIC_ANALYTICS_ID=
+
+# Feature Flags
+NEXT_PUBLIC_ENABLE_DARK_MODE=true
+NEXT_PUBLIC_ENABLE_I18N=true
+NEXT_PUBLIC_ENABLE_PWA=false
+
+
+# From: frontend-nextjs\.env.local
+# ========================================================================
+# ECaDP Frontend Local Environment
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
+NEXT_PUBLIC_GRAPHQL_URL=http://localhost:8000/graphql
+NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
+NEXT_PUBLIC_APP_NAME=ECaDP
+NEXT_PUBLIC_APP_VERSION=1.0.0
+NEXT_PUBLIC_ENVIRONMENT=development
+NEXT_PUBLIC_ENABLE_DARK_MODE=true
+NEXT_PUBLIC_ENABLE_I18N=true
+NEXT_PUBLIC_ENABLE_PWA=false
+
+
+# From: infra\deployment\docker\.env.docker
+# ========================================================================
+# Environment variables for Docker Compose
+
+# Database Configuration
+DATABASE_URL=postgresql://lovable:lovable123@postgres:5432/lovable_db
+POSTGRES_DB=lovable_db
+POSTGRES_USER=lovable
+POSTGRES_PASSWORD=lovable123
+
+# Redis Configuration
+REDIS_URL=redis://redis:6379
+
+# JWT Configuration
+JWT_SECRET_KEY=your-secret-key-here-change-in-production-use-random-string
+JWT_ALGORITHM=HS256
+JWT_EXPIRATION_HOURS=24
+
+# API Configuration
+API_PREFIX=/api/v1
+MAX_REQUEST_SIZE=10485760
+
+# Application Configuration
+ENVIRONMENT=development
+DEBUG=true
+LOG_LEVEL=info
+
+# PGAdmin Configuration
+PGADMIN_DEFAULT_EMAIL=admin@lovable.com
+PGADMIN_DEFAULT_PASSWORD=admin123
+
+# Server Configuration
+HOST=0.0.0.0
+PORT=8000
+
+
+# From: integrations\swedish\blocket_api\.envrc
+# ========================================================================
+use_flake .
+
+
+# From: sandbox\exploit_tools\bypass-url-parser\.envrc
+# ========================================================================
+layout python
+
+

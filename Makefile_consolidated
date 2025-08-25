@@ -1,0 +1,5102 @@
+﻿# 
+# â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆ
+# â–ˆâ–ˆ                                                                                    â–ˆâ–ˆ
+# â–ˆâ–ˆ   ðŸ¦‰ SPARKLING-OWL-SPIN - CONSOLIDATED MAKEFILE COLLECTION                       â–ˆâ–ˆ
+# â–ˆâ–ˆ   All Makefile configurations from vendors and subdirectories                    â–ˆâ–ˆ
+# â–ˆâ–ˆ                                                                                    â–ˆâ–ˆ
+# â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆ
+#
+
+# Makefile Consolidation
+# Total files: 85
+# Generated: 2025-08-25 13:12:00
+
+# ===== FROM: .venv\Lib\site-packages\pip\_vendor\urllib3\packages\backports\makefile.py =====
+# -*- coding: utf-8 -*-
+"""
+backports.makefile
+~~~~~~~~~~~~~~~~~~
+
+Backports the Python 3 ``socket.makefile`` method for use with anything that
+wants to create a "fake" socket object.
+"""
+import io
+from socket import SocketIO
+
+
+def backport_makefile(
+    self, mode="r", buffering=None, encoding=None, errors=None, newline=None
+):
+    """
+    Backport of ``socket.makefile`` from Python 3.5.
+    """
+    if not set(mode) <= {"r", "w", "b"}:
+        raise ValueError("invalid mode %r (only r, w, b allowed)" % (mode,))
+    writing = "w" in mode
+    reading = "r" in mode or not writing
+    assert reading or writing
+    binary = "b" in mode
+    rawmode = ""
+    if reading:
+        rawmode += "r"
+    if writing:
+        rawmode += "w"
+    raw = SocketIO(self, rawmode)
+    self._makefile_refs += 1
+    if buffering is None:
+        buffering = -1
+    if buffering < 0:
+        buffering = io.DEFAULT_BUFFER_SIZE
+    if buffering == 0:
+        if not binary:
+            raise ValueError("unbuffered streams must be binary")
+        return raw
+    if reading and writing:
+        buffer = io.BufferedRWPair(raw, raw, buffering)
+    elif reading:
+        buffer = io.BufferedReader(raw, buffering)
+    else:
+        assert writing
+        buffer = io.BufferedWriter(raw, buffering)
+    if binary:
+        return buffer
+    text = io.TextIOWrapper(buffer, encoding, errors, newline)
+    text.mode = mode
+    return text
+
+# ===== FROM: engines\bypass\adversarial-robustness-toolbox\Makefile =====
+PROJECT_HOME_DIR := ${CURDIR}
+
+build:
+    # Builds a TensorFlow 2 ART docker container
+    # IMPORTANT ! If you have an existing python env folder make sure to first add it to the `.dockerIgnore` \
+    to reduce the size of your the art docker image
+	docker build -t project-art-tf2 .
+
+build1:
+	# Builds a TensorFlow 1 ART docker container
+    # IMPORTANT ! If you have an existing python env folder make sure to first add it to the `.dockerIgnore` \
+    to reduce the size of your the art docker image
+	docker build -t project-art-tf1 .
+
+run-bash:
+	docker  run --rm -it --name project-art-run-bash -v ${PWD}:/project/ -v ~/.art/:/root/.art/ project-art-tf2  /bin/bash
+
+run-test:
+	docker  run --rm --name project-art-run-test -v ${PWD}:/project/ -v ~/.art/:/root/.art/  project-art-tf2
+
+run-pep:
+	docker  run --rm --name project-art-run-pep -v ${PWD}:/project/ -v ~/.art/:/root/.art/ project-art-tf2 py.test --pep8 -m pep8
+
+run-jupyter:
+	docker  run --rm  --name project-art-run-jupyter -v ${PWD}:/project/ -v ~/.art/:/root/.art/ -p 8888:8888 project-art-tf2 jupyter notebook --ip 0.0.0.0 --no-browser --allow-root
+
+# ===== FROM: engines\bypass\adversarial-robustness-toolbox\docs\Makefile =====
+# Minimal makefile for Sphinx documentation
+#
+
+# You can set these variables from the command line.
+SPHINXOPTS    =
+SPHINXBUILD   = sphinx-build
+SPHINXPROJ    = adversarial-robustness-toolbox
+SOURCEDIR     = .
+BUILDDIR      = _build
+
+# Put it first so that "make" without argument is like "make help".
+help:
+	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+
+.PHONY: help Makefile
+
+# Catch-all target: route all unknown targets to Sphinx using the new
+# "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
+%: Makefile
+	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+
+# ===== FROM: engines\bypass\azuretls-client\cffi\Makefile =====
+# AzureTLS CFFI Makefile
+# Supports Windows, Linux, macOS, and various architectures
+
+GOOS := $(shell go env GOOS)
+GOARCH := $(shell go env GOARCH)
+
+# Output directory
+BUILD_DIR := build
+
+# Library name
+LIB_NAME := azuretls
+
+# Platform-specific settings
+ifeq ($(GOOS),windows)
+    EXT := .dll
+    CGO_ENABLED := 1
+else ifeq ($(GOOS),darwin)
+    EXT := .dylib
+    CGO_ENABLED := 1
+else
+    EXT := .so
+    CGO_ENABLED := 1
+endif
+
+# Target library name
+TARGET := $(BUILD_DIR)/lib$(LIB_NAME)_$(GOOS)_$(GOARCH)$(EXT)
+
+# Go build flags
+GO_BUILD_FLAGS := -buildmode=c-shared
+GO_LDFLAGS := -s -w
+
+# Default target
+.PHONY: all
+all: $(TARGET)
+
+# Create build directory
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
+
+# Build shared library
+$(TARGET): $(BUILD_DIR) main.go
+	CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) GOARCH=$(GOARCH) \
+	go build $(GO_BUILD_FLAGS) \
+	-ldflags="$(GO_LDFLAGS)" \
+	-o $(TARGET) main.go
+
+# Build for all platforms
+.PHONY: build-all
+build-all: build-linux build-windows build-darwin
+
+# Linux builds
+.PHONY: build-linux
+build-linux: build-linux-amd64 build-linux-arm64 build-linux-386 build-linux-arm
+
+.PHONY: build-linux-amd64
+build-linux-amd64: $(BUILD_DIR)
+	CGO_ENABLED=1 GOOS=linux GOARCH=amd64 \
+	go build $(GO_BUILD_FLAGS) \
+	-ldflags="$(GO_LDFLAGS)" \
+	-o $(BUILD_DIR)/lib$(LIB_NAME)_linux_amd64.so main.go
+
+.PHONY: build-linux-arm64
+build-linux-arm64: $(BUILD_DIR)
+	CGO_ENABLED=1 GOOS=linux GOARCH=arm64 \
+	go build $(GO_BUILD_FLAGS) \
+	-ldflags="$(GO_LDFLAGS)" \
+	-o $(BUILD_DIR)/lib$(LIB_NAME)_linux_arm64.so main.go
+
+.PHONY: build-linux-386
+build-linux-386: $(BUILD_DIR)
+	CGO_ENABLED=1 GOOS=linux GOARCH=386 \
+	go build $(GO_BUILD_FLAGS) \
+	-ldflags="$(GO_LDFLAGS)" \
+	-o $(BUILD_DIR)/lib$(LIB_NAME)_linux_386.so main.go
+
+.PHONY: build-linux-arm
+build-linux-arm: $(BUILD_DIR)
+	CGO_ENABLED=1 GOOS=linux GOARCH=arm \
+	go build $(GO_BUILD_FLAGS) \
+	-ldflags="$(GO_LDFLAGS)" \
+	-o $(BUILD_DIR)/lib$(LIB_NAME)_linux_arm.so main.go
+
+# Windows builds
+.PHONY: build-windows
+build-windows: build-windows-amd64 build-windows-386 build-windows-arm64
+
+.PHONY: build-windows-amd64
+build-windows-amd64: $(BUILD_DIR)
+	CGO_ENABLED=1 GOOS=windows GOARCH=amd64 \
+	go build $(GO_BUILD_FLAGS) \
+	-ldflags="$(GO_LDFLAGS)" \
+	-o $(BUILD_DIR)/lib$(LIB_NAME)_windows_amd64.dll main.go
+
+.PHONY: build-windows-386
+build-windows-386: $(BUILD_DIR)
+	CGO_ENABLED=1 GOOS=windows GOARCH=386 \
+	go build $(GO_BUILD_FLAGS) \
+	-ldflags="$(GO_LDFLAGS)" \
+	-o $(BUILD_DIR)/lib$(LIB_NAME)_windows_386.dll main.go
+
+.PHONY: build-windows-arm64
+build-windows-arm64: $(BUILD_DIR)
+	CGO_ENABLED=1 GOOS=windows GOARCH=arm64 \
+	go build $(GO_BUILD_FLAGS) \
+	-ldflags="$(GO_LDFLAGS)" \
+	-o $(BUILD_DIR)/lib$(LIB_NAME)_windows_arm64.dll main.go
+
+# macOS builds
+.PHONY: build-darwin
+build-darwin: build-darwin-amd64 build-darwin-arm64
+
+.PHONY: build-darwin-amd64
+build-darwin-amd64: $(BUILD_DIR)
+	CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 \
+	go build $(GO_BUILD_FLAGS) \
+	-ldflags="$(GO_LDFLAGS)" \
+	-o $(BUILD_DIR)/lib$(LIB_NAME)_darwin_amd64.dylib main.go
+
+.PHONY: build-darwin-arm64
+build-darwin-arm64: $(BUILD_DIR)
+	CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 \
+	go build $(GO_BUILD_FLAGS) \
+	-ldflags="$(GO_LDFLAGS)" \
+	-o $(BUILD_DIR)/lib$(LIB_NAME)_darwin_arm64.dylib main.go
+
+# Copy header file to build directory
+.PHONY: copy-headers
+copy-headers: $(BUILD_DIR)
+	cp azuretls.h $(BUILD_DIR)/
+
+# Test the library
+.PHONY: test
+test: $(TARGET) copy-headers
+	cd examples && $(MAKE) test
+
+# Clean build artifacts
+.PHONY: clean
+clean:
+	rm -rf $(BUILD_DIR)
+
+# Install library to system paths (Unix-like systems)
+.PHONY: install
+install: $(TARGET) copy-headers
+ifeq ($(GOOS),windows)
+	@echo "Windows installation not implemented. Copy $(TARGET) to your desired location."
+else
+	sudo cp $(TARGET) /usr/local/lib/
+	sudo cp azuretls.h /usr/local/include/
+	sudo ldconfig 2>/dev/null || true
+endif
+
+# Uninstall library from system paths (Unix-like systems)
+.PHONY: uninstall
+uninstall:
+ifeq ($(GOOS),windows)
+	@echo "Windows uninstallation not implemented."
+else
+	sudo rm -f /usr/local/lib/lib$(LIB_NAME)*
+	sudo rm -f /usr/local/include/azuretls.h
+	sudo ldconfig 2>/dev/null || true
+endif
+
+# Show help
+.PHONY: help
+help:
+	@echo "AzureTLS CFFI Build System"
+	@echo ""
+	@echo "Targets:"
+	@echo "  all                    Build for current platform"
+	@echo "  build-all              Build for all platforms"
+	@echo "  build-linux            Build for all Linux architectures"
+	@echo "  build-windows          Build for all Windows architectures"
+	@echo "  build-darwin           Build for all macOS architectures"
+	@echo "  copy-headers           Copy header files to build directory"
+	@echo "  test                   Run tests"
+	@echo "  clean                  Remove build artifacts"
+	@echo "  install                Install library system-wide (Unix-like)"
+	@echo "  uninstall              Uninstall library (Unix-like)"
+	@echo "  help                   Show this help"
+	@echo ""
+	@echo "Environment Variables:"
+	@echo "  GOOS                   Target operating system"
+	@echo "  GOARCH                 Target architecture"
+	@echo "  CGO_ENABLED            Enable CGO (required)"
+	@echo ""
+	@echo "Current platform: $(GOOS)/$(GOARCH)"
+
+# ===== FROM: engines\bypass\azuretls-client\cffi\examples\Makefile =====
+# Examples Makefile for AzureTLS CFFI
+
+GOOS := $(shell go env GOOS)
+GOARCH := $(shell go env GOARCH)
+
+# Platform-specific settings
+ifeq ($(GOOS),windows)
+    EXT := .dll
+    EXE_EXT := .exe
+else ifeq ($(GOOS),darwin)
+    EXT := .dylib
+    EXE_EXT :=
+else
+    EXT := .so
+    EXE_EXT :=
+endif
+
+# Library name
+LIB_NAME := libazuretls_$(GOOS)_$(GOARCH)$(EXT)
+LIB_PATH := ../build/$(LIB_NAME)
+
+# Compiler settings
+CC := gcc
+CFLAGS := -Wall -Wextra -std=c99 -I..
+LDFLAGS := -L../build -lazuretls_$(GOOS)_$(GOARCH)
+
+# Targets
+C_EXAMPLE := c_example$(EXE_EXT)
+PYTHON_EXAMPLE := python_example.py
+
+.PHONY: all clean test test-c test-python
+
+all: $(C_EXAMPLE)
+
+# Build C example
+$(C_EXAMPLE): c_example.c $(LIB_PATH)
+	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
+
+# Test targets
+test: test-c test-python
+
+test-c: $(C_EXAMPLE)
+	@echo "Testing C example..."
+ifeq ($(GOOS),windows)
+	@set PATH=../build;%PATH% && ./$(C_EXAMPLE)
+else ifeq ($(GOOS),darwin)
+	@DYLD_LIBRARY_PATH=../build ./$(C_EXAMPLE)
+else
+	@LD_LIBRARY_PATH=../build ./$(C_EXAMPLE)
+endif
+
+test-python: $(PYTHON_EXAMPLE)
+	@echo "Testing Python example..."
+ifeq ($(GOOS),windows)
+	@set PATH=../build;%PATH% && python $(PYTHON_EXAMPLE)
+else
+	@LD_LIBRARY_PATH=../build:$$LD_LIBRARY_PATH DYLD_LIBRARY_PATH=../build:$$DYLD_LIBRARY_PATH python3 $(PYTHON_EXAMPLE)
+endif
+
+# Check if library exists
+$(LIB_PATH):
+	@echo "Library not found: $(LIB_PATH)"
+	@echo "Please run 'make' in the parent directory first"
+	@exit 1
+
+# Clean
+clean:
+	rm -f $(C_EXAMPLE)
+
+# Help
+help:
+	@echo "AzureTLS CFFI Examples"
+	@echo ""
+	@echo "Targets:"
+	@echo "  all        Build all examples"
+	@echo "  test       Run all tests"
+	@echo "  test-c     Run C example"
+	@echo "  test-python Run Python example"
+	@echo "  clean      Remove built examples"
+	@echo "  help       Show this help"
+	@echo ""
+	@echo "Current platform: $(GOOS)/$(GOARCH)"
+	@echo "Expected library: $(LIB_PATH)"
+
+# ===== FROM: engines\bypass\CaptchaHarvester\Makefile =====
+clean:
+	rm -rf build/ dist/ *.egg-info
+
+dist: setup.py harvester/__init__.py
+	pipenv run python setup.py sdist
+
+upload: clean dist
+	pipenv run python -m twine upload dist/*
+
+.PHONY: clean dist upload test
+
+# ===== FROM: engines\bypass\cloudflare-scrape\Makefile =====
+pep8-rules := E501,W503,W504
+
+init:
+	pip install pipenv -U
+	pipenv install --dev
+
+requirements:
+	pipenv lock -r > requirements.txt
+	pipenv lock --dev -r > requirements-dev.txt
+
+test:
+	# This runs all of the tests, on both Python 2 and Python 3.
+	pipenv run tox --parallel auto
+
+watch:
+	# This automatically selects and re-executes only tests affected by recent changes.
+	pipenv run ptw -- --testmon
+
+retry:
+	# This will retry failed tests on every file change.
+	pipenv run py.test -n auto --forked --looponfail
+
+ci:
+	pipenv run py.test tests
+
+lint:
+	pipenv run flake8 --ignore $(pep8-rules) cfscrape tests setup.py
+
+format:
+	# Automatic reformatting
+	pipenv run autopep8 -aaa --ignore $(pep8-rules) --in-place --recursive cfscrape tests setup.py
+
+coverage:
+	pipenv run py.test --cov-config .coveragerc --verbose --cov-report term --cov-report xml --cov=cfscrape tests
+	pipenv run coveralls
+
+publish:
+	pip install 'twine>=1.5.0'
+	python setup.py sdist bdist_wheel
+	twine upload dist/*
+	rm -fr build dist .egg cfscrape.egg-info
+
+# ===== FROM: engines\bypass\fake-useragent\docs\Makefile =====
+# Makefile for Sphinx documentation
+#
+
+# You can set these variables from the command line.
+SPHINXOPTS    =
+SPHINXBUILD   = sphinx-build
+PAPER         =
+BUILDDIR      = _build
+
+# User-friendly check for sphinx-build
+ifeq ($(shell which $(SPHINXBUILD) >/dev/null 2>&1; echo $$?), 1)
+$(error The '$(SPHINXBUILD)' command was not found. Make sure you have Sphinx installed, then set the SPHINXBUILD environment variable to point to the full path of the '$(SPHINXBUILD)' executable. Alternatively you can add the directory with the executable to your PATH. If you don't have Sphinx installed, grab it from http://sphinx-doc.org/)
+endif
+
+# Internal variables.
+PAPEROPT_a4     = -D latex_paper_size=a4
+PAPEROPT_letter = -D latex_paper_size=letter
+ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
+# the i18n builder cannot share the environment and doctrees with the others
+I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
+
+.PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest gettext
+
+help:
+	@echo "Please use \`make <target>' where <target> is one of"
+	@echo "  html       to make standalone HTML files"
+	@echo "  dirhtml    to make HTML files named index.html in directories"
+	@echo "  singlehtml to make a single large HTML file"
+	@echo "  pickle     to make pickle files"
+	@echo "  json       to make JSON files"
+	@echo "  htmlhelp   to make HTML files and a HTML help project"
+	@echo "  qthelp     to make HTML files and a qthelp project"
+	@echo "  devhelp    to make HTML files and a Devhelp project"
+	@echo "  epub       to make an epub"
+	@echo "  latex      to make LaTeX files, you can set PAPER=a4 or PAPER=letter"
+	@echo "  latexpdf   to make LaTeX files and run them through pdflatex"
+	@echo "  latexpdfja to make LaTeX files and run them through platex/dvipdfmx"
+	@echo "  text       to make text files"
+	@echo "  man        to make manual pages"
+	@echo "  texinfo    to make Texinfo files"
+	@echo "  info       to make Texinfo files and run them through makeinfo"
+	@echo "  gettext    to make PO message catalogs"
+	@echo "  changes    to make an overview of all changed/added/deprecated items"
+	@echo "  xml        to make Docutils-native XML files"
+	@echo "  pseudoxml  to make pseudoxml-XML files for display purposes"
+	@echo "  linkcheck  to check all external links for integrity"
+	@echo "  doctest    to run all doctests embedded in the documentation (if enabled)"
+
+clean:
+	rm -rf $(BUILDDIR)/*
+
+html:
+	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+	@echo
+	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
+
+dirhtml:
+	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/dirhtml
+	@echo
+	@echo "Build finished. The HTML pages are in $(BUILDDIR)/dirhtml."
+
+singlehtml:
+	$(SPHINXBUILD) -b singlehtml $(ALLSPHINXOPTS) $(BUILDDIR)/singlehtml
+	@echo
+	@echo "Build finished. The HTML page is in $(BUILDDIR)/singlehtml."
+
+pickle:
+	$(SPHINXBUILD) -b pickle $(ALLSPHINXOPTS) $(BUILDDIR)/pickle
+	@echo
+	@echo "Build finished; now you can process the pickle files."
+
+json:
+	$(SPHINXBUILD) -b json $(ALLSPHINXOPTS) $(BUILDDIR)/json
+	@echo
+	@echo "Build finished; now you can process the JSON files."
+
+htmlhelp:
+	$(SPHINXBUILD) -b htmlhelp $(ALLSPHINXOPTS) $(BUILDDIR)/htmlhelp
+	@echo
+	@echo "Build finished; now you can run HTML Help Workshop with the" \
+	      ".hhp project file in $(BUILDDIR)/htmlhelp."
+
+qthelp:
+	$(SPHINXBUILD) -b qthelp $(ALLSPHINXOPTS) $(BUILDDIR)/qthelp
+	@echo
+	@echo "Build finished; now you can run "qcollectiongenerator" with the" \
+	      ".qhcp project file in $(BUILDDIR)/qthelp, like this:"
+	@echo "# qcollectiongenerator $(BUILDDIR)/qthelp/fake-useragent.qhcp"
+	@echo "To view the help file:"
+	@echo "# assistant -collectionFile $(BUILDDIR)/qthelp/fake-useragent.qhc"
+
+devhelp:
+	$(SPHINXBUILD) -b devhelp $(ALLSPHINXOPTS) $(BUILDDIR)/devhelp
+	@echo
+	@echo "Build finished."
+	@echo "To view the help file:"
+	@echo "# mkdir -p $$HOME/.local/share/devhelp/fake-useragent"
+	@echo "# ln -s $(BUILDDIR)/devhelp $$HOME/.local/share/devhelp/fake-useragent"
+	@echo "# devhelp"
+
+epub:
+	$(SPHINXBUILD) -b epub $(ALLSPHINXOPTS) $(BUILDDIR)/epub
+	@echo
+	@echo "Build finished. The epub file is in $(BUILDDIR)/epub."
+
+latex:
+	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) $(BUILDDIR)/latex
+	@echo
+	@echo "Build finished; the LaTeX files are in $(BUILDDIR)/latex."
+	@echo "Run \`make' in that directory to run these through (pdf)latex" \
+	      "(use \`make latexpdf' here to do that automatically)."
+
+latexpdf:
+	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) $(BUILDDIR)/latex
+	@echo "Running LaTeX files through pdflatex..."
+	$(MAKE) -C $(BUILDDIR)/latex all-pdf
+	@echo "pdflatex finished; the PDF files are in $(BUILDDIR)/latex."
+
+latexpdfja:
+	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) $(BUILDDIR)/latex
+	@echo "Running LaTeX files through platex and dvipdfmx..."
+	$(MAKE) -C $(BUILDDIR)/latex all-pdf-ja
+	@echo "pdflatex finished; the PDF files are in $(BUILDDIR)/latex."
+
+text:
+	$(SPHINXBUILD) -b text $(ALLSPHINXOPTS) $(BUILDDIR)/text
+	@echo
+	@echo "Build finished. The text files are in $(BUILDDIR)/text."
+
+man:
+	$(SPHINXBUILD) -b man $(ALLSPHINXOPTS) $(BUILDDIR)/man
+	@echo
+	@echo "Build finished. The manual pages are in $(BUILDDIR)/man."
+
+texinfo:
+	$(SPHINXBUILD) -b texinfo $(ALLSPHINXOPTS) $(BUILDDIR)/texinfo
+	@echo
+	@echo "Build finished. The Texinfo files are in $(BUILDDIR)/texinfo."
+	@echo "Run \`make' in that directory to run these through makeinfo" \
+	      "(use \`make info' here to do that automatically)."
+
+info:
+	$(SPHINXBUILD) -b texinfo $(ALLSPHINXOPTS) $(BUILDDIR)/texinfo
+	@echo "Running Texinfo files through makeinfo..."
+	make -C $(BUILDDIR)/texinfo info
+	@echo "makeinfo finished; the Info files are in $(BUILDDIR)/texinfo."
+
+gettext:
+	$(SPHINXBUILD) -b gettext $(I18NSPHINXOPTS) $(BUILDDIR)/locale
+	@echo
+	@echo "Build finished. The message catalogs are in $(BUILDDIR)/locale."
+
+changes:
+	$(SPHINXBUILD) -b changes $(ALLSPHINXOPTS) $(BUILDDIR)/changes
+	@echo
+	@echo "The overview file is in $(BUILDDIR)/changes."
+
+linkcheck:
+	$(SPHINXBUILD) -b linkcheck $(ALLSPHINXOPTS) $(BUILDDIR)/linkcheck
+	@echo
+	@echo "Link check complete; look for any errors in the above output " \
+	      "or in $(BUILDDIR)/linkcheck/output.txt."
+
+doctest:
+	$(SPHINXBUILD) -b doctest $(ALLSPHINXOPTS) $(BUILDDIR)/doctest
+	@echo "Testing of doctests in the sources finished, look at the " \
+	      "results in $(BUILDDIR)/doctest/output.txt."
+
+xml:
+	$(SPHINXBUILD) -b xml $(ALLSPHINXOPTS) $(BUILDDIR)/xml
+	@echo
+	@echo "Build finished. The XML files are in $(BUILDDIR)/xml."
+
+pseudoxml:
+	$(SPHINXBUILD) -b pseudoxml $(ALLSPHINXOPTS) $(BUILDDIR)/pseudoxml
+	@echo
+	@echo "Build finished. The pseudo-XML files are in $(BUILDDIR)/pseudoxml."
+
+# ===== FROM: engines\bypass\rengine\Makefile =====
+include .env
+.DEFAULT_GOAL:=help
+
+# Credits: https://github.com/sherifabdlnaby/elastdocker/
+
+# This for future release of Compose that will use Docker Buildkit, which is much efficient.
+COMPOSE_PREFIX_CMD := COMPOSE_DOCKER_CLI_BUILD=1
+
+COMPOSE_ALL_FILES := -f docker-compose.yml
+SERVICES          := db web proxy redis celery celery-beat ollama
+
+# Check if 'docker compose' command is available, otherwise use 'docker-compose'
+DOCKER_COMPOSE := $(shell if command -v docker > /dev/null && docker compose version > /dev/null 2>&1; then echo "docker compose"; else echo "docker-compose"; fi)
+$(info Using: $(shell echo "$(DOCKER_COMPOSE)"))
+
+# --------------------------
+
+.PHONY: setup certs up build username pull down stop restart rm logs
+
+certs:		    ## Generate certificates.
+	@${COMPOSE_PREFIX_CMD} ${DOCKER_COMPOSE} -f docker-compose.setup.yml run --rm certs
+
+setup:			## Generate certificates.
+	@make certs
+
+up:				## Build and start all services.
+	${COMPOSE_PREFIX_CMD} ${DOCKER_COMPOSE} ${COMPOSE_ALL_FILES} up -d --build ${SERVICES}
+
+build:			## Build all services.
+	${COMPOSE_PREFIX_CMD} ${DOCKER_COMPOSE} ${COMPOSE_ALL_FILES} build ${SERVICES}
+
+username:		## Generate Username (Use only after make up).
+ifeq ($(isNonInteractive), true)
+	${COMPOSE_PREFIX_CMD} ${DOCKER_COMPOSE} ${COMPOSE_ALL_FILES} exec web python3 manage.py createsuperuser --username ${DJANGO_SUPERUSER_USERNAME} --email ${DJANGO_SUPERUSER_EMAIL} --noinput
+else
+	${COMPOSE_PREFIX_CMD} ${DOCKER_COMPOSE} ${COMPOSE_ALL_FILES} exec web python3 manage.py createsuperuser
+endif
+
+changepassword:	## Change password for user
+	${COMPOSE_PREFIX_CMD} ${DOCKER_COMPOSE} ${COMPOSE_ALL_FILES} exec web python3 manage.py changepassword
+
+migrate:		## Apply migrations
+	${COMPOSE_PREFIX_CMD} ${DOCKER_COMPOSE} ${COMPOSE_ALL_FILES} exec web python3 manage.py migrate
+
+pull:			## Pull Docker images.
+	docker login docker.pkg.github.com
+	${COMPOSE_PREFIX_CMD} ${DOCKER_COMPOSE} ${COMPOSE_ALL_FILES} pull
+
+down:			## Down all services.
+	${COMPOSE_PREFIX_CMD} ${DOCKER_COMPOSE} ${COMPOSE_ALL_FILES} down
+
+stop:			## Stop all services.
+	${COMPOSE_PREFIX_CMD} ${DOCKER_COMPOSE} ${COMPOSE_ALL_FILES} stop ${SERVICES}
+
+restart:		## Restart all services.
+	${COMPOSE_PREFIX_CMD} ${DOCKER_COMPOSE} ${COMPOSE_ALL_FILES} restart ${SERVICES}
+
+rm:				## Remove all services containers.
+	${COMPOSE_PREFIX_CMD} ${DOCKER_COMPOSE} $(COMPOSE_ALL_FILES) rm -f ${SERVICES}
+
+test:
+	${COMPOSE_PREFIX_CMD} ${DOCKER_COMPOSE} $(COMPOSE_ALL_FILES) exec celery python3 -m unittest tests/test_scan.py
+
+logs:			## Tail all logs with -n 1000.
+	${COMPOSE_PREFIX_CMD} ${DOCKER_COMPOSE} $(COMPOSE_ALL_FILES) logs --follow --tail=1000 ${SERVICES}
+
+images:			## Show all Docker images.
+	${COMPOSE_PREFIX_CMD} ${DOCKER_COMPOSE} $(COMPOSE_ALL_FILES) images ${SERVICES}
+
+prune:			## Remove containers and delete volume data.
+	@make stop && make rm && docker volume prune -f
+
+help:			## Show this help.
+	@echo "Make application Docker images and manage containers using Docker Compose files."
+	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m (default: help)\n\nTargets:\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
+
+# ===== FROM: frontend\Makefile =====
+# ECaDP - Ethical Crawler & Data Platform
+# Makefile fÃ¶r utveckling och drift
+
+.PHONY: help up down test lint e2e seed gen-sdk docs clean install-dev
+
+# Standard mÃ¥l
+help: ## Visa hjÃ¤lp
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
+
+# UtvecklingsmiljÃ¶
+up: ## Starta utvecklingsmiljÃ¶ (Docker Compose)
+	docker-compose -f docker/docker-compose.dev.yml up -d
+	@echo "ðŸš€ UtvecklingsmiljÃ¶ startad pÃ¥ http://localhost:8000"
+	@echo "ðŸ“Š Grafana: http://localhost:3000 (admin/admin)"
+	@echo "ðŸ“ˆ Prometheus: http://localhost:9090"
+
+down: ## Stoppa utvecklingsmiljÃ¶
+	docker-compose -f docker/docker-compose.dev.yml down
+	docker-compose -f docker/docker-compose.synthetic.yml down
+
+restart: down up ## Restart utvecklingsmiljÃ¶
+
+# Databas
+init: ## Initiera databas och migrationer
+	python scripts/init_db.py
+	@echo "âœ… Databas initierad"
+
+seed: ## Ladda seed-data
+	python scripts/seed_data.py
+	@echo "âœ… Seed-data laddad"
+
+# Tester
+test: ## KÃ¶r unit tests
+	pytest tests/unit/ -v --cov=src --cov-report=html
+	@echo "âœ… Unit tests slutfÃ¶rda"
+
+integration: ## KÃ¶r integration tests
+	pytest tests/integration/ -v
+	@echo "âœ… Integration tests slutfÃ¶rda"
+
+e2e: ## KÃ¶r end-to-end tests
+	docker-compose -f docker/docker-compose.synthetic.yml up -d
+	sleep 10
+	pytest tests/e2e/ -v
+	docker-compose -f docker/docker-compose.synthetic.yml down
+	@echo "âœ… E2E tests slutfÃ¶rda"
+
+test-all: test integration e2e ## KÃ¶r alla tester
+
+# Kvalitetsgranskning
+lint: ## KÃ¶r linting (ruff, mypy, black)
+	ruff check src/ --fix
+	black src/
+	isort src/
+	mypy src/
+	@echo "âœ… Linting slutfÃ¶rt"
+
+security: ## KÃ¶r sÃ¤kerhetsscanning
+	bandit -r src/
+	safety check
+	@echo "âœ… SÃ¤kerhetsscanning slutfÃ¶rd"
+
+format: ## Formatera kod
+	black src/
+	isort src/
+	@echo "âœ… Kod formaterad"
+
+# SDK och dokumentation
+gen-sdk: ## Generera SDK:er
+	./scripts/generate_sdk.sh
+	@echo "âœ… SDK:er genererade"
+
+docs: ## Generera dokumentation
+	cd docs && mkdocs build
+	@echo "âœ… Dokumentation byggd i docs/site/"
+
+docs-serve: ## Servera dokumentation lokalt
+	cd docs && mkdocs serve
+	@echo "ðŸ“š Dokumentation: http://localhost:8080"
+
+# Drift och underhÃ¥ll
+backup: ## KÃ¶r manuell backup
+	./scripts/backup_now.sh
+	@echo "âœ… Backup slutfÃ¶rd"
+
+restore-drill: ## KÃ¶r restore-Ã¶vning
+	./scripts/restore_drill.sh
+	@echo "âœ… Restore-Ã¶vning slutfÃ¶rd"
+
+sync-s3: ## Synka data till S3
+	./scripts/s3_sync.sh
+	@echo "âœ… S3-synkronisering slutfÃ¶rd"
+
+# Crawler och scraper
+crawl: ## Starta crawler manuellt
+	python scripts/run_crawler.py
+	@echo "ðŸ•·ï¸ Crawler startad"
+
+scrape: ## Starta scraper manuellt
+	python scripts/run_scraper.py
+	@echo "ðŸ” Scraper startad"
+
+scheduler: ## Starta scheduler
+	python scripts/start_scheduler.py
+	@echo "â° Scheduler startad"
+
+analysis: ## KÃ¶r dataanalys
+	python scripts/run_analysis.py
+	@echo "ðŸ“Š Analys slutfÃ¶rd"
+
+diagnose: ## KÃ¶r diagnostikverktyg
+	python scripts/diagnostic_tool.py
+	@echo "ðŸ”§ Diagnostik slutfÃ¶rd"
+
+# Installation och setup
+install-dev: ## Installera utvecklingsdependencies
+	pip install -e .
+	pip install -r requirements-dev.txt
+	npm install
+	@echo "âœ… Utvecklingsdependencies installerade"
+
+install: ## Installera produktionsdependencies
+	pip install -r requirements.txt
+	@echo "âœ… Produktionsdependencies installerade"
+
+# RengÃ¶ring
+clean: ## Rensa temporÃ¤ra filer
+	find . -type f -name "*.pyc" -delete
+	find . -type d -name "__pycache__" -delete
+	find . -type d -name ".pytest_cache" -delete
+	rm -rf htmlcov/
+	rm -rf .coverage
+	@echo "ðŸ§¹ TemporÃ¤ra filer rensade"
+
+clean-data: ## Rensa lokal data (VARNING: raderar all data!)
+	rm -rf data/raw/*
+	rm -rf data/processed/*
+	rm -rf data/exports/*
+	@echo "âš ï¸ Lokal data rensad"
+
+# Docker builds
+build-app: ## Bygg app-container
+	docker build -f docker/Dockerfile.app -t ecadp-app .
+
+build-worker: ## Bygg worker-container
+	docker build -f docker/Dockerfile.worker -t ecadp-worker .
+
+build-browser: ## Bygg browser-container
+	docker build -f docker/Dockerfile.browser -t ecadp-browser .
+
+build-all: build-app build-worker build-browser ## Bygg alla containers
+
+# Kubernetes
+k8s-apply: ## Appliera K8s manifests
+	kubectl apply -k iac/k8s/
+
+k8s-delete: ## Ta bort K8s resources
+	kubectl delete -k iac/k8s/
+
+# Monitoring
+logs-app: ## Visa app-loggar
+	docker-compose -f docker/docker-compose.dev.yml logs -f app
+
+logs-worker: ## Visa worker-loggar
+	docker-compose -f docker/docker-compose.dev.yml logs -f worker
+
+logs-all: ## Visa alla loggar
+	docker-compose -f docker/docker-compose.dev.yml logs -f
+
+# UtvecklingshjÃ¤lp
+shell-app: ## Ã–ppna shell i app-container
+	docker-compose -f docker/docker-compose.dev.yml exec app bash
+
+shell-worker: ## Ã–ppna shell i worker-container
+	docker-compose -f docker/docker-compose.dev.yml exec worker bash
+
+# Frontend
+frontend-dev: ## Starta frontend i dev-lÃ¤ge
+	cd frontend && npm run dev
+
+frontend-build: ## Bygg frontend fÃ¶r produktion
+	cd frontend && npm run build
+
+frontend-test: ## Testa frontend
+	cd frontend && npm test
+
+# Performance
+benchmark: ## KÃ¶r performance benchmarks
+	python -m pytest tests/performance/ -v
+	@echo "âš¡ Performance benchmarks slutfÃ¶rda"
+
+# Default mÃ¥l
+.DEFAULT_GOAL := help
+
+# ===== FROM: frontend-nextjs\node_modules\.pnpm\@cypress+request@3.0.9\node_modules\json-stringify-safe\Makefile =====
+NODE_OPTS =
+TEST_OPTS =
+
+love:
+	@echo "Feel like makin' love."
+
+test:
+	@node $(NODE_OPTS) ./node_modules/.bin/_mocha -R dot $(TEST_OPTS)
+
+spec:
+	@node $(NODE_OPTS) ./node_modules/.bin/_mocha -R spec $(TEST_OPTS)
+
+autotest:
+	@node $(NODE_OPTS) ./node_modules/.bin/_mocha -R dot --watch $(TEST_OPTS)
+
+autospec:
+	@node $(NODE_OPTS) ./node_modules/.bin/_mocha -R spec --watch $(TEST_OPTS)
+
+pack:
+	@file=$$(npm pack); echo "$$file"; tar tf "$$file"
+
+publish:
+	npm publish
+
+tag:
+	git tag "v$$(node -e 'console.log(require("./package").version)')"
+
+clean:
+	rm -f *.tgz
+	npm prune --production
+
+.PHONY: love
+.PHONY: test spec autotest autospec
+.PHONY: pack publish tag
+.PHONY: clean
+
+# ===== FROM: frontend-nextjs\node_modules\.pnpm\combined-stream@1.0.8\node_modules\delayed-stream\Makefile =====
+SHELL := /bin/bash
+
+test:
+	@./test/run.js
+
+.PHONY: test
+
+# ===== FROM: frontend-nextjs\node_modules\.pnpm\delayed-stream@1.0.0\node_modules\delayed-stream\Makefile =====
+SHELL := /bin/bash
+
+test:
+	@./test/run.js
+
+.PHONY: test
+
+# ===== FROM: frontend-nextjs\node_modules\.pnpm\extsprintf@1.3.0\node_modules\extsprintf\Makefile =====
+#
+# Copyright (c) 2012, Joyent, Inc. All rights reserved.
+#
+# Makefile: top-level Makefile
+#
+# This Makefile contains only repo-specific logic and uses included makefiles
+# to supply common targets (javascriptlint, jsstyle, restdown, etc.), which are
+# used by other repos as well.
+#
+
+#
+# Files
+#
+JSL		 = jsl
+JSSTYLE		 = jsstyle
+JS_FILES	:= $(shell find examples lib -name '*.js')
+JSL_FILES_NODE   = $(JS_FILES)
+JSSTYLE_FILES	 = $(JS_FILES)
+JSL_CONF_NODE	 = jsl.node.conf
+
+# Default target is "check"
+check:
+
+include ./Makefile.targ
+
+# ===== FROM: frontend-nextjs\node_modules\.pnpm\extsprintf@1.3.0\node_modules\extsprintf\Makefile.targ =====
+# -*- mode: makefile -*-
+#
+# Copyright (c) 2012, Joyent, Inc. All rights reserved.
+#
+# Makefile.targ: common targets.
+#
+# NOTE: This makefile comes from the "eng" repo. It's designed to be dropped
+# into other repos as-is without requiring any modifications. If you find
+# yourself changing this file, you should instead update the original copy in
+# eng.git and then update your repo to use the new version.
+#
+# This Makefile defines several useful targets and rules. You can use it by
+# including it from a Makefile that specifies some of the variables below.
+#
+# Targets defined in this Makefile:
+#
+#	check	Checks JavaScript files for lint and style
+#		Checks bash scripts for syntax
+#		Checks SMF manifests for validity against the SMF DTD
+#
+#	clean	Removes built files
+#
+#	docs	Builds restdown documentation in docs/
+#
+#	prepush	Depends on "check" and "test"
+#
+#	test	Does nothing (you should override this)
+#
+#	xref	Generates cscope (source cross-reference index)
+#
+# For details on what these targets are supposed to do, see the Joyent
+# Engineering Guide.
+#
+# To make use of these targets, you'll need to set some of these variables. Any
+# variables left unset will simply not be used.
+#
+#	BASH_FILES	Bash scripts to check for syntax
+#			(paths relative to top-level Makefile)
+#
+#	CLEAN_FILES	Files to remove as part of the "clean" target.  Note
+#			that files generated by targets in this Makefile are
+#			automatically included in CLEAN_FILES.  These include
+#			restdown-generated HTML and JSON files.
+#
+#	DOC_FILES	Restdown (documentation source) files. These are
+#			assumed to be contained in "docs/", and must NOT
+#			contain the "docs/" prefix.
+#
+#	JSL_CONF_NODE	Specify JavaScriptLint configuration files
+#	JSL_CONF_WEB	(paths relative to top-level Makefile)
+#
+#			Node.js and Web configuration files are separate
+#			because you'll usually want different global variable
+#			configurations.  If no file is specified, none is given
+#			to jsl, which causes it to use a default configuration,
+#			which probably isn't what you want.
+#
+#	JSL_FILES_NODE	JavaScript files to check with Node config file.
+#	JSL_FILES_WEB	JavaScript files to check with Web config file.
+#
+# You can also override these variables:
+#
+#	BASH		Path to bash (default: bash)
+#
+#	CSCOPE_DIRS	Directories to search for source files for the cscope
+#			index. (default: ".")
+#
+#	JSL		Path to JavaScriptLint (default: "jsl")
+#
+#	JSL_FLAGS_NODE	Additional flags to pass through to JSL
+#	JSL_FLAGS_WEB
+#	JSL_FLAGS
+#
+#	JSSTYLE		Path to jsstyle (default: jsstyle)
+#
+#	JSSTYLE_FLAGS	Additional flags to pass through to jsstyle
+#
+
+#
+# Defaults for the various tools we use.
+#
+BASH		?= bash
+BASHSTYLE	?= tools/bashstyle
+CP		?= cp
+CSCOPE		?= cscope
+CSCOPE_DIRS	?= .
+JSL		?= jsl
+JSSTYLE		?= jsstyle
+MKDIR		?= mkdir -p
+MV		?= mv
+RESTDOWN_FLAGS	?=
+RMTREE		?= rm -rf
+JSL_FLAGS  	?= --nologo --nosummary
+
+ifeq ($(shell uname -s),SunOS)
+	TAR	?= gtar
+else
+	TAR	?= tar
+endif
+
+
+#
+# Defaults for other fixed values.
+#
+BUILD		= build
+DISTCLEAN_FILES += $(BUILD)
+DOC_BUILD	= $(BUILD)/docs/public
+
+#
+# Configure JSL_FLAGS_{NODE,WEB} based on JSL_CONF_{NODE,WEB}.
+#
+ifneq ($(origin JSL_CONF_NODE), undefined)
+	JSL_FLAGS_NODE += --conf=$(JSL_CONF_NODE)
+endif
+
+ifneq ($(origin JSL_CONF_WEB), undefined)
+	JSL_FLAGS_WEB += --conf=$(JSL_CONF_WEB)
+endif
+
+#
+# Targets. For descriptions on what these are supposed to do, see the
+# Joyent Engineering Guide.
+#
+
+#
+# Instruct make to keep around temporary files. We have rules below that
+# automatically update git submodules as needed, but they employ a deps/*/.git
+# temporary file. Without this directive, make tries to remove these .git
+# directories after the build has completed.
+#
+.SECONDARY: $($(wildcard deps/*):%=%/.git)
+
+#
+# This rule enables other rules that use files from a git submodule to have
+# those files depend on deps/module/.git and have "make" automatically check
+# out the submodule as needed.
+#
+deps/%/.git:
+	git submodule update --init deps/$*
+
+#
+# These recipes make heavy use of dynamically-created phony targets. The parent
+# Makefile defines a list of input files like BASH_FILES. We then say that each
+# of these files depends on a fake target called filename.bashchk, and then we
+# define a pattern rule for those targets that runs bash in check-syntax-only
+# mode. This mechanism has the nice properties that if you specify zero files,
+# the rule becomes a noop (unlike a single rule to check all bash files, which
+# would invoke bash with zero files), and you can check individual files from
+# the command line with "make filename.bashchk".
+#
+.PHONY: check-bash
+check-bash: $(BASH_FILES:%=%.bashchk) $(BASH_FILES:%=%.bashstyle)
+
+%.bashchk: %
+	$(BASH) -n $^
+
+%.bashstyle: %
+	$(BASHSTYLE) $^
+
+.PHONY: check-jsl check-jsl-node check-jsl-web
+check-jsl: check-jsl-node check-jsl-web
+
+check-jsl-node: $(JSL_FILES_NODE:%=%.jslnodechk)
+
+check-jsl-web: $(JSL_FILES_WEB:%=%.jslwebchk)
+
+%.jslnodechk: % $(JSL_EXEC)
+	$(JSL) $(JSL_FLAGS) $(JSL_FLAGS_NODE) $<
+
+%.jslwebchk: % $(JSL_EXEC)
+	$(JSL) $(JSL_FLAGS) $(JSL_FLAGS_WEB) $<
+
+.PHONY: check-jsstyle
+check-jsstyle: $(JSSTYLE_FILES:%=%.jsstylechk)
+
+%.jsstylechk: % $(JSSTYLE_EXEC)
+	$(JSSTYLE) $(JSSTYLE_FLAGS) $<
+
+.PHONY: check
+check: check-jsl check-jsstyle check-bash
+	@echo check ok
+
+.PHONY: clean
+clean::
+	-$(RMTREE) $(CLEAN_FILES)
+
+.PHONY: distclean
+distclean:: clean
+	-$(RMTREE) $(DISTCLEAN_FILES)
+
+CSCOPE_FILES = cscope.in.out cscope.out cscope.po.out
+CLEAN_FILES += $(CSCOPE_FILES)
+
+.PHONY: xref
+xref: cscope.files
+	$(CSCOPE) -bqR
+
+.PHONY: cscope.files
+cscope.files:
+	find $(CSCOPE_DIRS) -name '*.c' -o -name '*.h' -o -name '*.cc' \
+	    -o -name '*.js' -o -name '*.s' -o -name '*.cpp' > $@
+
+#
+# The "docs" target is complicated because we do several things here:
+#
+#    (1) Use restdown to build HTML and JSON files from each of DOC_FILES.
+#
+#    (2) Copy these files into $(DOC_BUILD) (build/docs/public), which
+#        functions as a complete copy of the documentation that could be
+#        mirrored or served over HTTP.
+#
+#    (3) Then copy any directories and media from docs/media into
+#        $(DOC_BUILD)/media. This allows projects to include their own media,
+#        including files that will override same-named files provided by
+#        restdown.
+#
+# Step (3) is the surprisingly complex part: in order to do this, we need to
+# identify the subdirectories in docs/media, recreate them in
+# $(DOC_BUILD)/media, then do the same with the files.
+#
+DOC_MEDIA_DIRS := $(shell find docs/media -type d 2>/dev/null | grep -v "^docs/media$$")
+DOC_MEDIA_DIRS := $(DOC_MEDIA_DIRS:docs/media/%=%)
+DOC_MEDIA_DIRS_BUILD := $(DOC_MEDIA_DIRS:%=$(DOC_BUILD)/media/%)
+
+DOC_MEDIA_FILES := $(shell find docs/media -type f 2>/dev/null)
+DOC_MEDIA_FILES := $(DOC_MEDIA_FILES:docs/media/%=%)
+DOC_MEDIA_FILES_BUILD := $(DOC_MEDIA_FILES:%=$(DOC_BUILD)/media/%)
+
+#
+# Like the other targets, "docs" just depends on the final files we want to
+# create in $(DOC_BUILD), leveraging other targets and recipes to define how
+# to get there.
+#
+.PHONY: docs
+docs:							\
+    $(DOC_FILES:%.restdown=$(DOC_BUILD)/%.html)		\
+    $(DOC_FILES:%.restdown=$(DOC_BUILD)/%.json)		\
+    $(DOC_MEDIA_FILES_BUILD)
+
+#
+# We keep the intermediate files so that the next build can see whether the
+# files in DOC_BUILD are up to date.
+#
+.PRECIOUS:					\
+    $(DOC_FILES:%.restdown=docs/%.html)		\
+    $(DOC_FILES:%.restdown=docs/%json)
+
+#
+# We do clean those intermediate files, as well as all of DOC_BUILD.
+#
+CLEAN_FILES +=					\
+    $(DOC_BUILD)				\
+    $(DOC_FILES:%.restdown=docs/%.html)		\
+    $(DOC_FILES:%.restdown=docs/%.json)
+
+#
+# Before installing the files, we must make sure the directories exist. The |
+# syntax tells make that the dependency need only exist, not be up to date.
+# Otherwise, it might try to rebuild spuriously because the directory itself
+# appears out of date.
+#
+$(DOC_MEDIA_FILES_BUILD): | $(DOC_MEDIA_DIRS_BUILD)
+
+$(DOC_BUILD)/%: docs/% | $(DOC_BUILD)
+	$(CP) $< $@
+
+docs/%.json docs/%.html: docs/%.restdown | $(DOC_BUILD) $(RESTDOWN_EXEC)
+	$(RESTDOWN) $(RESTDOWN_FLAGS) -m $(DOC_BUILD) $<
+
+$(DOC_BUILD):
+	$(MKDIR) $@
+
+$(DOC_MEDIA_DIRS_BUILD):
+	$(MKDIR) $@
+
+#
+# The default "test" target does nothing. This should usually be overridden by
+# the parent Makefile. It's included here so we can define "prepush" without
+# requiring the repo to define "test".
+#
+.PHONY: test
+test:
+
+.PHONY: prepush
+prepush: check test
+
+# ===== FROM: frontend-nextjs\node_modules\.pnpm\json-stringify-safe@5.0.1\node_modules\json-stringify-safe\Makefile =====
+NODE_OPTS =
+TEST_OPTS =
+
+love:
+	@echo "Feel like makin' love."
+
+test:
+	@node $(NODE_OPTS) ./node_modules/.bin/_mocha -R dot $(TEST_OPTS)
+
+spec:
+	@node $(NODE_OPTS) ./node_modules/.bin/_mocha -R spec $(TEST_OPTS)
+
+autotest:
+	@node $(NODE_OPTS) ./node_modules/.bin/_mocha -R dot --watch $(TEST_OPTS)
+
+autospec:
+	@node $(NODE_OPTS) ./node_modules/.bin/_mocha -R spec --watch $(TEST_OPTS)
+
+pack:
+	@file=$$(npm pack); echo "$$file"; tar tf "$$file"
+
+publish:
+	npm publish
+
+tag:
+	git tag "v$$(node -e 'console.log(require("./package").version)')"
+
+clean:
+	rm -f *.tgz
+	npm prune --production
+
+.PHONY: love
+.PHONY: test spec autotest autospec
+.PHONY: pack publish tag
+.PHONY: clean
+
+# ===== FROM: frontend-nextjs\node_modules\.pnpm\jsprim@2.0.2\node_modules\extsprintf\Makefile =====
+#
+# Copyright (c) 2012, Joyent, Inc. All rights reserved.
+#
+# Makefile: top-level Makefile
+#
+# This Makefile contains only repo-specific logic and uses included makefiles
+# to supply common targets (javascriptlint, jsstyle, restdown, etc.), which are
+# used by other repos as well.
+#
+
+#
+# Files
+#
+JSL		 = jsl
+JSSTYLE		 = jsstyle
+JS_FILES	:= $(shell find examples lib -name '*.js')
+JSL_FILES_NODE   = $(JS_FILES)
+JSSTYLE_FILES	 = $(JS_FILES)
+JSL_CONF_NODE	 = jsl.node.conf
+
+# Default target is "check"
+check:
+
+include ./Makefile.targ
+
+# ===== FROM: frontend-nextjs\node_modules\.pnpm\jsprim@2.0.2\node_modules\extsprintf\Makefile.targ =====
+# -*- mode: makefile -*-
+#
+# Copyright (c) 2012, Joyent, Inc. All rights reserved.
+#
+# Makefile.targ: common targets.
+#
+# NOTE: This makefile comes from the "eng" repo. It's designed to be dropped
+# into other repos as-is without requiring any modifications. If you find
+# yourself changing this file, you should instead update the original copy in
+# eng.git and then update your repo to use the new version.
+#
+# This Makefile defines several useful targets and rules. You can use it by
+# including it from a Makefile that specifies some of the variables below.
+#
+# Targets defined in this Makefile:
+#
+#	check	Checks JavaScript files for lint and style
+#		Checks bash scripts for syntax
+#		Checks SMF manifests for validity against the SMF DTD
+#
+#	clean	Removes built files
+#
+#	docs	Builds restdown documentation in docs/
+#
+#	prepush	Depends on "check" and "test"
+#
+#	test	Does nothing (you should override this)
+#
+#	xref	Generates cscope (source cross-reference index)
+#
+# For details on what these targets are supposed to do, see the Joyent
+# Engineering Guide.
+#
+# To make use of these targets, you'll need to set some of these variables. Any
+# variables left unset will simply not be used.
+#
+#	BASH_FILES	Bash scripts to check for syntax
+#			(paths relative to top-level Makefile)
+#
+#	CLEAN_FILES	Files to remove as part of the "clean" target.  Note
+#			that files generated by targets in this Makefile are
+#			automatically included in CLEAN_FILES.  These include
+#			restdown-generated HTML and JSON files.
+#
+#	DOC_FILES	Restdown (documentation source) files. These are
+#			assumed to be contained in "docs/", and must NOT
+#			contain the "docs/" prefix.
+#
+#	JSL_CONF_NODE	Specify JavaScriptLint configuration files
+#	JSL_CONF_WEB	(paths relative to top-level Makefile)
+#
+#			Node.js and Web configuration files are separate
+#			because you'll usually want different global variable
+#			configurations.  If no file is specified, none is given
+#			to jsl, which causes it to use a default configuration,
+#			which probably isn't what you want.
+#
+#	JSL_FILES_NODE	JavaScript files to check with Node config file.
+#	JSL_FILES_WEB	JavaScript files to check with Web config file.
+#
+# You can also override these variables:
+#
+#	BASH		Path to bash (default: bash)
+#
+#	CSCOPE_DIRS	Directories to search for source files for the cscope
+#			index. (default: ".")
+#
+#	JSL		Path to JavaScriptLint (default: "jsl")
+#
+#	JSL_FLAGS_NODE	Additional flags to pass through to JSL
+#	JSL_FLAGS_WEB
+#	JSL_FLAGS
+#
+#	JSSTYLE		Path to jsstyle (default: jsstyle)
+#
+#	JSSTYLE_FLAGS	Additional flags to pass through to jsstyle
+#
+
+#
+# Defaults for the various tools we use.
+#
+BASH		?= bash
+BASHSTYLE	?= tools/bashstyle
+CP		?= cp
+CSCOPE		?= cscope
+CSCOPE_DIRS	?= .
+JSL		?= jsl
+JSSTYLE		?= jsstyle
+MKDIR		?= mkdir -p
+MV		?= mv
+RESTDOWN_FLAGS	?=
+RMTREE		?= rm -rf
+JSL_FLAGS  	?= --nologo --nosummary
+
+ifeq ($(shell uname -s),SunOS)
+	TAR	?= gtar
+else
+	TAR	?= tar
+endif
+
+
+#
+# Defaults for other fixed values.
+#
+BUILD		= build
+DISTCLEAN_FILES += $(BUILD)
+DOC_BUILD	= $(BUILD)/docs/public
+
+#
+# Configure JSL_FLAGS_{NODE,WEB} based on JSL_CONF_{NODE,WEB}.
+#
+ifneq ($(origin JSL_CONF_NODE), undefined)
+	JSL_FLAGS_NODE += --conf=$(JSL_CONF_NODE)
+endif
+
+ifneq ($(origin JSL_CONF_WEB), undefined)
+	JSL_FLAGS_WEB += --conf=$(JSL_CONF_WEB)
+endif
+
+#
+# Targets. For descriptions on what these are supposed to do, see the
+# Joyent Engineering Guide.
+#
+
+#
+# Instruct make to keep around temporary files. We have rules below that
+# automatically update git submodules as needed, but they employ a deps/*/.git
+# temporary file. Without this directive, make tries to remove these .git
+# directories after the build has completed.
+#
+.SECONDARY: $($(wildcard deps/*):%=%/.git)
+
+#
+# This rule enables other rules that use files from a git submodule to have
+# those files depend on deps/module/.git and have "make" automatically check
+# out the submodule as needed.
+#
+deps/%/.git:
+	git submodule update --init deps/$*
+
+#
+# These recipes make heavy use of dynamically-created phony targets. The parent
+# Makefile defines a list of input files like BASH_FILES. We then say that each
+# of these files depends on a fake target called filename.bashchk, and then we
+# define a pattern rule for those targets that runs bash in check-syntax-only
+# mode. This mechanism has the nice properties that if you specify zero files,
+# the rule becomes a noop (unlike a single rule to check all bash files, which
+# would invoke bash with zero files), and you can check individual files from
+# the command line with "make filename.bashchk".
+#
+.PHONY: check-bash
+check-bash: $(BASH_FILES:%=%.bashchk) $(BASH_FILES:%=%.bashstyle)
+
+%.bashchk: %
+	$(BASH) -n $^
+
+%.bashstyle: %
+	$(BASHSTYLE) $^
+
+.PHONY: check-jsl check-jsl-node check-jsl-web
+check-jsl: check-jsl-node check-jsl-web
+
+check-jsl-node: $(JSL_FILES_NODE:%=%.jslnodechk)
+
+check-jsl-web: $(JSL_FILES_WEB:%=%.jslwebchk)
+
+%.jslnodechk: % $(JSL_EXEC)
+	$(JSL) $(JSL_FLAGS) $(JSL_FLAGS_NODE) $<
+
+%.jslwebchk: % $(JSL_EXEC)
+	$(JSL) $(JSL_FLAGS) $(JSL_FLAGS_WEB) $<
+
+.PHONY: check-jsstyle
+check-jsstyle: $(JSSTYLE_FILES:%=%.jsstylechk)
+
+%.jsstylechk: % $(JSSTYLE_EXEC)
+	$(JSSTYLE) $(JSSTYLE_FLAGS) $<
+
+.PHONY: check
+check: check-jsl check-jsstyle check-bash
+	@echo check ok
+
+.PHONY: clean
+clean::
+	-$(RMTREE) $(CLEAN_FILES)
+
+.PHONY: distclean
+distclean:: clean
+	-$(RMTREE) $(DISTCLEAN_FILES)
+
+CSCOPE_FILES = cscope.in.out cscope.out cscope.po.out
+CLEAN_FILES += $(CSCOPE_FILES)
+
+.PHONY: xref
+xref: cscope.files
+	$(CSCOPE) -bqR
+
+.PHONY: cscope.files
+cscope.files:
+	find $(CSCOPE_DIRS) -name '*.c' -o -name '*.h' -o -name '*.cc' \
+	    -o -name '*.js' -o -name '*.s' -o -name '*.cpp' > $@
+
+#
+# The "docs" target is complicated because we do several things here:
+#
+#    (1) Use restdown to build HTML and JSON files from each of DOC_FILES.
+#
+#    (2) Copy these files into $(DOC_BUILD) (build/docs/public), which
+#        functions as a complete copy of the documentation that could be
+#        mirrored or served over HTTP.
+#
+#    (3) Then copy any directories and media from docs/media into
+#        $(DOC_BUILD)/media. This allows projects to include their own media,
+#        including files that will override same-named files provided by
+#        restdown.
+#
+# Step (3) is the surprisingly complex part: in order to do this, we need to
+# identify the subdirectories in docs/media, recreate them in
+# $(DOC_BUILD)/media, then do the same with the files.
+#
+DOC_MEDIA_DIRS := $(shell find docs/media -type d 2>/dev/null | grep -v "^docs/media$$")
+DOC_MEDIA_DIRS := $(DOC_MEDIA_DIRS:docs/media/%=%)
+DOC_MEDIA_DIRS_BUILD := $(DOC_MEDIA_DIRS:%=$(DOC_BUILD)/media/%)
+
+DOC_MEDIA_FILES := $(shell find docs/media -type f 2>/dev/null)
+DOC_MEDIA_FILES := $(DOC_MEDIA_FILES:docs/media/%=%)
+DOC_MEDIA_FILES_BUILD := $(DOC_MEDIA_FILES:%=$(DOC_BUILD)/media/%)
+
+#
+# Like the other targets, "docs" just depends on the final files we want to
+# create in $(DOC_BUILD), leveraging other targets and recipes to define how
+# to get there.
+#
+.PHONY: docs
+docs:							\
+    $(DOC_FILES:%.restdown=$(DOC_BUILD)/%.html)		\
+    $(DOC_FILES:%.restdown=$(DOC_BUILD)/%.json)		\
+    $(DOC_MEDIA_FILES_BUILD)
+
+#
+# We keep the intermediate files so that the next build can see whether the
+# files in DOC_BUILD are up to date.
+#
+.PRECIOUS:					\
+    $(DOC_FILES:%.restdown=docs/%.html)		\
+    $(DOC_FILES:%.restdown=docs/%json)
+
+#
+# We do clean those intermediate files, as well as all of DOC_BUILD.
+#
+CLEAN_FILES +=					\
+    $(DOC_BUILD)				\
+    $(DOC_FILES:%.restdown=docs/%.html)		\
+    $(DOC_FILES:%.restdown=docs/%.json)
+
+#
+# Before installing the files, we must make sure the directories exist. The |
+# syntax tells make that the dependency need only exist, not be up to date.
+# Otherwise, it might try to rebuild spuriously because the directory itself
+# appears out of date.
+#
+$(DOC_MEDIA_FILES_BUILD): | $(DOC_MEDIA_DIRS_BUILD)
+
+$(DOC_BUILD)/%: docs/% | $(DOC_BUILD)
+	$(CP) $< $@
+
+docs/%.json docs/%.html: docs/%.restdown | $(DOC_BUILD) $(RESTDOWN_EXEC)
+	$(RESTDOWN) $(RESTDOWN_FLAGS) -m $(DOC_BUILD) $<
+
+$(DOC_BUILD):
+	$(MKDIR) $@
+
+$(DOC_MEDIA_DIRS_BUILD):
+	$(MKDIR) $@
+
+#
+# The default "test" target does nothing. This should usually be overridden by
+# the parent Makefile. It's included here so we can define "prepush" without
+# requiring the repo to define "test".
+#
+.PHONY: test
+test:
+
+.PHONY: prepush
+prepush: check test
+
+# ===== FROM: frontend-nextjs\node_modules\.pnpm\node_modules\delayed-stream\Makefile =====
+SHELL := /bin/bash
+
+test:
+	@./test/run.js
+
+.PHONY: test
+
+# ===== FROM: frontend-nextjs\node_modules\.pnpm\node_modules\extsprintf\Makefile =====
+#
+# Copyright (c) 2012, Joyent, Inc. All rights reserved.
+#
+# Makefile: top-level Makefile
+#
+# This Makefile contains only repo-specific logic and uses included makefiles
+# to supply common targets (javascriptlint, jsstyle, restdown, etc.), which are
+# used by other repos as well.
+#
+
+#
+# Files
+#
+JSL		 = jsl
+JSSTYLE		 = jsstyle
+JS_FILES	:= $(shell find examples lib -name '*.js')
+JSL_FILES_NODE   = $(JS_FILES)
+JSSTYLE_FILES	 = $(JS_FILES)
+JSL_CONF_NODE	 = jsl.node.conf
+
+# Default target is "check"
+check:
+
+include ./Makefile.targ
+
+# ===== FROM: frontend-nextjs\node_modules\.pnpm\node_modules\extsprintf\Makefile.targ =====
+# -*- mode: makefile -*-
+#
+# Copyright (c) 2012, Joyent, Inc. All rights reserved.
+#
+# Makefile.targ: common targets.
+#
+# NOTE: This makefile comes from the "eng" repo. It's designed to be dropped
+# into other repos as-is without requiring any modifications. If you find
+# yourself changing this file, you should instead update the original copy in
+# eng.git and then update your repo to use the new version.
+#
+# This Makefile defines several useful targets and rules. You can use it by
+# including it from a Makefile that specifies some of the variables below.
+#
+# Targets defined in this Makefile:
+#
+#	check	Checks JavaScript files for lint and style
+#		Checks bash scripts for syntax
+#		Checks SMF manifests for validity against the SMF DTD
+#
+#	clean	Removes built files
+#
+#	docs	Builds restdown documentation in docs/
+#
+#	prepush	Depends on "check" and "test"
+#
+#	test	Does nothing (you should override this)
+#
+#	xref	Generates cscope (source cross-reference index)
+#
+# For details on what these targets are supposed to do, see the Joyent
+# Engineering Guide.
+#
+# To make use of these targets, you'll need to set some of these variables. Any
+# variables left unset will simply not be used.
+#
+#	BASH_FILES	Bash scripts to check for syntax
+#			(paths relative to top-level Makefile)
+#
+#	CLEAN_FILES	Files to remove as part of the "clean" target.  Note
+#			that files generated by targets in this Makefile are
+#			automatically included in CLEAN_FILES.  These include
+#			restdown-generated HTML and JSON files.
+#
+#	DOC_FILES	Restdown (documentation source) files. These are
+#			assumed to be contained in "docs/", and must NOT
+#			contain the "docs/" prefix.
+#
+#	JSL_CONF_NODE	Specify JavaScriptLint configuration files
+#	JSL_CONF_WEB	(paths relative to top-level Makefile)
+#
+#			Node.js and Web configuration files are separate
+#			because you'll usually want different global variable
+#			configurations.  If no file is specified, none is given
+#			to jsl, which causes it to use a default configuration,
+#			which probably isn't what you want.
+#
+#	JSL_FILES_NODE	JavaScript files to check with Node config file.
+#	JSL_FILES_WEB	JavaScript files to check with Web config file.
+#
+# You can also override these variables:
+#
+#	BASH		Path to bash (default: bash)
+#
+#	CSCOPE_DIRS	Directories to search for source files for the cscope
+#			index. (default: ".")
+#
+#	JSL		Path to JavaScriptLint (default: "jsl")
+#
+#	JSL_FLAGS_NODE	Additional flags to pass through to JSL
+#	JSL_FLAGS_WEB
+#	JSL_FLAGS
+#
+#	JSSTYLE		Path to jsstyle (default: jsstyle)
+#
+#	JSSTYLE_FLAGS	Additional flags to pass through to jsstyle
+#
+
+#
+# Defaults for the various tools we use.
+#
+BASH		?= bash
+BASHSTYLE	?= tools/bashstyle
+CP		?= cp
+CSCOPE		?= cscope
+CSCOPE_DIRS	?= .
+JSL		?= jsl
+JSSTYLE		?= jsstyle
+MKDIR		?= mkdir -p
+MV		?= mv
+RESTDOWN_FLAGS	?=
+RMTREE		?= rm -rf
+JSL_FLAGS  	?= --nologo --nosummary
+
+ifeq ($(shell uname -s),SunOS)
+	TAR	?= gtar
+else
+	TAR	?= tar
+endif
+
+
+#
+# Defaults for other fixed values.
+#
+BUILD		= build
+DISTCLEAN_FILES += $(BUILD)
+DOC_BUILD	= $(BUILD)/docs/public
+
+#
+# Configure JSL_FLAGS_{NODE,WEB} based on JSL_CONF_{NODE,WEB}.
+#
+ifneq ($(origin JSL_CONF_NODE), undefined)
+	JSL_FLAGS_NODE += --conf=$(JSL_CONF_NODE)
+endif
+
+ifneq ($(origin JSL_CONF_WEB), undefined)
+	JSL_FLAGS_WEB += --conf=$(JSL_CONF_WEB)
+endif
+
+#
+# Targets. For descriptions on what these are supposed to do, see the
+# Joyent Engineering Guide.
+#
+
+#
+# Instruct make to keep around temporary files. We have rules below that
+# automatically update git submodules as needed, but they employ a deps/*/.git
+# temporary file. Without this directive, make tries to remove these .git
+# directories after the build has completed.
+#
+.SECONDARY: $($(wildcard deps/*):%=%/.git)
+
+#
+# This rule enables other rules that use files from a git submodule to have
+# those files depend on deps/module/.git and have "make" automatically check
+# out the submodule as needed.
+#
+deps/%/.git:
+	git submodule update --init deps/$*
+
+#
+# These recipes make heavy use of dynamically-created phony targets. The parent
+# Makefile defines a list of input files like BASH_FILES. We then say that each
+# of these files depends on a fake target called filename.bashchk, and then we
+# define a pattern rule for those targets that runs bash in check-syntax-only
+# mode. This mechanism has the nice properties that if you specify zero files,
+# the rule becomes a noop (unlike a single rule to check all bash files, which
+# would invoke bash with zero files), and you can check individual files from
+# the command line with "make filename.bashchk".
+#
+.PHONY: check-bash
+check-bash: $(BASH_FILES:%=%.bashchk) $(BASH_FILES:%=%.bashstyle)
+
+%.bashchk: %
+	$(BASH) -n $^
+
+%.bashstyle: %
+	$(BASHSTYLE) $^
+
+.PHONY: check-jsl check-jsl-node check-jsl-web
+check-jsl: check-jsl-node check-jsl-web
+
+check-jsl-node: $(JSL_FILES_NODE:%=%.jslnodechk)
+
+check-jsl-web: $(JSL_FILES_WEB:%=%.jslwebchk)
+
+%.jslnodechk: % $(JSL_EXEC)
+	$(JSL) $(JSL_FLAGS) $(JSL_FLAGS_NODE) $<
+
+%.jslwebchk: % $(JSL_EXEC)
+	$(JSL) $(JSL_FLAGS) $(JSL_FLAGS_WEB) $<
+
+.PHONY: check-jsstyle
+check-jsstyle: $(JSSTYLE_FILES:%=%.jsstylechk)
+
+%.jsstylechk: % $(JSSTYLE_EXEC)
+	$(JSSTYLE) $(JSSTYLE_FLAGS) $<
+
+.PHONY: check
+check: check-jsl check-jsstyle check-bash
+	@echo check ok
+
+.PHONY: clean
+clean::
+	-$(RMTREE) $(CLEAN_FILES)
+
+.PHONY: distclean
+distclean:: clean
+	-$(RMTREE) $(DISTCLEAN_FILES)
+
+CSCOPE_FILES = cscope.in.out cscope.out cscope.po.out
+CLEAN_FILES += $(CSCOPE_FILES)
+
+.PHONY: xref
+xref: cscope.files
+	$(CSCOPE) -bqR
+
+.PHONY: cscope.files
+cscope.files:
+	find $(CSCOPE_DIRS) -name '*.c' -o -name '*.h' -o -name '*.cc' \
+	    -o -name '*.js' -o -name '*.s' -o -name '*.cpp' > $@
+
+#
+# The "docs" target is complicated because we do several things here:
+#
+#    (1) Use restdown to build HTML and JSON files from each of DOC_FILES.
+#
+#    (2) Copy these files into $(DOC_BUILD) (build/docs/public), which
+#        functions as a complete copy of the documentation that could be
+#        mirrored or served over HTTP.
+#
+#    (3) Then copy any directories and media from docs/media into
+#        $(DOC_BUILD)/media. This allows projects to include their own media,
+#        including files that will override same-named files provided by
+#        restdown.
+#
+# Step (3) is the surprisingly complex part: in order to do this, we need to
+# identify the subdirectories in docs/media, recreate them in
+# $(DOC_BUILD)/media, then do the same with the files.
+#
+DOC_MEDIA_DIRS := $(shell find docs/media -type d 2>/dev/null | grep -v "^docs/media$$")
+DOC_MEDIA_DIRS := $(DOC_MEDIA_DIRS:docs/media/%=%)
+DOC_MEDIA_DIRS_BUILD := $(DOC_MEDIA_DIRS:%=$(DOC_BUILD)/media/%)
+
+DOC_MEDIA_FILES := $(shell find docs/media -type f 2>/dev/null)
+DOC_MEDIA_FILES := $(DOC_MEDIA_FILES:docs/media/%=%)
+DOC_MEDIA_FILES_BUILD := $(DOC_MEDIA_FILES:%=$(DOC_BUILD)/media/%)
+
+#
+# Like the other targets, "docs" just depends on the final files we want to
+# create in $(DOC_BUILD), leveraging other targets and recipes to define how
+# to get there.
+#
+.PHONY: docs
+docs:							\
+    $(DOC_FILES:%.restdown=$(DOC_BUILD)/%.html)		\
+    $(DOC_FILES:%.restdown=$(DOC_BUILD)/%.json)		\
+    $(DOC_MEDIA_FILES_BUILD)
+
+#
+# We keep the intermediate files so that the next build can see whether the
+# files in DOC_BUILD are up to date.
+#
+.PRECIOUS:					\
+    $(DOC_FILES:%.restdown=docs/%.html)		\
+    $(DOC_FILES:%.restdown=docs/%json)
+
+#
+# We do clean those intermediate files, as well as all of DOC_BUILD.
+#
+CLEAN_FILES +=					\
+    $(DOC_BUILD)				\
+    $(DOC_FILES:%.restdown=docs/%.html)		\
+    $(DOC_FILES:%.restdown=docs/%.json)
+
+#
+# Before installing the files, we must make sure the directories exist. The |
+# syntax tells make that the dependency need only exist, not be up to date.
+# Otherwise, it might try to rebuild spuriously because the directory itself
+# appears out of date.
+#
+$(DOC_MEDIA_FILES_BUILD): | $(DOC_MEDIA_DIRS_BUILD)
+
+$(DOC_BUILD)/%: docs/% | $(DOC_BUILD)
+	$(CP) $< $@
+
+docs/%.json docs/%.html: docs/%.restdown | $(DOC_BUILD) $(RESTDOWN_EXEC)
+	$(RESTDOWN) $(RESTDOWN_FLAGS) -m $(DOC_BUILD) $<
+
+$(DOC_BUILD):
+	$(MKDIR) $@
+
+$(DOC_MEDIA_DIRS_BUILD):
+	$(MKDIR) $@
+
+#
+# The default "test" target does nothing. This should usually be overridden by
+# the parent Makefile. It's included here so we can define "prepush" without
+# requiring the repo to define "test".
+#
+.PHONY: test
+test:
+
+.PHONY: prepush
+prepush: check test
+
+# ===== FROM: frontend-nextjs\node_modules\.pnpm\node_modules\json-stringify-safe\Makefile =====
+NODE_OPTS =
+TEST_OPTS =
+
+love:
+	@echo "Feel like makin' love."
+
+test:
+	@node $(NODE_OPTS) ./node_modules/.bin/_mocha -R dot $(TEST_OPTS)
+
+spec:
+	@node $(NODE_OPTS) ./node_modules/.bin/_mocha -R spec $(TEST_OPTS)
+
+autotest:
+	@node $(NODE_OPTS) ./node_modules/.bin/_mocha -R dot --watch $(TEST_OPTS)
+
+autospec:
+	@node $(NODE_OPTS) ./node_modules/.bin/_mocha -R spec --watch $(TEST_OPTS)
+
+pack:
+	@file=$$(npm pack); echo "$$file"; tar tf "$$file"
+
+publish:
+	npm publish
+
+tag:
+	git tag "v$$(node -e 'console.log(require("./package").version)')"
+
+clean:
+	rm -f *.tgz
+	npm prune --production
+
+.PHONY: love
+.PHONY: test spec autotest autospec
+.PHONY: pack publish tag
+.PHONY: clean
+
+# ===== FROM: frontend-nextjs\node_modules\.pnpm\node_modules\throttleit\Makefile =====
+
+build: components index.js
+	@component build --dev
+
+components: component.json
+	@component install --dev
+
+clean:
+	rm -fr build components template.js
+
+test: node_modules
+	@./node_modules/mocha/bin/mocha \
+		--reporter spec
+
+node_modules: package.json
+	@npm install
+
+.PHONY: clean
+
+# ===== FROM: frontend-nextjs\node_modules\.pnpm\request-progress@3.0.0\node_modules\throttleit\Makefile =====
+
+build: components index.js
+	@component build --dev
+
+components: component.json
+	@component install --dev
+
+clean:
+	rm -fr build components template.js
+
+test: node_modules
+	@./node_modules/mocha/bin/mocha \
+		--reporter spec
+
+node_modules: package.json
+	@npm install
+
+.PHONY: clean
+
+# ===== FROM: frontend-nextjs\node_modules\.pnpm\throttleit@1.0.1\node_modules\throttleit\Makefile =====
+
+build: components index.js
+	@component build --dev
+
+components: component.json
+	@component install --dev
+
+clean:
+	rm -fr build components template.js
+
+test: node_modules
+	@./node_modules/mocha/bin/mocha \
+		--reporter spec
+
+node_modules: package.json
+	@npm install
+
+.PHONY: clean
+
+# ===== FROM: frontend-nextjs\node_modules\.pnpm\verror@1.10.0\node_modules\extsprintf\Makefile =====
+#
+# Copyright (c) 2012, Joyent, Inc. All rights reserved.
+#
+# Makefile: top-level Makefile
+#
+# This Makefile contains only repo-specific logic and uses included makefiles
+# to supply common targets (javascriptlint, jsstyle, restdown, etc.), which are
+# used by other repos as well.
+#
+
+#
+# Files
+#
+JSL		 = jsl
+JSSTYLE		 = jsstyle
+JS_FILES	:= $(shell find examples lib -name '*.js')
+JSL_FILES_NODE   = $(JS_FILES)
+JSSTYLE_FILES	 = $(JS_FILES)
+JSL_CONF_NODE	 = jsl.node.conf
+
+# Default target is "check"
+check:
+
+include ./Makefile.targ
+
+# ===== FROM: frontend-nextjs\node_modules\.pnpm\verror@1.10.0\node_modules\extsprintf\Makefile.targ =====
+# -*- mode: makefile -*-
+#
+# Copyright (c) 2012, Joyent, Inc. All rights reserved.
+#
+# Makefile.targ: common targets.
+#
+# NOTE: This makefile comes from the "eng" repo. It's designed to be dropped
+# into other repos as-is without requiring any modifications. If you find
+# yourself changing this file, you should instead update the original copy in
+# eng.git and then update your repo to use the new version.
+#
+# This Makefile defines several useful targets and rules. You can use it by
+# including it from a Makefile that specifies some of the variables below.
+#
+# Targets defined in this Makefile:
+#
+#	check	Checks JavaScript files for lint and style
+#		Checks bash scripts for syntax
+#		Checks SMF manifests for validity against the SMF DTD
+#
+#	clean	Removes built files
+#
+#	docs	Builds restdown documentation in docs/
+#
+#	prepush	Depends on "check" and "test"
+#
+#	test	Does nothing (you should override this)
+#
+#	xref	Generates cscope (source cross-reference index)
+#
+# For details on what these targets are supposed to do, see the Joyent
+# Engineering Guide.
+#
+# To make use of these targets, you'll need to set some of these variables. Any
+# variables left unset will simply not be used.
+#
+#	BASH_FILES	Bash scripts to check for syntax
+#			(paths relative to top-level Makefile)
+#
+#	CLEAN_FILES	Files to remove as part of the "clean" target.  Note
+#			that files generated by targets in this Makefile are
+#			automatically included in CLEAN_FILES.  These include
+#			restdown-generated HTML and JSON files.
+#
+#	DOC_FILES	Restdown (documentation source) files. These are
+#			assumed to be contained in "docs/", and must NOT
+#			contain the "docs/" prefix.
+#
+#	JSL_CONF_NODE	Specify JavaScriptLint configuration files
+#	JSL_CONF_WEB	(paths relative to top-level Makefile)
+#
+#			Node.js and Web configuration files are separate
+#			because you'll usually want different global variable
+#			configurations.  If no file is specified, none is given
+#			to jsl, which causes it to use a default configuration,
+#			which probably isn't what you want.
+#
+#	JSL_FILES_NODE	JavaScript files to check with Node config file.
+#	JSL_FILES_WEB	JavaScript files to check with Web config file.
+#
+# You can also override these variables:
+#
+#	BASH		Path to bash (default: bash)
+#
+#	CSCOPE_DIRS	Directories to search for source files for the cscope
+#			index. (default: ".")
+#
+#	JSL		Path to JavaScriptLint (default: "jsl")
+#
+#	JSL_FLAGS_NODE	Additional flags to pass through to JSL
+#	JSL_FLAGS_WEB
+#	JSL_FLAGS
+#
+#	JSSTYLE		Path to jsstyle (default: jsstyle)
+#
+#	JSSTYLE_FLAGS	Additional flags to pass through to jsstyle
+#
+
+#
+# Defaults for the various tools we use.
+#
+BASH		?= bash
+BASHSTYLE	?= tools/bashstyle
+CP		?= cp
+CSCOPE		?= cscope
+CSCOPE_DIRS	?= .
+JSL		?= jsl
+JSSTYLE		?= jsstyle
+MKDIR		?= mkdir -p
+MV		?= mv
+RESTDOWN_FLAGS	?=
+RMTREE		?= rm -rf
+JSL_FLAGS  	?= --nologo --nosummary
+
+ifeq ($(shell uname -s),SunOS)
+	TAR	?= gtar
+else
+	TAR	?= tar
+endif
+
+
+#
+# Defaults for other fixed values.
+#
+BUILD		= build
+DISTCLEAN_FILES += $(BUILD)
+DOC_BUILD	= $(BUILD)/docs/public
+
+#
+# Configure JSL_FLAGS_{NODE,WEB} based on JSL_CONF_{NODE,WEB}.
+#
+ifneq ($(origin JSL_CONF_NODE), undefined)
+	JSL_FLAGS_NODE += --conf=$(JSL_CONF_NODE)
+endif
+
+ifneq ($(origin JSL_CONF_WEB), undefined)
+	JSL_FLAGS_WEB += --conf=$(JSL_CONF_WEB)
+endif
+
+#
+# Targets. For descriptions on what these are supposed to do, see the
+# Joyent Engineering Guide.
+#
+
+#
+# Instruct make to keep around temporary files. We have rules below that
+# automatically update git submodules as needed, but they employ a deps/*/.git
+# temporary file. Without this directive, make tries to remove these .git
+# directories after the build has completed.
+#
+.SECONDARY: $($(wildcard deps/*):%=%/.git)
+
+#
+# This rule enables other rules that use files from a git submodule to have
+# those files depend on deps/module/.git and have "make" automatically check
+# out the submodule as needed.
+#
+deps/%/.git:
+	git submodule update --init deps/$*
+
+#
+# These recipes make heavy use of dynamically-created phony targets. The parent
+# Makefile defines a list of input files like BASH_FILES. We then say that each
+# of these files depends on a fake target called filename.bashchk, and then we
+# define a pattern rule for those targets that runs bash in check-syntax-only
+# mode. This mechanism has the nice properties that if you specify zero files,
+# the rule becomes a noop (unlike a single rule to check all bash files, which
+# would invoke bash with zero files), and you can check individual files from
+# the command line with "make filename.bashchk".
+#
+.PHONY: check-bash
+check-bash: $(BASH_FILES:%=%.bashchk) $(BASH_FILES:%=%.bashstyle)
+
+%.bashchk: %
+	$(BASH) -n $^
+
+%.bashstyle: %
+	$(BASHSTYLE) $^
+
+.PHONY: check-jsl check-jsl-node check-jsl-web
+check-jsl: check-jsl-node check-jsl-web
+
+check-jsl-node: $(JSL_FILES_NODE:%=%.jslnodechk)
+
+check-jsl-web: $(JSL_FILES_WEB:%=%.jslwebchk)
+
+%.jslnodechk: % $(JSL_EXEC)
+	$(JSL) $(JSL_FLAGS) $(JSL_FLAGS_NODE) $<
+
+%.jslwebchk: % $(JSL_EXEC)
+	$(JSL) $(JSL_FLAGS) $(JSL_FLAGS_WEB) $<
+
+.PHONY: check-jsstyle
+check-jsstyle: $(JSSTYLE_FILES:%=%.jsstylechk)
+
+%.jsstylechk: % $(JSSTYLE_EXEC)
+	$(JSSTYLE) $(JSSTYLE_FLAGS) $<
+
+.PHONY: check
+check: check-jsl check-jsstyle check-bash
+	@echo check ok
+
+.PHONY: clean
+clean::
+	-$(RMTREE) $(CLEAN_FILES)
+
+.PHONY: distclean
+distclean:: clean
+	-$(RMTREE) $(DISTCLEAN_FILES)
+
+CSCOPE_FILES = cscope.in.out cscope.out cscope.po.out
+CLEAN_FILES += $(CSCOPE_FILES)
+
+.PHONY: xref
+xref: cscope.files
+	$(CSCOPE) -bqR
+
+.PHONY: cscope.files
+cscope.files:
+	find $(CSCOPE_DIRS) -name '*.c' -o -name '*.h' -o -name '*.cc' \
+	    -o -name '*.js' -o -name '*.s' -o -name '*.cpp' > $@
+
+#
+# The "docs" target is complicated because we do several things here:
+#
+#    (1) Use restdown to build HTML and JSON files from each of DOC_FILES.
+#
+#    (2) Copy these files into $(DOC_BUILD) (build/docs/public), which
+#        functions as a complete copy of the documentation that could be
+#        mirrored or served over HTTP.
+#
+#    (3) Then copy any directories and media from docs/media into
+#        $(DOC_BUILD)/media. This allows projects to include their own media,
+#        including files that will override same-named files provided by
+#        restdown.
+#
+# Step (3) is the surprisingly complex part: in order to do this, we need to
+# identify the subdirectories in docs/media, recreate them in
+# $(DOC_BUILD)/media, then do the same with the files.
+#
+DOC_MEDIA_DIRS := $(shell find docs/media -type d 2>/dev/null | grep -v "^docs/media$$")
+DOC_MEDIA_DIRS := $(DOC_MEDIA_DIRS:docs/media/%=%)
+DOC_MEDIA_DIRS_BUILD := $(DOC_MEDIA_DIRS:%=$(DOC_BUILD)/media/%)
+
+DOC_MEDIA_FILES := $(shell find docs/media -type f 2>/dev/null)
+DOC_MEDIA_FILES := $(DOC_MEDIA_FILES:docs/media/%=%)
+DOC_MEDIA_FILES_BUILD := $(DOC_MEDIA_FILES:%=$(DOC_BUILD)/media/%)
+
+#
+# Like the other targets, "docs" just depends on the final files we want to
+# create in $(DOC_BUILD), leveraging other targets and recipes to define how
+# to get there.
+#
+.PHONY: docs
+docs:							\
+    $(DOC_FILES:%.restdown=$(DOC_BUILD)/%.html)		\
+    $(DOC_FILES:%.restdown=$(DOC_BUILD)/%.json)		\
+    $(DOC_MEDIA_FILES_BUILD)
+
+#
+# We keep the intermediate files so that the next build can see whether the
+# files in DOC_BUILD are up to date.
+#
+.PRECIOUS:					\
+    $(DOC_FILES:%.restdown=docs/%.html)		\
+    $(DOC_FILES:%.restdown=docs/%json)
+
+#
+# We do clean those intermediate files, as well as all of DOC_BUILD.
+#
+CLEAN_FILES +=					\
+    $(DOC_BUILD)				\
+    $(DOC_FILES:%.restdown=docs/%.html)		\
+    $(DOC_FILES:%.restdown=docs/%.json)
+
+#
+# Before installing the files, we must make sure the directories exist. The |
+# syntax tells make that the dependency need only exist, not be up to date.
+# Otherwise, it might try to rebuild spuriously because the directory itself
+# appears out of date.
+#
+$(DOC_MEDIA_FILES_BUILD): | $(DOC_MEDIA_DIRS_BUILD)
+
+$(DOC_BUILD)/%: docs/% | $(DOC_BUILD)
+	$(CP) $< $@
+
+docs/%.json docs/%.html: docs/%.restdown | $(DOC_BUILD) $(RESTDOWN_EXEC)
+	$(RESTDOWN) $(RESTDOWN_FLAGS) -m $(DOC_BUILD) $<
+
+$(DOC_BUILD):
+	$(MKDIR) $@
+
+$(DOC_MEDIA_DIRS_BUILD):
+	$(MKDIR) $@
+
+#
+# The default "test" target does nothing. This should usually be overridden by
+# the parent Makefile. It's included here so we can define "prepush" without
+# requiring the repo to define "test".
+#
+.PHONY: test
+test:
+
+.PHONY: prepush
+prepush: check test
+
+# ===== FROM: frontend-nextjs\node_modules\delayed-stream\Makefile =====
+SHELL := /bin/bash
+
+test:
+	@./test/run.js
+
+.PHONY: test
+
+# ===== FROM: frontend-nextjs\node_modules\extsprintf\Makefile =====
+#
+# Copyright (c) 2012, Joyent, Inc. All rights reserved.
+#
+# Makefile: top-level Makefile
+#
+# This Makefile contains only repo-specific logic and uses included makefiles
+# to supply common targets (javascriptlint, jsstyle, restdown, etc.), which are
+# used by other repos as well.
+#
+
+#
+# Files
+#
+JSL		 = jsl
+JSSTYLE		 = jsstyle
+JS_FILES	:= $(shell find examples lib -name '*.js')
+JSL_FILES_NODE   = $(JS_FILES)
+JSSTYLE_FILES	 = $(JS_FILES)
+JSL_CONF_NODE	 = jsl.node.conf
+
+# Default target is "check"
+check:
+
+include ./Makefile.targ
+
+# ===== FROM: frontend-nextjs\node_modules\extsprintf\Makefile.targ =====
+# -*- mode: makefile -*-
+#
+# Copyright (c) 2012, Joyent, Inc. All rights reserved.
+#
+# Makefile.targ: common targets.
+#
+# NOTE: This makefile comes from the "eng" repo. It's designed to be dropped
+# into other repos as-is without requiring any modifications. If you find
+# yourself changing this file, you should instead update the original copy in
+# eng.git and then update your repo to use the new version.
+#
+# This Makefile defines several useful targets and rules. You can use it by
+# including it from a Makefile that specifies some of the variables below.
+#
+# Targets defined in this Makefile:
+#
+#	check	Checks JavaScript files for lint and style
+#		Checks bash scripts for syntax
+#		Checks SMF manifests for validity against the SMF DTD
+#
+#	clean	Removes built files
+#
+#	docs	Builds restdown documentation in docs/
+#
+#	prepush	Depends on "check" and "test"
+#
+#	test	Does nothing (you should override this)
+#
+#	xref	Generates cscope (source cross-reference index)
+#
+# For details on what these targets are supposed to do, see the Joyent
+# Engineering Guide.
+#
+# To make use of these targets, you'll need to set some of these variables. Any
+# variables left unset will simply not be used.
+#
+#	BASH_FILES	Bash scripts to check for syntax
+#			(paths relative to top-level Makefile)
+#
+#	CLEAN_FILES	Files to remove as part of the "clean" target.  Note
+#			that files generated by targets in this Makefile are
+#			automatically included in CLEAN_FILES.  These include
+#			restdown-generated HTML and JSON files.
+#
+#	DOC_FILES	Restdown (documentation source) files. These are
+#			assumed to be contained in "docs/", and must NOT
+#			contain the "docs/" prefix.
+#
+#	JSL_CONF_NODE	Specify JavaScriptLint configuration files
+#	JSL_CONF_WEB	(paths relative to top-level Makefile)
+#
+#			Node.js and Web configuration files are separate
+#			because you'll usually want different global variable
+#			configurations.  If no file is specified, none is given
+#			to jsl, which causes it to use a default configuration,
+#			which probably isn't what you want.
+#
+#	JSL_FILES_NODE	JavaScript files to check with Node config file.
+#	JSL_FILES_WEB	JavaScript files to check with Web config file.
+#
+# You can also override these variables:
+#
+#	BASH		Path to bash (default: bash)
+#
+#	CSCOPE_DIRS	Directories to search for source files for the cscope
+#			index. (default: ".")
+#
+#	JSL		Path to JavaScriptLint (default: "jsl")
+#
+#	JSL_FLAGS_NODE	Additional flags to pass through to JSL
+#	JSL_FLAGS_WEB
+#	JSL_FLAGS
+#
+#	JSSTYLE		Path to jsstyle (default: jsstyle)
+#
+#	JSSTYLE_FLAGS	Additional flags to pass through to jsstyle
+#
+
+#
+# Defaults for the various tools we use.
+#
+BASH		?= bash
+BASHSTYLE	?= tools/bashstyle
+CP		?= cp
+CSCOPE		?= cscope
+CSCOPE_DIRS	?= .
+JSL		?= jsl
+JSSTYLE		?= jsstyle
+MKDIR		?= mkdir -p
+MV		?= mv
+RESTDOWN_FLAGS	?=
+RMTREE		?= rm -rf
+JSL_FLAGS  	?= --nologo --nosummary
+
+ifeq ($(shell uname -s),SunOS)
+	TAR	?= gtar
+else
+	TAR	?= tar
+endif
+
+
+#
+# Defaults for other fixed values.
+#
+BUILD		= build
+DISTCLEAN_FILES += $(BUILD)
+DOC_BUILD	= $(BUILD)/docs/public
+
+#
+# Configure JSL_FLAGS_{NODE,WEB} based on JSL_CONF_{NODE,WEB}.
+#
+ifneq ($(origin JSL_CONF_NODE), undefined)
+	JSL_FLAGS_NODE += --conf=$(JSL_CONF_NODE)
+endif
+
+ifneq ($(origin JSL_CONF_WEB), undefined)
+	JSL_FLAGS_WEB += --conf=$(JSL_CONF_WEB)
+endif
+
+#
+# Targets. For descriptions on what these are supposed to do, see the
+# Joyent Engineering Guide.
+#
+
+#
+# Instruct make to keep around temporary files. We have rules below that
+# automatically update git submodules as needed, but they employ a deps/*/.git
+# temporary file. Without this directive, make tries to remove these .git
+# directories after the build has completed.
+#
+.SECONDARY: $($(wildcard deps/*):%=%/.git)
+
+#
+# This rule enables other rules that use files from a git submodule to have
+# those files depend on deps/module/.git and have "make" automatically check
+# out the submodule as needed.
+#
+deps/%/.git:
+	git submodule update --init deps/$*
+
+#
+# These recipes make heavy use of dynamically-created phony targets. The parent
+# Makefile defines a list of input files like BASH_FILES. We then say that each
+# of these files depends on a fake target called filename.bashchk, and then we
+# define a pattern rule for those targets that runs bash in check-syntax-only
+# mode. This mechanism has the nice properties that if you specify zero files,
+# the rule becomes a noop (unlike a single rule to check all bash files, which
+# would invoke bash with zero files), and you can check individual files from
+# the command line with "make filename.bashchk".
+#
+.PHONY: check-bash
+check-bash: $(BASH_FILES:%=%.bashchk) $(BASH_FILES:%=%.bashstyle)
+
+%.bashchk: %
+	$(BASH) -n $^
+
+%.bashstyle: %
+	$(BASHSTYLE) $^
+
+.PHONY: check-jsl check-jsl-node check-jsl-web
+check-jsl: check-jsl-node check-jsl-web
+
+check-jsl-node: $(JSL_FILES_NODE:%=%.jslnodechk)
+
+check-jsl-web: $(JSL_FILES_WEB:%=%.jslwebchk)
+
+%.jslnodechk: % $(JSL_EXEC)
+	$(JSL) $(JSL_FLAGS) $(JSL_FLAGS_NODE) $<
+
+%.jslwebchk: % $(JSL_EXEC)
+	$(JSL) $(JSL_FLAGS) $(JSL_FLAGS_WEB) $<
+
+.PHONY: check-jsstyle
+check-jsstyle: $(JSSTYLE_FILES:%=%.jsstylechk)
+
+%.jsstylechk: % $(JSSTYLE_EXEC)
+	$(JSSTYLE) $(JSSTYLE_FLAGS) $<
+
+.PHONY: check
+check: check-jsl check-jsstyle check-bash
+	@echo check ok
+
+.PHONY: clean
+clean::
+	-$(RMTREE) $(CLEAN_FILES)
+
+.PHONY: distclean
+distclean:: clean
+	-$(RMTREE) $(DISTCLEAN_FILES)
+
+CSCOPE_FILES = cscope.in.out cscope.out cscope.po.out
+CLEAN_FILES += $(CSCOPE_FILES)
+
+.PHONY: xref
+xref: cscope.files
+	$(CSCOPE) -bqR
+
+.PHONY: cscope.files
+cscope.files:
+	find $(CSCOPE_DIRS) -name '*.c' -o -name '*.h' -o -name '*.cc' \
+	    -o -name '*.js' -o -name '*.s' -o -name '*.cpp' > $@
+
+#
+# The "docs" target is complicated because we do several things here:
+#
+#    (1) Use restdown to build HTML and JSON files from each of DOC_FILES.
+#
+#    (2) Copy these files into $(DOC_BUILD) (build/docs/public), which
+#        functions as a complete copy of the documentation that could be
+#        mirrored or served over HTTP.
+#
+#    (3) Then copy any directories and media from docs/media into
+#        $(DOC_BUILD)/media. This allows projects to include their own media,
+#        including files that will override same-named files provided by
+#        restdown.
+#
+# Step (3) is the surprisingly complex part: in order to do this, we need to
+# identify the subdirectories in docs/media, recreate them in
+# $(DOC_BUILD)/media, then do the same with the files.
+#
+DOC_MEDIA_DIRS := $(shell find docs/media -type d 2>/dev/null | grep -v "^docs/media$$")
+DOC_MEDIA_DIRS := $(DOC_MEDIA_DIRS:docs/media/%=%)
+DOC_MEDIA_DIRS_BUILD := $(DOC_MEDIA_DIRS:%=$(DOC_BUILD)/media/%)
+
+DOC_MEDIA_FILES := $(shell find docs/media -type f 2>/dev/null)
+DOC_MEDIA_FILES := $(DOC_MEDIA_FILES:docs/media/%=%)
+DOC_MEDIA_FILES_BUILD := $(DOC_MEDIA_FILES:%=$(DOC_BUILD)/media/%)
+
+#
+# Like the other targets, "docs" just depends on the final files we want to
+# create in $(DOC_BUILD), leveraging other targets and recipes to define how
+# to get there.
+#
+.PHONY: docs
+docs:							\
+    $(DOC_FILES:%.restdown=$(DOC_BUILD)/%.html)		\
+    $(DOC_FILES:%.restdown=$(DOC_BUILD)/%.json)		\
+    $(DOC_MEDIA_FILES_BUILD)
+
+#
+# We keep the intermediate files so that the next build can see whether the
+# files in DOC_BUILD are up to date.
+#
+.PRECIOUS:					\
+    $(DOC_FILES:%.restdown=docs/%.html)		\
+    $(DOC_FILES:%.restdown=docs/%json)
+
+#
+# We do clean those intermediate files, as well as all of DOC_BUILD.
+#
+CLEAN_FILES +=					\
+    $(DOC_BUILD)				\
+    $(DOC_FILES:%.restdown=docs/%.html)		\
+    $(DOC_FILES:%.restdown=docs/%.json)
+
+#
+# Before installing the files, we must make sure the directories exist. The |
+# syntax tells make that the dependency need only exist, not be up to date.
+# Otherwise, it might try to rebuild spuriously because the directory itself
+# appears out of date.
+#
+$(DOC_MEDIA_FILES_BUILD): | $(DOC_MEDIA_DIRS_BUILD)
+
+$(DOC_BUILD)/%: docs/% | $(DOC_BUILD)
+	$(CP) $< $@
+
+docs/%.json docs/%.html: docs/%.restdown | $(DOC_BUILD) $(RESTDOWN_EXEC)
+	$(RESTDOWN) $(RESTDOWN_FLAGS) -m $(DOC_BUILD) $<
+
+$(DOC_BUILD):
+	$(MKDIR) $@
+
+$(DOC_MEDIA_DIRS_BUILD):
+	$(MKDIR) $@
+
+#
+# The default "test" target does nothing. This should usually be overridden by
+# the parent Makefile. It's included here so we can define "prepush" without
+# requiring the repo to define "test".
+#
+.PHONY: test
+test:
+
+.PHONY: prepush
+prepush: check test
+
+# ===== FROM: frontend-nextjs\node_modules\json-stringify-safe\Makefile =====
+NODE_OPTS =
+TEST_OPTS =
+
+love:
+	@echo "Feel like makin' love."
+
+test:
+	@node $(NODE_OPTS) ./node_modules/.bin/_mocha -R dot $(TEST_OPTS)
+
+spec:
+	@node $(NODE_OPTS) ./node_modules/.bin/_mocha -R spec $(TEST_OPTS)
+
+autotest:
+	@node $(NODE_OPTS) ./node_modules/.bin/_mocha -R dot --watch $(TEST_OPTS)
+
+autospec:
+	@node $(NODE_OPTS) ./node_modules/.bin/_mocha -R spec --watch $(TEST_OPTS)
+
+pack:
+	@file=$$(npm pack); echo "$$file"; tar tf "$$file"
+
+publish:
+	npm publish
+
+tag:
+	git tag "v$$(node -e 'console.log(require("./package").version)')"
+
+clean:
+	rm -f *.tgz
+	npm prune --production
+
+.PHONY: love
+.PHONY: test spec autotest autospec
+.PHONY: pack publish tag
+.PHONY: clean
+
+# ===== FROM: frontend-nextjs\node_modules\throttleit\Makefile =====
+
+build: components index.js
+	@component build --dev
+
+components: component.json
+	@component install --dev
+
+clean:
+	rm -fr build components template.js
+
+test: node_modules
+	@./node_modules/mocha/bin/mocha \
+		--reporter spec
+
+node_modules: package.json
+	@npm install
+
+.PHONY: clean
+
+# ===== FROM: node_modules\.ignored\apollo-server-express\node_modules\debug\Makefile =====
+# get Makefile directory name: http://stackoverflow.com/a/5982798/376773
+THIS_MAKEFILE_PATH:=$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
+THIS_DIR:=$(shell cd $(dir $(THIS_MAKEFILE_PATH));pwd)
+
+# BIN directory
+BIN := $(THIS_DIR)/node_modules/.bin
+
+# Path
+PATH := node_modules/.bin:$(PATH)
+SHELL := /bin/bash
+
+# applications
+NODE ?= $(shell which node)
+YARN ?= $(shell which yarn)
+PKG ?= $(if $(YARN),$(YARN),$(NODE) $(shell which npm))
+BROWSERIFY ?= $(NODE) $(BIN)/browserify
+
+.FORCE:
+
+install: node_modules
+
+node_modules: package.json
+	@NODE_ENV= $(PKG) install
+	@touch node_modules
+
+lint: .FORCE
+	eslint browser.js debug.js index.js node.js
+
+test-node: .FORCE
+	istanbul cover node_modules/mocha/bin/_mocha -- test/**.js
+
+test-browser: .FORCE
+	mkdir -p dist
+
+	@$(BROWSERIFY) \
+		--standalone debug \
+		. > dist/debug.js
+
+	karma start --single-run
+	rimraf dist
+
+test: .FORCE
+	concurrently \
+		"make test-node" \
+		"make test-browser"
+
+coveralls:
+	cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js
+
+.PHONY: all install clean distclean
+
+# ===== FROM: node_modules\.ignored\express\node_modules\debug\Makefile =====
+# get Makefile directory name: http://stackoverflow.com/a/5982798/376773
+THIS_MAKEFILE_PATH:=$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
+THIS_DIR:=$(shell cd $(dir $(THIS_MAKEFILE_PATH));pwd)
+
+# BIN directory
+BIN := $(THIS_DIR)/node_modules/.bin
+
+# Path
+PATH := node_modules/.bin:$(PATH)
+SHELL := /bin/bash
+
+# applications
+NODE ?= $(shell which node)
+YARN ?= $(shell which yarn)
+PKG ?= $(if $(YARN),$(YARN),$(NODE) $(shell which npm))
+BROWSERIFY ?= $(NODE) $(BIN)/browserify
+
+.FORCE:
+
+install: node_modules
+
+node_modules: package.json
+	@NODE_ENV= $(PKG) install
+	@touch node_modules
+
+lint: .FORCE
+	eslint browser.js debug.js index.js node.js
+
+test-node: .FORCE
+	istanbul cover node_modules/mocha/bin/_mocha -- test/**.js
+
+test-browser: .FORCE
+	mkdir -p dist
+
+	@$(BROWSERIFY) \
+		--standalone debug \
+		. > dist/debug.js
+
+	karma start --single-run
+	rimraf dist
+
+test: .FORCE
+	concurrently \
+		"make test-node" \
+		"make test-browser"
+
+coveralls:
+	cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js
+
+.PHONY: all install clean distclean
+
+# ===== FROM: node_modules\.pnpm\@graphql-codegen+cli@5.0.7__48cc420ab41b562b2fe47567fcf9e318\node_modules\debounce\Makefile =====
+
+build: components index.js
+	@component build --dev
+
+components: component.json
+	@component install --dev
+
+clean:
+	rm -fr build components template.js
+
+.PHONY: clean
+
+# ===== FROM: node_modules\.pnpm\@graphql-codegen+cli@5.0.7__db2e307922c1f43b94608ae634156c53\node_modules\debounce\Makefile =====
+
+build: components index.js
+	@component build --dev
+
+components: component.json
+	@component install --dev
+
+clean:
+	rm -fr build components template.js
+
+.PHONY: clean
+
+# ===== FROM: node_modules\.pnpm\body-parser@1.20.3\node_modules\debug\Makefile =====
+# get Makefile directory name: http://stackoverflow.com/a/5982798/376773
+THIS_MAKEFILE_PATH:=$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
+THIS_DIR:=$(shell cd $(dir $(THIS_MAKEFILE_PATH));pwd)
+
+# BIN directory
+BIN := $(THIS_DIR)/node_modules/.bin
+
+# Path
+PATH := node_modules/.bin:$(PATH)
+SHELL := /bin/bash
+
+# applications
+NODE ?= $(shell which node)
+YARN ?= $(shell which yarn)
+PKG ?= $(if $(YARN),$(YARN),$(NODE) $(shell which npm))
+BROWSERIFY ?= $(NODE) $(BIN)/browserify
+
+.FORCE:
+
+install: node_modules
+
+node_modules: package.json
+	@NODE_ENV= $(PKG) install
+	@touch node_modules
+
+lint: .FORCE
+	eslint browser.js debug.js index.js node.js
+
+test-node: .FORCE
+	istanbul cover node_modules/mocha/bin/_mocha -- test/**.js
+
+test-browser: .FORCE
+	mkdir -p dist
+
+	@$(BROWSERIFY) \
+		--standalone debug \
+		. > dist/debug.js
+
+	karma start --single-run
+	rimraf dist
+
+test: .FORCE
+	concurrently \
+		"make test-node" \
+		"make test-browser"
+
+coveralls:
+	cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js
+
+.PHONY: all install clean distclean
+
+# ===== FROM: node_modules\.pnpm\debounce@1.2.1\node_modules\debounce\Makefile =====
+
+build: components index.js
+	@component build --dev
+
+components: component.json
+	@component install --dev
+
+clean:
+	rm -fr build components template.js
+
+.PHONY: clean
+
+# ===== FROM: node_modules\.pnpm\debug@2.6.9\node_modules\debug\Makefile =====
+# get Makefile directory name: http://stackoverflow.com/a/5982798/376773
+THIS_MAKEFILE_PATH:=$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
+THIS_DIR:=$(shell cd $(dir $(THIS_MAKEFILE_PATH));pwd)
+
+# BIN directory
+BIN := $(THIS_DIR)/node_modules/.bin
+
+# Path
+PATH := node_modules/.bin:$(PATH)
+SHELL := /bin/bash
+
+# applications
+NODE ?= $(shell which node)
+YARN ?= $(shell which yarn)
+PKG ?= $(if $(YARN),$(YARN),$(NODE) $(shell which npm))
+BROWSERIFY ?= $(NODE) $(BIN)/browserify
+
+.FORCE:
+
+install: node_modules
+
+node_modules: package.json
+	@NODE_ENV= $(PKG) install
+	@touch node_modules
+
+lint: .FORCE
+	eslint browser.js debug.js index.js node.js
+
+test-node: .FORCE
+	istanbul cover node_modules/mocha/bin/_mocha -- test/**.js
+
+test-browser: .FORCE
+	mkdir -p dist
+
+	@$(BROWSERIFY) \
+		--standalone debug \
+		. > dist/debug.js
+
+	karma start --single-run
+	rimraf dist
+
+test: .FORCE
+	concurrently \
+		"make test-node" \
+		"make test-browser"
+
+coveralls:
+	cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js
+
+.PHONY: all install clean distclean
+
+# ===== FROM: node_modules\.pnpm\express@4.21.2\node_modules\debug\Makefile =====
+# get Makefile directory name: http://stackoverflow.com/a/5982798/376773
+THIS_MAKEFILE_PATH:=$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
+THIS_DIR:=$(shell cd $(dir $(THIS_MAKEFILE_PATH));pwd)
+
+# BIN directory
+BIN := $(THIS_DIR)/node_modules/.bin
+
+# Path
+PATH := node_modules/.bin:$(PATH)
+SHELL := /bin/bash
+
+# applications
+NODE ?= $(shell which node)
+YARN ?= $(shell which yarn)
+PKG ?= $(if $(YARN),$(YARN),$(NODE) $(shell which npm))
+BROWSERIFY ?= $(NODE) $(BIN)/browserify
+
+.FORCE:
+
+install: node_modules
+
+node_modules: package.json
+	@NODE_ENV= $(PKG) install
+	@touch node_modules
+
+lint: .FORCE
+	eslint browser.js debug.js index.js node.js
+
+test-node: .FORCE
+	istanbul cover node_modules/mocha/bin/_mocha -- test/**.js
+
+test-browser: .FORCE
+	mkdir -p dist
+
+	@$(BROWSERIFY) \
+		--standalone debug \
+		. > dist/debug.js
+
+	karma start --single-run
+	rimraf dist
+
+test: .FORCE
+	concurrently \
+		"make test-node" \
+		"make test-browser"
+
+coveralls:
+	cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js
+
+.PHONY: all install clean distclean
+
+# ===== FROM: node_modules\.pnpm\finalhandler@1.3.1\node_modules\debug\Makefile =====
+# get Makefile directory name: http://stackoverflow.com/a/5982798/376773
+THIS_MAKEFILE_PATH:=$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
+THIS_DIR:=$(shell cd $(dir $(THIS_MAKEFILE_PATH));pwd)
+
+# BIN directory
+BIN := $(THIS_DIR)/node_modules/.bin
+
+# Path
+PATH := node_modules/.bin:$(PATH)
+SHELL := /bin/bash
+
+# applications
+NODE ?= $(shell which node)
+YARN ?= $(shell which yarn)
+PKG ?= $(if $(YARN),$(YARN),$(NODE) $(shell which npm))
+BROWSERIFY ?= $(NODE) $(BIN)/browserify
+
+.FORCE:
+
+install: node_modules
+
+node_modules: package.json
+	@NODE_ENV= $(PKG) install
+	@touch node_modules
+
+lint: .FORCE
+	eslint browser.js debug.js index.js node.js
+
+test-node: .FORCE
+	istanbul cover node_modules/mocha/bin/_mocha -- test/**.js
+
+test-browser: .FORCE
+	mkdir -p dist
+
+	@$(BROWSERIFY) \
+		--standalone debug \
+		. > dist/debug.js
+
+	karma start --single-run
+	rimraf dist
+
+test: .FORCE
+	concurrently \
+		"make test-node" \
+		"make test-browser"
+
+coveralls:
+	cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js
+
+.PHONY: all install clean distclean
+
+# ===== FROM: node_modules\.pnpm\node_modules\debounce\Makefile =====
+
+build: components index.js
+	@component build --dev
+
+components: component.json
+	@component install --dev
+
+clean:
+	rm -fr build components template.js
+
+.PHONY: clean
+
+# ===== FROM: node_modules\.pnpm\node_modules\debug\Makefile =====
+# get Makefile directory name: http://stackoverflow.com/a/5982798/376773
+THIS_MAKEFILE_PATH:=$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
+THIS_DIR:=$(shell cd $(dir $(THIS_MAKEFILE_PATH));pwd)
+
+# BIN directory
+BIN := $(THIS_DIR)/node_modules/.bin
+
+# Path
+PATH := node_modules/.bin:$(PATH)
+SHELL := /bin/bash
+
+# applications
+NODE ?= $(shell which node)
+YARN ?= $(shell which yarn)
+PKG ?= $(if $(YARN),$(YARN),$(NODE) $(shell which npm))
+BROWSERIFY ?= $(NODE) $(BIN)/browserify
+
+.FORCE:
+
+install: node_modules
+
+node_modules: package.json
+	@NODE_ENV= $(PKG) install
+	@touch node_modules
+
+lint: .FORCE
+	eslint browser.js debug.js index.js node.js
+
+test-node: .FORCE
+	istanbul cover node_modules/mocha/bin/_mocha -- test/**.js
+
+test-browser: .FORCE
+	mkdir -p dist
+
+	@$(BROWSERIFY) \
+		--standalone debug \
+		. > dist/debug.js
+
+	karma start --single-run
+	rimraf dist
+
+test: .FORCE
+	concurrently \
+		"make test-node" \
+		"make test-browser"
+
+coveralls:
+	cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js
+
+.PHONY: all install clean distclean
+
+# ===== FROM: node_modules\.pnpm\node_modules\toposort\Makefile =====
+
+build: components index.js
+	@component build --dev
+
+components: component.json
+	@component install --dev
+
+clean:
+	rm -fr build components template.js
+
+.PHONY: clean
+
+# ===== FROM: node_modules\.pnpm\send@0.19.0\node_modules\debug\Makefile =====
+# get Makefile directory name: http://stackoverflow.com/a/5982798/376773
+THIS_MAKEFILE_PATH:=$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
+THIS_DIR:=$(shell cd $(dir $(THIS_MAKEFILE_PATH));pwd)
+
+# BIN directory
+BIN := $(THIS_DIR)/node_modules/.bin
+
+# Path
+PATH := node_modules/.bin:$(PATH)
+SHELL := /bin/bash
+
+# applications
+NODE ?= $(shell which node)
+YARN ?= $(shell which yarn)
+PKG ?= $(if $(YARN),$(YARN),$(NODE) $(shell which npm))
+BROWSERIFY ?= $(NODE) $(BIN)/browserify
+
+.FORCE:
+
+install: node_modules
+
+node_modules: package.json
+	@NODE_ENV= $(PKG) install
+	@touch node_modules
+
+lint: .FORCE
+	eslint browser.js debug.js index.js node.js
+
+test-node: .FORCE
+	istanbul cover node_modules/mocha/bin/_mocha -- test/**.js
+
+test-browser: .FORCE
+	mkdir -p dist
+
+	@$(BROWSERIFY) \
+		--standalone debug \
+		. > dist/debug.js
+
+	karma start --single-run
+	rimraf dist
+
+test: .FORCE
+	concurrently \
+		"make test-node" \
+		"make test-browser"
+
+coveralls:
+	cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js
+
+.PHONY: all install clean distclean
+
+# ===== FROM: node_modules\.pnpm\toposort@2.0.2\node_modules\toposort\Makefile =====
+
+build: components index.js
+	@component build --dev
+
+components: component.json
+	@component install --dev
+
+clean:
+	rm -fr build components template.js
+
+.PHONY: clean
+
+# ===== FROM: node_modules\.pnpm\yup@0.32.11\node_modules\toposort\Makefile =====
+
+build: components index.js
+	@component build --dev
+
+components: component.json
+	@component install --dev
+
+clean:
+	rm -fr build components template.js
+
+.PHONY: clean
+
+# ===== FROM: node_modules\apollo-server-express\node_modules\debug\Makefile =====
+# get Makefile directory name: http://stackoverflow.com/a/5982798/376773
+THIS_MAKEFILE_PATH:=$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
+THIS_DIR:=$(shell cd $(dir $(THIS_MAKEFILE_PATH));pwd)
+
+# BIN directory
+BIN := $(THIS_DIR)/node_modules/.bin
+
+# Path
+PATH := node_modules/.bin:$(PATH)
+SHELL := /bin/bash
+
+# applications
+NODE ?= $(shell which node)
+YARN ?= $(shell which yarn)
+PKG ?= $(if $(YARN),$(YARN),$(NODE) $(shell which npm))
+BROWSERIFY ?= $(NODE) $(BIN)/browserify
+
+.FORCE:
+
+install: node_modules
+
+node_modules: package.json
+	@NODE_ENV= $(PKG) install
+	@touch node_modules
+
+lint: .FORCE
+	eslint browser.js debug.js index.js node.js
+
+test-node: .FORCE
+	istanbul cover node_modules/mocha/bin/_mocha -- test/**.js
+
+test-browser: .FORCE
+	mkdir -p dist
+
+	@$(BROWSERIFY) \
+		--standalone debug \
+		. > dist/debug.js
+
+	karma start --single-run
+	rimraf dist
+
+test: .FORCE
+	concurrently \
+		"make test-node" \
+		"make test-browser"
+
+coveralls:
+	cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js
+
+.PHONY: all install clean distclean
+
+# ===== FROM: node_modules\debounce\Makefile =====
+
+build: components index.js
+	@component build --dev
+
+components: component.json
+	@component install --dev
+
+clean:
+	rm -fr build components template.js
+
+.PHONY: clean
+
+# ===== FROM: node_modules\express\node_modules\debug\Makefile =====
+# get Makefile directory name: http://stackoverflow.com/a/5982798/376773
+THIS_MAKEFILE_PATH:=$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
+THIS_DIR:=$(shell cd $(dir $(THIS_MAKEFILE_PATH));pwd)
+
+# BIN directory
+BIN := $(THIS_DIR)/node_modules/.bin
+
+# Path
+PATH := node_modules/.bin:$(PATH)
+SHELL := /bin/bash
+
+# applications
+NODE ?= $(shell which node)
+YARN ?= $(shell which yarn)
+PKG ?= $(if $(YARN),$(YARN),$(NODE) $(shell which npm))
+BROWSERIFY ?= $(NODE) $(BIN)/browserify
+
+.FORCE:
+
+install: node_modules
+
+node_modules: package.json
+	@NODE_ENV= $(PKG) install
+	@touch node_modules
+
+lint: .FORCE
+	eslint browser.js debug.js index.js node.js
+
+test-node: .FORCE
+	istanbul cover node_modules/mocha/bin/_mocha -- test/**.js
+
+test-browser: .FORCE
+	mkdir -p dist
+
+	@$(BROWSERIFY) \
+		--standalone debug \
+		. > dist/debug.js
+
+	karma start --single-run
+	rimraf dist
+
+test: .FORCE
+	concurrently \
+		"make test-node" \
+		"make test-browser"
+
+coveralls:
+	cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js
+
+.PHONY: all install clean distclean
+
+# ===== FROM: node_modules\send\node_modules\debug\Makefile =====
+# get Makefile directory name: http://stackoverflow.com/a/5982798/376773
+THIS_MAKEFILE_PATH:=$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
+THIS_DIR:=$(shell cd $(dir $(THIS_MAKEFILE_PATH));pwd)
+
+# BIN directory
+BIN := $(THIS_DIR)/node_modules/.bin
+
+# Path
+PATH := node_modules/.bin:$(PATH)
+SHELL := /bin/bash
+
+# applications
+NODE ?= $(shell which node)
+YARN ?= $(shell which yarn)
+PKG ?= $(if $(YARN),$(YARN),$(NODE) $(shell which npm))
+BROWSERIFY ?= $(NODE) $(BIN)/browserify
+
+.FORCE:
+
+install: node_modules
+
+node_modules: package.json
+	@NODE_ENV= $(PKG) install
+	@touch node_modules
+
+lint: .FORCE
+	eslint browser.js debug.js index.js node.js
+
+test-node: .FORCE
+	istanbul cover node_modules/mocha/bin/_mocha -- test/**.js
+
+test-browser: .FORCE
+	mkdir -p dist
+
+	@$(BROWSERIFY) \
+		--standalone debug \
+		. > dist/debug.js
+
+	karma start --single-run
+	rimraf dist
+
+test: .FORCE
+	concurrently \
+		"make test-node" \
+		"make test-browser"
+
+coveralls:
+	cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js
+
+.PHONY: all install clean distclean
+
+# ===== FROM: node_modules\toposort\Makefile =====
+
+build: components index.js
+	@component build --dev
+
+components: component.json
+	@component install --dev
+
+clean:
+	rm -fr build components template.js
+
+.PHONY: clean
+
+# ===== FROM: processing\analyzers\temp_analysis\ProxyBroker\docs\Makefile =====
+# Makefile for Sphinx documentation
+#
+
+# You can set these variables from the command line.
+SPHINXOPTS    =
+SPHINXBUILD   = sphinx-build
+PAPER         =
+BUILDDIR      = build
+
+# User-friendly check for sphinx-build
+ifeq ($(shell which $(SPHINXBUILD) >/dev/null 2>&1; echo $$?), 1)
+$(error The '$(SPHINXBUILD)' command was not found. Make sure you have Sphinx installed, then set the SPHINXBUILD environment variable to point to the full path of the '$(SPHINXBUILD)' executable. Alternatively you can add the directory with the executable to your PATH. If you don't have Sphinx installed, grab it from http://sphinx-doc.org/)
+endif
+
+# Internal variables.
+PAPEROPT_a4     = -D latex_paper_size=a4
+PAPEROPT_letter = -D latex_paper_size=letter
+ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) source
+# the i18n builder cannot share the environment and doctrees with the others
+I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) source
+
+.PHONY: help
+help:
+	@echo "Please use \`make <target>' where <target> is one of"
+	@echo "  html       to make standalone HTML files"
+	@echo "  dirhtml    to make HTML files named index.html in directories"
+	@echo "  singlehtml to make a single large HTML file"
+	@echo "  pickle     to make pickle files"
+	@echo "  json       to make JSON files"
+	@echo "  htmlhelp   to make HTML files and a HTML help project"
+	@echo "  qthelp     to make HTML files and a qthelp project"
+	@echo "  applehelp  to make an Apple Help Book"
+	@echo "  devhelp    to make HTML files and a Devhelp project"
+	@echo "  epub       to make an epub"
+	@echo "  latex      to make LaTeX files, you can set PAPER=a4 or PAPER=letter"
+	@echo "  latexpdf   to make LaTeX files and run them through pdflatex"
+	@echo "  latexpdfja to make LaTeX files and run them through platex/dvipdfmx"
+	@echo "  text       to make text files"
+	@echo "  man        to make manual pages"
+	@echo "  texinfo    to make Texinfo files"
+	@echo "  info       to make Texinfo files and run them through makeinfo"
+	@echo "  gettext    to make PO message catalogs"
+	@echo "  changes    to make an overview of all changed/added/deprecated items"
+	@echo "  xml        to make Docutils-native XML files"
+	@echo "  pseudoxml  to make pseudoxml-XML files for display purposes"
+	@echo "  linkcheck  to check all external links for integrity"
+	@echo "  doctest    to run all doctests embedded in the documentation (if enabled)"
+	@echo "  coverage   to run coverage check of the documentation (if enabled)"
+
+.PHONY: clean
+clean:
+	rm -rf $(BUILDDIR)/*
+
+.PHONY: html
+html:
+	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+	@echo
+	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
+
+.PHONY: dirhtml
+dirhtml:
+	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/dirhtml
+	@echo
+	@echo "Build finished. The HTML pages are in $(BUILDDIR)/dirhtml."
+
+.PHONY: singlehtml
+singlehtml:
+	$(SPHINXBUILD) -b singlehtml $(ALLSPHINXOPTS) $(BUILDDIR)/singlehtml
+	@echo
+	@echo "Build finished. The HTML page is in $(BUILDDIR)/singlehtml."
+
+.PHONY: pickle
+pickle:
+	$(SPHINXBUILD) -b pickle $(ALLSPHINXOPTS) $(BUILDDIR)/pickle
+	@echo
+	@echo "Build finished; now you can process the pickle files."
+
+.PHONY: json
+json:
+	$(SPHINXBUILD) -b json $(ALLSPHINXOPTS) $(BUILDDIR)/json
+	@echo
+	@echo "Build finished; now you can process the JSON files."
+
+.PHONY: htmlhelp
+htmlhelp:
+	$(SPHINXBUILD) -b htmlhelp $(ALLSPHINXOPTS) $(BUILDDIR)/htmlhelp
+	@echo
+	@echo "Build finished; now you can run HTML Help Workshop with the" \
+	      ".hhp project file in $(BUILDDIR)/htmlhelp."
+
+.PHONY: qthelp
+qthelp:
+	$(SPHINXBUILD) -b qthelp $(ALLSPHINXOPTS) $(BUILDDIR)/qthelp
+	@echo
+	@echo "Build finished; now you can run "qcollectiongenerator" with the" \
+	      ".qhcp project file in $(BUILDDIR)/qthelp, like this:"
+	@echo "# qcollectiongenerator $(BUILDDIR)/qthelp/proxybroker.qhcp"
+	@echo "To view the help file:"
+	@echo "# assistant -collectionFile $(BUILDDIR)/qthelp/proxybroker.qhc"
+
+.PHONY: applehelp
+applehelp:
+	$(SPHINXBUILD) -b applehelp $(ALLSPHINXOPTS) $(BUILDDIR)/applehelp
+	@echo
+	@echo "Build finished. The help book is in $(BUILDDIR)/applehelp."
+	@echo "N.B. You won't be able to view it unless you put it in" \
+	      "~/Library/Documentation/Help or install it in your application" \
+	      "bundle."
+
+.PHONY: devhelp
+devhelp:
+	$(SPHINXBUILD) -b devhelp $(ALLSPHINXOPTS) $(BUILDDIR)/devhelp
+	@echo
+	@echo "Build finished."
+	@echo "To view the help file:"
+	@echo "# mkdir -p $$HOME/.local/share/devhelp/proxybroker"
+	@echo "# ln -s $(BUILDDIR)/devhelp $$HOME/.local/share/devhelp/proxybroker"
+	@echo "# devhelp"
+
+.PHONY: epub
+epub:
+	$(SPHINXBUILD) -b epub $(ALLSPHINXOPTS) $(BUILDDIR)/epub
+	@echo
+	@echo "Build finished. The epub file is in $(BUILDDIR)/epub."
+
+.PHONY: latex
+latex:
+	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) $(BUILDDIR)/latex
+	@echo
+	@echo "Build finished; the LaTeX files are in $(BUILDDIR)/latex."
+	@echo "Run \`make' in that directory to run these through (pdf)latex" \
+	      "(use \`make latexpdf' here to do that automatically)."
+
+.PHONY: latexpdf
+latexpdf:
+	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) $(BUILDDIR)/latex
+	@echo "Running LaTeX files through pdflatex..."
+	$(MAKE) -C $(BUILDDIR)/latex all-pdf
+	@echo "pdflatex finished; the PDF files are in $(BUILDDIR)/latex."
+
+.PHONY: latexpdfja
+latexpdfja:
+	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) $(BUILDDIR)/latex
+	@echo "Running LaTeX files through platex and dvipdfmx..."
+	$(MAKE) -C $(BUILDDIR)/latex all-pdf-ja
+	@echo "pdflatex finished; the PDF files are in $(BUILDDIR)/latex."
+
+.PHONY: text
+text:
+	$(SPHINXBUILD) -b text $(ALLSPHINXOPTS) $(BUILDDIR)/text
+	@echo
+	@echo "Build finished. The text files are in $(BUILDDIR)/text."
+
+.PHONY: man
+man:
+	$(SPHINXBUILD) -b man $(ALLSPHINXOPTS) $(BUILDDIR)/man
+	@echo
+	@echo "Build finished. The manual pages are in $(BUILDDIR)/man."
+
+.PHONY: texinfo
+texinfo:
+	$(SPHINXBUILD) -b texinfo $(ALLSPHINXOPTS) $(BUILDDIR)/texinfo
+	@echo
+	@echo "Build finished. The Texinfo files are in $(BUILDDIR)/texinfo."
+	@echo "Run \`make' in that directory to run these through makeinfo" \
+	      "(use \`make info' here to do that automatically)."
+
+.PHONY: info
+info:
+	$(SPHINXBUILD) -b texinfo $(ALLSPHINXOPTS) $(BUILDDIR)/texinfo
+	@echo "Running Texinfo files through makeinfo..."
+	make -C $(BUILDDIR)/texinfo info
+	@echo "makeinfo finished; the Info files are in $(BUILDDIR)/texinfo."
+
+.PHONY: gettext
+gettext:
+	$(SPHINXBUILD) -b gettext $(I18NSPHINXOPTS) $(BUILDDIR)/locale
+	@echo
+	@echo "Build finished. The message catalogs are in $(BUILDDIR)/locale."
+
+.PHONY: changes
+changes:
+	$(SPHINXBUILD) -b changes $(ALLSPHINXOPTS) $(BUILDDIR)/changes
+	@echo
+	@echo "The overview file is in $(BUILDDIR)/changes."
+
+.PHONY: linkcheck
+linkcheck:
+	$(SPHINXBUILD) -b linkcheck $(ALLSPHINXOPTS) $(BUILDDIR)/linkcheck
+	@echo
+	@echo "Link check complete; look for any errors in the above output " \
+	      "or in $(BUILDDIR)/linkcheck/output.txt."
+
+.PHONY: doctest
+doctest:
+	$(SPHINXBUILD) -b doctest $(ALLSPHINXOPTS) $(BUILDDIR)/doctest
+	@echo "Testing of doctests in the sources finished, look at the " \
+	      "results in $(BUILDDIR)/doctest/output.txt."
+
+.PHONY: coverage
+coverage:
+	$(SPHINXBUILD) -b coverage $(ALLSPHINXOPTS) $(BUILDDIR)/coverage
+	@echo "Testing of coverage in the sources finished, look at the " \
+	      "results in $(BUILDDIR)/coverage/python.txt."
+
+.PHONY: xml
+xml:
+	$(SPHINXBUILD) -b xml $(ALLSPHINXOPTS) $(BUILDDIR)/xml
+	@echo
+	@echo "Build finished. The XML files are in $(BUILDDIR)/xml."
+
+.PHONY: pseudoxml
+pseudoxml:
+	$(SPHINXBUILD) -b pseudoxml $(ALLSPHINXOPTS) $(BUILDDIR)/pseudoxml
+	@echo
+	@echo "Build finished. The pseudo-XML files are in $(BUILDDIR)/pseudoxml."
+
+# ===== FROM: processing\analyzers\temp_analysis\proxy_pool\docs\Makefile =====
+# Minimal makefile for Sphinx documentation
+#
+
+# You can set these variables from the command line, and also
+# from the environment for the first two.
+SPHINXOPTS    ?=
+SPHINXBUILD   ?= sphinx-build
+SOURCEDIR     = .
+BUILDDIR      = _build
+
+# Put it first so that "make" without argument is like "make help".
+help:
+	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+
+.PHONY: help Makefile
+
+# Catch-all target: route all unknown targets to Sphinx using the new
+# "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
+%: Makefile
+	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+
+# ===== FROM: processing\extractors\PDF-Extract-Kit\docs\en\Makefile =====
+# Minimal makefile for Sphinx documentation
+#
+
+# You can set these variables from the command line, and also
+# from the environment for the first two.
+SPHINXOPTS    ?=
+SPHINXBUILD   ?= sphinx-build
+SOURCEDIR     = .
+BUILDDIR      = _build
+
+# Put it first so that "make" without argument is like "make help".
+help:
+	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+
+.PHONY: help Makefile
+
+# Catch-all target: route all unknown targets to Sphinx using the new
+# "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
+%: Makefile
+	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+
+# ===== FROM: processing\extractors\PDF-Extract-Kit\docs\zh_cn\Makefile =====
+# Minimal makefile for Sphinx documentation
+#
+
+# You can set these variables from the command line, and also
+# from the environment for the first two.
+SPHINXOPTS    ?=
+SPHINXBUILD   ?= sphinx-build
+SOURCEDIR     = .
+BUILDDIR      = _build
+
+# Put it first so that "make" without argument is like "make help".
+help:
+	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+
+.PHONY: help Makefile
+
+# Catch-all target: route all unknown targets to Sphinx using the new
+# "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
+%: Makefile
+	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+
+# ===== FROM: vendors\auto-lookup\Makefile =====
+BINARY := auto-lookup
+
+.PHONY: darwin
+darwin:
+	mkdir -p release
+	GOOS=darwin GOARCH=amd64 go build -o release/$(BINARY)-darwin-amd64 cmd/auto-lookup/main.go
+
+.PHONY: linux
+linux:
+	mkdir -p release
+	GOOS=linux GOARCH=amd64 go build -o release/$(BINARY)-linux-amd64 cmd/auto-lookup/main.go
+
+.PHONY: clean
+clean:
+	rm -rf release/*
+
+# ===== FROM: vendors\fake-useragent\docs\Makefile =====
+# Makefile for Sphinx documentation
+#
+
+# You can set these variables from the command line.
+SPHINXOPTS    =
+SPHINXBUILD   = sphinx-build
+PAPER         =
+BUILDDIR      = _build
+
+# User-friendly check for sphinx-build
+ifeq ($(shell which $(SPHINXBUILD) >/dev/null 2>&1; echo $$?), 1)
+$(error The '$(SPHINXBUILD)' command was not found. Make sure you have Sphinx installed, then set the SPHINXBUILD environment variable to point to the full path of the '$(SPHINXBUILD)' executable. Alternatively you can add the directory with the executable to your PATH. If you don't have Sphinx installed, grab it from http://sphinx-doc.org/)
+endif
+
+# Internal variables.
+PAPEROPT_a4     = -D latex_paper_size=a4
+PAPEROPT_letter = -D latex_paper_size=letter
+ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
+# the i18n builder cannot share the environment and doctrees with the others
+I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
+
+.PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest gettext
+
+help:
+	@echo "Please use \`make <target>' where <target> is one of"
+	@echo "  html       to make standalone HTML files"
+	@echo "  dirhtml    to make HTML files named index.html in directories"
+	@echo "  singlehtml to make a single large HTML file"
+	@echo "  pickle     to make pickle files"
+	@echo "  json       to make JSON files"
+	@echo "  htmlhelp   to make HTML files and a HTML help project"
+	@echo "  qthelp     to make HTML files and a qthelp project"
+	@echo "  devhelp    to make HTML files and a Devhelp project"
+	@echo "  epub       to make an epub"
+	@echo "  latex      to make LaTeX files, you can set PAPER=a4 or PAPER=letter"
+	@echo "  latexpdf   to make LaTeX files and run them through pdflatex"
+	@echo "  latexpdfja to make LaTeX files and run them through platex/dvipdfmx"
+	@echo "  text       to make text files"
+	@echo "  man        to make manual pages"
+	@echo "  texinfo    to make Texinfo files"
+	@echo "  info       to make Texinfo files and run them through makeinfo"
+	@echo "  gettext    to make PO message catalogs"
+	@echo "  changes    to make an overview of all changed/added/deprecated items"
+	@echo "  xml        to make Docutils-native XML files"
+	@echo "  pseudoxml  to make pseudoxml-XML files for display purposes"
+	@echo "  linkcheck  to check all external links for integrity"
+	@echo "  doctest    to run all doctests embedded in the documentation (if enabled)"
+
+clean:
+	rm -rf $(BUILDDIR)/*
+
+html:
+	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+	@echo
+	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
+
+dirhtml:
+	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/dirhtml
+	@echo
+	@echo "Build finished. The HTML pages are in $(BUILDDIR)/dirhtml."
+
+singlehtml:
+	$(SPHINXBUILD) -b singlehtml $(ALLSPHINXOPTS) $(BUILDDIR)/singlehtml
+	@echo
+	@echo "Build finished. The HTML page is in $(BUILDDIR)/singlehtml."
+
+pickle:
+	$(SPHINXBUILD) -b pickle $(ALLSPHINXOPTS) $(BUILDDIR)/pickle
+	@echo
+	@echo "Build finished; now you can process the pickle files."
+
+json:
+	$(SPHINXBUILD) -b json $(ALLSPHINXOPTS) $(BUILDDIR)/json
+	@echo
+	@echo "Build finished; now you can process the JSON files."
+
+htmlhelp:
+	$(SPHINXBUILD) -b htmlhelp $(ALLSPHINXOPTS) $(BUILDDIR)/htmlhelp
+	@echo
+	@echo "Build finished; now you can run HTML Help Workshop with the" \
+	      ".hhp project file in $(BUILDDIR)/htmlhelp."
+
+qthelp:
+	$(SPHINXBUILD) -b qthelp $(ALLSPHINXOPTS) $(BUILDDIR)/qthelp
+	@echo
+	@echo "Build finished; now you can run "qcollectiongenerator" with the" \
+	      ".qhcp project file in $(BUILDDIR)/qthelp, like this:"
+	@echo "# qcollectiongenerator $(BUILDDIR)/qthelp/fake-useragent.qhcp"
+	@echo "To view the help file:"
+	@echo "# assistant -collectionFile $(BUILDDIR)/qthelp/fake-useragent.qhc"
+
+devhelp:
+	$(SPHINXBUILD) -b devhelp $(ALLSPHINXOPTS) $(BUILDDIR)/devhelp
+	@echo
+	@echo "Build finished."
+	@echo "To view the help file:"
+	@echo "# mkdir -p $$HOME/.local/share/devhelp/fake-useragent"
+	@echo "# ln -s $(BUILDDIR)/devhelp $$HOME/.local/share/devhelp/fake-useragent"
+	@echo "# devhelp"
+
+epub:
+	$(SPHINXBUILD) -b epub $(ALLSPHINXOPTS) $(BUILDDIR)/epub
+	@echo
+	@echo "Build finished. The epub file is in $(BUILDDIR)/epub."
+
+latex:
+	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) $(BUILDDIR)/latex
+	@echo
+	@echo "Build finished; the LaTeX files are in $(BUILDDIR)/latex."
+	@echo "Run \`make' in that directory to run these through (pdf)latex" \
+	      "(use \`make latexpdf' here to do that automatically)."
+
+latexpdf:
+	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) $(BUILDDIR)/latex
+	@echo "Running LaTeX files through pdflatex..."
+	$(MAKE) -C $(BUILDDIR)/latex all-pdf
+	@echo "pdflatex finished; the PDF files are in $(BUILDDIR)/latex."
+
+latexpdfja:
+	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) $(BUILDDIR)/latex
+	@echo "Running LaTeX files through platex and dvipdfmx..."
+	$(MAKE) -C $(BUILDDIR)/latex all-pdf-ja
+	@echo "pdflatex finished; the PDF files are in $(BUILDDIR)/latex."
+
+text:
+	$(SPHINXBUILD) -b text $(ALLSPHINXOPTS) $(BUILDDIR)/text
+	@echo
+	@echo "Build finished. The text files are in $(BUILDDIR)/text."
+
+man:
+	$(SPHINXBUILD) -b man $(ALLSPHINXOPTS) $(BUILDDIR)/man
+	@echo
+	@echo "Build finished. The manual pages are in $(BUILDDIR)/man."
+
+texinfo:
+	$(SPHINXBUILD) -b texinfo $(ALLSPHINXOPTS) $(BUILDDIR)/texinfo
+	@echo
+	@echo "Build finished. The Texinfo files are in $(BUILDDIR)/texinfo."
+	@echo "Run \`make' in that directory to run these through makeinfo" \
+	      "(use \`make info' here to do that automatically)."
+
+info:
+	$(SPHINXBUILD) -b texinfo $(ALLSPHINXOPTS) $(BUILDDIR)/texinfo
+	@echo "Running Texinfo files through makeinfo..."
+	make -C $(BUILDDIR)/texinfo info
+	@echo "makeinfo finished; the Info files are in $(BUILDDIR)/texinfo."
+
+gettext:
+	$(SPHINXBUILD) -b gettext $(I18NSPHINXOPTS) $(BUILDDIR)/locale
+	@echo
+	@echo "Build finished. The message catalogs are in $(BUILDDIR)/locale."
+
+changes:
+	$(SPHINXBUILD) -b changes $(ALLSPHINXOPTS) $(BUILDDIR)/changes
+	@echo
+	@echo "The overview file is in $(BUILDDIR)/changes."
+
+linkcheck:
+	$(SPHINXBUILD) -b linkcheck $(ALLSPHINXOPTS) $(BUILDDIR)/linkcheck
+	@echo
+	@echo "Link check complete; look for any errors in the above output " \
+	      "or in $(BUILDDIR)/linkcheck/output.txt."
+
+doctest:
+	$(SPHINXBUILD) -b doctest $(ALLSPHINXOPTS) $(BUILDDIR)/doctest
+	@echo "Testing of doctests in the sources finished, look at the " \
+	      "results in $(BUILDDIR)/doctest/output.txt."
+
+xml:
+	$(SPHINXBUILD) -b xml $(ALLSPHINXOPTS) $(BUILDDIR)/xml
+	@echo
+	@echo "Build finished. The XML files are in $(BUILDDIR)/xml."
+
+pseudoxml:
+	$(SPHINXBUILD) -b pseudoxml $(ALLSPHINXOPTS) $(BUILDDIR)/pseudoxml
+	@echo
+	@echo "Build finished. The pseudo-XML files are in $(BUILDDIR)/pseudoxml."
+
+# ===== FROM: vendors\langroid\Makefile =====
+.PHONY: setup check lint tests docs nodocs loc
+
+SHELL := /bin/bash
+
+.PHONY: setup update
+
+setup: ## Setup the git pre-commit hooks
+	uv run pre-commit install
+
+update: ## Update the git pre-commit hooks
+	uv run pre-commit autoupdate
+
+.PHONY: type-check
+type-check:
+	@uv run pre-commit install
+	@uv run pre-commit autoupdate
+	@uv run pre-commit run --all-files
+	@echo "Running black..."
+	@uv run black --check .
+	@echo "Running ruff check (without fix)..."
+	@uv run ruff check .
+	@echo "Running mypy...";
+	@uv run mypy -p langroid
+	@echo "All checks passed!"
+
+.PHONY: lint
+lint:
+	uv run black .
+	uv run ruff check . --fix
+	@echo "Auto-fixing issues in examples folder..."
+	@uv run ruff check examples/ --fix-only --no-force-exclude
+
+.PHONY: stubs
+stubs:
+	@echo "Generating Python stubs for the langroid package..."
+	@uv run stubgen -p langroid -o stubs
+	@echo "Stubs generated in the 'stubs' directory"
+
+.PHONY: tests
+tests:
+	pytest tests/main --basetemp=/tmp/pytest
+
+
+docs:
+	@# Kill any existing 'mkdocs serve' processes.
+	@pkill -f "mkdocs serve" 2>/dev/null || true
+	@# Build the documentation.
+	mkdocs build
+	@# Serve the documentation in the background.
+	mkdocs serve &
+	@echo "Documentation is being served in the background."
+	@echo "You can access the documentation at http://127.0.0.1:8000/"
+
+nodocs:
+	@# Kill any existing 'mkdocs serve' processes.
+	@pkill -f "mkdocs serve" 2>/dev/null || echo "No 'mkdocs serve' process found."
+	@echo "Stopped serving documentation."
+
+
+loc:
+	@echo "Lines in git-tracked files python files:"
+	@git ls-files | grep '\.py$$' | xargs cat | grep -v '^\s*$$' | wc -l
+
+.PHONY: repomix repomix-no-tests repomix-all
+
+repomix: ## Generate llms.txt and llms-compressed.txt (includes tests)
+	@echo "Generating llms.txt (with tests)..."
+	@git ls-files | repomix --stdin
+	@echo "Generating llms-compressed.txt..."
+	@git ls-files | repomix --stdin --compress -o llms-compressed.txt
+	@echo "Generated llms.txt and llms-compressed.txt"
+
+repomix-no-tests: ## Generate llms-no-tests.txt (excludes tests)
+	@echo "Generating llms-no-tests.txt (without tests)..."
+	@git ls-files | grep -v "^tests/" | repomix --stdin -o llms-no-tests.txt
+	@echo "Generating llms-no-tests-compressed.txt..."
+	@git ls-files | grep -v "^tests/" | repomix --stdin --compress -o llms-no-tests-compressed.txt
+	@echo "Generated llms-no-tests.txt and llms-no-tests-compressed.txt"
+
+repomix-no-tests-no-examples: ## Generate llms-no-tests-no-examples.txt (excludes tests and examples)
+	@echo "Generating llms-no-tests-no-examples.txt (without tests and examples)..."
+	@git ls-files | grep -v -E "^(tests|examples)/" | repomix --stdin -o llms-no-tests-no-examples.txt
+	@echo "Generating llms-no-tests-no-examples-compressed.txt..."
+	@git ls-files | grep -v -E "^(tests|examples)/" | repomix --stdin --compress -o llms-no-tests-no-examples-compressed.txt
+	@echo "Generated llms-no-tests-no-examples.txt and llms-no-tests-no-examples-compressed.txt"
+
+repomix-all: repomix repomix-no-tests repomix-no-tests-no-examples ## Generate all repomix variants
+
+.PHONY: check
+check: lint type-check repomix-all
+
+.PHONY: revert-tag
+revert-tag:
+	@LATEST_TAG=$$(git describe --tags --abbrev=0) && \
+	echo "Deleting tag: $$LATEST_TAG" && \
+	git tag -d $$LATEST_TAG
+
+.PHONY: revert-bump
+revert-bump:
+	@if git log -1 --pretty=%B | grep -q "bump"; then \
+		git reset --hard HEAD~1; \
+		echo "Reverted last commit (bump commit)"; \
+	else \
+		echo "Last commit was not a bump commit"; \
+	fi
+
+.PHONY: revert
+revert: revert-bump revert-tag
+	
+.PHONY: bump-patch
+bump-patch:
+	@cz bump --increment PATCH
+
+.PHONY: bump-minor
+bump-minor:
+	@cz bump --increment MINOR 
+
+.PHONY: bump-major
+bump-major:
+	@cz bump --increment MAJOR 
+
+.PHONY: build
+build:
+	@uv build
+
+.PHONY: push
+push:
+	@git push origin main
+	@git push origin --tags
+
+.PHONY: clean
+clean:
+	-rm -rf dist/*
+
+.PHONY: release
+release:
+	@VERSION=$$(cz version -p | cut -d' ' -f2) && gh release create $${VERSION} dist/*
+
+.PHONY: bump-rc
+bump-rc:
+	@cz bump --prerelease rc
+
+.PHONY: bump-beta
+bump-beta:
+	@cz bump --prerelease beta
+
+.PHONY: bump-alpha
+bump-alpha:
+	@cz bump --prerelease alpha
+
+.PHONY: all-patch
+all-patch: bump-patch clean build push release
+
+.PHONY: all-minor
+all-minor: bump-minor clean build push release
+
+.PHONY: all-major
+all-major: bump-major clean build push release
+
+.PHONY: all-rc
+all-rc: bump-rc clean build push release
+
+.PHONY: all-beta
+all-beta: bump-beta clean build push release
+
+.PHONY: all-alpha
+all-alpha: bump-alpha clean build push release
+
+.PHONY: pre-release-branch
+pre-release-branch: ## Create and push pre-release from current branch
+	@CURRENT_BRANCH=$$(git rev-parse --abbrev-ref HEAD) && \
+	if [ "$$CURRENT_BRANCH" = "main" ]; then \
+		echo "Error: Cannot create pre-release from main branch"; \
+		exit 1; \
+	fi && \
+	PRERELEASE_TYPE=$${PRERELEASE_TYPE:-rc} && \
+	cz bump --prerelease "$$PRERELEASE_TYPE" && \
+	VERSION=$$(cz version -p | cut -d' ' -f2) && \
+	echo "Creating pre-release $$VERSION from branch $$CURRENT_BRANCH" && \
+	git push origin "$$CURRENT_BRANCH" --tags && \
+	gh release create "$$VERSION" dist/* --target "$$CURRENT_BRANCH" --prerelease --title "Pre-release $$VERSION" --notes "Experimental pre-release from $$CURRENT_BRANCH"
+
+.PHONY: pre-release-rc
+pre-release-rc: ## Create release candidate from current branch
+	@PRERELEASE_TYPE=rc make pre-release-branch
+
+.PHONY: pre-release-beta
+pre-release-beta: ## Create beta release from current branch
+	@PRERELEASE_TYPE=beta make pre-release-branch
+
+.PHONY: pre-release-alpha
+pre-release-alpha: ## Create alpha release from current branch
+	@PRERELEASE_TYPE=alpha make pre-release-branch
+
+.PHONY: pre-release-push
+pre-release-push: ## Push current branch and tags (for pre-releases)
+	@CURRENT_BRANCH=$$(git rev-parse --abbrev-ref HEAD) && \
+	if [ "$$CURRENT_BRANCH" = "main" ]; then \
+		echo "Error: Cannot push pre-release from main branch"; \
+		exit 1; \
+	fi && \
+	git push origin "$$CURRENT_BRANCH" --tags
+
+.PHONY: pre-release-release
+pre-release-release: ## Create GitHub pre-release (requires VERSION env var)
+	@CURRENT_BRANCH=$$(git rev-parse --abbrev-ref HEAD) && \
+	if [ "$$CURRENT_BRANCH" = "main" ]; then \
+		echo "Error: Cannot create pre-release from main branch"; \
+		exit 1; \
+	fi && \
+	VERSION=$$(cz version -p | cut -d' ' -f2) && \
+	echo "Creating pre-release $$VERSION from branch $$CURRENT_BRANCH" && \
+	gh release create "$$VERSION" dist/* --target "$$CURRENT_BRANCH" --prerelease --title "Pre-release $$VERSION" --notes "Experimental pre-release from $$CURRENT_BRANCH"
+
+.PHONY: bump-rc-patch
+bump-rc-patch: ## Bump to release candidate patch
+	@cz bump --increment PATCH --prerelease rc
+
+.PHONY: bump-rc-minor
+bump-rc-minor: ## Bump to release candidate minor
+	@cz bump --increment MINOR --prerelease rc
+
+.PHONY: bump-rc-major
+bump-rc-major: ## Bump to release candidate major
+	@cz bump --increment MAJOR --prerelease rc
+
+.PHONY: bump-beta-patch
+bump-beta-patch: ## Bump to beta patch
+	@cz bump --increment PATCH --prerelease beta
+
+.PHONY: bump-beta-minor
+bump-beta-minor: ## Bump to beta minor
+	@cz bump --increment MINOR --prerelease beta
+
+.PHONY: bump-alpha-patch
+bump-alpha-patch: ## Bump to alpha patch
+	@cz bump --increment PATCH --prerelease alpha
+
+.PHONY: bump-alpha-minor
+bump-alpha-minor: ## Bump to alpha minor
+	@cz bump --increment MINOR --prerelease alpha
+
+.PHONY: pre-release-rc-patch
+pre-release-rc-patch: bump-rc-patch clean build pre-release-push pre-release-release
+
+.PHONY: pre-release-rc-minor
+pre-release-rc-minor: bump-rc-minor clean build pre-release-push pre-release-release
+
+.PHONY: pre-release-rc-major
+pre-release-rc-major: bump-rc-major clean build pre-release-push pre-release-release
+
+.PHONY: pre-release-beta-patch
+pre-release-beta-patch: bump-beta-patch clean build pre-release-push pre-release-release
+
+.PHONY: pre-release-beta-minor
+pre-release-beta-minor: bump-beta-minor clean build pre-release-push pre-release-release
+
+.PHONY: pre-release-alpha-patch
+pre-release-alpha-patch: bump-alpha-patch clean build pre-release-push pre-release-release
+
+.PHONY: pre-release-alpha-minor
+pre-release-alpha-minor: bump-alpha-minor clean build pre-release-push pre-release-release
+
+.PHONY: publish
+publish:
+	uv publish
+
+# ===== FROM: vendors\mubeng\Makefile =====
+all: mubeng
+
+APP_NAME = mubeng
+VERSION  = $(shell git describe --always --tags)
+LINT_CMD = "golangci-lint run ./... -v --timeout 5m"
+LINT_BIN = "https://install.goreleaser.com/github.com/golangci/golangci-lint.sh"
+
+mubeng: test build
+
+test:
+	@echo "Testing ${APP_NAME} package ${VERSION}"
+	@go test -short github.com/mubeng/mubeng/pkg/mubeng
+	@go test -short github.com/mubeng/mubeng/pkg/helper
+
+test-extra: golangci-lint test
+
+build:
+	@echo "Building ${APP_NAME} ${VERSION}"
+	@echo "GOPATH=${GOPATH}"
+	@mkdir -p bin/
+	@go build -ldflags "-s -w -X github.com/mubeng/mubeng/common.Version=${VERSION}" -o ./bin/${APP_NAME} .
+
+
+golangci-lint:
+	@echo "Run GolangCI-Lint"
+	@if [ -x $(command -v golangci-lint) ]; then \
+		eval "${LINT_CMD}"; \
+	else \
+		echo "Download GolangCI-Lint..."; \
+		curl -sfL "${LINT_BIN}" | sh; \
+		eval "./bin/${LINT_CMD}"; \
+	fi;
+
+clean:
+	@echo "Removing binaries"
+	@rm -rf bin/
+
+# ===== FROM: vendors\proxy_pool\docs\Makefile =====
+# Minimal makefile for Sphinx documentation
+#
+
+# You can set these variables from the command line, and also
+# from the environment for the first two.
+SPHINXOPTS    ?=
+SPHINXBUILD   ?= sphinx-build
+SOURCEDIR     = .
+BUILDDIR      = _build
+
+# Put it first so that "make" without argument is like "make help".
+help:
+	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+
+.PHONY: help Makefile
+
+# Catch-all target: route all unknown targets to Sphinx using the new
+# "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
+%: Makefile
+	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+
+# ===== FROM: vendors\react-agent\node_modules\@storybook\components\dist\makefile-EC5P7XYS.mjs =====
+import { require_makefile } from './chunk-UKLIRXNX.mjs';
+import './chunk-NNAAFZ4U.mjs';
+
+var makefileEC5P7XYS = require_makefile();
+
+export { makefileEC5P7XYS as default };
+
+# ===== FROM: vendors\react-agent\node_modules\@storybook\components\dist\makefile-VLJIRPPI.mjs =====
+import { __commonJS } from './chunk-NNAAFZ4U.mjs';
+
+var require_makefile=__commonJS({"../../node_modules/highlight.js/lib/languages/makefile.js"(exports,module){function makefile(hljs){let VARIABLE={className:"variable",variants:[{begin:"\\$\\("+hljs.UNDERSCORE_IDENT_RE+"\\)",contains:[hljs.BACKSLASH_ESCAPE]},{begin:/\$[@%<?\^\+\*]/}]},QUOTE_STRING={className:"string",begin:/"/,end:/"/,contains:[hljs.BACKSLASH_ESCAPE,VARIABLE]},FUNC={className:"variable",begin:/\$\([\w-]+\s/,end:/\)/,keywords:{built_in:"subst patsubst strip findstring filter filter-out sort word wordlist firstword lastword dir notdir suffix basename addsuffix addprefix join wildcard realpath abspath error warning shell origin flavor foreach if or and call eval file value"},contains:[VARIABLE]},ASSIGNMENT={begin:"^"+hljs.UNDERSCORE_IDENT_RE+"\\s*(?=[:+?]?=)"},META={className:"meta",begin:/^\.PHONY:/,end:/$/,keywords:{$pattern:/[\.\w]+/,"meta-keyword":".PHONY"}},TARGET={className:"section",begin:/^[^\s]+:/,end:/$/,contains:[VARIABLE]};return {name:"Makefile",aliases:["mk","mak","make"],keywords:{$pattern:/[\w-]+/,keyword:"define endef undefine ifdef ifndef ifeq ifneq else endif include -include sinclude override export unexport private vpath"},contains:[hljs.HASH_COMMENT_MODE,VARIABLE,QUOTE_STRING,FUNC,ASSIGNMENT,META,TARGET]}}module.exports=makefile;}});var makefileVLJIRPPI = require_makefile();
+
+export { makefileVLJIRPPI as default };
+
+# ===== FROM: vendors\react-agent\node_modules\body-parser\node_modules\debug\Makefile =====
+# get Makefile directory name: http://stackoverflow.com/a/5982798/376773
+THIS_MAKEFILE_PATH:=$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
+THIS_DIR:=$(shell cd $(dir $(THIS_MAKEFILE_PATH));pwd)
+
+# BIN directory
+BIN := $(THIS_DIR)/node_modules/.bin
+
+# Path
+PATH := node_modules/.bin:$(PATH)
+SHELL := /bin/bash
+
+# applications
+NODE ?= $(shell which node)
+YARN ?= $(shell which yarn)
+PKG ?= $(if $(YARN),$(YARN),$(NODE) $(shell which npm))
+BROWSERIFY ?= $(NODE) $(BIN)/browserify
+
+.FORCE:
+
+install: node_modules
+
+node_modules: package.json
+	@NODE_ENV= $(PKG) install
+	@touch node_modules
+
+lint: .FORCE
+	eslint browser.js debug.js index.js node.js
+
+test-node: .FORCE
+	istanbul cover node_modules/mocha/bin/_mocha -- test/**.js
+
+test-browser: .FORCE
+	mkdir -p dist
+
+	@$(BROWSERIFY) \
+		--standalone debug \
+		. > dist/debug.js
+
+	karma start --single-run
+	rimraf dist
+
+test: .FORCE
+	concurrently \
+		"make test-node" \
+		"make test-browser"
+
+coveralls:
+	cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js
+
+.PHONY: all install clean distclean
+
+# ===== FROM: vendors\react-agent\node_modules\compression\node_modules\debug\Makefile =====
+# get Makefile directory name: http://stackoverflow.com/a/5982798/376773
+THIS_MAKEFILE_PATH:=$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
+THIS_DIR:=$(shell cd $(dir $(THIS_MAKEFILE_PATH));pwd)
+
+# BIN directory
+BIN := $(THIS_DIR)/node_modules/.bin
+
+# Path
+PATH := node_modules/.bin:$(PATH)
+SHELL := /bin/bash
+
+# applications
+NODE ?= $(shell which node)
+YARN ?= $(shell which yarn)
+PKG ?= $(if $(YARN),$(YARN),$(NODE) $(shell which npm))
+BROWSERIFY ?= $(NODE) $(BIN)/browserify
+
+.FORCE:
+
+install: node_modules
+
+node_modules: package.json
+	@NODE_ENV= $(PKG) install
+	@touch node_modules
+
+lint: .FORCE
+	eslint browser.js debug.js index.js node.js
+
+test-node: .FORCE
+	istanbul cover node_modules/mocha/bin/_mocha -- test/**.js
+
+test-browser: .FORCE
+	mkdir -p dist
+
+	@$(BROWSERIFY) \
+		--standalone debug \
+		. > dist/debug.js
+
+	karma start --single-run
+	rimraf dist
+
+test: .FORCE
+	concurrently \
+		"make test-node" \
+		"make test-browser"
+
+coveralls:
+	cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js
+
+.PHONY: all install clean distclean
+
+# ===== FROM: vendors\react-agent\node_modules\concat-stream\node_modules\isarray\Makefile =====
+
+test:
+	@node_modules/.bin/tape test.js
+
+.PHONY: test
+
+# ===== FROM: vendors\react-agent\node_modules\delayed-stream\Makefile =====
+SHELL := /bin/bash
+
+test:
+	@./test/run.js
+
+.PHONY: test
+
+# ===== FROM: vendors\react-agent\node_modules\delegates\Makefile =====
+
+test:
+	@./node_modules/.bin/mocha \
+		--require should \
+		--reporter spec \
+		--bail
+
+.PHONY: test
+
+# ===== FROM: vendors\react-agent\node_modules\duplexify\node_modules\isarray\Makefile =====
+
+test:
+	@node_modules/.bin/tape test.js
+
+.PHONY: test
+
+# ===== FROM: vendors\react-agent\node_modules\es-to-primitive\Makefile =====
+# Since we rely on paths relative to the makefile location, abort if make isn't being run from there.
+$(if $(findstring /,$(MAKEFILE_LIST)),$(error Please only invoke this makefile from the directory it resides in))
+
+	# The files that need updating when incrementing the version number.
+VERSIONED_FILES := *.js *.json README*
+
+
+# Add the local npm packages' bin folder to the PATH, so that `make` can find them, when invoked directly.
+# Note that rather than using `$(npm bin)` the 'node_modules/.bin' path component is hard-coded, so that invocation works even from an environment
+# where npm is (temporarily) unavailable due to having deactivated an nvm instance loaded into the calling shell in order to avoid interference with tests.
+export PATH := $(shell printf '%s' "$$PWD/node_modules/.bin:$$PATH")
+UTILS := semver
+# Make sure that all required utilities can be located.
+UTIL_CHECK := $(or $(shell PATH="$(PATH)" which $(UTILS) >/dev/null && echo 'ok'),$(error Did you forget to run `npm install` after cloning the repo? At least one of the required supporting utilities not found: $(UTILS)))
+
+# Default target (by virtue of being the first non '.'-prefixed in the file).
+.PHONY: _no-target-specified
+_no-target-specified:
+	$(error Please specify the target to make - `make list` shows targets. Alternatively, use `npm test` to run the default tests; `npm run` shows all tests)
+
+# Lists all targets defined in this makefile.
+.PHONY: list
+list:
+	@$(MAKE) -pRrn : -f $(MAKEFILE_LIST) 2>/dev/null | awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' | command grep -v -e '^[^[:alnum:]]' -e '^$@$$command ' | sort
+
+# All-tests target: invokes the specified test suites for ALL shells defined in $(SHELLS).
+.PHONY: test
+test:
+	@npm test
+
+.PHONY: _ensure-tag
+_ensure-tag:
+ifndef TAG
+	$(error Please invoke with `make TAG=<new-version> release`, where <new-version> is either an increment specifier (patch, minor, major, prepatch, preminor, premajor, prerelease), or an explicit major.minor.patch version number)
+endif
+
+CHANGELOG_ERROR = $(error No CHANGELOG specified)
+.PHONY: _ensure-changelog
+_ensure-changelog:
+	@ (git status -sb --porcelain | command grep -E '^( M|[MA] ) CHANGELOG.md' > /dev/null) || (echo no CHANGELOG.md specified && exit 2)
+
+# Ensures that the git workspace is clean.
+.PHONY: _ensure-clean
+_ensure-clean:
+	@[ -z "$$((git status --porcelain --untracked-files=no || echo err) | command grep -v 'CHANGELOG.md')" ] || { echo "Workspace is not clean; please commit changes first." >&2; exit 2; }
+
+# Makes a release; invoke with `make TAG=<versionOrIncrementSpec> release`.
+.PHONY: release
+release: _ensure-tag _ensure-changelog _ensure-clean
+	@old_ver=`git describe --abbrev=0 --tags --match 'v[0-9]*.[0-9]*.[0-9]*'` || { echo "Failed to determine current version." >&2; exit 1; }; old_ver=$${old_ver#v}; \
+	 new_ver=`echo "$(TAG)" | sed 's/^v//'`; new_ver=$${new_ver:-patch}; \
+	 if printf "$$new_ver" | command grep -q '^[0-9]'; then \
+	   semver "$$new_ver" >/dev/null || { echo 'Invalid version number specified: $(TAG) - must be major.minor.patch' >&2; exit 2; }; \
+	   semver -r "> $$old_ver" "$$new_ver" >/dev/null || { echo 'Invalid version number specified: $(TAG) - must be HIGHER than current one.' >&2; exit 2; } \
+	 else \
+	   new_ver=`semver -i "$$new_ver" "$$old_ver"` || { echo 'Invalid version-increment specifier: $(TAG)' >&2; exit 2; } \
+	 fi; \
+	 printf "=== Bumping version **$$old_ver** to **$$new_ver** before committing and tagging:\n=== TYPE 'proceed' TO PROCEED, anything else to abort: " && read response && [ "$$response" = 'proceed' ] || { echo 'Aborted.' >&2; exit 2; };  \
+	 replace "$$old_ver" "$$new_ver" -- $(VERSIONED_FILES) && \
+	 git commit -m "v$$new_ver" $(VERSIONED_FILES) CHANGELOG.md && \
+	 git tag -a -m "v$$new_ver" "v$$new_ver"
+
+# ===== FROM: vendors\react-agent\node_modules\express\node_modules\debug\Makefile =====
+# get Makefile directory name: http://stackoverflow.com/a/5982798/376773
+THIS_MAKEFILE_PATH:=$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
+THIS_DIR:=$(shell cd $(dir $(THIS_MAKEFILE_PATH));pwd)
+
+# BIN directory
+BIN := $(THIS_DIR)/node_modules/.bin
+
+# Path
+PATH := node_modules/.bin:$(PATH)
+SHELL := /bin/bash
+
+# applications
+NODE ?= $(shell which node)
+YARN ?= $(shell which yarn)
+PKG ?= $(if $(YARN),$(YARN),$(NODE) $(shell which npm))
+BROWSERIFY ?= $(NODE) $(BIN)/browserify
+
+.FORCE:
+
+install: node_modules
+
+node_modules: package.json
+	@NODE_ENV= $(PKG) install
+	@touch node_modules
+
+lint: .FORCE
+	eslint browser.js debug.js index.js node.js
+
+test-node: .FORCE
+	istanbul cover node_modules/mocha/bin/_mocha -- test/**.js
+
+test-browser: .FORCE
+	mkdir -p dist
+
+	@$(BROWSERIFY) \
+		--standalone debug \
+		. > dist/debug.js
+
+	karma start --single-run
+	rimraf dist
+
+test: .FORCE
+	concurrently \
+		"make test-node" \
+		"make test-browser"
+
+coveralls:
+	cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js
+
+.PHONY: all install clean distclean
+
+# ===== FROM: vendors\react-agent\node_modules\extract-zip\node_modules\debug\Makefile =====
+# get Makefile directory name: http://stackoverflow.com/a/5982798/376773
+THIS_MAKEFILE_PATH:=$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
+THIS_DIR:=$(shell cd $(dir $(THIS_MAKEFILE_PATH));pwd)
+
+# BIN directory
+BIN := $(THIS_DIR)/node_modules/.bin
+
+# Path
+PATH := node_modules/.bin:$(PATH)
+SHELL := /bin/bash
+
+# applications
+NODE ?= $(shell which node)
+YARN ?= $(shell which yarn)
+PKG ?= $(if $(YARN),$(YARN),$(NODE) $(shell which npm))
+BROWSERIFY ?= $(NODE) $(BIN)/browserify
+
+.FORCE:
+
+install: node_modules
+
+node_modules: package.json
+	@NODE_ENV= $(PKG) install
+	@touch node_modules
+
+lint: .FORCE
+	eslint browser.js debug.js index.js node.js
+
+test-node: .FORCE
+	istanbul cover node_modules/mocha/bin/_mocha -- test/**.js
+
+test-browser: .FORCE
+	mkdir -p dist
+
+	@$(BROWSERIFY) \
+		--standalone debug \
+		. > dist/debug.js
+
+	karma start --single-run
+	rimraf dist
+
+test: .FORCE
+	concurrently \
+		"make test-node" \
+		"make test-browser"
+
+coveralls:
+	cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js
+
+.PHONY: all install clean distclean
+
+# ===== FROM: vendors\react-agent\node_modules\finalhandler\node_modules\debug\Makefile =====
+# get Makefile directory name: http://stackoverflow.com/a/5982798/376773
+THIS_MAKEFILE_PATH:=$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
+THIS_DIR:=$(shell cd $(dir $(THIS_MAKEFILE_PATH));pwd)
+
+# BIN directory
+BIN := $(THIS_DIR)/node_modules/.bin
+
+# Path
+PATH := node_modules/.bin:$(PATH)
+SHELL := /bin/bash
+
+# applications
+NODE ?= $(shell which node)
+YARN ?= $(shell which yarn)
+PKG ?= $(if $(YARN),$(YARN),$(NODE) $(shell which npm))
+BROWSERIFY ?= $(NODE) $(BIN)/browserify
+
+.FORCE:
+
+install: node_modules
+
+node_modules: package.json
+	@NODE_ENV= $(PKG) install
+	@touch node_modules
+
+lint: .FORCE
+	eslint browser.js debug.js index.js node.js
+
+test-node: .FORCE
+	istanbul cover node_modules/mocha/bin/_mocha -- test/**.js
+
+test-browser: .FORCE
+	mkdir -p dist
+
+	@$(BROWSERIFY) \
+		--standalone debug \
+		. > dist/debug.js
+
+	karma start --single-run
+	rimraf dist
+
+test: .FORCE
+	concurrently \
+		"make test-node" \
+		"make test-browser"
+
+coveralls:
+	cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js
+
+.PHONY: all install clean distclean
+
+# ===== FROM: vendors\react-agent\node_modules\jake\Makefile =====
+#
+# Jake JavaScript build tool
+# Copyright 2112 Matthew Eernisse (mde@fleegix.org)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+.PHONY: all build install clean uninstall
+
+PREFIX=/usr/local
+DESTDIR=
+
+all: build
+
+build:
+	@echo 'Jake built.'
+
+install:
+	@mkdir -p $(DESTDIR)$(PREFIX)/bin && \
+    mkdir -p $(DESTDIR)$(PREFIX)/lib/node_modules/jake && \
+    mkdir -p ./node_modules && \
+    npm install utilities minimatch && \
+		cp -R ./* $(DESTDIR)$(PREFIX)/lib/node_modules/jake/ && \
+		ln -snf ../lib/node_modules/jake/bin/cli.js $(DESTDIR)$(PREFIX)/bin/jake && \
+		chmod 755 $(DESTDIR)$(PREFIX)/lib/node_modules/jake/bin/cli.js && \
+		echo 'Jake installed.'
+
+clean:
+	@true
+
+uninstall:
+	@rm -f $(DESTDIR)$(PREFIX)/bin/jake && \
+		rm -fr $(DESTDIR)$(PREFIX)/lib/node_modules/jake/ && \
+		echo 'Jake uninstalled.'
+
+# ===== FROM: vendors\react-agent\node_modules\jju\Makefile =====
+PATH := node_modules/.bin:$(PATH)
+
+all: package.json install
+
+install: package.json
+	yarn
+
+test:
+	mocha test/*.js
+
+lint:
+	eslint -c ./.eslint.yaml ./lib
+
+clean:
+	rm package.json yarn.lock
+
+package.json: package.yaml
+	js-yaml package.yaml > package.json
+
+.PHONY: clean all install lint test
+
+# ===== FROM: vendors\react-agent\node_modules\language-tags\Makefile =====
+test: lib test/lib node_modules
+	TEST_LIB_PATH="../../lib" ./node_modules/.bin/_mocha \
+		--timeout 3000 \
+		--reporter spec \
+		--check-leaks \
+		--ui tdd \
+		--recursive
+
+test-coverage: lib test/lib node_modules
+	TEST_LIB_PATH="../../lib" ./node_modules/.bin/istanbul \
+		cover ./node_modules/.bin/_mocha \
+			-- \
+			--timeout 3000 \
+			--reporter spec \
+			--check-leaks \
+			--ui tdd \
+			--recursive
+
+view-coverage: test-coverage
+	open coverage/lcov-report/index.html
+
+test-coveralls: test-coverage
+	cat coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js
+
+node_modules: package.json
+	npm install
+	touch $@
+
+clean:
+	rm -rf coverage
+
+.PHONY: test test-coverage test-coveralls view-coverage clean
+
+# ===== FROM: vendors\react-agent\node_modules\progress\Makefile =====
+
+EXAMPLES = $(foreach EXAMPLE, $(wildcard examples/*.js), $(EXAMPLE))
+
+.PHONY: test
+test: $(EXAMPLES)
+
+.PHONY: $(EXAMPLES)
+$(EXAMPLES): ; node $@ && echo
+
+# ===== FROM: vendors\react-agent\node_modules\send\node_modules\debug\Makefile =====
+# get Makefile directory name: http://stackoverflow.com/a/5982798/376773
+THIS_MAKEFILE_PATH:=$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
+THIS_DIR:=$(shell cd $(dir $(THIS_MAKEFILE_PATH));pwd)
+
+# BIN directory
+BIN := $(THIS_DIR)/node_modules/.bin
+
+# Path
+PATH := node_modules/.bin:$(PATH)
+SHELL := /bin/bash
+
+# applications
+NODE ?= $(shell which node)
+YARN ?= $(shell which yarn)
+PKG ?= $(if $(YARN),$(YARN),$(NODE) $(shell which npm))
+BROWSERIFY ?= $(NODE) $(BIN)/browserify
+
+.FORCE:
+
+install: node_modules
+
+node_modules: package.json
+	@NODE_ENV= $(PKG) install
+	@touch node_modules
+
+lint: .FORCE
+	eslint browser.js debug.js index.js node.js
+
+test-node: .FORCE
+	istanbul cover node_modules/mocha/bin/_mocha -- test/**.js
+
+test-browser: .FORCE
+	mkdir -p dist
+
+	@$(BROWSERIFY) \
+		--standalone debug \
+		. > dist/debug.js
+
+	karma start --single-run
+	rimraf dist
+
+test: .FORCE
+	concurrently \
+		"make test-node" \
+		"make test-browser"
+
+coveralls:
+	cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js
+
+.PHONY: all install clean distclean
+
+# ===== FROM: vendors\react-agent\node_modules\through2\node_modules\isarray\Makefile =====
+
+test:
+	@node_modules/.bin/tape test.js
+
+.PHONY: test
+
+# ===== FROM: vendors\Scrapegraph-ai\Makefile =====
+# Makefile for Project Automation
+
+.PHONY: install lint type-check test build all clean
+
+# Variables
+PACKAGE_NAME = scrapegraphai
+TEST_DIR = tests
+
+# Default target
+all: lint type-check test
+
+# Install project dependencies
+install:
+	uv sync
+	uv run pre-commit install
+
+# Linting and Formatting Checks
+lint:
+	uv run ruff check $(PACKAGE_NAME) $(TEST_DIR)
+	uv run black --check $(PACKAGE_NAME) $(TEST_DIR)
+	uv run isort --check-only $(PACKAGE_NAME) $(TEST_DIR)
+
+# Type Checking with MyPy
+type-check:
+	uv run mypy $(PACKAGE_NAME) $(TEST_DIR)
+
+# Run Tests with Coverage
+test:
+	uv run pytest --cov=$(PACKAGE_NAME) --cov-report=xml $(TEST_DIR)/
+
+# Run Pre-Commit Hooks
+pre-commit:
+	uv run pre-commit run --all-files
+
+# Clean Up Generated Files
+clean:
+	rm -rf dist/
+	rm -rf build/
+	rm -rf *.egg-info
+	rm -rf htmlcov/
+	rm -rf .mypy_cache/
+	rm -rf .pytest_cache/
+	rm -rf .ruff_cache/
+	rm -rf .uv/
+	rm -rf .venv/
+
+# Build the Package
+build:
+	uv build --no-sources
+
+# ===== FROM: vendors\Scrapegraph-ai\docs\Makefile =====
+# Minimal makefile for Sphinx documentation
+#
+
+# You can set these variables from the command line, and also
+# from the environment for the first two.
+SPHINXOPTS    ?=
+SPHINXBUILD   ?= sphinx-build
+SOURCEDIR     = source
+BUILDDIR      = build
+
+# Put it first so that "make" without argument is like "make help".
+help:
+	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+
+.PHONY: help Makefile
+
+# Catch-all target: route all unknown targets to Sphinx using the new
+# "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
+%: Makefile
+	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+
+# ===== FROM: vendors\scrapy\docs\Makefile =====
+# Minimal makefile for Sphinx documentation
+#
+
+# You can set these variables from the command line, and also
+# from the environment for the first two.
+SPHINXOPTS    ?=
+SPHINXBUILD   ?= sphinx-build
+SOURCEDIR     = .
+BUILDDIR      = build
+
+# Put it first so that "make" without argument is like "make help".
+help:
+	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+
+.PHONY: help Makefile
+
+# Catch-all target: route all unknown targets to Sphinx using the new
+# "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
+%: Makefile
+	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+
+# ===== FROM: vendors\spyder\external-deps\qtconsole\docs\Makefile =====
+# Makefile for Sphinx documentation
+#
+
+# You can set these variables from the command line.
+SPHINXOPTS    =
+SPHINXBUILD   = sphinx-build
+PAPER         =
+BUILDDIR      = build
+
+# User-friendly check for sphinx-build
+ifeq ($(shell which $(SPHINXBUILD) >/dev/null 2>&1; echo $$?), 1)
+$(error The '$(SPHINXBUILD)' command was not found. Make sure you have Sphinx installed, then set the SPHINXBUILD environment variable to point to the full path of the '$(SPHINXBUILD)' executable. Alternatively you can add the directory with the executable to your PATH. If you don't have Sphinx installed, grab it from http://sphinx-doc.org/)
+endif
+
+# Internal variables.
+PAPEROPT_a4     = -D latex_paper_size=a4
+PAPEROPT_letter = -D latex_paper_size=letter
+ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) source
+# the i18n builder cannot share the environment and doctrees with the others
+I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) source
+
+.PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest coverage gettext
+
+help:
+	@echo "Please use \`make <target>' where <target> is one of"
+	@echo "  html       to make standalone HTML files"
+	@echo "  gh-pages   clone qtconsole docs in ./gh-pages/ , build doc, autocommit"
+	@echo "  dirhtml    to make HTML files named index.html in directories"
+	@echo "  singlehtml to make a single large HTML file"
+	@echo "  pickle     to make pickle files"
+	@echo "  json       to make JSON files"
+	@echo "  htmlhelp   to make HTML files and a HTML help project"
+	@echo "  qthelp     to make HTML files and a qthelp project"
+	@echo "  applehelp  to make an Apple Help Book"
+	@echo "  devhelp    to make HTML files and a Devhelp project"
+	@echo "  epub       to make an epub"
+	@echo "  latex      to make LaTeX files, you can set PAPER=a4 or PAPER=letter"
+	@echo "  latexpdf   to make LaTeX files and run them through pdflatex"
+	@echo "  latexpdfja to make LaTeX files and run them through platex/dvipdfmx"
+	@echo "  text       to make text files"
+	@echo "  man        to make manual pages"
+	@echo "  texinfo    to make Texinfo files"
+	@echo "  info       to make Texinfo files and run them through makeinfo"
+	@echo "  gettext    to make PO message catalogs"
+	@echo "  changes    to make an overview of all changed/added/deprecated items"
+	@echo "  xml        to make Docutils-native XML files"
+	@echo "  pseudoxml  to make pseudoxml-XML files for display purposes"
+	@echo "  linkcheck  to check all external links for integrity"
+	@echo "  doctest    to run all doctests embedded in the documentation (if enabled)"
+	@echo "  coverage   to run coverage check of the documentation (if enabled)"
+
+clean:
+	rm -rf $(BUILDDIR)/*
+	rm -rf source/config_options.rst
+
+html: source/config_options.rst
+	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+	@echo
+	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
+
+source/config_options.rst:
+	python3 autogen_config.py
+	@echo "Created docs for config options"
+
+gh-pages: clean html
+	# if VERSION is unspecified, it will be dev
+	# For releases, VERSION should be just the major version,
+	# e.g. VERSION=2 make gh-pages
+	python3 gh-pages.py $(VERSION)
+
+dirhtml:
+	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/dirhtml
+	@echo
+	@echo "Build finished. The HTML pages are in $(BUILDDIR)/dirhtml."
+
+singlehtml:
+	$(SPHINXBUILD) -b singlehtml $(ALLSPHINXOPTS) $(BUILDDIR)/singlehtml
+	@echo
+	@echo "Build finished. The HTML page is in $(BUILDDIR)/singlehtml."
+
+pickle:
+	$(SPHINXBUILD) -b pickle $(ALLSPHINXOPTS) $(BUILDDIR)/pickle
+	@echo
+	@echo "Build finished; now you can process the pickle files."
+
+json:
+	$(SPHINXBUILD) -b json $(ALLSPHINXOPTS) $(BUILDDIR)/json
+	@echo
+	@echo "Build finished; now you can process the JSON files."
+
+htmlhelp:
+	$(SPHINXBUILD) -b htmlhelp $(ALLSPHINXOPTS) $(BUILDDIR)/htmlhelp
+	@echo
+	@echo "Build finished; now you can run HTML Help Workshop with the" \
+	      ".hhp project file in $(BUILDDIR)/htmlhelp."
+
+qthelp:
+	$(SPHINXBUILD) -b qthelp $(ALLSPHINXOPTS) $(BUILDDIR)/qthelp
+	@echo
+	@echo "Build finished; now you can run "qcollectiongenerator" with the" \
+	      ".qhcp project file in $(BUILDDIR)/qthelp, like this:"
+	@echo "# qcollectiongenerator $(BUILDDIR)/qthelp/JupyterQtConsole.qhcp"
+	@echo "To view the help file:"
+	@echo "# assistant -collectionFile $(BUILDDIR)/qthelp/JupyterQtConsole.qhc"
+
+applehelp:
+	$(SPHINXBUILD) -b applehelp $(ALLSPHINXOPTS) $(BUILDDIR)/applehelp
+	@echo
+	@echo "Build finished. The help book is in $(BUILDDIR)/applehelp."
+	@echo "N.B. You won't be able to view it unless you put it in" \
+	      "~/Library/Documentation/Help or install it in your application" \
+	      "bundle."
+
+devhelp:
+	$(SPHINXBUILD) -b devhelp $(ALLSPHINXOPTS) $(BUILDDIR)/devhelp
+	@echo
+	@echo "Build finished."
+	@echo "To view the help file:"
+	@echo "# mkdir -p $$HOME/.local/share/devhelp/JupyterQtConsole"
+	@echo "# ln -s $(BUILDDIR)/devhelp $$HOME/.local/share/devhelp/JupyterQtConsole"
+	@echo "# devhelp"
+
+epub:
+	$(SPHINXBUILD) -b epub $(ALLSPHINXOPTS) $(BUILDDIR)/epub
+	@echo
+	@echo "Build finished. The epub file is in $(BUILDDIR)/epub."
+
+latex:
+	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) $(BUILDDIR)/latex
+	@echo
+	@echo "Build finished; the LaTeX files are in $(BUILDDIR)/latex."
+	@echo "Run \`make' in that directory to run these through (pdf)latex" \
+	      "(use \`make latexpdf' here to do that automatically)."
+
+latexpdf:
+	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) $(BUILDDIR)/latex
+	@echo "Running LaTeX files through pdflatex..."
+	$(MAKE) -C $(BUILDDIR)/latex all-pdf
+	@echo "pdflatex finished; the PDF files are in $(BUILDDIR)/latex."
+
+latexpdfja:
+	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) $(BUILDDIR)/latex
+	@echo "Running LaTeX files through platex and dvipdfmx..."
+	$(MAKE) -C $(BUILDDIR)/latex all-pdf-ja
+	@echo "pdflatex finished; the PDF files are in $(BUILDDIR)/latex."
+
+text:
+	$(SPHINXBUILD) -b text $(ALLSPHINXOPTS) $(BUILDDIR)/text
+	@echo
+	@echo "Build finished. The text files are in $(BUILDDIR)/text."
+
+man:
+	$(SPHINXBUILD) -b man $(ALLSPHINXOPTS) $(BUILDDIR)/man
+	@echo
+	@echo "Build finished. The manual pages are in $(BUILDDIR)/man."
+
+texinfo:
+	$(SPHINXBUILD) -b texinfo $(ALLSPHINXOPTS) $(BUILDDIR)/texinfo
+	@echo
+	@echo "Build finished. The Texinfo files are in $(BUILDDIR)/texinfo."
+	@echo "Run \`make' in that directory to run these through makeinfo" \
+	      "(use \`make info' here to do that automatically)."
+
+info:
+	$(SPHINXBUILD) -b texinfo $(ALLSPHINXOPTS) $(BUILDDIR)/texinfo
+	@echo "Running Texinfo files through makeinfo..."
+	make -C $(BUILDDIR)/texinfo info
+	@echo "makeinfo finished; the Info files are in $(BUILDDIR)/texinfo."
+
+gettext:
+	$(SPHINXBUILD) -b gettext $(I18NSPHINXOPTS) $(BUILDDIR)/locale
+	@echo
+	@echo "Build finished. The message catalogs are in $(BUILDDIR)/locale."
+
+changes:
+	$(SPHINXBUILD) -b changes $(ALLSPHINXOPTS) $(BUILDDIR)/changes
+	@echo
+	@echo "The overview file is in $(BUILDDIR)/changes."
+
+linkcheck:
+	$(SPHINXBUILD) -b linkcheck $(ALLSPHINXOPTS) $(BUILDDIR)/linkcheck
+	@echo
+	@echo "Link check complete; look for any errors in the above output " \
+	      "or in $(BUILDDIR)/linkcheck/output.txt."
+
+doctest:
+	$(SPHINXBUILD) -b doctest $(ALLSPHINXOPTS) $(BUILDDIR)/doctest
+	@echo "Testing of doctests in the sources finished, look at the " \
+	      "results in $(BUILDDIR)/doctest/output.txt."
+
+coverage:
+	$(SPHINXBUILD) -b coverage $(ALLSPHINXOPTS) $(BUILDDIR)/coverage
+	@echo "Testing of coverage in the sources finished, look at the " \
+	      "results in $(BUILDDIR)/coverage/python.txt."
+
+xml:
+	$(SPHINXBUILD) -b xml $(ALLSPHINXOPTS) $(BUILDDIR)/xml
+	@echo
+	@echo "Build finished. The XML files are in $(BUILDDIR)/xml."
+
+pseudoxml:
+	$(SPHINXBUILD) -b pseudoxml $(ALLSPHINXOPTS) $(BUILDDIR)/pseudoxml
+	@echo
+	@echo "Build finished. The pseudo-XML files are in $(BUILDDIR)/pseudoxml."
+
+# ===== FROM: vendors\trafilatura\docs\Makefile =====
+# Minimal makefile for Sphinx documentation
+#
+
+# You can set these variables from the command line, and also
+# from the environment for the first two.
+SPHINXOPTS    ?=
+SPHINXBUILD   ?= sphinx-build
+SOURCEDIR     = .
+BUILDDIR      = _build
+
+# Put it first so that "make" without argument is like "make help".
+help:
+	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+
+.PHONY: help Makefile
+
+# Catch-all target: route all unknown targets to Sphinx using the new
+# "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
+%: Makefile
+	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+
+# ===== FROM: vendors\zenrows-python-sdk\Makefile =====
+.PHONY: install build clean lint test
+
+install:
+	pip install -r requirements.txt
+
+build:
+	python setup.py sdist bdist_wheel
+
+clean:
+	python setup.py clean
+	rm -rf dist build zenrows.egg-info .pytest_cache
+	find . -name '__pycache__' -delete -o -name '*.pyc' -delete
+
+lint:
+	flake8 --config flake8 setup.py tests zenrows
+
+test:
+	python -m pytest tests
+
+# END OF MAKEFILE CONSOLIDATION - 85 files processed
+

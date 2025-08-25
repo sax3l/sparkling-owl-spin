@@ -1,0 +1,776 @@
+﻿# 
+# â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆ
+# â–ˆâ–ˆ                                                                                    â–ˆâ–ˆ
+# â–ˆâ–ˆ   ðŸ¦‰ SPARKLING-OWL-SPIN - CONSOLIDATED REQUIREMENTS                               â–ˆâ–ˆ
+# â–ˆâ–ˆ   All Dependencies from Vendors, Agents, Engines & Core                         â–ˆâ–ˆ
+# â–ˆâ–ˆ                                                                                    â–ˆâ–ˆ
+# â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆ
+#
+
+# From: docker\synthetics\form\requirements.txt
+Flask==2.3.2
+
+# From: docker\synthetics\infinite\requirements.txt
+
+# From: docker\synthetics\static\requirements.txt
+
+# From: frontend\requirements.txt
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
+sqlalchemy==2.0.23
+alembic==1.13.1
+asyncpg==0.29.0
+psycopg2-binary==2.9.9
+redis[hiredis]==5.0.1
+aioredis==2.0.1
+celery[redis]==5.3.4
+httpx==0.25.2
+aiohttp==3.9.1
+beautifulsoup4==4.12.2
+lxml==4.9.3
+playwright==1.40.0
+selenium==4.16.0
+apscheduler==3.10.4
+pandas==2.1.4
+numpy==1.25.2
+great-expectations==0.18.5
+openpyxl==3.1.2
+xlsxwriter==3.1.9
+pyyaml==6.0.1
+google-auth==2.25.2
+google-auth-oauthlib==1.2.0
+google-auth-httplib2==0.2.0
+google-api-python-client==2.111.0
+snowflake-connector-python==3.6.0
+elasticsearch==8.11.1
+supabase==2.3.0
+prometheus-client==0.19.0
+structlog==23.2.0
+click==8.1.7
+typer==0.9.0
+cryptography==41.0.8
+passlib[bcrypt]==1.7.4
+python-jose[cryptography]==3.3.0
+jinja2==3.1.2
+python-multipart==0.0.6
+
+# From: frontend\requirements-dev.txt
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+pytest-mock==3.12.0
+pytest-xdist==3.5.0
+httpx-mock==0.10.1
+fakeredis==2.20.1
+factory-boy==3.3.0
+freezegun==1.2.2
+black==23.11.0
+isort==5.12.0
+ruff==0.1.6
+mypy==1.7.1
+bandit==1.7.5
+safety==2.3.5
+pre-commit==3.6.0
+mkdocs==1.5.3
+mkdocs-material==9.4.10
+-r requirements.txt
+
+# From: infra\deployment\docker\synthetics\form\requirements.txt
+
+# From: infra\deployment\docker\synthetics\infinite\requirements.txt
+
+# From: infra\deployment\docker\synthetics\static\requirements.txt
+
+# From: integrations\swedish\blocket_api\requirements.txt
+anyio==4.9.0
+certifi==2025.6.15
+cfgv==3.4.0
+distlib==0.3.9
+filelock==3.18.0
+h11==0.16.0
+httpcore==1.0.9
+identify==2.6.12
+idna==3.10
+iniconfig==2.1.0
+mypy-extensions==1.1.0
+nodeenv==1.9.1
+packaging==25.0
+pathspec==0.12.1
+platformdirs==4.3.8
+pluggy==1.6.0
+pygments==2.19.2
+respx==0.22.0
+sniffio==1.3.1
+typing-extensions==4.14.1
+virtualenv==20.31.2
+
+# From: processing\analyzers\temp_analysis\proxy_pool\requirements.txt
+requests==2.20.0
+gunicorn==19.9.0
+werkzeug==2.1.0;python_version>"3.6"
+
+# From: processing\analyzers\temp_analysis\ProxyBroker\requirements.txt
+
+# From: processing\extractors\archive\old_requirements\requirements_complete_v4.txt
+asyncio-throttle>=1.0.2
+python-dotenv>=1.0.0
+rich>=13.7.0
+tqdm>=4.66.0
+cloudscraper>=1.2.71
+undetected-chromedriver>=3.5.5
+requests-ip-rotator>=1.0.43
+2captcha-python>=1.3.0
+python-anticaptcha>=1.0.0
+azuretls-client>=1.4.0
+tls-client>=1.0.1
+trafilatura>=1.8.0
+newspaper3k>=0.2.8
+readability-lxml>=0.8.1
+goose3>=3.1.17
+boilerpy3>=1.0.7
+PyMuPDF>=1.23.0
+pdfplumber>=0.10.0
+pdfminer.six>=20231228
+camelot-py[cv]>=0.11.0
+python-docx>=1.1.0
+python-pptx>=0.6.23
+tika>=2.6.0
+recognizers-text-suite>=1.0.2
+spacy>=3.7.2
+transformers>=4.37.0
+rapidfuzz>=3.6.0
+Levenshtein>=0.25.0
+simhash>=2.1.2
+scrapy>=2.11.0
+cssselect>=1.2.0
+pyquery>=2.0.0
+selenium-stealth>=1.0.6
+selenium-wire>=5.1.0
+robotparser>=1.0.0
+advertools>=0.13.2
+proxybroker>=0.3.2
+requests-futures>=1.0.1
+concurrent-futures>=3.1.1
+python-socks>=2.4.2
+pysocks>=1.7.1
+python-whois>=0.8.0
+dnspython>=2.4.2
+python-censys>=2.2.12
+shodan>=1.31.0
+maxminddb>=2.2.0
+ipaddress>=1.0.23
+netaddr>=1.2.1
+pyopenssl>=24.0.0
+sslyze>=6.0.0
+virustotal-api>=1.1.11
+otx-python-sdk>=1.5.12
+pyppeteer>=2.0.0
+websockets>=12.0
+fake-useragent>=1.4.0
+browser-fingerprinting>=1.0.0
+selenium-profiles>=2.2.10
+pymongo>=4.6.1
+msgpack>=1.0.7
+orjson>=3.9.10
+ujson>=5.9.0
+loguru>=0.7.2
+psutil>=5.9.8
+memory-profiler>=0.61.0
+py-spy>=0.3.14
+toml>=0.10.2
+configobj>=5.0.8
+keyring>=24.3.0
+h2>=4.1.0
+hypercorn>=0.16.0
+uvloop>=0.19.0
+ping3>=4.0.4
+python-nmap>=0.7.1
+scipy>=1.12.0
+scikit-learn>=1.4.0
+joblib>=1.3.2
+reportlab>=4.0.9
+boto3>=1.34.34
+google-cloud-storage>=2.10.0
+responses>=0.24.1
+colorama>=0.4.6
+tabulate>=0.9.0
+alive-progress>=3.1.5
+inquirer>=3.2.1
+docker>=7.0.0
+docker-compose>=1.29.2
+torch>=2.1.0
+sentence-transformers>=2.3.0
+langdetect>=1.0.9
+pillow>=10.2.0
+opencv-python>=4.9.0
+pytesseract>=0.3.10
+easyocr>=1.7.0
+nltk>=3.8.1
+textstat>=0.7.3
+yake>=0.4.8
+web3>=6.15.1
+ethereum>=2.7.0
+schedule>=1.2.1
+watchdog>=4.0.0
+supervisor>=4.2.5
+email-validator>=2.1.0
+flanker>=0.9.11
+phonenumbers>=8.13.27
+python-dateutil>=2.8.2
+arrow>=1.3.0
+validators>=0.22.0
+furl>=2.1.3
+setuptools>=69.0.3
+wheel>=0.42.0
+pip>=24.0
+
+# From: processing\extractors\archive\old_requirements\requirements_revolutionary.txt
+asyncio
+json5>=0.9.0
+aiofiles>=23.0.0
+user-agents>=2.2.0
+flake8>=6.0.0
+
+# From: processing\extractors\archive\old_requirements\requirements_revolutionary_enhanced.txt
+python-tika==2.6.0                      # Apache Tika client
+recognizers-text[all]==1.0.3a1          # Microsoft entity recognition
+katana-python==0.1.1                    # Next-gen URL enumerator
+photon-crawler==1.3.0                   # OSINT link discovery
+requests-toolbelt==1.0.0                # Additional request utilities
+urllib3==2.1.0                          # Low-level HTTP library
+proxy-rotator==2.1.0                    # Advanced proxy rotation
+mubeng==0.14.2                          # Proxy validation and rotation
+socks==1.7.1                            # SOCKS proxy support
+anticaptcha==2.0.0                      # Anti-CAPTCHA service
+nopecha==0.3.1                          # NopeCHA extension support
+html5lib==1.1                           # HTML5 parser
+selectolax==0.3.17                      # Fast HTML parser
+bleach==6.1.0                           # HTML sanitization
+markdownify==0.11.6                     # HTML to Markdown conversion
+pypdf==3.17.1                           # Pure Python PDF library
+tabula-py==2.8.2                        # PDF table extraction
+motor==3.3.2                            # Async MongoDB driver
+sentry-sdk==1.39.1                      # Error tracking
+jupyter==1.0.0                          # Interactive development
+ipython==8.18.1                         # Enhanced Python shell
+
+# From: processing\extractors\archive\old_requirements\requirements_revolutionary_ultimate.txt
+zenrows>=1.0.0
+scrapfly-sdk>=1.0.0
+scrapeops>=1.0.0
+
+# From: processing\extractors\PDF-Extract-Kit\docs\requirements.txt
+sphinx
+sphinx_rtd_theme
+myst-parser
+sphinx-copybutton
+sphinx-argparse
+sphinx-book-theme
+
+# From: processing\extractors\PDF-Extract-Kit\requirements.txt
+omegaconf
+matplotlib
+ultralytics>=8.2.85
+doclayout-yolo==0.0.2
+unimernet==0.2.1
+paddlepaddle-gpu
+paddleocr==2.7.3
+struct-eqtable
+lmdeploy
+
+# From: processing\extractors\PDF-Extract-Kit\requirements-cpu.txt
+paddlepaddle
+
+# From: sandbox\exploit_tools\BypassFuzzer\requirements.txt
+
+# From: sandbox\exploit_tools\bypass-url-parser\requirements.txt
+coloredlogs==15.0.1 \
+--hash=sha256:612ee75c546f53e92e70049c9dbfcc18c935a2b9a53b66085ce9ef6a6e5c0934 \
+docopt==0.6.2 \
+humanfriendly==10.0 \
+pyreadline3==3.5.4; sys_platform == "win32" and python_version >= "3.8" \
+
+# From: sandbox\exploit_tools\bypass-url-parser\requirements-dev.txt
+appnope==0.1.4; sys_platform == "darwin" \
+asttokens==2.4.1 \
+autopep8==2.3.1 \
+backcall==0.2.0 \
+cachetools==5.5.0 \
+chardet==5.2.0 \
+decorator==5.1.1 \
+exceptiongroup==1.2.2; python_version < "3.11" \
+executing==2.1.0 \
+ipdb==0.13.9 \
+jedi==0.19.1 \
+markdown-it-py==2.2.0 \
+matplotlib-inline==0.1.7 \
+mdurl==0.1.2 \
+parso==0.8.4 \
+pexpect==4.9.0; sys_platform != "win32" \
+pickleshare==0.7.5 \
+prompt-toolkit==3.0.48 \
+ptyprocess==0.7.0; sys_platform != "win32" \
+pure-eval==0.2.3 \
+pycodestyle==2.12.1 \
+pyproject-api==1.8.0 \
+six==1.16.0 \
+stack-data==0.6.3 \
+tomli==2.0.2; python_version < "3.11" \
+tox==4.23.2 \
+tox-pdm==0.7.2 \
+traitlets==5.14.3 \
+types-docopt==0.6.11.4 \
+wcwidth==0.2.13 \
+
+# From: sandbox\exploit_tools\CloudflareBypassForScraping\requirements.txt
+DrissionPage==4.0.5.6
+
+# From: sandbox\exploit_tools\GoogleRecaptchaBypass\requirements.txt
+pydub
+SpeechRecognition
+
+# From: sandbox\exploit_tools\Turnstile-Solver\requirements.txt
+quart
+argparse
+patchright
+camoufox[geoip]
+
+# From: sandbox\exploit_tools\uncaptcha\requirements.txt
+image-slicer==0.1.1
+bs4==0.0.1
+clarifai==2.0.21
+faker==0.7.10
+
+# From: sandbox\exploit_tools\Upload_Bypass\requirements.txt
+
+# From: sandbox\osint_tools\the_spy_job\requisitos\theHarvester\requirements.txt
+
+# From: vendors\AgentVerse\requirements.txt
+py3langid
+setuptools-scm
+openai==1.1.0
+gradio
+astunparse
+langchain==0.0.157
+typing-inspect==0.8.0
+colorlog
+tiktoken==0.5.1
+
+# From: vendors\AgentVerse\requirements_local.txt
+fschat[model_worker,webui]==0.2.30
+
+# From: vendors\aider\requirements.txt
+aiohappyeyeballs==2.6.1
+aiosignal==1.4.0
+annotated-types==0.7.0
+attrs==25.3.0
+backoff==2.2.1
+cffi==1.17.1
+charset-normalizer==3.4.2
+configargparse==1.7.1
+diff-match-patch==20241021
+diskcache==5.6.3
+distro==1.9.0
+frozenlist==1.7.0
+fsspec==2025.7.0
+gitdb==4.0.12
+gitpython==3.1.45
+google-ai-generativelanguage==0.6.15
+google-api-core[grpc]==2.25.1
+google-generativeai==0.8.5
+googleapis-common-protos==1.70.0
+grep-ast==0.9.0
+grpcio==1.74.0
+grpcio-status==1.71.2
+hf-xet==1.1.7
+httplib2==0.22.0
+huggingface-hub==0.34.3
+importlib-metadata==7.2.1
+importlib-resources==6.5.2
+jiter==0.10.0
+jsonschema==4.25.0
+jsonschema-specifications==2025.4.1
+litellm==1.75.0
+markupsafe==3.0.2
+mccabe==0.7.0
+mixpanel==4.10.1
+mslex==1.3.0
+multidict==6.6.3
+networkx==3.4.2
+oslex==0.1.3
+posthog==6.4.1
+propcache==0.3.2
+proto-plus==1.26.1
+protobuf==5.29.5
+pyasn1==0.6.1
+pyasn1-modules==0.4.2
+pycparser==2.22
+pydantic-core==2.33.2
+pyflakes==3.4.0
+pypandoc==1.15
+pyparsing==3.2.3
+pyperclip==1.9.0
+referencing==0.36.2
+regex==2025.7.34
+rpds-py==0.27.0
+rsa==4.9.1
+shtab==1.7.2
+smmap==5.0.2
+socksio==1.0.0
+sounddevice==0.5.2
+soundfile==0.13.1
+soupsieve==2.7
+tokenizers==0.21.4
+tree-sitter-c-sharp==0.23.1
+tree-sitter-embedded-template==0.23.2
+tree-sitter-language-pack==0.9.0
+tree-sitter-yaml==0.7.1
+typing-inspection==0.4.1
+uritemplate==4.2.0
+watchfiles==1.1.0
+yarl==1.20.1
+zipp==3.23.0
+tree-sitter==0.23.2; python_version < "3.10"
+
+# From: vendors\crawl4ai\deploy\docker\requirements.txt
+slowapi==0.1.9
+prometheus-fastapi-instrumentator>=7.1.0
+jwt>=1.3.1
+sse-starlette==2.2.1
+rank-bm25==0.2.2
+PyJWT==2.10.1
+mcp>=1.6.0
+
+# From: vendors\crawl4ai\docs\examples\c4a_script\tutorial\requirements.txt
+flask-cors>=4.0.0
+
+# From: vendors\crawl4ai\docs\md_v2\apps\c4a-script\requirements.txt
+
+# From: vendors\crawl4ai\requirements.txt
+aiosqlite~=0.20
+tf-playwright-stealth>=1.1.0
+xxhash~=3.4
+snowballstemmer~=2.2
+brotli>=1.1.0
+alphashape>=1.3.1
+shapely>=2.0.0
+pdf2image>=1.17.0
+PyPDF2>=3.0.1
+
+# From: vendors\crawl4ai\tests\memory\requirements.txt
+seaborn>=0.12.0
+
+# From: vendors\CyberScraper-2077\requirements.txt
+streamlit
+langchain-community
+langchain_openai
+markdown
+playwright_stealth
+ollama
+google_auth_oauthlib
+langchain-google-genai
+
+# From: vendors\EasySpider\ExecuteStage\requirements.txt
+commandline_config==2.2.3
+pyinstaller==5.13.2
+pymysql==1.1.1
+ddddocr==1.5.6
+pynput==1.7.6
+
+# From: vendors\EasySpider\ExecuteStage\requirements_win32.txt
+
+# From: vendors\fake-useragent\requirements.txt
+build==1.2.2.post1
+coverage==7.8.0
+fastjsonschema==2.21.1
+pep517==0.13.1
+py==1.11.0
+pyproject_hooks==1.2.0
+typing_extensions==4.13.2
+validate-pyproject==0.24.1
+
+# From: vendors\fake-useragent\requirements_converter.txt
+-e .
+ua-parser==1.0.0
+ua-parser-builtins==0.18.0.post1
+ua-parser-rs==0.1.2
+
+# From: vendors\flaresolverr\requirements.txt
+bottle==0.12.25
+waitress==3.0.1
+func-timeout==4.3.5
+xvfbwrapper==0.2.9; platform_system != "Windows"
+pefile==2023.2.7; platform_system == "Windows"
+
+# From: vendors\langroid\.github\workflows\requirements-torch.txt
+--index-url https://download.pytorch.org/whl/cpu
+torchvision
+torchaudio
+
+# From: vendors\langroid\examples\docqa\streamlit-app\requirements.txt
+langroid
+
+# From: vendors\langroid\examples\langdb\requirements.txt
+
+# From: vendors\langroid\examples\portkey\requirements.txt
+
+# From: vendors\localGPT\backend\requirements.txt
+
+# From: vendors\localGPT\rag_system\requirements.txt
+colpali-engine
+lancedb
+rank_bm25
+fuzzywuzzy
+python-Levenshtein
+sentencepiece
+accelerate
+docling
+ocrmac
+
+# From: vendors\localGPT\requirements.txt
+sentence_transformers
+rerankers
+
+# From: vendors\localGPT\requirements-docker.txt
+
+# From: vendors\playwright_stealth\requirements.txt
+
+# From: vendors\proxy_pool\requirements.txt
+
+# From: vendors\PulsarRPA\pulsar-python\requirements.txt
+py4j
+
+# From: vendors\requirements\requirements-browser.txt
+altair==5.5.0
+blinker==1.9.0
+narwhals==2.0.1
+pyarrow==21.0.0
+pydeck==0.9.1
+pytz==2025.2
+tenacity==9.1.2
+tornado==6.5.1
+tzdata==2025.2
+
+# From: vendors\requirements\requirements-dev.txt
+codespell==2.4.1
+cogapp==3.5.1
+contourpy==1.3.3
+cycler==0.12.1
+dill==0.4.0
+fonttools==4.59.0
+google-cloud-bigquery==3.35.1
+google-cloud-core==2.4.3
+google-crc32c==1.7.1
+google-resumable-media==2.7.2
+imgcat==0.6.0
+kiwisolver==1.4.8
+lox==0.13.0
+multiprocess==0.70.18
+pathos==0.3.4
+pip-tools==7.5.0
+pox==0.3.6
+ppft==1.7.7
+pyproject-hooks==1.2.0
+pytest-env==1.1.5
+semver==3.0.4
+shellingham==1.5.4
+uv==0.8.5
+
+# From: vendors\requirements\requirements-help.txt
+banks==2.2.0
+dataclasses-json==0.6.7
+deprecated==1.2.18
+dirtyjson==1.0.8
+filetype==1.2.0
+greenlet==3.2.3
+griffe==1.10.0
+llama-index-core==0.13.0
+llama-index-embeddings-huggingface==0.6.0
+llama-index-instrumentation==0.4.0
+llama-index-workflows==1.3.0
+marshmallow==3.26.1
+mpmath==1.3.0
+nest-asyncio==1.6.0
+safetensors==0.6.1
+sympy==1.14.0
+threadpoolctl==3.6.0
+wrapt==1.17.2
+
+# From: vendors\requirements\requirements-playwright.txt
+pyee==13.0.0
+
+# From: vendors\Scrapegraph-ai\docs\requirements.txt
+sphinx-rtd-theme>=1.3.0
+sphinx-design>=0.5.0
+sphinx-autodoc-typehints>=1.25.2
+sphinx-autoapi>=3.0.0
+furo>=2024.1.29
+
+# From: vendors\Scrapegraph-ai\docs\requirements-dev.txt
+
+# From: vendors\Scrapegraph-ai\requirements.txt
+
+# From: vendors\Scrapegraph-ai\requirements-dev.txt
+
+# From: vendors\Scrapling\docs\requirements.txt
+mkdocstrings
+mkdocstrings-python
+
+# From: vendors\Scrapling\tests\requirements.txt
+pytest-httpbin==2.1.0
+httpbin~=0.10.0
+
+# From: vendors\scrapy\docs\requirements.txt
+sphinx-notfound-page==1.0.4
+sphinx-rtd-dark-mode==1.3.0
+
+# From: vendors\SeleniumBase\mkdocs_build\requirements.txt
+pymdown-extensions>=10.16.1
+pipdeptree>=2.28.0
+ghp-import==2.1.0
+cairocffi==1.7.1
+Babel==2.17.0
+paginate==0.5.7
+mkdocs-exclude-search==0.6.6
+mkdocs-simple-hooks==0.1.5
+mkdocs-material-extensions==1.3.1
+
+# From: vendors\SeleniumBase\requirements.txt
+fasteners>=0.20
+mycdp>=1.2.0
+pynose>=1.5.4
+sbvirtualdisplay>=1.4.0
+parse>=1.20.2
+parse-type>=0.6.6
+tabcompleter>=1.4.0
+pdbp>=1.7.1
+outcome==1.3.0.post0
+trio==0.27.0;python_version<"3.9"
+trio-websocket==0.12.2
+wsproto==1.2.0
+websocket-client==1.8.0
+sortedcontainers==2.4.0
+execnet==2.1.1
+pytest-html==4.0.2
+pytest-metadata==3.1.1
+pytest-ordering==0.6
+pytest-rerunfailures==14.0;python_version<"3.9"
+parameterized==0.9.0
+behave==1.2.6
+pyotp==2.9.0
+python-xlib==0.33;platform_system=="Linux"
+
+# From: vendors\sweep\requirements.txt
+aiolimiter==1.1.0
+anthropic==0.21.3
+argon2-cffi==23.1.0
+argon2-cffi-bindings==21.2.0
+astroid==3.1.0
+async-lru==2.0.4
+async-timeout==4.0.3
+botocore==1.34.75
+cachecontrol==0.14.0
+cattrs==23.2.3
+cleo==2.1.0
+cohere==5.2.5
+comm==0.2.2
+contextvars==2.4
+crashtest==0.4.1
+debugpy==1.8.1
+defusedxml==0.7.1
+dulwich==0.21.7
+fastavro==1.9.4
+fqdn==1.5.1
+immutables==0.20
+importmagic==0.1.7
+installer==0.7.0
+ipykernel==6.29.4
+ipywidgets==8.1.2
+isoduration==20.11.0
+jaraco-classes==3.3.1
+jeepney==0.8.0
+jira==3.8.0
+jmespath==1.0.1
+jsonpatch==1.33
+jsonpointer==2.4
+jupyter-client==8.6.1
+jupyter-console==6.6.3
+jupyter-core==5.7.2
+jupyter-events==0.10.0
+jupyter-lsp==2.2.4
+jupyter-server==2.13.0
+jupyter-server-terminals==0.5.3
+jupyterlab==4.1.5
+jupyterlab-pygments==0.3.0
+jupyterlab-server==2.25.4
+jupyterlab-widgets==3.0.10
+logtail==1.0.1
+mistune==3.0.2
+more-itertools==10.2.0
+nbclient==0.10.0
+nbconvert==7.16.3
+nbformat==5.10.3
+notebook==7.1.2
+notebook-shim==0.2.4
+oauthlib==3.2.2
+overrides==7.7.0
+pandocfilters==1.5.1
+parea-ai==0.2.114
+pkginfo==1.10.0
+poetry==1.8.2
+poetry-core==1.9.0
+poetry-plugin-dotenv==0.6.28
+poetry-plugin-export==1.7.1
+pygithub==2.2.0
+pylint==3.1.0
+pynacl==1.5.0
+pysbd==0.3.4
+python-json-logger==2.0.7
+pyupgrade==3.15.2
+pyzmq==25.1.2
+qtconsole==5.5.1
+qtpy==2.4.1
+requests-oauthlib==2.0.0
+resend==0.8.0
+rfc3339-validator==0.1.4
+rfc3986-validator==0.1.1
+s3transfer==0.10.1
+secretstorage==3.3.3
+send2trash==1.8.2
+slack-sdk==3.27.1
+starlette==0.36.3
+stringzilla==3.8.4
+tantivy==0.22.0
+terminado==0.18.1
+tinycss2==1.2.1
+tokenize-rt==5.2.0
+tomlkit==0.12.3
+tree-sitter-javascript==0.21.0
+tree-sitter-languages==1.10.2
+tree-sitter-python==0.21.0
+trove-classifiers==2024.3.25
+types-python-dateutil==2.9.0.20240316
+types-requests==2.31.0.20240406
+uri-template==1.3.0
+voyageai==0.2.1
+webcolors==1.13
+webencodings==0.5.1
+widgetsnbextension==4.0.10
+yamllint==1.35.1
+
+# From: vendors\trafilatura\docs\requirements.txt
+pydata-sphinx-theme>=0.16.1
+docutils>=0.21.2
+sphinx-sitemap>=2.6.0
+
+# From: vendors\zenrows-python-sdk\requirements.txt
+
+# ========================================================================================
+# ðŸŽ¯ END OF CONSOLIDATED REQUIREMENTS
+# ========================================================================================
+
+# Total unique packages: 624
+# Consolidated from 68 requirements files
+# Generated: 2025-08-25 12:27:18

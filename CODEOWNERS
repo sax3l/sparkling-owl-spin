@@ -10,7 +10,7 @@
 /*.toml @sax3l
 /*.ini @sax3l
 /Makefile @sax3l
-/requirements*.txt @sax3l
+/requirements.txt @sax3l
 
 # Documentation
 /docs/ @sax3l
