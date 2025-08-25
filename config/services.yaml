@@ -1,0 +1,239 @@
+# Configuration consolidation and merging
+# Merges config.yaml + config/local.yaml → config/services.yaml
+# As specified in Swedish reorganization instructions
+
+# System Configuration - Enhanced
+system:
+  name: "sparkling-owl-spin"
+  version: "2.0.0"
+  environment: "${ENVIRONMENT:development}"  # development, testing, production
+  debug: "${DEBUG:false}"
+  log_level: "${LOG_LEVEL:INFO}"
+  
+  # Service discovery and registry
+  service_registry:
+    enabled: true
+    discovery_interval: 30
+    health_check_interval: 15
+    cleanup_interval: 300
+
+# Core Orchestration - Enhanced
+orchestration:
+  max_concurrent_tasks: 100
+  task_timeout: 300  # seconds
+  health_check_interval: 30
+  graceful_shutdown_timeout: 60
+  startup_timeout: 60
+  shutdown_timeout: 30
+  service_startup_delay: 2
+  max_concurrent_services: 5
+
+# Engines Configuration
+engines:
+  # Bypass Engines
+  bypass:
+    cloudflare:
+      enabled: true
+      timeout: 30
+      max_retries: 3
+      delay_range: [1, 5]
+    
+    waf:
+      enabled: true
+      techniques: ["encoding", "fragmentation", "method_override"]
+      timeout: 20
+    
+    tls_fingerprinting:
+      enabled: true
+      browser_profiles: ["chrome", "firefox", "safari"]
+      randomize_timing: true
+
+  # Scraping Engines  
+  scraping:
+    web_scraper:
+      enabled: true
+      max_pages_per_session: 1000
+      rate_limit: 1.0  # seconds between requests
+      respect_robots_txt: true
+    
+    content_extraction:
+      enabled: true
+      extractors: ["trafilatura", "readability", "boilerplate"]
+      fallback_enabled: true
+
+  # Pentesting Engines
+  pentesting:
+    vulnerability_scanner:
+      enabled: true
+      scan_levels: ["passive", "active"]  # exclude "aggressive" for safety
+      max_scan_duration: 300
+      ethical_mode: true
+    
+    exploit_manager:
+      enabled: true
+      ethical_constraints: true
+      allowed_networks: ["127.0.0.0/8", "192.168.0.0/16", "10.0.0.0/8"]
+      forbidden_actions: ["data_destruction", "service_disruption"]
+
+# AI Agents Configuration
+agents:
+  crew:
+    scraping_specialist:
+      enabled: true
+      max_analysis_time: 60
+      confidence_threshold: 0.7
+      learning_enabled: true
+    
+    security_analyst:
+      enabled: true
+      compliance_frameworks: ["owasp_top_10", "nist"]
+      risk_scoring_enabled: true
+      ai_correlation: true
+    
+    data_scientist:
+      enabled: true
+      ml_libraries: ["sklearn", "pandas", "numpy"]
+      analysis_types: ["eda", "clustering", "anomaly_detection", "trend_analysis"]
+      visualization_enabled: true
+
+# Processing Configuration
+processing:
+  extractors:
+    content_extractor:
+      enabled: true
+      formats: ["html", "pdf", "doc", "txt"]
+      max_file_size: "100MB"
+      ocr_enabled: false
+  
+  transformers:
+    data_transformer:
+      enabled: true
+      output_formats: ["json", "csv", "parquet"]
+      validation_enabled: true
+      schema_inference: true
+
+# Integration Configuration
+integrations:
+  swedish:
+    blocket_api:
+      enabled: true
+      rate_limit: 10  # requests per minute
+      cache_ttl: 3600  # seconds
+      ethical_scraping: true
+    
+    vehicle_data:
+      enabled: true
+      data_sources: ["transport_styrelsen"]
+      pii_filtering: true
+      gdpr_compliant: true
+
+# API Configuration
+api:
+  rest:
+    host: "0.0.0.0"
+    port: 8000
+    cors_origins: ["*"]  # Configure appropriately for production
+    rate_limiting:
+      enabled: true
+      requests_per_minute: 60
+  
+  graphql:
+    enabled: false  # Enable when needed
+    endpoint: "/graphql"
+    playground: true
+  
+  websocket:
+    enabled: true
+    endpoint: "/ws"
+    max_connections: 100
+
+# Database Configuration
+database:
+  primary:
+    type: "postgresql"
+    host: "localhost"
+    port: 5432
+    name: "pyramid_crawler"
+    pool_size: 10
+    max_overflow: 20
+  
+  cache:
+    type: "redis"
+    host: "localhost" 
+    port: 6379
+    db: 0
+    ttl: 3600
+
+# Monitoring and Logging
+monitoring:
+  metrics:
+    enabled: true
+    export_interval: 60
+    prometheus_endpoint: "/metrics"
+  
+  health_checks:
+    enabled: true
+    interval: 30
+    timeout: 10
+  
+  tracing:
+    enabled: false
+    jaeger_endpoint: "http://localhost:14268"
+
+logging:
+  level: "INFO"
+  format: "json"
+  file_rotation: true
+  max_file_size: "100MB"
+  backup_count: 5
+  
+  loggers:
+    engines: "DEBUG"
+    agents: "INFO"
+    processing: "INFO"
+    integrations: "INFO"
+
+# Security Configuration
+security:
+  authentication:
+    enabled: false  # Enable for production
+    method: "jwt"
+    secret_key: "${SECRET_KEY}"
+    token_ttl: 3600
+  
+  authorization:
+    enabled: false
+    rbac: true
+    permissions: ["read", "write", "admin"]
+  
+  encryption:
+    enabled: true
+    algorithm: "AES-256-GCM"
+    key_rotation_days: 90
+
+# Development Configuration
+development:
+  hot_reload: true
+  debug_mode: true
+  test_data_enabled: true
+  mock_external_services: false
+
+# Production Overrides (when environment=production)
+production:
+  debug: false
+  log_level: "WARNING"
+  
+  api:
+    cors_origins: ["https://yourdomain.com"]
+    rate_limiting:
+      requests_per_minute: 30
+  
+  security:
+    authentication:
+      enabled: true
+    authorization:
+      enabled: true
+  
+  monitoring:
+    tracing:
+      enabled: true

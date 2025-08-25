@@ -1,0 +1,78 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: crawler-api
+  namespace: crawler-production
+  labels:
+    app: crawler
+    component: api
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8000
+    protocol: TCP
+    name: http
+  selector:
+    app: crawler
+    component: api
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: crawler-worker
+  namespace: crawler-production
+  labels:
+    app: crawler
+    component: worker
+spec:
+  type: ClusterIP
+  ports:
+  - port: 9090
+    targetPort: 9090
+    protocol: TCP
+    name: metrics
+  selector:
+    app: crawler
+    component: worker
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: scraper-worker
+  namespace: crawler-production
+  labels:
+    app: crawler
+    component: scraper
+spec:
+  type: ClusterIP
+  ports:
+  - port: 9090
+    targetPort: 9090
+    protocol: TCP
+    name: metrics
+  selector:
+    app: crawler
+    component: scraper
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flower
+  namespace: crawler-production
+  labels:
+    app: crawler
+    component: flower
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5555
+    targetPort: 5555
+    protocol: TCP
+    name: http
+  selector:
+    app: crawler
+    component: flower

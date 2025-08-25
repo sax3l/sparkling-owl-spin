@@ -1,0 +1,47 @@
+# Docker image for synthetic test sites
+FROM nginx:alpine
+
+# Install dependencies
+RUN apk add --no-cache \
+    nodejs \
+    npm \
+    python3 \
+    py3-pip \
+    curl
+
+# Create synthetic sites directory
+WORKDIR /usr/share/nginx/html
+
+# Copy synthetic site templates
+COPY docker/synthetics/sites/ ./
+
+# Copy custom nginx configuration
+COPY docker/synthetics/nginx.conf /etc/nginx/nginx.conf
+
+# Create additional directories for dynamic content
+RUN mkdir -p /usr/share/nginx/html/api \
+             /usr/share/nginx/html/forms \
+             /usr/share/nginx/html/captcha \
+             /usr/share/nginx/html/protected
+
+# Copy synthetic API server
+COPY docker/synthetics/api-server.py /app/
+RUN pip3 install flask flask-cors
+
+# Create startup script
+RUN echo '#!/bin/sh\n\
+# Start synthetic API server in background\n\
+python3 /app/api-server.py &\n\
+\n\
+# Start nginx\n\
+nginx -g "daemon off;"' > /start.sh && chmod +x /start.sh
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:80/health || exit 1
+
+# Expose ports
+EXPOSE 80 5000
+
+# Start services
+CMD ["/start.sh"]

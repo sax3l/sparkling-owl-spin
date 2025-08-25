@@ -1,0 +1,274 @@
+version: '3.8'
+
+services:
+  # Main application - production optimized
+  web:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.app
+      target: production
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
+      - ENVIRONMENT=production
+      - SECRET_KEY=${SECRET_KEY}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - app_data:/app/data
+      - app_logs:/app/logs
+    networks:
+      - crawler-network
+    restart: unless-stopped
+    deploy:
+      replicas: 3
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+        reservations:
+          memory: 1G
+          cpus: '0.5'
+
+  # Database with production settings
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - postgres_backups:/backups
+      - ./scripts/postgres_tune.conf:/etc/postgresql/postgresql.conf
+    networks:
+      - crawler-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: '2.0'
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
+
+  # Redis with persistence
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      - ./config/redis.conf:/usr/local/etc/redis/redis.conf
+    networks:
+      - crawler-network
+    restart: unless-stopped
+    command: redis-server /usr/local/etc/redis/redis.conf
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+
+  # High-performance crawler workers
+  crawler-worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.worker
+      target: production
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
+      - WORKER_TYPE=crawler
+      - WORKER_CONCURRENCY=8
+      - WORKER_LOG_LEVEL=WARNING
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - app_data:/app/data
+      - app_logs:/app/logs
+    networks:
+      - crawler-network
+    restart: unless-stopped
+    deploy:
+      replicas: 4
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.5'
+
+  # Browser-enabled scraper workers
+  scraper-worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.browser
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
+      - WORKER_TYPE=scraper
+      - WORKER_CONCURRENCY=4
+      - WORKER_LOG_LEVEL=WARNING
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - app_data:/app/data
+      - app_logs:/app/logs
+    networks:
+      - crawler-network
+    restart: unless-stopped
+    shm_size: 4gb
+    deploy:
+      replicas: 3
+      resources:
+        limits:
+          memory: 4G
+          cpus: '2.0'
+
+  # Scheduler - single instance with leader election
+  scheduler-worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.worker
+      target: production
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
+      - WORKER_TYPE=scheduler
+      - WORKER_CONCURRENCY=1
+      - WORKER_LOG_LEVEL=INFO
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - app_data:/app/data
+      - app_logs:/app/logs
+      - scheduler_state:/app/scheduler
+    networks:
+      - crawler-network
+    restart: unless-stopped
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
+
+  # Analysis workers for ML/AI processing
+  analysis-worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.worker
+      target: production
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
+      - WORKER_TYPE=analysis
+      - WORKER_CONCURRENCY=4
+      - WORKER_LOG_LEVEL=WARNING
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - app_data:/app/data
+      - app_logs:/app/logs
+      - ml_models:/app/models
+    networks:
+      - crawler-network
+    restart: unless-stopped
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          memory: 6G
+          cpus: '3.0'
+
+  # Production monitoring with Flower
+  flower:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.worker
+    ports:
+      - "5555:5555"
+    environment:
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - WORKER_TYPE=flower
+      - FLOWER_BASIC_AUTH=${FLOWER_USER}:${FLOWER_PASSWORD}
+    depends_on:
+      - redis
+    networks:
+      - crawler-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.25'
+
+  # Load balancer / reverse proxy
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx-production.conf:/etc/nginx/nginx.conf
+      - ./docker/ssl:/etc/ssl/certs
+      - nginx_logs:/var/log/nginx
+    depends_on:
+      - web
+    networks:
+      - crawler-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+
+  # Log aggregation
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.10.0
+    user: root
+    volumes:
+      - ./docker/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - app_logs:/var/log/app:ro
+      - nginx_logs:/var/log/nginx:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - crawler-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  postgres_backups:
+  redis_data:
+  app_data:
+  app_logs:
+  nginx_logs:
+  scheduler_state:
+  ml_models:
+
+networks:
+  crawler-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
