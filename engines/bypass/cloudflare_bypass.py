@@ -932,3 +932,6 @@ class EnhancedCloudflareBypassAdapter:
         self.stats.clear()
         self.initialized = False
         logger.info("✅ Enhanced Cloudflare Bypass Adapter cleanup completed")
+
+# Alias för pyramid architecture compatibility
+CloudflareBypass = EnhancedCloudflareBypassAdapter

@@ -1,0 +1,324 @@
+# Sparkling Owl Spin - Unified Configuration
+# Sammanfogad konfiguration från alla tidigare config-filer
+
+# === AGENT CONFIGURATION ===
+agents:
+  orchestrator:
+    enabled: true
+    max_agents: 10
+    task_timeout: 300
+    coordination_strategy: "democratic"
+    
+  scraping_specialist:
+    enabled: true
+    capabilities:
+      - "web_scraping"
+      - "data_extraction"
+      - "dom_parsing"
+      - "javascript_rendering"
+    max_concurrent_tasks: 5
+    browser_pool_size: 3
+    default_timeout: 30
+    
+  security_analyst:
+    enabled: true
+    capabilities:
+      - "security_analysis"
+      - "vulnerability_scanning"
+      - "bypass_detection"
+      - "captcha_solving"
+    security_level: "high"
+    threat_detection: true
+    
+  data_scientist:
+    enabled: true
+    capabilities:
+      - "data_analysis"
+      - "ml_processing"
+      - "pattern_recognition"
+      - "quality_assessment"
+    models_enabled:
+      - "text_classification"
+      - "entity_extraction"
+      - "content_scoring"
+
+# === SCRAPING CONFIGURATION ===
+scraping:
+  engines:
+    requests:
+      enabled: true
+      priority: 1
+      timeout: 30
+      retries: 3
+      headers:
+        User-Agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+        Accept-Language: "en-US,en;q=0.5"
+        Accept-Encoding: "gzip, deflate"
+        Connection: "keep-alive"
+        Upgrade-Insecure-Requests: "1"
+        
+    selenium:
+      enabled: true
+      priority: 2
+      timeout: 60
+      browser: "chrome"
+      headless: true
+      stealth_mode: true
+      options:
+        - "--no-sandbox"
+        - "--disable-dev-shm-usage"
+        - "--disable-blink-features=AutomationControlled"
+        - "--exclude-switches=enable-automation"
+        
+    playwright:
+      enabled: true
+      priority: 3
+      timeout: 60
+      browser: "chromium"
+      headless: true
+      stealth_mode: true
+      
+  rate_limiting:
+    default_delay: 1.0
+    max_concurrent: 10
+    domain_specific:
+      google.com: 2.0
+      facebook.com: 3.0
+      amazon.com: 1.5
+      
+  retry_policy:
+    max_retries: 3
+    backoff_factor: 2
+    retry_delays: [1.0, 5.0, 15.0]
+    retry_on_status: [429, 503, 504]
+    
+  content_extraction:
+    default_extractors:
+      - "title"
+      - "meta_description"
+      - "headings"
+      - "links"
+      - "images"
+      - "text_content"
+    custom_selectors: {}
+    javascript_enabled: true
+    wait_for_content: 2.0
+
+# === SECURITY CONFIGURATION ===
+security:
+  bypass:
+    cloudflare:
+      enabled: true
+      methods:
+        - "requests_html"
+        - "selenium_stealth"
+        - "cloudscraper"
+      timeout: 60
+      max_attempts: 3
+      
+    captcha_solving:
+      enabled: true
+      services:
+        twocaptcha:
+          enabled: false
+          api_key: ${TWOCAPTCHA_API_KEY}
+        anticaptcha:
+          enabled: false
+          api_key: ${ANTICAPTCHA_API_KEY}
+      timeout: 120
+      
+    ip_rotation:
+      enabled: true
+      aws_integration: true
+      regions: ["us-east-1", "eu-west-1", "ap-southeast-1"]
+      cost_limit_daily: 10.0
+      rotation_strategy: "round_robin"
+      
+  stealth:
+    user_agent_rotation: true
+    header_randomization: true
+    viewport_randomization: true
+    fingerprint_evasion: true
+    webrtc_leak_protection: true
+    
+  vulnerability_scanning:
+    sql_injection: true
+    xss_detection: true
+    directory_traversal: true
+    file_inclusion: true
+    command_injection: true
+    
+# === CORE SYSTEM CONFIGURATION ===
+core:
+  logging:
+    level: "INFO"
+    format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    file: "sparkling_owl_spin.log"
+    max_bytes: 10485760  # 10MB
+    backup_count: 5
+    
+  database:
+    url: ${DATABASE_URL:-sqlite:///sparkling_owl_spin.db}
+    pool_size: 10
+    pool_timeout: 30
+    echo: false
+    
+  cache:
+    backend: "redis"
+    url: ${REDIS_URL:-redis://localhost:6379/0}
+    default_timeout: 3600
+    
+  monitoring:
+    enabled: true
+    metrics_port: 8000
+    health_check_port: 8001
+    prometheus_enabled: true
+    
+  api:
+    host: "0.0.0.0"
+    port: 8080
+    debug: false
+    cors_enabled: true
+    cors_origins: ["*"]
+    rate_limiting:
+      enabled: true
+      requests_per_minute: 60
+
+# === SWEDISH INTEGRATION ===
+swedish_integration:
+  enabled: true
+  features:
+    personnummer_validation: true
+    organisationsnummer_validation: true
+    domain_detection: true
+    postal_code_validation: true
+    municipality_mapping: true
+    
+  data_sources:
+    bolagsverket: true
+    skatteverket: true
+    statistiska_centralbyrån: true
+    
+  compliance:
+    gdpr_enabled: true
+    data_retention_days: 365
+    anonymization: true
+    consent_management: true
+
+# === PROCESSING CONFIGURATION ===
+processing:
+  pipelines:
+    default:
+      - "url_validation"
+      - "content_extraction"
+      - "data_cleaning"
+      - "swedish_validation"
+      - "quality_scoring"
+      - "data_enrichment"
+      
+  data_cleaning:
+    remove_html_tags: true
+    normalize_whitespace: true
+    remove_special_characters: false
+    text_encoding: "utf-8"
+    
+  quality_scoring:
+    content_length_weight: 0.3
+    link_density_weight: 0.2
+    image_density_weight: 0.1
+    text_quality_weight: 0.4
+    
+# === DEPLOYMENT CONFIGURATION ===
+deployment:
+  docker:
+    enabled: true
+    compose_file: "docker-compose.yml"
+    networks:
+      - "sparkling_owl_network"
+      
+  kubernetes:
+    enabled: false
+    namespace: "sparkling-owl-spin"
+    replicas: 3
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "128Mi"
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+        
+  scaling:
+    auto_scaling: true
+    min_instances: 1
+    max_instances: 10
+    cpu_threshold: 70
+    memory_threshold: 80
+
+# === EXPORT CONFIGURATION ===
+export:
+  formats:
+    json:
+      enabled: true
+      pretty_print: true
+      include_metadata: true
+      
+    csv:
+      enabled: true
+      delimiter: ","
+      include_headers: true
+      
+    xlsx:
+      enabled: true
+      sheet_name: "scraped_data"
+      include_charts: false
+      
+  storage:
+    local:
+      enabled: true
+      path: "./exports/"
+      
+    s3:
+      enabled: false
+      bucket: ${S3_BUCKET}
+      region: ${S3_REGION}
+      access_key: ${AWS_ACCESS_KEY_ID}
+      secret_key: ${AWS_SECRET_ACCESS_KEY}
+      
+# === ENVIRONMENT SPECIFIC OVERRIDES ===
+environments:
+  development:
+    core:
+      logging:
+        level: "DEBUG"
+      api:
+        debug: true
+    scraping:
+      rate_limiting:
+        default_delay: 0.5
+        
+  production:
+    core:
+      logging:
+        level: "WARNING"
+      api:
+        debug: false
+    scraping:
+      rate_limiting:
+        default_delay: 2.0
+        max_concurrent: 5
+    security:
+      vulnerability_scanning:
+        sql_injection: false  # Disabled in production for performance
+        
+  testing:
+    core:
+      database:
+        url: "sqlite:///:memory:"
+    scraping:
+      engines:
+        selenium:
+          enabled: false
+        playwright:
+          enabled: false

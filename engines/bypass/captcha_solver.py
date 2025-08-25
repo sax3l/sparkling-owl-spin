@@ -945,3 +945,6 @@ class EnhancedCaptchaSolverAdapter:
         
     async def _solve_with_nopecha(self, challenge: CaptchaChallenge) -> CaptchaSolution:
         return CaptchaSolution(success=False, error_message="NopeCHA implementation not complete")
+
+# Alias för pyramid architecture compatibility  
+CaptchaSolver = EnhancedCaptchaSolverAdapter
