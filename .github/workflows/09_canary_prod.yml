@@ -61,7 +61,7 @@ jobs:
         aws-region: ${{ vars.AWS_REGION }}
 
     - name: Setup kubectl
-      uses: azure/setup-kubectl@v3
+      uses: azure/setup-kubectl@v4
       with:
         version: ${{ env.KUBECTL_VERSION }}
 
@@ -182,7 +182,7 @@ jobs:
         aws-region: ${{ vars.AWS_REGION }}
 
     - name: Setup kubectl
-      uses: azure/setup-kubectl@v3
+      uses: azure/setup-kubectl@v4
       with:
         version: ${{ env.KUBECTL_VERSION }}
 
@@ -323,7 +323,7 @@ jobs:
         aws-region: ${{ vars.AWS_REGION }}
 
     - name: Setup kubectl
-      uses: azure/setup-kubectl@v3
+      uses: azure/setup-kubectl@v4
       with:
         version: ${{ env.KUBECTL_VERSION }}
 
