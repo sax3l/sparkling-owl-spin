@@ -23,7 +23,7 @@ jobs:
         run: echo "title=${{ github.event.pull_request.title }}" >> $GITHUB_OUTPUT
 
       - name: Save PR body to file
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
