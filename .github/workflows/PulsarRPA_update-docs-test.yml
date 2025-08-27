@@ -23,7 +23,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           # 使用个人访问令牌以便具有推送权限
           token: ${{ secrets.GH_PAT || github.token }}

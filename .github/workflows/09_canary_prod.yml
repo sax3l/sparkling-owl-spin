@@ -52,7 +52,7 @@ jobs:
     
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
@@ -103,7 +103,7 @@ jobs:
       
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
@@ -173,7 +173,7 @@ jobs:
     
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
@@ -260,7 +260,7 @@ jobs:
       
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Download canary analysis
       uses: actions/download-artifact@v4
@@ -314,7 +314,7 @@ jobs:
     
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4

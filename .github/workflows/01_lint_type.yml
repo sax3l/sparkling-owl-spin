@@ -10,7 +10,7 @@ jobs:
   lint-python:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -37,7 +37,7 @@ jobs:
   lint-typescript:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     
     - name: Setup Node.js
       uses: actions/setup-node@v4

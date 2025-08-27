@@ -32,7 +32,7 @@ jobs:
           path: ~\AppData\Local\pip\Cache
           key: ${{ runner.os }}-${{ matrix.PYTHON_VERSION }}-pip-${{ hashFiles('pyproject.toml') }}
           restore-keys: ${{ runner.os }}-${{ matrix.PYTHON_VERSION }}-pip-
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.PYTHON_VERSION }}
