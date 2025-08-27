@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v5
       - run: |
           sudo apt-get install tcpdump
           sudo setcap cap_net_raw,cap_net_admin=eip /usr/bin/tcpdump
@@ -33,7 +33,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v5
       - run: |
           sudo apt-get install tcpdump
           sudo setcap cap_net_raw,cap_net_admin=eip /usr/bin/tcpdump
@@ -56,7 +56,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v5
       - run: |
           sudo apt-get install tcpdump
           sudo setcap cap_net_raw,cap_net_admin=eip /usr/bin/tcpdump

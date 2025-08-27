@@ -23,7 +23,7 @@ jobs:
       matrix: ${{ fromJson(needs.matrix.outputs.stable) }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v5
       - uses: ljharb/actions/node/run@main
         with:
           node-version: ${{ matrix.node-version }}
@@ -40,7 +40,7 @@ jobs:
       matrix: ${{ fromJson(needs.matrix.outputs.unstable) }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v5
       - uses: ljharb/actions/node/run@main
         with:
           node-version: ${{ matrix.node-version }}

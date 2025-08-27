@@ -30,7 +30,7 @@ jobs:
     timeout-minutes: 25
     steps:
       - name: Checkout branch
-        uses: actions/checkout@v1
+        uses: actions/checkout@v5
       - name: Install Conda
         uses: conda-incubator/setup-miniconda@v3
         with:
